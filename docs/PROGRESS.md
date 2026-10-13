@@ -26,7 +26,20 @@ Chronological record of what has been built. Newest entries first within each da
 - [x] Verified live in the browser: real notes listed, opened, and searched; no console errors
 - [x] `tsc --noEmit` passes for daemon + desktop; `vite build` succeeds; `/note` traversal returns 400
 
+### Done (continued 3) — tooling, enforcement and workflow
+- [x] oxlint replaces the ad-hoc check (TS-version compatible) and prettier owns formatting
+- [x] Husky + lint-staged + commitlint installed; hooks cannot be bypassed
+- [x] Root scripts added: `lint`, `lint:fix`, `format`, `format:check`, `typecheck`, `build`, `validate`
+- [x] `pre-commit` now also refuses to commit on `main`, so the branch workflow is enforced by the tooling
+- [x] Unified TypeScript `~6.0.3` across all four workspaces; `typecheck` script in every workspace
+- [x] `RULES.md`, `AGENTS.md` and `CLAUDE.md` written; `CONTRIBUTING.md` and `README.md` point at them
+- [x] Branching model adopted: short-lived `<type>/<description>` branches, PR into `main`, squash-merge, no direct commits
+- [x] Generated Tauri schemas excluded from formatting; `pnpm validate` verified green end to end
+- [x] Fixed two real lint findings in the desktop app by deriving state at render instead of repairing it in effects
+
 ### Next up
+- [ ] Merge this branch through a PR into `main` (first run of the new branch workflow)
+- [ ] GitHub Actions running `pnpm validate` on every PR + branch protection on `main`
 - [ ] Markdown rendering (react-markdown) + tag filtering
 - [ ] Resizable panes, TanStack Router, zustand
 - [ ] Phase 3: link expansion, `/find`, `/plan` with Ollama, tagging

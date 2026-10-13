@@ -22,3 +22,9 @@ Status values: **done** · **in-progress** · **planned** · **idea**
 | Note editor | planned | Markdown editor with preview |
 | Link enrichment | idea | Summaries and key points from links |
 | Graph view | idea | Not core; revisit later |
+| Lint + format gate | done | oxlint + prettier, run on staged files by lint-staged |
+| Commit message lint | done | commitlint enforces `<type>(<scope>): <description>` |
+| Pre-push validation | done | `pnpm validate` — lint + format:check + typecheck + build |
+| Branch workflow | done | Short-lived `<type>/<description>` branches; `pre-commit` blocks commits on `main` |
+| Agent working agreement | done | `RULES.md`, `AGENTS.md`, `CLAUDE.md` at the repo root |
+| CI validation | planned | GitHub Actions running `pnpm validate` on every PR |

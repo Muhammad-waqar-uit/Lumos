@@ -14,7 +14,7 @@ export default function App() {
   const [activeFolder, setActiveFolder] = useState<FolderFilter>("All");
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<string | null>(null);
-  const [note, setNote] = useState<Note | null>(null);
+  const [fetched, setFetched] = useState<{ key: string; note: Note } | null>(null);
   const [loading, setLoading] = useState(true);
 
   // Load the vault from the daemon; fall back to demo data if it is not running.
@@ -50,44 +50,39 @@ export default function App() {
     });
   }, [notes, activeFolder, query]);
 
-  // Keep a valid selection as the folder/search changes.
-  useEffect(() => {
-    if (visible.length === 0) {
-      if (selected !== null) setSelected(null);
-      return;
-    }
-    if (!selected || !visible.some((n) => keyOf(n) === selected)) {
-      setSelected(keyOf(visible[0]));
-    }
-  }, [visible, selected]);
+  // The active note key is derived from the list and the user's choice - never repaired in an effect.
+  const activeKey = useMemo(() => {
+    if (selected && visible.some((n) => keyOf(n) === selected)) return selected;
+    return visible.length > 0 ? keyOf(visible[0]) : null;
+  }, [selected, visible]);
 
-  // Load the full note for the current selection.
+  const activeEntry = useMemo(
+    () => (activeKey ? (notes.find((n) => keyOf(n) === activeKey) ?? null) : null),
+    [activeKey, notes],
+  );
+
+  // Fetch the full note from the daemon (async only - the demo path needs no effect).
   useEffect(() => {
-    if (!selected) {
-      setNote(null);
-      return;
-    }
-    const entry = notes.find((n) => keyOf(n) === selected);
-    if (!entry) {
-      setNote(null);
-      return;
-    }
+    if (connection !== "daemon" || !activeKey || !activeEntry) return;
     let alive = true;
-    if (connection === "daemon") {
-      getNote(entry.folder, entry.name)
-        .then((n) => {
-          if (alive) setNote(n);
-        })
-        .catch(() => {
-          if (alive) setNote(demoNote(entry));
-        });
-    } else {
-      setNote(demoNote(entry));
-    }
+    getNote(activeEntry.folder, activeEntry.name)
+      .then((n) => {
+        if (alive) setFetched({ key: activeKey, note: n });
+      })
+      .catch(() => {
+        // Keep the listing excerpt as the fallback content.
+      });
     return () => {
       alive = false;
     };
-  }, [selected, notes, connection]);
+  }, [connection, activeKey, activeEntry]);
+
+  // Derived at render: demo note, or the fetched note once it matches the active key.
+  const note = useMemo(() => {
+    if (!activeEntry) return null;
+    if (connection !== "daemon") return demoNote(activeEntry);
+    return fetched && fetched.key === activeKey ? fetched.note : demoNote(activeEntry);
+  }, [activeEntry, connection, fetched, activeKey]);
 
   return (
     <div className="flex h-full flex-col">
@@ -100,7 +95,7 @@ export default function App() {
         />
         <NoteList
           notes={visible}
-          selected={selected}
+          selected={activeKey}
           query={query}
           onQuery={setQuery}
           onSelect={setSelected}

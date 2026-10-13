@@ -30,8 +30,8 @@ Lumos is a local-first second brain that captures thoughts via WhatsApp and stor
 
 ### Desktop (UI)
 - Tauri 2.x + Rust backend
-- React 18 + TypeScript + Vite
-- Tailwind CSS + shadcn/ui (components)
+- React 19 + TypeScript + Vite
+- Tailwind CSS v4 + shadcn/ui-style tokens (components)
 - TanStack Router (routing)
 - zustand (state)
 - react-markdown + remark-gfm (rendering)
@@ -39,11 +39,14 @@ Lumos is a local-first second brain that captures thoughts via WhatsApp and stor
 - lucide-react (icons)
 
 ### Shared / Infra
-- pnpm workspaces
-- TypeScript project references
+- pnpm workspaces (pnpm only)
+- TypeScript project references, one TypeScript version across the workspace
+- oxlint (lint) + prettier (format)
+- Husky hooks, lint-staged, commitlint
 
 ## Implementation Phases
 
+0. **Phase 0: Enforcement & Workflow** - oxlint + prettier, Husky hooks (pre-commit / commit-msg / pre-push), the `pnpm validate` gate, and the branch-based workflow recorded in `RULES.md`, `AGENTS.md` (agents) and `CLAUDE.md` (Claude Code). Every phase below ships through these gates.
 1. **Phase 1: Docs & Tracking Foundation** - PLAN, TODO, PROGRESS, FEATURES, ARCHITECTURE, CONTRIBUTING, CHANGELOG, docs/*. Establishes the source of truth for what is built vs being built.
 2. **Phase 2: Shared Packages** - `packages/shared` (types) and `packages/vault-utils` (vault ops); refactor the daemon to use them.
 3. **Phase 3: Daemon Enhancements** - Link expansion, `/find`, `/plan` with Ollama, tag extraction, config file, tests.
@@ -67,9 +70,9 @@ Layout: resizable panes - **Sidebar (folders) | Notes list | Note viewer** - wit
 
 ## Documentation Plan
 
-Root: `PLAN.md`, `TODO.md`, `PROGRESS.md`, `FEATURES.md`, `ARCHITECTURE.md`, `CONTRIBUTING.md`, `CHANGELOG.md`.
+Root keeps only what convention demands: `README.md`, `CHANGELOG.md`, `CONTRIBUTING.md`, `LICENSE`, plus the standards files `RULES.md`, `AGENTS.md` and `CLAUDE.md`.
 
-`docs/`: `daemon.md`, `desktop.md`, `vault.md`, `design.md`, `roadmap.md`.
+`docs/` holds everything else: `PLAN.md`, `TODO.md`, `PROGRESS.md`, `FEATURES.md`, `ARCHITECTURE.md`, `daemon.md`, `desktop.md`, `vault.md`, `design.md`, `roadmap.md`. Docs are cross-linked by relative path and moved with `git mv` so history survives.
 
 ## Tracking Conventions
 
@@ -79,6 +82,7 @@ Root: `PLAN.md`, `TODO.md`, `PROGRESS.md`, `FEATURES.md`, `ARCHITECTURE.md`, `CO
 
 ## Milestones
 
+- **M0** Tooling & Enforcement (Phase 0)
 - **M1** Tracking Docs (Phase 1)
 - **M2** Shared Packages (Phase 2)
 - **M3** Daemon Enhanced (Phase 3)
@@ -99,6 +103,11 @@ Root: `PLAN.md`, `TODO.md`, `PROGRESS.md`, `FEATURES.md`, `ARCHITECTURE.md`, `CO
 | Icons | lucide-react | Consistent, minimal |
 | WhatsApp | Baileys | Node-native, no Docker needed |
 | Local AI | Ollama (small model) | Local-first planning/enrichment |
+| Linter | oxlint | Fast, and compatible with the TypeScript version in use |
+| Formatter | prettier | One formatter, no style debates; runs on staged files |
+| Git hooks | Husky + lint-staged + commitlint | The standards are enforced, not aspirational |
+| Branching | Short-lived `<type>/<description>` branches, PR into `main`, squash-merge | `main` stays releasable; every change is reviewable in isolation |
+| TypeScript version | One version (`~6.0.3`) across all workspaces | Avoids cross-package type mismatches |
 
 ## Open Questions
 

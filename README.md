@@ -155,6 +155,8 @@ curl http://127.0.0.1:3001/health
 
 This is a pnpm monorepo. Commands can be run from root or from individual apps.
 
+**Every change must pass `pnpm validate` before it is pushed, and nothing is committed directly to `main`.** Work happens on a short-lived branch; the git hooks (Husky + lint-staged + commitlint) block a commit on `main`, a badly formatted commit message, or a red gate. See [RULES.md](RULES.md) for the enforced standard and [AGENTS.md](AGENTS.md) for the working agreement.
+
 ```bash
 # Install all dependencies
 pnpm install
@@ -162,8 +164,11 @@ pnpm install
 # Run daemon in dev mode (from root)
 cd apps/daemon && pnpm dev
 
-# Build/Typecheck daemon
-cd apps/daemon && node --import tsx --check src/**/*.ts
+# Lint + format check + typecheck + build (the gate)
+pnpm validate
+
+# Start a branch before writing any code
+git checkout -b feat/my-change
 ```
 
 ## Roadmap
@@ -172,7 +177,7 @@ cd apps/daemon && node --import tsx --check src/**/*.ts
 - [ ] Daily planner with `/plan today|tomorrow` (AI-assisted via Ollama)
 - [ ] Full-text search with `/find <query>`
 - [ ] Tag extraction and auto-tagging
-- [ ] Tauri desktop app UI for browsing/searching vault
+- [~] Tauri desktop app UI for browsing/searching vault - dark shell, folder sidebar, note list and viewer are in place; Markdown rendering, tags, resizable panes and an editor remain
 - [ ] Enrichment: extract summaries, key points from links
 - [ ] Sync/backups, exports
 
@@ -190,6 +195,12 @@ Tracking:
 - [CHANGELOG.md](CHANGELOG.md) - version history
 - [CONTRIBUTING.md](CONTRIBUTING.md) - how to contribute
 
+Standards and agent docs:
+
+- [RULES.md](RULES.md) - build, commit and branch rules (enforced by git hooks)
+- [AGENTS.md](AGENTS.md) - working agreement for AI agents working in this repo
+- [CLAUDE.md](CLAUDE.md) - Claude Code entry point
+
 Reference:
 
 - [docs/daemon.md](docs/daemon.md) - daemon, commands, HTTP API, config
@@ -201,6 +212,8 @@ Reference:
 ## Contributing
 
 Contributions are welcome! Please feel free to submit issues, feature requests, or pull requests.
+
+Read [CONTRIBUTING.md](CONTRIBUTING.md) and [RULES.md](RULES.md) first: commits go on a branch (never `main`), the commit message must be `<type>(<scope>): <description>`, and `pnpm validate` must be green.
 
 ## License
 

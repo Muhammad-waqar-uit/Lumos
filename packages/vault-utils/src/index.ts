@@ -74,7 +74,10 @@ export function parseNote(raw: string): { frontmatter: Frontmatter; content: str
     return { frontmatter: normalizeFrontmatter({}), content: normalized.trim() };
   }
   const block = normalized.slice(3, end).trim();
-  const content = normalized.slice(end + 4).replace(/^\r?\n/, "").trim();
+  const content = normalized
+    .slice(end + 4)
+    .replace(/^\r?\n/, "")
+    .trim();
   const data = (YAML.parse(block) ?? {}) as Record<string, unknown>;
   return { frontmatter: normalizeFrontmatter(data), content };
 }
@@ -198,7 +201,9 @@ export async function saveNote(
     created: now.toISOString(),
     ...(input.url ? { url: input.url } : {}),
   };
-  const body = [`# ${title}`, "", input.text, input.url ?? ""].filter((l, i) => i < 2 || l).join("\n");
+  const body = [`# ${title}`, "", input.text, input.url ?? ""]
+    .filter((l, i) => i < 2 || l)
+    .join("\n");
   const content = serializeNote(frontmatter, body);
 
   const base = `${date}-${slugify(title)}`;

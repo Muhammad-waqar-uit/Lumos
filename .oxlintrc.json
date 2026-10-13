@@ -1,0 +1,16 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "react", "import", "promise"],
+  "env": {
+    "browser": true,
+    "node": true,
+    "es2024": true
+  },
+  "categories": {
+    "correctness": "error"
+  },
+  "ignorePatterns": ["**/node_modules/**", "**/dist/**", "**/target/**", "**/.preview-vault/**"],
+  "rules": {
+    "no-console": "off"
+  }
+}
