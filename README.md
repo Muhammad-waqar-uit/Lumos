@@ -176,6 +176,26 @@ cd apps/daemon && node --import tsx --check src/**/*.ts
 - [ ] Enrichment: extract summaries, key points from links
 - [ ] Sync/backups, exports
 
+## Documentation
+
+Project tracking and reference docs (the source of truth for what is built vs being built):
+
+- [PLAN.md](PLAN.md) - goals, non-goals, tech stack, phases, decisions log
+- [TODO.md](TODO.md) - actionable checklist for every phase
+- [PROGRESS.md](PROGRESS.md) - chronological progress log
+- [FEATURES.md](FEATURES.md) - feature status matrix
+- [ARCHITECTURE.md](ARCHITECTURE.md) - system architecture and data flow
+- [CHANGELOG.md](CHANGELOG.md) - version history
+- [CONTRIBUTING.md](CONTRIBUTING.md) - how to contribute
+
+Reference docs in [`docs/`](docs):
+
+- [docs/daemon.md](docs/daemon.md) - daemon, commands, HTTP API, config
+- [docs/desktop.md](docs/desktop.md) - desktop app architecture and layout
+- [docs/vault.md](docs/vault.md) - vault format, frontmatter, conventions
+- [docs/design.md](docs/design.md) - design system, dark color tokens, spacing
+- [docs/roadmap.md](docs/roadmap.md) - milestones
+
 ## Contributing
 
 Contributions are welcome! Please feel free to submit issues, feature requests, or pull requests.
