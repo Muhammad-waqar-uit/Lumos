@@ -187,8 +187,8 @@ Tracking:
 - [docs/PROGRESS.md](docs/PROGRESS.md) - chronological progress log
 - [docs/FEATURES.md](docs/FEATURES.md) - feature status matrix
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) - system architecture and data flow
-- [docs/CHANGELOG.md](docs/CHANGELOG.md) - version history
-- [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) - how to contribute
+- [CHANGELOG.md](CHANGELOG.md) - version history
+- [CONTRIBUTING.md](CONTRIBUTING.md) - how to contribute
 
 Reference:
 

@@ -73,9 +73,10 @@ lumos/
 │   └── desktop/      # Tauri desktop UI
 ├── packages/         # @lumos/shared (types) + @lumos/vault-utils (vault ops)
 ├── docs/             # plan + tracking + reference docs
-│   ├── PLAN.md TODO.md PROGRESS.md FEATURES.md ARCHITECTURE.md CONTRIBUTING.md CHANGELOG.md
+│   ├── PLAN.md TODO.md PROGRESS.md FEATURES.md ARCHITECTURE.md
 │   └── daemon.md desktop.md vault.md design.md roadmap.md
 ├── idea/             # original idea PDFs and notes
 ├── vault/            # user notes (git-ignored)
+├── CHANGELOG.md CONTRIBUTING.md LICENSE
 └── README.md
 ```
