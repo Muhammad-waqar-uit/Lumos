@@ -1,5 +1,6 @@
-﻿import Fastify from "fastify";
+import Fastify from "fastify";
 import { handleMessage } from "./handler.js";
+import { startWhatsApp } from "./whatsapp.js";
 
 const app = Fastify({ logger: true });
 
@@ -12,3 +13,4 @@ app.post<{ Body: { text?: string } }>("/message", async (req, reply) => {
 });
 
 await app.listen({ host: "127.0.0.1", port: 3001 });
+startWhatsApp().catch((err) => app.log.error(err));

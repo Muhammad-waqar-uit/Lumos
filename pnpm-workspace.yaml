@@ -3,6 +3,6 @@ packages:
   - 'packages/*'
 
 allowBuilds:
-  '@whiskeysockets/baileys': set this to true or false
   esbuild: true
-  protobufjs: set this to true or false
+  '@whiskeysockets/baileys': true
+  protobufjs: true
