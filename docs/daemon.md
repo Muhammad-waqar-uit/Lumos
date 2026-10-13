@@ -69,5 +69,5 @@ write). Keeping this logic in packages lets the desktop app reuse it.
 
 ## Planned enhancements
 
-See [`../TODO.md`](../TODO.md) Phase 3: link expansion, `/find`, `/plan` with Ollama, tag
+See [`TODO.md`](TODO.md) Phase 3: link expansion, `/find`, `/plan` with Ollama, tag
 extraction, a config file, and unit tests.

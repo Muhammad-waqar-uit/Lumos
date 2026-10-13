@@ -178,17 +178,19 @@ cd apps/daemon && node --import tsx --check src/**/*.ts
 
 ## Documentation
 
-Project tracking and reference docs (the source of truth for what is built vs being built):
+All project docs live in [`docs/`](docs). They are the source of truth for what is built vs being built.
 
-- [PLAN.md](PLAN.md) - goals, non-goals, tech stack, phases, decisions log
-- [TODO.md](TODO.md) - actionable checklist for every phase
-- [PROGRESS.md](PROGRESS.md) - chronological progress log
-- [FEATURES.md](FEATURES.md) - feature status matrix
-- [ARCHITECTURE.md](ARCHITECTURE.md) - system architecture and data flow
-- [CHANGELOG.md](CHANGELOG.md) - version history
-- [CONTRIBUTING.md](CONTRIBUTING.md) - how to contribute
+Tracking:
 
-Reference docs in [`docs/`](docs):
+- [docs/PLAN.md](docs/PLAN.md) - goals, non-goals, tech stack, phases, decisions log
+- [docs/TODO.md](docs/TODO.md) - actionable checklist for every phase
+- [docs/PROGRESS.md](docs/PROGRESS.md) - chronological progress log
+- [docs/FEATURES.md](docs/FEATURES.md) - feature status matrix
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) - system architecture and data flow
+- [docs/CHANGELOG.md](docs/CHANGELOG.md) - version history
+- [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) - how to contribute
+
+Reference:
 
 - [docs/daemon.md](docs/daemon.md) - daemon, commands, HTTP API, config
 - [docs/desktop.md](docs/desktop.md) - desktop app architecture and layout

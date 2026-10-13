@@ -29,8 +29,8 @@ Thanks for your interest in Lumos. This is a local-first project, and contributi
 
 - Run the relevant type checks (e.g. for the daemon: `node --import tsx --check src/**/*.ts`).
 - Keep each pull request scoped to one logical change.
-- Update the docs that your change affects (`TODO.md`, `PROGRESS.md`, `FEATURES.md`, `docs/*`) so
-  the tracking docs stay accurate.
+- Update the docs that your change affects (`docs/TODO.md`, `docs/PROGRESS.md`, `docs/FEATURES.md`)
+  so the tracking docs stay accurate.
 - Write a clear commit message explaining the *why*, not just the *what*.
 
 ## Reporting issues

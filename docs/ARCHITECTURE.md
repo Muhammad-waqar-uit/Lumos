@@ -48,14 +48,14 @@ WhatsApp ──► Daemon ──► vault/*.md ◄── Desktop (Tauri UI)
 
 - Plain Markdown files with YAML frontmatter.
 - Folders: `Inbox`, `Ideas`, `Interviews`, `Goals`, `Reading`.
-- Filenames: `YYYY-MM-DD-slug.md`. See [docs/vault.md](docs/vault.md).
+- Filenames: `YYYY-MM-DD-slug.md`. See [vault.md](vault.md).
 
 ## UI Theme (Dark Minimal)
 
 - Background near-black (`hsl(0 0% 3.9%)`).
 - Subtle surfaces and thin, low-opacity borders.
 - High-contrast text; restrained accent.
-- No gradients, no heavy shadows. See [docs/design.md](docs/design.md).
+- No gradients, no heavy shadows. See [design.md](design.md).
 
 ## Tech Decisions
 
@@ -72,9 +72,10 @@ lumos/
 │   ├── daemon/       # WhatsApp capture service
 │   └── desktop/      # Tauri desktop UI
 ├── packages/         # @lumos/shared (types) + @lumos/vault-utils (vault ops)
-├── docs/             # project documentation
+├── docs/             # plan + tracking + reference docs
+│   ├── PLAN.md TODO.md PROGRESS.md FEATURES.md ARCHITECTURE.md CONTRIBUTING.md CHANGELOG.md
+│   └── daemon.md desktop.md vault.md design.md roadmap.md
 ├── idea/             # original idea PDFs and notes
 ├── vault/            # user notes (git-ignored)
-├── PLAN.md TODO.md PROGRESS.md FEATURES.md ARCHITECTURE.md CONTRIBUTING.md CHANGELOG.md
 └── README.md
 ```

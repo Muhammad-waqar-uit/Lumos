@@ -1,7 +1,7 @@
 # Roadmap
 
-Milestones are ordered; each maps to a phase in [`../PLAN.md`](../PLAN.md) and a section in
-[`../TODO.md`](../TODO.md).
+Milestones are ordered; each maps to a phase in [`PLAN.md`](PLAN.md) and a section in
+[`TODO.md`](TODO.md).
 
 ## M1 - Tracking docs (Phase 1) ✅
 
@@ -49,4 +49,4 @@ folder, so progress is always visible.
 ## Beyond
 
 Ideas not yet committed: link enrichment summaries, statistics/insights, optional
-sync/backups, and a graph view. These are recorded in [`../FEATURES.md`](../FEATURES.md) as `idea`.
+sync/backups, and a graph view. These are recorded in [`FEATURES.md`](FEATURES.md) as `idea`.

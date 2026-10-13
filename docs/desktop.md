@@ -6,7 +6,7 @@ the Markdown vault. It lives in [`apps/desktop`](../apps/desktop).
 ## Status
 
 Currently the Tauri + React + TypeScript scaffold. The vault browser, note viewer, and search UI
-are planned (see [`../TODO.md`](../TODO.md) Phases 4-7).
+are planned (see [`TODO.md`](TODO.md) Phases 4-7).
 
 ## Planned structure
 
@@ -34,7 +34,7 @@ The desktop reads the vault directory from disk. Two paths are possible:
 1. **Tauri filesystem/Rust commands** - read and parse Markdown directly (preferred, no server needed).
 2. **Daemon HTTP API** - reuse the daemon for parsing/writing when it is running.
 
-Both are kept possible by putting shared logic in `packages/` (see [`../ARCHITECTURE.md`](../ARCHITECTURE.md)).
+Both are kept possible by putting shared logic in `packages/` (see [`ARCHITECTURE.md`](ARCHITECTURE.md)).
 
 ## Keyboard
 
