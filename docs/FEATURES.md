@@ -17,7 +17,9 @@ Status values: **done** · **in-progress** · **planned** · **idea**
 | Daemon read API | done | `GET /notes`, `/notes/search`, `/folders`, `/note` + CORS |
 | Dark UI theme | done | Tailwind v4 tokens, near-black background |
 | Desktop vault browser | in-progress | Folder sidebar + note list + viewer + status bar |
-| Note viewer | in-progress | Renders note text; Markdown rendering pending |
+| Note viewer | done | Markdown via `react-markdown` + `remark-gfm` (tables, task lists, fenced code) |
+| Markdown rendering | done | Headings, lists, tables, blockquotes, task lists, links; styled with the dark tokens |
+| Code syntax highlighting | planned | Highlight fenced code blocks in the viewer |
 | Full-text search UI | in-progress | Client-side filter; fuse.js + Cmd/Ctrl+K pending |
 | Note editor | planned | Markdown editor with preview |
 | Link enrichment | idea | Summaries and key points from links |

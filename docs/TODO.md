@@ -64,7 +64,8 @@
 - [x] Sidebar with vault folders + note counts
 - [x] Note list pane (sorted by date, preview, tags)
 - [x] Vault load on mount via the daemon read API (demo fallback when offline)
-- [~] Note viewer - renders note text; Markdown rendering (react-markdown) pending
+- [x] Note viewer - Markdown rendering via `react-markdown` + `remark-gfm` (headings, lists, tables, task lists, blockquotes, fenced code; note links open externally)
+- [ ] Syntax highlighting for fenced code blocks (`rehype-highlight` or shiki)
 - [ ] Tag filtering
 
 ## Phase 6: Search & Discovery (P1)
