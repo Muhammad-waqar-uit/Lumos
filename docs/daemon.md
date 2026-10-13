@@ -17,7 +17,7 @@ Markdown notes to the vault. It lives in [`apps/daemon`](../apps/daemon).
 | File | Responsibility |
 |---|---|
 | `src/commands.ts` | `parseMessage()` - turns raw text into a typed `Parsed` result.
-| `src/vault.ts` | `saveNote()` - writes a note with YAML frontmatter, returns title + path.
+| `src/vault.ts` | Resolves the vault path and delegates to `@lumos/vault-utils` `saveNote()`.
 | `src/handler.ts` | `handleMessage()` - routes a parsed command to a reply string.
 | `src/server.ts` | Fastify routes + boots the WhatsApp connection.
 | `src/whatsapp.ts` | Baileys connection, QR auth, allowlist, message loop.
@@ -60,6 +60,12 @@ Response: `{ "ok": true }`.
 On first run a QR code is printed to the terminal. Scan it from the Lumos number's
 **Settings > Linked Devices > Link a Device**. The session is stored in `apps/daemon/auth_info/`,
 which is git-ignored and must never be shared. Delete it to force a fresh pairing.
+
+## Shared packages
+
+The daemon uses [`@lumos/shared`](../packages/shared) for its types and
+[`@lumos/vault-utils`](../packages/vault-utils) for vault operations (parse, read, list, search,
+write). Keeping this logic in packages lets the desktop app reuse it.
 
 ## Planned enhancements
 

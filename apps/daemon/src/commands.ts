@@ -1,13 +1,6 @@
-﻿export type Folder = "Inbox" | "Ideas" | "Interviews" | "Goals" | "Reading";
+import type { Folder, NoteInput, Parsed } from "@lumos/shared";
 
-export type NoteInput = { folder: Folder; text: string; url?: string };
-
-export type Parsed =
-  | ({ kind: "note" } & NoteInput)
-  | { kind: "plan"; when: "today" | "tomorrow" }
-  | { kind: "find"; query: string }
-  | { kind: "help" }
-  | { kind: "unknown"; command: string };
+export type { Folder, NoteInput, Parsed };
 
 const FOLDER_COMMANDS: Record<string, Folder> = {
   idea: "Ideas",

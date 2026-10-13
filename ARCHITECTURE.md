@@ -6,7 +6,7 @@ Lumos is a pnpm monorepo. Two applications share a common Markdown vault:
 
 - **`apps/daemon`** - capture service. Connects to WhatsApp, parses messages, writes Markdown notes.
 - **`apps/desktop`** - Tauri desktop UI. Browses, searches, and (later) edits the vault.
-- **`packages/*`** - shared TypeScript types and vault utilities used by both.
+- **`packages/*`** - shared TypeScript: `@lumos/shared` (types) and `@lumos/vault-utils` (vault read/list/search/write).
 - **`vault/`** - the user's notes as plain Markdown files (created at runtime, git-ignored).
 
 ## Component Diagram
@@ -71,7 +71,7 @@ lumos/
 ├── apps/
 │   ├── daemon/       # WhatsApp capture service
 │   └── desktop/      # Tauri desktop UI
-├── packages/         # shared types + vault utilities (planned)
+├── packages/         # @lumos/shared (types) + @lumos/vault-utils (vault ops)
 ├── docs/             # project documentation
 ├── idea/             # original idea PDFs and notes
 ├── vault/            # user notes (git-ignored)

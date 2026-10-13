@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - WhatsApp bridge via Baileys with QR authentication, sender allowlist, and auto-reconnect.
 - Project documentation: `PLAN.md`, `TODO.md`, `PROGRESS.md`, `FEATURES.md`,
   `ARCHITECTURE.md`, `CONTRIBUTING.md`, `CHANGELOG.md`, and the `docs/` set.
+- Shared workspace packages: `@lumos/shared` (core types) and `@lumos/vault-utils`
+  (slugify, frontmatter parse/serialize, read/list/search/write). The daemon is refactored onto them.
 - MIT `LICENSE`.
 
 ### Notes

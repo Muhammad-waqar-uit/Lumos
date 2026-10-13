@@ -12,7 +12,8 @@ Status values: **done** · **in-progress** · **planned** · **idea**
 | `/find` search | planned | Search vault from the daemon |
 | `/plan` with Ollama | planned | Local AI daily planning |
 | Tag extraction | planned | Hashtag extraction + auto-tagging |
-| Shared packages | planned | `packages/shared`, `packages/vault-utils` |
+| Shared packages | done | `@lumos/shared` types + `@lumos/vault-utils` (parse/list/search/write) |
+| Vault listing/search | done | `listNotes`, `getNotesByFolder`, `searchNotes`, `readNote` |
 | Desktop vault browser | planned | Dark minimal UI, folder sidebar |
 | Note viewer | planned | react-markdown + remark-gfm |
 | Full-text search UI | planned | fuse.js + Cmd/Ctrl+K modal |

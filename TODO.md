@@ -18,10 +18,10 @@
 - [x] Update `README.md` with doc links
 
 ## Phase 2: Shared Packages (P0)
-- [ ] `packages/shared`: core types (Note, Frontmatter, Command, VaultEntry)
-- [ ] `packages/vault-utils`: vault ops (read/list/search/parse/write, slugify)
-- [ ] Configure pnpm workspace + tsconfig for packages
-- [ ] Refactor daemon to use shared packages
+- [x] `packages/shared`: core types (Note, Frontmatter, Command, VaultEntry)
+- [x] `packages/vault-utils`: vault ops (read/list/search/parse/write, slugify)
+- [x] Configure pnpm workspace + tsconfig for packages
+- [x] Refactor daemon to use shared packages
 
 ## Phase 3: Daemon Enhancements (P1)
 - [ ] Link expansion for `/read` and `/interview` (title, description, og:image)

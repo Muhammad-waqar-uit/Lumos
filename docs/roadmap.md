@@ -8,11 +8,12 @@ Milestones are ordered; each maps to a phase in [`../PLAN.md`](../PLAN.md) and a
 The `PLAN.md` / `TODO.md` / `PROGRESS.md` / `FEATURES.md` / `ARCHITECTURE.md` set and the `docs/`
 folder, so progress is always visible.
 
-## M2 - Shared packages (Phase 2)
+## M2 - Shared packages (Phase 2) ✅
 
-- `packages/shared` - `Note`, `Frontmatter`, `Command`, `VaultEntry` types.
-- `packages/vault-utils` - read / list / search / parse / write / slugify.
-- Refactor the daemon onto the shared packages so the desktop can reuse the same logic.
+- `@lumos/shared` - `Folder`, `NoteInput`, `Parsed`, `Frontmatter`, `Note`, `VaultEntry` types.
+- `@lumos/vault-utils` - `slugify`, `makeTitle`, `parseNote`, `serializeNote`, `readNote`,
+  `listNotes`, `getNotesByFolder`, `searchNotes`, `saveNote`.
+- The daemon is refactored onto the shared packages, so the desktop can reuse the same logic.
 
 ## M3 - Daemon enhanced (Phase 3)
 
