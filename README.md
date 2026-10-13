@@ -1,61 +1,191 @@
-# Lumos
+# Lumos - Second Brain via WhatsApp
 
-A second brain system with WhatsApp integration. Capture ideas, notes, and tasks via WhatsApp messages that get parsed and saved as Markdown files in a vault.
+Lumos is a personal knowledge management system that lets you capture thoughts, ideas, tasks, and links directly from WhatsApp. Send a message to your Lumos number, and it automatically parses commands and saves structured Markdown notes to a local vault - ready to use with Obsidian or any Markdown editor.
 
-## Structure
+## What is Lumos?
 
-- `apps/daemon` - WhatsApp bridge daemon that receives messages, parses commands, and writes notes to the vault
-- `apps/desktop` - Desktop app (Tauri) for viewing and managing your second brain
-- `packages/` - Shared packages (if any)
-- `vault/` - Markdown note storage (auto-generated)
+Lumos transforms WhatsApp into an effortless capture tool for your second brain. Instead of opening apps or breaking your flow, you can just send a message and have it automatically organized into folders like Ideas, Interviews, Goals, Reading, or Inbox.
+
+## Features
+
+- **WhatsApp Integration**: Link a dedicated WhatsApp number using Baileys (multi-device) - no third-party WhatsApp API keys required
+- **Natural Capture**: Send plain text to Inbox, or use slash commands for organized filing
+- **Structured Notes**: Each note is saved as Markdown with YAML frontmatter (timestamps, source, tags, status)
+- **Local-First**: All notes are stored locally in a vault directory - your data stays yours
+- **Smart Parsing**: Automatically extracts URLs from messages and preserves them in frontmatter
+- **Auto-Reconnection**: Robust connection handling with automatic reconnection on disconnects
+- **Allowlist Security**: Only messages from whitelisted phone numbers are processed
+- **Monorepo Architecture**: Clean separation between daemon (capture) and desktop app (viewing)
+
+## Architecture
+
+Lumos consists of two main applications:
+
+- **[apps/daemon](apps/daemon/README.md)** - A Node.js service that connects to WhatsApp via Baileys, exposes an HTTP API, parses commands, and writes notes to the vault
+- **[apps/desktop](apps/desktop/README.md)** - A Tauri desktop app (React + TypeScript) for browsing, searching, and managing your second brain
+- **[vault/](vault/)** - Local Markdown storage (generated at runtime)
+
+## Tech Stack
+
+- **Runtime**: Node.js + TypeScript
+- **WhatsApp**: [Baileys](https://github.com/WhiskeySockets/Baileys) (WhatsApp Web API)
+- **Server**: [Fastify](https://fastify.dev/) for HTTP API
+- **Monorepo**: [pnpm workspaces](https://pnpm.io/workspaces)
+- **Desktop**: [Tauri](https://tauri.app/) + [React](https://react.dev/) + [Vite](https://vitejs.dev/)
+- **Logging**: [Pino](https://getpino.io/)
 
 ## Commands
 
-The daemon understands these WhatsApp commands:
+| Command | Action | Destination |
+| --- | --- | --- |
+| `/idea <text>` | Save an idea | `vault/Ideas/` |
+| `/interview <text or link>` | Save interview notes/resources | `vault/Interviews/` |
+| `/goal <text>` | Save a goal | `vault/Goals/` |
+| `/read <link>` | Save something to read | `vault/Reading/` |
+| `/plan today\|tomorrow` | Plan command (coming soon) | - |
+| `/find <query>` | Search command (coming soon) | - |
+| `/help` | Show available commands | - |
+| *(plain text)* | Quick capture | `vault/Inbox/` |
 
-- `/idea <text>` - Save to Ideas folder
-- `/interview <link or text>` - Save to Interviews folder
-- `/goal <text>` - Save to Goals folder
-- `/read <link>` - Save to Reading folder
-- `/plan today|tomorrow` - Plan command (placeholder)
-- `/find <query>` - Find command (placeholder)
-- `/help` - Show available commands
-
-Any message without a command goes to the Inbox folder.
+URLs in messages are automatically detected and stored in the note's frontmatter.
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js 20+
-- pnpm 9+
+- [Node.js](https://nodejs.org/) 20.0.0 or higher
+- [pnpm](https://pnpm.io/) 9.0.0 or higher
+- [Git](https://git-scm.com/)
+- A spare phone number for your Lumos WhatsApp account (recommended, not required)
 
-### Setup
+### Installation
 
-1. Install dependencies
-   ```bash
-   pnpm install
-   ```
+```bash
+# Clone the repository
+git clone <your-repo-url> lumos
+cd lumos
 
-2. Start the daemon
-   ```bash
-   cd apps/daemon
-   pnpm dev
-   ```
+# Install dependencies
+pnpm install
+```
 
-3. Test it
-   ```bash
-   curl -X POST http://127.0.0.1:3001/message \
-     -H "Content-Type: application/json" \
-     -d '{"text":"/idea build a habit tracker"}'
-   ```
+### Configuration
 
-Notes will be saved to `vault/` as Markdown files with YAML frontmatter.
+1. Get your phone number (country code + number, no + or spaces). This is the number you'll send messages from.
+2. Set the allowlist when running the daemon:
+
+```bash
+# Windows PowerShell
+$env:ALLOWED_NUMBERS="1234567890"
+
+# macOS/Linux
+export ALLOWED_NUMBERS="1234567890"
+```
+
+You can allow multiple numbers by comma-separating: `1234567890,0987654321`
+
+### Running the Daemon
+
+```bash
+cd apps/daemon
+pnpm dev
+```
+
+On first run, a QR code will appear in your terminal. 
+
+### Linking WhatsApp
+
+1. Open WhatsApp on the phone number you want to use as **Lumos** (the receiving number)
+2. Go to **Settings > Linked Devices > Link a Device**
+3. Scan the QR code displayed in your terminal
+4. You'll see `WhatsApp connected.` in the logs
+
+The session is saved in `apps/daemon/auth_info/` - you only need to scan once. This folder is git-ignored for security.
+
+### Usage
+
+1. From your personal WhatsApp (the allowed number), message the Lumos number
+2. Try it: `/idea Build a habit tracker`
+3. Check your vault: `vault/Ideas/2025-10-13-build-a-habit-tracker.md` will be created
+4. Open the vault in [Obsidian](https://obsidian.md/) to browse your notes
+
+Example note:
+```markdown
+---
+source: whatsapp
+created: 2025-10-13T12:34:56.789Z
+tags: []
+status: new
+---
+# Build a habit tracker
+
+Build a habit tracker
+```
+
+### Testing via HTTP API
+
+You can also test the daemon directly without WhatsApp:
+
+```bash
+curl -X POST http://127.0.0.1:3001/message \
+  -H "Content-Type: application/json" \
+  -d '{"text":"/idea test idea"}'
+
+curl http://127.0.0.1:3001/health
+```
+
+## Configuration Reference
+
+### Environment Variables (Daemon)
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `ALLOWED_NUMBERS` | `""` | Comma-separated list of allowed sender phone numbers (country code + number) |
+| `VAULT_PATH` | `../../vault` | Path to store Markdown notes (relative to daemon cwd) |
+
+## Security & Privacy
+
+- **Local-first**: Your vault and auth data never leave your machine
+- **Allowlist**: Only whitelisted numbers can trigger writes
+- **Ignored files**: `auth_info/` (WhatsApp session), `.env`, and vault contents are git-ignored
+- **Unofficial API**: Uses Baileys (WhatsApp Web protocol). Use responsibly - avoid spam and respect WhatsApp's Terms of Service
+- **Separate number recommended**: Use a dedicated number for Lumos to minimize risk
 
 ## Development
 
-This is a pnpm monorepo. Run commands from the root or from specific apps.
+This is a pnpm monorepo. Commands can be run from root or from individual apps.
+
+```bash
+# Install all dependencies
+pnpm install
+
+# Run daemon in dev mode (from root)
+cd apps/daemon && pnpm dev
+
+# Build/Typecheck daemon
+cd apps/daemon && node --import tsx --check src/**/*.ts
+```
+
+## Roadmap
+
+- [ ] Link expansion for `/read` and `/interview` (fetch page titles and readable content)
+- [ ] Daily planner with `/plan today|tomorrow` (AI-assisted via Ollama)
+- [ ] Full-text search with `/find <query>`
+- [ ] Tag extraction and auto-tagging
+- [ ] Tauri desktop app UI for browsing/searching vault
+- [ ] Enrichment: extract summaries, key points from links
+- [ ] Sync/backups, exports
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit issues, feature requests, or pull requests.
 
 ## License
 
-MIT
+MIT License - see [LICENSE](LICENSE) if available.
+
+## Acknowledgments
+
+- [Baileys](https://github.com/WhiskeySockets/Baileys) for the WhatsApp Web API implementation
+- [Obsidian](https://obsidian.md/) for inspiring the vault-based second brain approach
+- The PKM community for ideas on capture workflows
