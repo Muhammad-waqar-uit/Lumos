@@ -48,6 +48,22 @@ Response: `{ "reply": "Filed in Ideas: build a habit tracker" }`. Missing `text`
 ### `GET /health`
 Response: `{ "ok": true }`.
 
+### `GET /notes`
+Every note in the vault, newest first: `{ "notes": VaultEntry[] }`.
+
+### `GET /notes/search?q=<query>`
+Case-insensitive search across titles, content, and tags: `{ "notes": VaultEntry[] }`.
+
+### `GET /folders`
+Note counts per folder: `{ "folders": [{ "folder": "Ideas", "count": 3 }] }`.
+
+### `GET /note?folder=<Folder>&name=<file.md>`
+A single note (`frontmatter` + `content`). Returns `400` for an unknown folder or an unsafe
+filename, and `404` when the note is missing.
+
+CORS is enabled for local development origins (`localhost`, `127.0.0.1`, `tauri://`) since the
+server binds to `127.0.0.1` only.
+
 ## Configuration
 
 | Variable | Default | Description |

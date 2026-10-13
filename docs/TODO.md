@@ -24,6 +24,7 @@
 - [x] Refactor daemon to use shared packages
 
 ## Phase 3: Daemon Enhancements (P1)
+- [x] Read API for the desktop: `GET /notes`, `/notes/search`, `/folders`, `/note` (+ CORS, traversal guards)
 - [ ] Link expansion for `/read` and `/interview` (title, description, og:image)
 - [ ] Implement `/find <query>` search over the vault
 - [ ] `/plan today|tomorrow` with Ollama integration
@@ -33,17 +34,18 @@
 - [ ] Unit tests for commands / parser / vault
 
 ## Phase 4: Desktop UI Foundation (P0)
-- [ ] Install and configure shadcn/ui with dark theme (near-black)
-- [ ] Add core components (Button, Card, Input, ScrollArea, Separator, Tabs)
-- [ ] App shell layout with sidebar + resizable panes
+- [x] Tailwind CSS v4 + dark shadcn-style design tokens (near-black)
+- [x] Core components (Sidebar, NoteList, NoteViewer, StatusBar, search input)
+- [x] App shell layout: sidebar + note list + note viewer + status bar
+- [ ] Resizable panes
 - [ ] TanStack Router setup
-- [ ] zustand state management for vault state and filters
+- [ ] zustand state management (currently plain React state)
 
 ## Phase 5: Vault Browser (P0)
-- [ ] Sidebar with vault folders + note counts
-- [ ] Note list pane (sorted by date, tags, preview)
-- [ ] Note viewer with react-markdown + remark-gfm
-- [ ] Vault scanning / indexing on load
+- [x] Sidebar with vault folders + note counts
+- [x] Note list pane (sorted by date, preview, tags)
+- [x] Vault load on mount via the daemon read API (demo fallback when offline)
+- [~] Note viewer - renders note text; Markdown rendering (react-markdown) pending
 - [ ] Tag filtering
 
 ## Phase 6: Search & Discovery (P1)

@@ -1,8 +1,18 @@
+import path from "node:path";
 import Fastify from "fastify";
+import cors from "@fastify/cors";
+import { listNotes, searchNotes, readNote, getNotesByFolder } from "@lumos/vault-utils";
+import { FOLDERS, type Folder } from "@lumos/shared";
 import { handleMessage } from "./handler.js";
 import { startWhatsApp } from "./whatsapp.js";
+import { VAULT } from "./vault.js";
 
 const app = Fastify({ logger: true });
+
+// Local-only dev origins (Vite dev server + Tauri). The server binds to 127.0.0.1.
+await app.register(cors, {
+  origin: [/^https?:\/\/localhost(:\d+)?$/, /^https?:\/\/127\.0\.0\.1(:\d+)?$/, /^tauri:\/\//],
+});
 
 app.get("/health", async () => ({ ok: true }));
 
@@ -12,5 +22,45 @@ app.post<{ Body: { text?: string } }>("/message", async (req, reply) => {
   return { reply: await handleMessage(text) };
 });
 
-await app.listen({ host: "127.0.0.1", port: 3001 });
-startWhatsApp().catch((err) => app.log.error(err));
+/** List every note in the vault, newest first. */
+app.get("/notes", async () => ({ notes: await listNotes(VAULT) }));
+
+/** Case-insensitive search across titles, content, and tags. */
+app.get<{ Querystring: { q?: string } }>("/notes/search", async (req) => {
+  return { notes: await searchNotes(VAULT, req.query.q ?? "") };
+});
+
+/** Note counts per vault folder. */
+app.get("/folders", async () => {
+  const groups = await Promise.all(
+    FOLDERS.map(async (folder) => ({
+      folder,
+      count: (await getNotesByFolder(VAULT, folder)).length,
+    })),
+  );
+  return { folders: groups };
+});
+
+/** Read a single note by folder + filename. */
+app.get<{ Querystring: { folder?: string; name?: string } }>("/note", async (req, reply) => {
+  const { folder, name } = req.query;
+  if (!folder || !name) return reply.code(400).send({ error: "folder and name are required" });
+  if (!FOLDERS.includes(folder as Folder)) return reply.code(400).send({ error: "unknown folder" });
+  // Guard against path traversal: a plain filename that ends in .md, no separators.
+  if (name.includes("/") || name.includes("\\") || name.includes("..") || !name.endsWith(".md")) {
+    return reply.code(400).send({ error: "invalid name" });
+  }
+  try {
+    return { note: await readNote(path.join(VAULT, folder, name), folder) };
+  } catch {
+    return reply.code(404).send({ error: "note not found" });
+  }
+});
+
+await app.listen({ host: "127.0.0.1", port: Number(process.env.PORT ?? 3001) });
+
+if (process.env.LUMOS_DISABLE_WHATSAPP !== "1") {
+  startWhatsApp().catch((err) => app.log.error(err));
+} else {
+  app.log.info("WhatsApp bridge disabled (LUMOS_DISABLE_WHATSAPP=1)");
+}

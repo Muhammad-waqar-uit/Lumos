@@ -16,5 +16,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (slugify, frontmatter parse/serialize, read/list/search/write). The daemon is refactored onto them.
 - MIT `LICENSE`.
 
+### Added (continued)
+- Daemon read API: `GET /notes`, `/notes/search`, `/folders`, and `/note`, with CORS for local
+  origins and guards against path traversal.
+- Desktop dark UI: Tailwind v4 design tokens and a three-pane shell (folder sidebar, note list,
+  note viewer, status bar) that loads the vault from the daemon with a demo-data fallback.
+
 ### Notes
-- The desktop app is currently the Tauri + React scaffold; the vault browser UI is planned.
+- The desktop vault browser renders note text; Markdown rendering, tag filtering, resizable panes,
+  routing, and a note editor are still to come.

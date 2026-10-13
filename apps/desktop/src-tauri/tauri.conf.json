@@ -12,9 +12,12 @@
   "app": {
     "windows": [
       {
-        "title": "lumos",
-        "width": 800,
-        "height": 600
+        "title": "Lumos",
+        "width": 1100,
+        "height": 720,
+        "minWidth": 860,
+        "minHeight": 560,
+        "center": true
       }
     ],
     "security": {

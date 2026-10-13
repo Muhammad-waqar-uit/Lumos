@@ -48,3 +48,5 @@ Thumbs.db
 # Generated vault
 vault
 idea/
+# Local preview artifacts
+.preview-vault

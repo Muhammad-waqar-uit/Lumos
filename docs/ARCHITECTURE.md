@@ -24,7 +24,7 @@ WhatsApp ──► Daemon ──► vault/*.md ◄── Desktop (Tauri UI)
 3. The message text is parsed into a command (`parseMessage`).
 4. For note commands the vault writer creates a Markdown file with YAML frontmatter.
 5. The daemon replies to the sender with a confirmation.
-6. The desktop app reads the vault directory directly from disk and renders it.
+6. The desktop app requests the vault from the daemon read API (`/notes`, `/folders`, `/note`) and renders it (demo data when the daemon is offline).
 
 ## Daemon
 
@@ -42,7 +42,7 @@ WhatsApp ──► Daemon ──► vault/*.md ◄── Desktop (Tauri UI)
 
 - **Shell**: Tauri 2.x (Rust backend) hosting a Vite/React frontend.
 - **UI**: Tailwind CSS + shadcn/ui, dark minimal theme.
-- **Access to the vault**: via Tauri commands / filesystem APIs (planned) and/or the daemon HTTP API.
+- **Access to the vault**: the daemon HTTP read API today; Tauri filesystem commands are a possible future path so it can run without the daemon.
 
 ## Vault
 

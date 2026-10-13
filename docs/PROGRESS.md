@@ -19,8 +19,16 @@ Chronological record of what has been built. Newest entries first within each da
 - [x] Refactored the daemon onto the shared packages; `handleMessage` + vault round-trip verified with `tsx`
 - [x] `tsc --noEmit` passes for daemon, shared, and vault-utils
 
+### Done (continued 2)
+- [x] Daemon read API: `GET /notes`, `/notes/search`, `/folders`, `/note` (+ CORS for local origins, path-traversal and folder guards)
+- [x] Desktop dark UI: Tailwind v4 tokens, three-pane shell (Sidebar, NoteList, NoteViewer, StatusBar)
+- [x] Desktop loads the vault from the daemon with a demo fallback when it is offline
+- [x] Verified live in the browser: real notes listed, opened, and searched; no console errors
+- [x] `tsc --noEmit` passes for daemon + desktop; `vite build` succeeds; `/note` traversal returns 400
+
 ### Next up
-- [ ] Phase 4: shadcn/ui dark theme setup in desktop
+- [ ] Markdown rendering (react-markdown) + tag filtering
+- [ ] Resizable panes, TanStack Router, zustand
 - [ ] Phase 3: link expansion, `/find`, `/plan` with Ollama, tagging
 
 ## Template for new entries

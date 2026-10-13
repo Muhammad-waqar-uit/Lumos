@@ -1,51 +1,114 @@
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import { invoke } from "@tauri-apps/api/core";
-import "./App.css";
+import { useEffect, useMemo, useState } from "react";
+import type { Note, VaultEntry } from "@lumos/shared";
+import { getFolders, getNote, getNotes, type Connection, type FolderCount } from "./lib/api";
+import { DEMO_FOLDERS, DEMO_NOTES, demoNote } from "./lib/demo";
+import { Sidebar, type FolderFilter } from "./components/Sidebar";
+import { NoteList, keyOf } from "./components/NoteList";
+import { NoteViewer } from "./components/NoteViewer";
+import { StatusBar } from "./components/StatusBar";
 
-function App() {
-  const [greetMsg, setGreetMsg] = useState("");
-  const [name, setName] = useState("");
+export default function App() {
+  const [connection, setConnection] = useState<Connection>("connecting");
+  const [folders, setFolders] = useState<FolderCount[]>([]);
+  const [notes, setNotes] = useState<VaultEntry[]>([]);
+  const [activeFolder, setActiveFolder] = useState<FolderFilter>("All");
+  const [query, setQuery] = useState("");
+  const [selected, setSelected] = useState<string | null>(null);
+  const [note, setNote] = useState<Note | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  async function greet() {
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-    setGreetMsg(await invoke("greet", { name }));
-  }
+  // Load the vault from the daemon; fall back to demo data if it is not running.
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const [f, n] = await Promise.all([getFolders(), getNotes()]);
+        if (!alive) return;
+        setFolders(f);
+        setNotes(n);
+        setConnection("daemon");
+      } catch {
+        if (!alive) return;
+        setFolders(DEMO_FOLDERS);
+        setNotes(DEMO_NOTES);
+        setConnection("demo");
+      } finally {
+        if (alive) setLoading(false);
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const visible = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return notes.filter((n) => {
+      if (activeFolder !== "All" && n.folder !== activeFolder) return false;
+      if (!q) return true;
+      return `${n.title} ${n.excerpt} ${n.tags.join(" ")}`.toLowerCase().includes(q);
+    });
+  }, [notes, activeFolder, query]);
+
+  // Keep a valid selection as the folder/search changes.
+  useEffect(() => {
+    if (visible.length === 0) {
+      if (selected !== null) setSelected(null);
+      return;
+    }
+    if (!selected || !visible.some((n) => keyOf(n) === selected)) {
+      setSelected(keyOf(visible[0]));
+    }
+  }, [visible, selected]);
+
+  // Load the full note for the current selection.
+  useEffect(() => {
+    if (!selected) {
+      setNote(null);
+      return;
+    }
+    const entry = notes.find((n) => keyOf(n) === selected);
+    if (!entry) {
+      setNote(null);
+      return;
+    }
+    let alive = true;
+    if (connection === "daemon") {
+      getNote(entry.folder, entry.name)
+        .then((n) => {
+          if (alive) setNote(n);
+        })
+        .catch(() => {
+          if (alive) setNote(demoNote(entry));
+        });
+    } else {
+      setNote(demoNote(entry));
+    }
+    return () => {
+      alive = false;
+    };
+  }, [selected, notes, connection]);
 
   return (
-    <main className="container">
-      <h1>Welcome to Tauri + React</h1>
-
-      <div className="row">
-        <a href="https://vite.dev" target="_blank">
-          <img src="/vite.svg" className="logo vite" alt="Vite logo" />
-        </a>
-        <a href="https://tauri.app" target="_blank">
-          <img src="/tauri.svg" className="logo tauri" alt="Tauri logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <p>Click on the Tauri, Vite, and React logos to learn more.</p>
-
-      <form
-        className="row"
-        onSubmit={(e) => {
-          e.preventDefault();
-          greet();
-        }}
-      >
-        <input
-          id="greet-input"
-          onChange={(e) => setName(e.currentTarget.value)}
-          placeholder="Enter a name..."
+    <div className="flex h-full flex-col">
+      <div className="flex flex-1 overflow-hidden">
+        <Sidebar
+          folders={folders}
+          total={notes.length}
+          active={activeFolder}
+          onSelect={setActiveFolder}
         />
-        <button type="submit">Greet</button>
-      </form>
-      <p>{greetMsg}</p>
-    </main>
+        <NoteList
+          notes={visible}
+          selected={selected}
+          query={query}
+          onQuery={setQuery}
+          onSelect={setSelected}
+          loading={loading}
+        />
+        <NoteViewer note={note} />
+      </div>
+      <StatusBar connection={connection} count={visible.length} />
+    </div>
   );
 }
-
-export default App;

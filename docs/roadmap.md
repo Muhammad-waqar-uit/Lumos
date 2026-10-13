@@ -22,17 +22,17 @@ folder, so progress is always visible.
 - `/plan today|tomorrow` backed by a local Ollama model.
 - Tag extraction and auto-tagging.
 
-## M4 - Dark UI foundation (Phase 4)
+## M4 - Dark UI foundation (Phase 4) — mostly done
 
-- shadcn/ui configured with the dark tokens in [`design.md`](design.md).
-- App shell with sidebar and resizable panes.
-- TanStack Router + zustand wired up.
+- Dark tokens from [`design.md`](design.md) applied via Tailwind v4. ✅
+- App shell with sidebar and panes. ✅ (resizable panes pending)
+- TanStack Router + zustand wired up. ⏳ (currently plain React state)
 
-## M5 - Vault browser MVP (Phase 5)
+## M5 - Vault browser MVP (Phase 5) — in progress
 
-- Folder sidebar, note list, note viewer.
-- Vault scanning and indexing on load.
-- Tag filtering.
+- Folder sidebar, note list, note viewer. ✅
+- Vault load on mount via the daemon read API. ✅
+- Markdown rendering and tag filtering. ⏳
 
 ## M6 - Search (Phase 6)
 
