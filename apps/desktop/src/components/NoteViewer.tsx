@@ -1,4 +1,15 @@
+import ReactMarkdown, { type Components } from "react-markdown";
+import remarkGfm from "remark-gfm";
 import type { Note } from "@lumos/shared";
+
+/** Note links open outside the app window instead of navigating the UI away. */
+const markdownComponents: Components = {
+  a: ({ href, title, children }) => (
+    <a href={href} title={title} target="_blank" rel="noreferrer">
+      {children}
+    </a>
+  ),
+};
 
 function formatDate(iso: string): string {
   const d = new Date(iso);
@@ -45,9 +56,11 @@ export function NoteViewer({ note }: { note: Note | null }) {
       </header>
       <div className="flex-1 overflow-y-auto px-6 py-5">
         {note.content.trim() ? (
-          <pre className="whitespace-pre-wrap break-words font-sans text-sm leading-relaxed">
-            {note.content}
-          </pre>
+          <article className="markdown">
+            <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
+              {note.content}
+            </ReactMarkdown>
+          </article>
         ) : (
           <p className="text-sm text-muted-foreground">This note is empty.</p>
         )}

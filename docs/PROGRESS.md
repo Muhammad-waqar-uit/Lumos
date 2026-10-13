@@ -37,10 +37,17 @@ Chronological record of what has been built. Newest entries first within each da
 - [x] Generated Tauri schemas excluded from formatting; `pnpm validate` verified green end to end
 - [x] Fixed two real lint findings in the desktop app by deriving state at render instead of repairing it in effects
 
+### Done (continued 4) — Markdown note rendering
+- [x] Note bodies render as Markdown (`react-markdown` + `remark-gfm`) instead of preformatted text
+- [x] GFM coverage: headings, nested lists, ordered lists, tables, task lists, blockquotes, fenced code
+- [x] Note links open externally (`target="_blank"`, `rel="noreferrer"`) so the window never navigates away
+- [x] `.markdown` styles in `index.css` use the existing dark tokens — no hex values in a component
+- [x] Verified against the running daemon: an 11-block note renders with the expected DOM elements and computed styles, all requests 200, no console errors
+
 ### Next up
 - [ ] Merge this branch through a PR into `main` (first run of the new branch workflow)
 - [ ] GitHub Actions running `pnpm validate` on every PR + branch protection on `main`
-- [ ] Markdown rendering (react-markdown) + tag filtering
+- [ ] Tag filtering + syntax highlighting for fenced code
 - [ ] Resizable panes, TanStack Router, zustand
 - [ ] Phase 3: link expansion, `/find`, `/plan` with Ollama, tagging
 

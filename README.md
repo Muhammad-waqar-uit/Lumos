@@ -177,7 +177,7 @@ git checkout -b feat/my-change
 - [ ] Daily planner with `/plan today|tomorrow` (AI-assisted via Ollama)
 - [ ] Full-text search with `/find <query>`
 - [ ] Tag extraction and auto-tagging
-- [~] Tauri desktop app UI for browsing/searching vault - dark shell, folder sidebar, note list and viewer are in place; Markdown rendering, tags, resizable panes and an editor remain
+- [~] Tauri desktop app UI for browsing/searching vault - dark shell, folder sidebar, note list and Markdown-rendering viewer are in place; tag filtering, code highlighting, resizable panes and an editor remain
 - [ ] Enrichment: extract summaries, key points from links
 - [ ] Sync/backups, exports
 
