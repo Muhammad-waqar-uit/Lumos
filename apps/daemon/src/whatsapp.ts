@@ -12,7 +12,10 @@ const AUTH_DIR = path.resolve(process.cwd(), "auth_info");
 
 // Comma-separated numbers (country code + number, no + or spaces)
 const allowed = new Set(
-  (process.env.ALLOWED_NUMBERS ?? "").split(",").map((s) => s.trim()).filter(Boolean)
+  (process.env.ALLOWED_NUMBERS ?? "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean),
 );
 
 const userPart = (jid?: string | null) => jid?.split("@")[0]?.split(":")[0] ?? "";
@@ -31,7 +34,9 @@ export async function startWhatsApp() {
 
   sock.ev.on("connection.update", ({ connection, lastDisconnect, qr }) => {
     if (qr) {
-      console.log("\nScan this QR with the Lumos number: WhatsApp > Linked devices > Link a device\n");
+      console.log(
+        "\nScan this QR with the Lumos number: WhatsApp > Linked devices > Link a device\n",
+      );
       qrcode.generate(qr, { small: true });
     }
     if (connection === "open") console.log("WhatsApp connected.");

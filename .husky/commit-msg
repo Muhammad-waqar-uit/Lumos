@@ -1,0 +1,2 @@
+# Enforce "<type>(<scope>): <description>" (see commitlint.config.cjs).
+pnpm exec commitlint --edit "$1"

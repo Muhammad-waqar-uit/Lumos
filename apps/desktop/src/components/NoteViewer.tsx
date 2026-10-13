@@ -32,7 +32,12 @@ export function NoteViewer({ note }: { note: Note | null }) {
           <span>{formatDate(fm.created)}</span>
           <span>source: {fm.source}</span>
           {fm.url ? (
-            <a href={fm.url} target="_blank" rel="noreferrer" className="underline hover:text-foreground">
+            <a
+              href={fm.url}
+              target="_blank"
+              rel="noreferrer"
+              className="underline hover:text-foreground"
+            >
               {fm.url}
             </a>
           ) : null}
