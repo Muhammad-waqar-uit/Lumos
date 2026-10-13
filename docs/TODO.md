@@ -2,6 +2,23 @@
 
 **Legend:** `[ ]` todo · `[~]` in progress · `[x]` done · Priority: P0 critical, P1 high, P2 medium, P3 low
 
+## Phase 0: Enforcement & Workflow (P0)
+- [x] oxlint as the linter (kept in step with the TypeScript version), prettier as the formatter
+- [x] Husky hooks: `pre-commit` (lint-staged), `commit-msg` (commitlint), `pre-push` (`pnpm validate`)
+- [x] Root scripts: `lint`, `lint:fix`, `format`, `format:check`, `typecheck`, `build`, `validate`
+- [x] `pre-commit` refuses to commit while on `main` — the branch workflow is enforced, not just documented
+- [x] `pnpm validate` = lint + format:check + typecheck + build
+- [x] One TypeScript version (`~6.0.3`) across every workspace, with a `typecheck` script in each
+- [x] `RULES.md` (build / commit / branch standards), `AGENTS.md` (agent working agreement), `CLAUDE.md`
+- [x] Branching model in writing: short-lived `<type>/<description>` branches, PR into `main`, squash-merge
+- [x] Generated Tauri schemas excluded from formatting; prettier clean across the repo
+
+## Phase 0.1: Enforcement still to come (P1)
+- [ ] GitHub Actions workflow running `pnpm validate` on every pull request
+- [ ] Branch protection on `main` (require a PR and a green check) — needs repository settings
+- [ ] Test runner (vitest) wired up, then added to the pre-push gate
+- [ ] Schema validation for note frontmatter in CI
+
 ## Phase 1: Documentation & Tracking Foundation (P0)
 - [x] Create `PLAN.md`
 - [x] Create `TODO.md`
@@ -16,6 +33,8 @@
 - [x] Create `docs/design.md`
 - [x] Create `docs/roadmap.md`
 - [x] Update `README.md` with doc links
+- [x] Move all docs into `docs/` (keeping `CHANGELOG.md` and `CONTRIBUTING.md` at root for GitHub conventions)
+- [x] Link check over README + `docs/*.md` after every move
 
 ## Phase 2: Shared Packages (P0)
 - [x] `packages/shared`: core types (Note, Frontmatter, Command, VaultEntry)

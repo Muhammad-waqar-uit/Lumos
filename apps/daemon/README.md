@@ -99,8 +99,14 @@ pnpm dev
 ### Type Checking
 
 ```bash
-node --import tsx --check src/commands.ts src/vault.ts src/handler.ts src/server.ts src/whatsapp.ts
+# Type-check just this workspace
+pnpm typecheck
+
+# The full gate (lint + format:check + typecheck + build) before you push
+pnpm -w validate
 ```
+
+The daemon can run headless with `LUMOS_DISABLE_WHATSAPP=1` when you only need the HTTP API. Read [RULES.md](../../RULES.md) before contributing — commits go on a branch, never on `main`.
 
 ## WhatsApp Authentication
 

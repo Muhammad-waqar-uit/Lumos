@@ -77,6 +77,20 @@ lumos/
 │   └── daemon.md desktop.md vault.md design.md roadmap.md
 ├── idea/             # original idea PDFs and notes
 ├── vault/            # user notes (git-ignored)
+├── .husky/           # git hooks: pre-commit, commit-msg, pre-push
+├── RULES.md AGENTS.md CLAUDE.md          # standards + agent working agreements
+├── .oxlintrc.json .prettierrc.json .lintstagedrc.json commitlint.config.cjs
 ├── CHANGELOG.md CONTRIBUTING.md LICENSE
 └── README.md
 ```
+
+## Tooling & Enforcement
+
+- **pnpm only** (pnpm workspace, `pnpm-lock.yaml` committed).
+- **Lint:** oxlint, kept in step with the TypeScript version. **Format:** prettier.
+- **Husky hooks** — `pre-commit` refuses to commit while on `main`, then runs lint-staged on the
+  staged files; `commit-msg` runs commitlint; `pre-push` runs `pnpm validate`
+  (lint + format:check + typecheck + build). None of the hooks can be bypassed.
+- **One TypeScript version** (`~6.0.3`) across all four workspaces, each with a `typecheck` script.
+- **Workflow:** every change lives on a short-lived `<type>/<short-description>` branch and lands in
+  `main` through a pull request (squash-merge). `main` is always releasable. See [RULES.md §6](../RULES.md).

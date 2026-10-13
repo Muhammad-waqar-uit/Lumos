@@ -33,12 +33,11 @@ While the daemon handles capture via WhatsApp, the desktop app is designed to he
 # From the monorepo root
 pnpm install
 
-# Start development server
-cd apps/desktop
-pnpm dev
+# Start the Vite dev server (fastest loop, port 1420)
+pnpm --filter desktop dev
 
-# In a separate terminal, start the Tauri app
-pnpm tauri dev
+# In a separate terminal, start the full Tauri window
+pnpm --filter desktop tauri dev
 ```
 
 This will open the desktop app in development mode with hot reload.
@@ -75,7 +74,7 @@ The desktop app reads from the same vault directory that the daemon writes to. B
 
 ## Roadmap
 
-- [ ] Vault browser with folder navigation
+- [~] Vault browser with folder navigation (dark shell, folder sidebar, note list and viewer built)
 - [ ] Full-text search
 - [ ] Note editor with Markdown preview
 - [ ] Tag management and filtering
@@ -87,4 +86,6 @@ The desktop app reads from the same vault directory that the daemon writes to. B
 
 - [Root README](../../README.md) - Project overview
 - [Daemon README](../daemon/README.md) - Capture engine documentation
+- [RULES.md](../../RULES.md) - build, commit and branch rules (enforced by git hooks)
+- [docs/desktop.md](../../docs/desktop.md) - desktop architecture and layout
 - [Tauri Docs](https://tauri.app/) - Tauri framework documentation

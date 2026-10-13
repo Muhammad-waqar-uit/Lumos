@@ -3,6 +3,14 @@
 Milestones are ordered; each maps to a phase in [`PLAN.md`](PLAN.md) and a section in
 [`TODO.md`](TODO.md).
 
+## M0 - Tooling & enforcement (Phase 0) ✅
+
+oxlint + prettier, Husky hooks (pre-commit / commit-msg / pre-push), lint-staged and commitlint, the
+`pnpm validate` gate, a single TypeScript version across the workspace, and the branch-based
+workflow written down in [`RULES.md`](../RULES.md) with [`AGENTS.md`](../AGENTS.md) and
+[`CLAUDE.md`](../CLAUDE.md) for agents. Remaining: GitHub Actions running `pnpm validate` on every
+PR, plus branch protection on `main`.
+
 ## M1 - Tracking docs (Phase 1) ✅
 
 The `PLAN.md` / `TODO.md` / `PROGRESS.md` / `FEATURES.md` / `ARCHITECTURE.md` set and the `docs/`
