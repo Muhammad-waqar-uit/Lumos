@@ -74,9 +74,8 @@ describe("handleMessage - filing notes", () => {
 });
 
 describe("handleMessage - replies", () => {
-  it("says the unbuilt commands are unbuilt", async () => {
+  it("says /plan is not built yet", async () => {
     expect(await handleMessage("/plan tomorrow")).toBe("Lumos Maxima (tomorrow) isn't built yet.");
-    expect(await handleMessage("/find rust")).toBe("Search isn't built yet.");
   });
 
   it("answers /help with the command list", async () => {
@@ -95,5 +94,38 @@ describe("handleMessage - replies", () => {
     const reply = await handleMessage("/bogus something");
     expect(reply).toContain("Unknown command /bogus");
     expect(reply).toContain("/goal <text>");
+  });
+});
+
+describe("handleMessage - /find", () => {
+  it("finds a note filed earlier and names its folder", async () => {
+    await handleMessage("/goal ship a zeta cli");
+    const reply = await handleMessage("/find zeta");
+    expect(reply).toContain('Found 1 note for "zeta":');
+    expect(reply).toContain("- ship a zeta cli (Goals)");
+  });
+
+  it("matches case-insensitively", async () => {
+    expect(await handleMessage("/find ZETA")).toContain("- ship a zeta cli (Goals)");
+  });
+
+  it("says so when nothing matches", async () => {
+    expect(await handleMessage("/find quantum nonsense")).toBe(
+      'No notes match "quantum nonsense".',
+    );
+  });
+
+  it("asks for a query when none is given", async () => {
+    expect(await handleMessage("/find")).toBe("Usage: /find <query>");
+  });
+
+  it("caps the list at five notes and counts the rest", async () => {
+    for (let i = 1; i <= 6; i += 1) {
+      await handleMessage(`/idea streak goal ${i}`);
+    }
+    const lines = (await handleMessage("/find streak")).split("\n");
+    expect(lines[0]).toBe('Found 6 notes for "streak":');
+    expect(lines).toHaveLength(7);
+    expect(lines[6]).toBe("and 1 more.");
   });
 });

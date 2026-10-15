@@ -16,7 +16,7 @@
 ## Phase 0.1: Enforcement still to come (P1)
 - [x] GitHub Actions workflow (`.github/workflows/validate.yml`) running `pnpm validate` on every PR into `main` and every push to `main`
 - [ ] Branch protection on `main`: require a pull request and the `pnpm validate` check before merging (a repository setting; the workflow's first run on `main` was green in `38790615355`)
-- [x] Test runner (vitest) wired up and added to the validation gate — 107 tests over `@lumos/vault-utils` and the daemon
+- [x] Test runner (vitest) wired up and added to the validation gate — 112 tests over `@lumos/vault-utils` and the daemon
 - [ ] Schema validation for note frontmatter in CI
 - [ ] Route tests for the read API — extract the Fastify app from `server.ts` so `app.inject()` can hit `/note`, `/notes`, `/folders`, `/graph` without binding a port
 - [ ] Desktop component tests (jsdom + Testing Library) for the sidebar, list and viewer states
@@ -47,7 +47,7 @@
 ## Phase 3: Daemon Enhancements (P1)
 - [x] Read API for the desktop: `GET /notes`, `/notes/search`, `/folders`, `/note`, `/graph` (+ CORS, traversal guards)
 - [ ] Link expansion for `/read` and `/interview` (title, description, og:image)
-- [ ] Implement `/find <query>` search over the vault
+- [x] Implement `/find <query>` search over the vault (title, tags, body; 5 matches per reply)
 - [ ] `/plan today|tomorrow` with Ollama integration
 - [ ] Tag extraction / auto-tagging (`#tag`)
 - [ ] Config file support (dotenv / JSON)

@@ -34,13 +34,19 @@ Chronological record of what has been built. Newest entries first within each da
 - [x] Landed on `main` (PR #4, `aaa7571`) and the first run on `main` is green: run `38790615355`, push event, every step passed
 - [!] Branch protection is repository-side and still off: the check is not yet required to merge
 
+### Done (continued) — `/find`
+- [x] `/find <query>` answers with real results instead of "Search isn't built yet.", reusing `searchNotes` from `@lumos/vault-utils` so the command and `GET /notes/search` share one definition
+- [x] Replies are capped at five matches with "and N more.", and an empty query asks for one instead of searching for nothing
+- [x] Written test-first: five tests added to `src/handler.test.ts` failed against the stub, then passed once it was implemented (37 daemon tests now)
+- [x] Exercised over real HTTP against a temporary vault on a spare port — `/find zeta` returned both matching notes across Ideas and Goals, `/find ZETA` matched case-insensitively, no-match and empty-query replies were correct, then the daemon was stopped and the temp vault deleted
+
 ### Next up
 - [ ] Turn on branch protection on `main` so the green `pnpm validate` check is required to merge (the workflow itself runs on every PR and every push)
 - [ ] Route tests for the read API (needs a Fastify factory extracted from `server.ts`)
 - [ ] Tag filtering + syntax highlighting for fenced code
 - [ ] Graph follow-ups: a backlinks panel in the note viewer, tag nodes styled and clickable apart from notes
 - [ ] Resizable panes, TanStack Router, zustand
-- [ ] Phase 3: link expansion, `/find`, `/plan` with Ollama, tagging
+- [ ] Phase 3: link expansion, `/plan` with Ollama, tagging
 
 ## 2026-10-13
 

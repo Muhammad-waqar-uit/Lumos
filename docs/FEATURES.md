@@ -9,7 +9,7 @@ Status values: **done** · **in-progress** · **planned** · **idea**
 | Vault writer | done | Markdown + YAML frontmatter, slugified filenames |
 | HTTP API | done | `POST /message`, `GET /health` |
 | Link expansion | planned | Fetch title/description/og:image for `/read` and `/interview` |
-| `/find` search | planned | Search vault from the daemon |
+| `/find` search | done | Searches title, tags and body; replies with up to five matches and counts the rest |
 | `/plan` with Ollama | planned | Local AI daily planning |
 | Tag extraction | planned | Hashtag extraction + auto-tagging |
 | Shared packages | done | `@lumos/shared` types + `@lumos/vault-utils` (parse/list/search/write) |
@@ -29,7 +29,7 @@ Status values: **done** · **in-progress** · **planned** · **idea**
 | Commit message lint | done | commitlint enforces `<type>(<scope>): <description>` |
 | Pre-push validation | done | `pnpm validate` — lint + format:check + typecheck + test + build |
 | Test runner | done | vitest 5; `pnpm test` runs every workspace that has a suite |
-| Parser & vault tests | done | 107 tests: 75 for `@lumos/vault-utils` (including link/tag extraction, graph assembly and neighbourhoods) and 32 for the daemon |
+| Parser & vault tests | done | 112 tests: 75 for `@lumos/vault-utils` (including link/tag extraction, graph assembly and neighbourhoods) and 37 for the daemon (including `/find`) |
 | Read API route tests | planned | Needs a Fastify factory in `server.ts` so `app.inject()` can run without a port |
 | Desktop component tests | planned | jsdom + Testing Library for the sidebar, list and viewer states |
 | Branch workflow | done | Short-lived `<type>/<description>` branches; `pre-commit` blocks commits on `main` |
