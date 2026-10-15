@@ -34,15 +34,17 @@ WhatsApp ──► Daemon ──► vault/*.md ◄── Desktop (Tauri UI)
 - **WhatsApp**: Baileys multi-device; auth persists in `apps/daemon/auth_info/`.
 - **Modules**:
   - `commands.ts` - parse command text into a typed result.
-  - `vault.ts` - write notes to disk with frontmatter.
-  - `handler.ts` - route a parsed command to a reply.
-  - `server.ts` - Fastify routes + start WhatsApp.
+  - `vault.ts` - resolve the vault path from `VAULT_PATH`.
+  - `handler.ts` - route a parsed command to a reply; the vault directory arrives as an argument.
+  - `app.ts` - `createApp()`, which builds the Fastify app (CORS + routes) over a given vault, so the routes can be tested without binding a port.
+  - `server.ts` - entry point: build the app, listen on loopback, start WhatsApp.
   - `fetch-link.ts` - fetch one link for the desktop, with the guards and caps `GET /link` returns as refusals.
   - `whatsapp.ts` - Baileys connection, allowlist, message handling.
 
-Tests sit beside the modules they cover (`commands.test.ts`, `handler.test.ts`). The handler test
-points `VAULT_PATH` at a fresh temporary directory before importing the handler, so the real vault is
-never read or written.
+Tests sit beside the modules they cover (`commands.test.ts`, `handler.test.ts`, `app.test.ts`,
+`fetch-link.test.ts`). Each passes a fresh temporary directory in as the vault, so the real vault is
+never read or written; the route tests drive the app through `app.inject()` with the link fetcher
+injected, so no port is bound and no network request is made.
 
 ## Desktop
 

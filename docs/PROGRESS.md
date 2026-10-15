@@ -4,6 +4,25 @@ Chronological record of what has been built. Newest entries first within each da
 
 ## 2026-10-16
 
+### Done — the daemon's routes are tested
+- [x] The Fastify app moved out of the entry point: `createApp()` in `apps/daemon/src/app.ts` builds it
+  (CORS + every route) over a vault directory, and `server.ts` is now only the bootstrap that listens and
+  starts WhatsApp
+- [x] `handleMessage()` takes the vault as an argument instead of reading `VAULT` from module state, so a
+  caller decides where a note lands; `vault.ts` is left as the one place the path is resolved
+- [x] The handler test no longer has to set `VAULT_PATH` and re-import the module before it can run
+- [x] 22 route tests in `app.test.ts`, driven through `app.inject()` so no port is bound and no network
+  request is made: `/health`, `/message` (missing text, a malformed message, and a filing that is checked
+  on disk), `/notes` and its empty case, `/notes/search` (match, blank query, no match), `/folders`,
+  `/note` (missing parameter, unknown folder, each traversal shape, a real note, a 404), `/graph` (nodes,
+  edges, unresolved links, empty vault), `/link` (refusals and the 200/400/502 mapping with the fetcher
+  injected, plus a generic message that carries no stack trace), and the CORS allow-list
+- [x] The traversal test leaves a decoy note outside the folders and asserts a 400 with no leak; removing
+  the guard makes it fail, so the test can fail for the right reason
+- [x] The daemon suite is 81 tests and the whole suite is 180
+- [x] Two documented gaps closed: `docs/TODO.md` Phase 0.1 route tests, and the `docs/LIMITATIONS.md`
+  entry saying the HTTP routes had no tests because the app was built inline
+
 ### Done — links play and read in the app
 - [x] A link in a note is no longer just something to click away from: the note viewer shows it in place
 - [x] `@lumos/vault-utils` gained a browser-safe link module (its own `./link` subpath): `parseLinkMedia()` (YouTube across `watch`/`youtu.be`/`shorts`/`embed`/`live`/music, Vimeo in both shapes, an image by extension, else a page), `extractPreview()` (og/twitter/title metadata plus readable text, tags stripped, entities decoded, 6,000-character cap) and `firstExternalLink()` (the first link in a note body, code fences ignored like the graph does)
@@ -22,7 +41,8 @@ Chronological record of what has been built. Newest entries first within each da
 - [ ] Turn on branch protection on `main` so the green `pnpm validate` check is required to merge
 - [ ] Link pane: keep a scraped page for the session (it refetches when the note is reopened, and twice in dev under StrictMode)
 - [ ] Link pane: strip site chrome harder — the reader still carries code samples and repeated navigation text from some pages
-- [ ] Route tests for the read API (needs a Fastify factory extracted from `server.ts`), which would cover `/link`'s status codes too
+- [ ] Frontmatter schema validation, and reporting a malformed note instead of skipping it silently
+- [ ] `/help` does not list itself in the command list it prints
 
 ## 2026-10-15
 

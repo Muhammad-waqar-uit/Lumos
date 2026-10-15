@@ -20,7 +20,11 @@ const allowed = new Set(
 
 const userPart = (jid?: string | null) => jid?.split("@")[0]?.split(":")[0] ?? "";
 
-export async function startWhatsApp() {
+/**
+ * Connect to WhatsApp and answer messages. The vault arrives as an argument, so this module
+ * never decides where a note lands.
+ */
+export async function startWhatsApp(vault: string) {
   const { state, saveCreds } = await useMultiFileAuthState(AUTH_DIR);
   const { version } = await fetchLatestBaileysVersion();
 
@@ -46,7 +50,7 @@ export async function startWhatsApp() {
         console.log("Logged out. Delete the auth_info folder and restart to link again.");
       } else {
         console.log(`Connection closed (${code}). Reconnecting...`);
-        setTimeout(() => startWhatsApp().catch(console.error), 3000);
+        setTimeout(() => startWhatsApp(vault).catch(console.error), 3000);
       }
     }
   });
@@ -75,7 +79,7 @@ export async function startWhatsApp() {
       }
 
       try {
-        const reply = await handleMessage(text);
+        const reply = await handleMessage(text, vault);
         await sock.sendMessage(jid, { text: reply });
       } catch (err) {
         console.error(err);
