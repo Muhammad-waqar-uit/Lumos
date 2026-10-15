@@ -78,7 +78,7 @@ The desktop app reads from the same vault directory that the daemon writes to. B
 - [ ] Full-text search
 - [ ] Note editor with Markdown preview
 - [ ] Tag management and filtering
-- [ ] Graph view (Obsidian-style linking)
+- [x] Graph view (link graph from the daemon, canvas force layout, per-folder hues, filters, local depth)
 - [ ] Daily notes view
 - [ ] Statistics and insights
 

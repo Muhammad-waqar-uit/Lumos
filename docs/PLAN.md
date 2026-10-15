@@ -14,7 +14,7 @@ Lumos is a local-first second brain that captures thoughts via WhatsApp and stor
 
 ## Non-Goals
 
-- Not a full Obsidian clone (no plugin system, no canvas/graph as a core promise).
+- Not a full Obsidian clone (no plugin system, no canvas; the graph is a link-graph view over Markdown, not an editing surface).
 - Not a cloud sync product (local-first only).
 - Not a multi-user/collaboration tool.
 
@@ -35,6 +35,7 @@ Lumos is a local-first second brain that captures thoughts via WhatsApp and stor
 - TanStack Router (routing)
 - zustand (state)
 - react-markdown + remark-gfm (rendering)
+- force-graph (link graph, canvas)
 - fuse.js (full-text search)
 - lucide-react (icons)
 

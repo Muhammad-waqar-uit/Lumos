@@ -4,6 +4,17 @@ Chronological record of what has been built. Newest entries first within each da
 
 ## 2026-10-15
 
+### Done — vault graph view
+- [x] `@lumos/vault-utils` gained a browser-safe graph module (its own `./graph` subpath): `extractLinks`/`extractTags` over note bodies, `buildGraphFromNotes` (notes + tags as nodes, links and tag references as edges, `inDegree`, `orphan`, unresolved targets reported rather than invented) and `neighborhood()` for hop-limited subgraphs
+- [x] The module reads no filesystem, so the same code runs in the daemon and in the desktop bundle
+- [x] Daemon: `GET /graph` returns the vault's graph; CORS and the vault-root guards stay in place
+- [x] 41 new tests against a temporary vault (link forms, tag extraction, backlinks, orphans, unresolved links, neighbourhood depth); `@lumos/vault-utils` is now 75 tests and the suite is 107
+- [x] Desktop: a Graph tab beside Notes — canvas force layout, glow nodes sized by backlink count, curved synapse edges, one hue per folder from the theme tokens, controls for tags, unlinked notes and depth
+- [x] Clicking a node selects it (panel shows in/out degree, with a button that opens the note in the Notes view); hovering pulls its links forward and draws the label
+- [x] Offline path exercised with the daemon stopped: the pane renders "Offline — demo vault" and the demo graph instead of a blank screen (4,064 painted pixels, 5 notes, 9 links)
+- [x] Verified in the browser at pixel level: node cores in the intended per-folder hues, edge-coloured and tag-coloured line pixels present, painters running (~570 curves/second); the depth-1 result (4 notes, 7 links, 1 unresolved) matched an independent recomputation of `neighborhood()` against the daemon's own data — no console errors
+- [x] Two real defects found and fixed on the way: the React wrapper for the graph renderer silently drops its canvas-object props, so the pane now drives the library's vanilla instance API; and Tailwind pruned the palette-step tokens that only TypeScript referenced, so the `--color-graph-*` values are plain `:root` custom properties. A failed lazy chunk used to leave a blank app — it now renders an error with a retry
+
 ### Done — test gate (vitest)
 - [x] Both open PRs merged into `main` (`#1` tooling and rules, `#2` markdown viewer); `main` is now `df44395`
 - [x] vitest 5 added at the root, to `@lumos/vault-utils` and to the daemon; `pnpm test` runs every workspace that has a suite
@@ -20,12 +31,14 @@ Chronological record of what has been built. Newest entries first within each da
 - [x] Pinned `actions/checkout@v7`, `actions/setup-node@v7` and `pnpm/action-setup@v6`: the v4-era actions run on a Node 20 runtime that GitHub removed in September 2026
 - [x] Verified locally: the YAML parses to the intended shape (triggers, five steps, concurrency group), prettier accepts it, and `pnpm install --frozen-lockfile` then `pnpm run validate` both exit 0
 - [x] Exercised on the pull request itself, not just described: the `pnpm validate` check ran on PR #4 and finished green (run `38783175553`), so the gate works before it exists on `main`
+- [x] Landed on `main` (PR #4, `aaa7571`) and the first run on `main` is green: run `38790615355`, push event, every step passed
 - [!] Branch protection is repository-side and still off: the check is not yet required to merge
 
 ### Next up
-- [ ] Merge `ci/validate-workflow`, confirm the first run on `main` is green, then turn on branch protection on `main`
+- [ ] Turn on branch protection on `main` so the green `pnpm validate` check is required to merge (the workflow itself runs on every PR and every push)
 - [ ] Route tests for the read API (needs a Fastify factory extracted from `server.ts`)
 - [ ] Tag filtering + syntax highlighting for fenced code
+- [ ] Graph follow-ups: a backlinks panel in the note viewer, tag nodes styled and clickable apart from notes
 - [ ] Resizable panes, TanStack Router, zustand
 - [ ] Phase 3: link expansion, `/find`, `/plan` with Ollama, tagging
 

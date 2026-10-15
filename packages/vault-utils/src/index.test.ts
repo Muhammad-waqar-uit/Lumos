@@ -3,6 +3,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
+  buildVaultGraph,
   defaultFrontmatter,
   getNotesByFolder,
   listNotes,
@@ -286,5 +287,74 @@ describe("searchNotes", () => {
 
   it("returns nothing when nothing matches", async () => {
     expect(await searchNotes(vault, "quantum")).toEqual([]);
+  });
+});
+
+describe("buildVaultGraph", () => {
+  beforeEach(async () => {
+    await put(
+      "Ideas",
+      "2026-01-01-habit.md",
+      '---\nsource: whatsapp\ncreated: "2026-01-01T00:00:00.000Z"\ntags: [ideas]\nstatus: new\n---\n\n# Build a habit tracker\n\nPairs with [[Learn Rust]] and [[missing-note]].',
+    );
+    await put(
+      "Goals",
+      "2026-01-02-rust.md",
+      '---\nsource: whatsapp\ncreated: "2026-01-02T00:00:00.000Z"\ntags: []\naliases: [Rust plan]\nstatus: new\n---\n\n# Learn Rust\n\nShip a CLI in #rust',
+    );
+    await put(
+      "Inbox",
+      "2026-01-03-alias-user.md",
+      '---\nsource: desktop\ncreated: "2026-01-03T00:00:00.000Z"\ntags: []\nstatus: new\n---\n\n# Alias user\n\nSee [[Rust plan]].',
+    );
+  });
+
+  it("reads links, tags and aliases out of real files", async () => {
+    const graph = await buildVaultGraph(vault);
+
+    expect(graph.nodes.map((n) => n.id).sort()).toEqual([
+      "#ideas",
+      "#rust",
+      "Goals/2026-01-02-rust.md",
+      "Ideas/2026-01-01-habit.md",
+      "Inbox/2026-01-03-alias-user.md",
+    ]);
+    expect(graph.edges).toContainEqual({
+      source: "Ideas/2026-01-01-habit.md",
+      target: "Goals/2026-01-02-rust.md",
+      kind: "link",
+    });
+    expect(graph.edges).toContainEqual({
+      source: "Inbox/2026-01-03-alias-user.md",
+      target: "Goals/2026-01-02-rust.md",
+      kind: "link",
+    });
+    expect(graph.edges).toContainEqual({
+      source: "Goals/2026-01-02-rust.md",
+      target: "#rust",
+      kind: "tag",
+    });
+    expect(graph.unresolved).toEqual([
+      { source: "Ideas/2026-01-01-habit.md", target: "missing-note" },
+    ]);
+  });
+
+  it("takes the node label from the note's first heading", async () => {
+    await put(
+      "Reading",
+      "2026-01-04-real-title.md",
+      '---\nsource: whatsapp\ncreated: "2026-01-04T00:00:00.000Z"\ntags: []\nstatus: new\n---\n\n# Real title\n\nbody',
+    );
+    const graph = await buildVaultGraph(vault);
+    const node = graph.nodes.find((n) => n.id === "Reading/2026-01-04-real-title.md");
+    expect(node).toMatchObject({ label: "Real title", folder: "Reading" });
+  });
+
+  it("returns an empty graph for a vault that does not exist", async () => {
+    expect(await buildVaultGraph(path.join(vault, "missing"))).toEqual({
+      nodes: [],
+      edges: [],
+      unresolved: [],
+    });
   });
 });

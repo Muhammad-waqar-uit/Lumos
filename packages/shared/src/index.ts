@@ -55,6 +55,75 @@ export interface Note {
   content: string;
 }
 
+/** A link written inside a note body. */
+export interface LinkRef {
+  /** The target as written, without any alias or heading part. */
+  target: string;
+  /** Display text after a `|`, when the link has one. */
+  alias: string | null;
+  /** Heading or block reference after a `#`, when the link has one. */
+  heading: string | null;
+  /** True for `![[embed]]` links. Embeds count as links in the graph. */
+  embed: boolean;
+}
+
+/** How a graph edge was formed. */
+export type GraphEdgeKind = "link" | "tag";
+
+/** A node in the vault graph: a note, or a tag that notes use. */
+export interface GraphNode {
+  /** Stable id: `Folder/name.md` for notes, `#tag` for tags. */
+  id: string;
+  /** Note title, or the tag including its `#`. */
+  label: string;
+  kind: "note" | "tag";
+  folder?: string;
+  created?: string;
+  tags: string[];
+  /** Incoming edges - how many notes point here. Drives node size. */
+  inDegree: number;
+  outDegree: number;
+  /** Nothing links in or out, and the note carries no tags. */
+  orphan: boolean;
+}
+
+/** A resolved relationship between two nodes. */
+export interface GraphEdge {
+  /** Source node id. */
+  source: string;
+  /** Target node id. */
+  target: string;
+  kind: GraphEdgeKind;
+}
+
+/** A link whose target is not a note in the vault. */
+export interface UnresolvedLink {
+  /** Id of the note the link was written in. */
+  source: string;
+  /** The target exactly as written, so it can be shown as a placeholder. */
+  target: string;
+}
+
+/** Everything the graph view needs for one vault. */
+export interface GraphData {
+  nodes: GraphNode[];
+  edges: GraphEdge[];
+  unresolved: UnresolvedLink[];
+}
+
+/** The minimal note shape the pure graph builder needs. */
+export interface GraphSourceNote {
+  /** Same id the desktop lists notes by: `Folder/name.md`. */
+  id: string;
+  title: string;
+  folder: string;
+  created: string;
+  tags: string[];
+  /** Frontmatter aliases, which links are allowed to resolve to. */
+  aliases?: string[];
+  content: string;
+}
+
 /** A lightweight vault listing entry. */
 export interface VaultEntry {
   title: string;
