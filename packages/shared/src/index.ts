@@ -124,6 +124,38 @@ export interface GraphSourceNote {
   content: string;
 }
 
+/** How a link can be shown inside the app. */
+export type LinkMediaKind = "youtube" | "vimeo" | "image" | "page";
+
+/** What the app can do with a link without asking the network. */
+export interface LinkMedia {
+  /** The link itself, trimmed. */
+  url: string;
+  kind: LinkMediaKind;
+  /** Inline player URL, for the video hosts. */
+  embedUrl?: string;
+  /** Poster image, when the host exposes one (a YouTube thumbnail). */
+  poster?: string;
+}
+
+/** A link as the desktop shows it: whatever can be played, plus the scraped page details. */
+export interface LinkCard {
+  media: LinkMedia;
+  /** Page title, or null when the page was not fetched. */
+  title: string | null;
+  /** `og:site_name`, or the host. */
+  site: string | null;
+  description: string | null;
+  /** Lead image from the page, or the poster for a video. */
+  image: string | null;
+  /** Readable body text, whitespace-collapsed. Empty for media links. */
+  text: string;
+  /** True when the body text hit the length cap. */
+  truncated: boolean;
+  /** URL after redirects, when it differs from the link as written. */
+  finalUrl?: string;
+}
+
 /** A lightweight vault listing entry. */
 export interface VaultEntry {
   title: string;

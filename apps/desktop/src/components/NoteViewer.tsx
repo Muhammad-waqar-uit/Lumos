@@ -1,6 +1,10 @@
+import { useMemo } from "react";
 import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import type { Note } from "@lumos/shared";
+import { firstExternalLink } from "@lumos/vault-utils/link";
+import { type Connection } from "../lib/api";
+import { LinkPane } from "./LinkPane";
 
 /** Note links open outside the app window instead of navigating the UI away. */
 const markdownComponents: Components = {
@@ -23,7 +27,14 @@ function formatDate(iso: string): string {
   });
 }
 
-export function NoteViewer({ note }: { note: Note | null }) {
+export function NoteViewer({ note, connection }: { note: Note | null; connection: Connection }) {
+  // A note captured from WhatsApp carries its link in the frontmatter and in the body;
+  // either one is enough to play or read it here.
+  const link = useMemo(() => {
+    if (!note) return null;
+    return note.frontmatter.url ?? firstExternalLink(note.content);
+  }, [note]);
+
   if (!note) {
     return (
       <main className="flex flex-1 items-center justify-center p-8 text-sm text-muted-foreground">
@@ -54,6 +65,7 @@ export function NoteViewer({ note }: { note: Note | null }) {
           ) : null}
         </p>
       </header>
+      {link ? <LinkPane url={link} connection={connection} /> : null}
       <div className="flex-1 overflow-y-auto px-6 py-5">
         {note.content.trim() ? (
           <article className="markdown">

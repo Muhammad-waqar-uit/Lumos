@@ -16,7 +16,7 @@
 ## Phase 0.1: Enforcement still to come (P1)
 - [x] GitHub Actions workflow (`.github/workflows/validate.yml`) running `pnpm validate` on every PR into `main` and every push to `main`
 - [ ] Branch protection on `main`: require a pull request and the `pnpm validate` check before merging (a repository setting; the workflow's first run on `main` was green in `38790615355`)
-- [x] Test runner (vitest) wired up and added to the validation gate — 112 tests over `@lumos/vault-utils` and the daemon
+- [x] Test runner (vitest) wired up and added to the validation gate — 158 tests over `@lumos/vault-utils` and the daemon
 - [ ] Schema validation for note frontmatter in CI
 - [ ] Route tests for the read API — extract the Fastify app from `server.ts` so `app.inject()` can hit `/note`, `/notes`, `/folders`, `/graph` without binding a port
 - [ ] Desktop component tests (jsdom + Testing Library) for the sidebar, list and viewer states
@@ -46,7 +46,7 @@
 
 ## Phase 3: Daemon Enhancements (P1)
 - [x] Read API for the desktop: `GET /notes`, `/notes/search`, `/folders`, `/note`, `/graph` (+ CORS, traversal guards)
-- [ ] Link expansion for `/read` and `/interview` (title, description, og:image)
+- [x] Link expansion for `/read` and `/interview` (title, description, og:image, plus the readable text) — `GET /link`, with the guards and caps in `fetch-link.ts`
 - [x] Implement `/find <query>` search over the vault (title, tags, body; 5 matches per reply)
 - [ ] `/plan today|tomorrow` with Ollama integration
 - [ ] Tag extraction / auto-tagging (`#tag`)
@@ -75,6 +75,10 @@
 - [ ] Graph: tag nodes styled apart from notes, and tag nodes clickable as a filter
 - [ ] Graph: keep the node positions across tab switches instead of re-running the layout
 - [ ] Graph: re-fit after the pane is resized — today the transform is kept, so the graph can sit off-centre until `Fit` (or a filter change) is used
+- [x] Link pane: a note's link plays (YouTube/Vimeo), shows as an image, or scrapes into a reader card with loading, error and retry states
+- [ ] Link pane: keep a scraped page for the session instead of refetching it every time the note is reopened
+- [ ] Link pane: strip site chrome harder — the reader still includes code samples and repeated navigation text from some pages
+- [ ] Link pane: read a PDF or a plain HTML file the same way (today a non-HTML content type is refused with its type named)
 
 ## Phase 6: Search & Discovery (P1)
 - [ ] Full-text search with fuse.js
@@ -86,7 +90,7 @@
 ## Phase 7: Editing & Enrichment (P2)
 - [ ] Markdown editor with preview
 - [ ] Edit/save notes to disk
-- [ ] Link metadata enrichment + previews
+- [x] Link metadata enrichment + previews — the viewer's link pane plays a video, shows an image, or reads the page in place
 - [ ] Bulk operations (move, tag, archive)
 
 ## Phase 8: Polish & Docs (P2)

@@ -2,6 +2,28 @@
 
 Chronological record of what has been built. Newest entries first within each date.
 
+## 2026-10-16
+
+### Done — links play and read in the app
+- [x] A link in a note is no longer just something to click away from: the note viewer shows it in place
+- [x] `@lumos/vault-utils` gained a browser-safe link module (its own `./link` subpath): `parseLinkMedia()` (YouTube across `watch`/`youtu.be`/`shorts`/`embed`/`live`/music, Vimeo in both shapes, an image by extension, else a page), `extractPreview()` (og/twitter/title metadata plus readable text, tags stripped, entities decoded, 6,000-character cap) and `firstExternalLink()` (the first link in a note body, code fences ignored like the graph does)
+- [x] 24 tests for the link module: every URL shape including the lookalike `youtube.com.evil.example`, non-http schemes, channel pages, article-vs-body extraction, entity forms, truncation, and `firstExternalLink` skipping code
+- [x] Daemon: `GET /link` fetches one URL through `fetch-link.ts` and returns a `LinkCard`; a video or an image is answered from the URL alone, so playback needs no daemon at all
+- [x] The URL is treated as untrusted: only `http(s)`, no credentials in the URL, and a refusal for `localhost`, `*.local`/`*.internal`, loopback, private, link-local, CGNAT and reserved addresses — for the URL written *and* for every redirect hop, since a public link can redirect into the local network
+- [x] Bounded on purpose: 8 s timeout, 3 redirects, 1 MiB body, HTML/XHTML/text content types only. A refusal is a 400, an unreachable page a 502, and the URL is never logged
+- [x] 22 tests for the fetcher, with `fetch` and DNS injected so the suite stays offline: the address table, hostnames, a redirect into a private host, the redirect limit, the byte cap, the content type, and that a socket error's detail never reaches the message
+- [x] Desktop: `LinkPane` in the viewer — a 16:9 no-cookie embed for a video (with an “Open on …” fallback), the image itself for an image, and for a page a card with title/site/description/lead image plus the readable text, with loading, error-and-retry, and daemon-down states
+- [x] Verified in the browser against the running daemon and a throwaway vault: the YouTube note rendered the embed and, once clicked, the poster was replaced by a playing frame (the embed document loaded 200; no `/link` request was made for it); the MDN note rendered title, site, description and 6,000 characters of text with the cut notice; the `http://localhost:3210/notes` note rendered “That link points at this machine or the local network.” with its Retry button
+- [x] The pane renders the scraped text as text, never as HTML, so a page cannot inject markup into the app
+- [x] No new dependency: the extraction is a few pure functions in the existing package, recorded as a decision in `PLAN.md`
+- [x] `docs/LIMITATIONS.md` added, and the docs that enumerate the doc set (README, PLAN, ARCHITECTURE, CONTRIBUTING, RULES, CLAUDE, AGENTS, both app READMEs) point at it: the known limits in one place, with what each gives up — the reader's JavaScript blind spot and refused local addresses, the cache-less refetch, the untested WhatsApp session and Tauri shell, branch protection still off, and the HTTP routes having no tests
+
+### Next up
+- [ ] Turn on branch protection on `main` so the green `pnpm validate` check is required to merge
+- [ ] Link pane: keep a scraped page for the session (it refetches when the note is reopened, and twice in dev under StrictMode)
+- [ ] Link pane: strip site chrome harder — the reader still carries code samples and repeated navigation text from some pages
+- [ ] Route tests for the read API (needs a Fastify factory extracted from `server.ts`), which would cover `/link`'s status codes too
+
 ## 2026-10-15
 
 ### Done — vault graph view

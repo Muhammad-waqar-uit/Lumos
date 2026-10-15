@@ -155,7 +155,7 @@ export default function App() {
               onSelect={setSelected}
               loading={loading}
             />
-            <NoteViewer note={note} />
+            <NoteViewer note={note} connection={connection} />
           </>
         )}
       </div>

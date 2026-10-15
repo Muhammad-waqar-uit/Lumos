@@ -11,11 +11,12 @@ daemon (falling back to demo data when the daemon is offline):
 - `src/App.tsx` - state, vault loading, folder + search filtering, selection
 - `src/components/Sidebar.tsx` - folders with note counts
 - `src/components/NoteList.tsx` - searchable note list (title, date, preview, tags)
-- `src/components/NoteViewer.tsx` - note header (folder, date, source, url) + Markdown body
+- `src/components/NoteViewer.tsx` - note header (folder, date, source, url) + link pane + Markdown body
+- `src/components/LinkPane.tsx` - the note's link: video player, image, or scraped reader card
 - `src/components/GraphView.tsx` - canvas link graph (routes, controls, click-to-open)
 - `src/components/PaneBoundary.tsx` - error boundary around the lazily loaded graph pane
 - `src/components/StatusBar.tsx` - connection state + note count
-- `src/lib/api.ts` - daemon client (`/notes`, `/notes/search`, `/folders`, `/note`, `/graph`)
+- `src/lib/api.ts` - daemon client (`/notes`, `/notes/search`, `/folders`, `/note`, `/graph`, `/link`)
 - `src/lib/graph-palette.ts` - pure helpers mapping a node to its colour index and radius
 - `src/lib/demo.ts` - demo data used when the daemon is not running
 - `src/index.css` - Tailwind v4 import + dark design tokens + `.markdown` typography for notes
@@ -32,6 +33,31 @@ colour is hardcoded in a component. Fenced code blocks are styled but not yet sy
 
 Still to come: tag filtering, code syntax highlighting, resizable panes, routing, and a note editor
 (see [`TODO.md`](TODO.md) Phases 4-7).
+
+### Link pane
+
+A note that carries a link — `/read <link>` from WhatsApp puts it in the frontmatter and the body —
+shows that link in the viewer instead of only linking out.
+
+- A **YouTube or Vimeo** link becomes a player in a 16:9 frame, on the no-cookie embed host, with an
+  “Open on …” link beside it. The embed URL comes from the URL alone, so a video plays with the
+  daemon stopped. Verified end to end: the frame loads the embed document and, once clicked, plays.
+- An **image** link renders the image itself, capped in height, with its filename as the alt text.
+- Any other **page** is scraped by the daemon and shown as a card: title, site, description and lead
+  image, with the page's readable text underneath. The text is rendered as text, never as HTML. If it
+  was cut at the 6,000-character cap the pane says so and offers the real page.
+- States: a loading line while the page is read, the daemon's own refusal message with a **Retry**
+  beside it (a private host, a non-page content type, a timeout), and — with the daemon down — a line
+  saying the page cannot be read while the link itself stays clickable.
+
+The classification is `parseLinkMedia()` and the text extraction is `extractPreview()`, both in
+`@lumos/vault-utils/link`: pure, browser-safe, so the desktop classifies with the same code the
+daemon scrapes with. `firstExternalLink()` finds the link in a note body when the frontmatter has
+none, ignoring code fences the way the graph does.
+
+The reader is text only - no layout, no in-body images, no code formatting, and JavaScript-rendered
+pages come back nearly empty. [LIMITATIONS.md](LIMITATIONS.md) is the list, with what each limit
+gives up.
 
 ### Graph view
 

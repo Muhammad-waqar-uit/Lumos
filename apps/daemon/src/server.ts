@@ -9,6 +9,7 @@ import {
   getNotesByFolder,
 } from "@lumos/vault-utils";
 import { FOLDERS, type Folder } from "@lumos/shared";
+import { LinkFetchError, fetchLinkCard } from "./fetch-link.js";
 import { handleMessage } from "./handler.js";
 import { startWhatsApp } from "./whatsapp.js";
 import { VAULT } from "./vault.js";
@@ -34,6 +35,28 @@ app.get("/notes", async () => ({ notes: await listNotes(VAULT) }));
 /** Case-insensitive search across titles, content, and tags. */
 app.get<{ Querystring: { q?: string } }>("/notes/search", async (req) => {
   return { notes: await searchNotes(VAULT, req.query.q ?? "") };
+});
+
+/**
+ * One link, as the desktop shows it: whatever can be played inline, plus the page's
+ * readable text. The URL is untrusted, so the fetcher refuses anything that is not a
+ * public http(s) page. A refusal is a 400 with a message, never a stack trace.
+ */
+app.get<{ Querystring: { url?: string } }>("/link", async (req, reply) => {
+  const url = (req.query.url ?? "").trim();
+  if (!url) return reply.code(400).send({ error: "url is required" });
+
+  try {
+    return { link: await fetchLinkCard(url) };
+  } catch (err: unknown) {
+    if (err instanceof LinkFetchError) {
+      const refused = err.code === "unsupported" || err.code === "blocked";
+      return reply.code(refused ? 400 : 502).send({ error: err.message });
+    }
+    // Log the failure, not the link: a URL can carry private detail.
+    req.log.error({ err }, "link fetch failed");
+    return reply.code(502).send({ error: "That link could not be opened." });
+  }
 });
 
 /** The vault's link graph: notes, internal links, tags, and links with no target yet. */

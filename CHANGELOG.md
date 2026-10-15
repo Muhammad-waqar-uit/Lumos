@@ -37,11 +37,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Note links open outside the window so the vault view is never navigated away.
 
 ### Added (continued 4)
-- A test suite run by vitest 5: 112 tests, 75 for `@lumos/vault-utils` (slugify, title choice,
+- A test suite run by vitest 5: 158 tests, 99 for `@lumos/vault-utils` (slugify, title choice,
   frontmatter parsing including BOM and CRLF files, save/read/list/search, link and tag extraction,
-  graph assembly and neighbourhoods, all against a temporary vault) and 37 for the daemon
-  (`parseMessage` for every command and for malformed input, plus `handleMessage` filing real notes,
-  answering `/find` and filing `/find` matches).
+  graph assembly and neighbourhoods, link parsing and page metadata, all against a temporary vault)
+  and 59 for the daemon (`parseMessage` for every command and for malformed input, `handleMessage`
+  filing real notes and answering `/find`, and the link fetcher's refusals and caps, with `fetch` and
+  DNS injected so the suite stays offline).
 
 ### Added (continued 5)
 - A vault link graph. Note bodies are scanned for `[[wikilinks]]`, relative `.md` links and hashtags;
@@ -60,6 +61,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   folder of each match — up to five, with the remainder counted. Matching is case-insensitive across
   titles, tags and body text, and it reuses `@lumos/vault-utils` `searchNotes`, so `/find` and
   `GET /notes/search` cannot drift apart.
+
+### Added (continued 7)
+- Links in a note are now playable and readable in place. A YouTube or Vimeo link renders a 16:9
+  player on the no-cookie embed host, an image link renders the image, and any other page is fetched
+  by the daemon and shown as a card — title, site, description, lead image — with its readable text
+  underneath, cut at 6,000 characters with a link to the whole page.
+- `GET /link` on the daemon read API returns that card for one URL. A video or an image is answered
+  from the URL alone, so playback works with the daemon stopped.
+- `@lumos/vault-utils` gained a browser-safe `./link` entry point: `parseLinkMedia`, `extractPreview`
+  and `firstExternalLink`, so the desktop and the daemon classify and read links with one
+  implementation.
+- [`docs/LIMITATIONS.md`](docs/LIMITATIONS.md): what Lumos does not do, or does partly, gathered in one
+  place with what each limit gives up — from the reader's JavaScript blind spot and the refused local
+  addresses to branch protection still being off and the HTTP routes having no tests.
 
 ### Fixed
 - Palette steps that only TypeScript referenced never reached the browser: Tailwind prunes theme
@@ -88,6 +103,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   store, and calls the same `validate` script the local hooks run, so the gate is defined in one place.
 
 ### Notes
+- Link fetching is guarded, and the guards are the interesting part: only `http(s)`, no credentials in
+  the URL, and a refusal for anything local — `localhost`, `*.local`, `*.internal`, loopback, private,
+  link-local, CGNAT and reserved addresses — including a public URL that redirects into them, because
+  every hop is checked. Time (8 s), redirects (3) and body size (1 MiB) are capped, and the content
+  type has to be HTML, XHTML or plain text. A name is resolved and every answer checked, which closes
+  the ordinary rebinding case; a name that resolves publicly and then moves is a known limit of a
+  reader on a personal machine.
+- The extraction is hand-written rather than a library (`link-preview-js`, cheerio): it keeps
+  `@lumos/vault-utils` dependency-light and side-effect free, and gives up the edge cases a full HTML
+  parser would handle. Recorded in `PLAN.md`.
 - The desktop vault browser renders Markdown notes; tag filtering, code syntax highlighting,
   resizable panes, routing, and a note editor are still to come. There is no desktop test coverage
   yet — the suites cover the daemon and the vault packages.

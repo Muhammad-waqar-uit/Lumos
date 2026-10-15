@@ -26,7 +26,7 @@ folder, so progress is always visible.
 
 ## M3 - Daemon enhanced (Phase 3)
 
-- Link expansion for `/read` and `/interview` (title, description, image).
+- Link expansion for `/read` and `/interview` (title, description, image). ✅ (`GET /link`, and the desktop reads the page in place)
 - `/find <query>` over the vault. ✅ (title, tags and body; five matches per reply, the rest counted)
 - `/plan today|tomorrow` backed by a local Ollama model.
 - Tag extraction and auto-tagging.

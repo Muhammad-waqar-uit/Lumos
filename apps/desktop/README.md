@@ -7,9 +7,14 @@ The Lumos Desktop app is a Tauri-based desktop client for browsing, searching, a
 While the daemon handles capture via WhatsApp, the desktop app is designed to help you:
 - Browse notes organized by folders (Inbox, Ideas, Interviews, Goals, Reading)
 - Search across your entire vault
-- View, edit, and organize notes
+- View notes with their Markdown rendered
+- Play a link or read the page it points at without leaving the app — a YouTube or Vimeo link plays in place, an image link shows the image, any other page is read as text
 - Tag and filter your knowledge base
-- Get a bird's-eye view of your captured thoughts
+- Get a bird's-eye view of your captured thoughts, as a link graph
+
+Notes are read-only today, and the vault is served by the daemon: with it stopped the app shows
+`src/lib/demo.ts` instead. Set `VITE_DAEMON_URL` to point the app at a daemon on another port. What is
+known to be missing is listed in [docs/LIMITATIONS.md](../../docs/LIMITATIONS.md).
 
 ## Tech Stack
 
@@ -79,6 +84,8 @@ The desktop app reads from the same vault directory that the daemon writes to. B
 - [ ] Note editor with Markdown preview
 - [ ] Tag management and filtering
 - [x] Graph view (link graph from the daemon, canvas force layout, per-folder hues, filters, local depth)
+- [x] Links in place (a YouTube or Vimeo link plays in the note viewer, an image link shows the image, any other page is scraped by the daemon and read as text)
+- [ ] Link reader polish (session cache, less site chrome in the extracted text) — see [docs/LIMITATIONS.md](../../docs/LIMITATIONS.md)
 - [ ] Daily notes view
 - [ ] Statistics and insights
 

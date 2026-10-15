@@ -25,7 +25,7 @@ Lumos is a local-first second brain that captures thoughts via WhatsApp and stor
 - Fastify (HTTP API)
 - Baileys `@whiskeysockets/baileys` (WhatsApp Web multi-device)
 - pino (logging), qrcode-terminal (QR display)
-- link-preview-js (planned) for link expansion
+- link expansion: none - `@lumos/vault-utils/link` reads the metadata and text itself
 - ollama-js (planned) for local AI planning/enrichment
 
 ### Desktop (UI)
@@ -74,13 +74,13 @@ Layout: resizable panes - **Sidebar (folders) | Notes list | Note viewer** - wit
 
 Root keeps only what convention demands: `README.md`, `CHANGELOG.md`, `CONTRIBUTING.md`, `LICENSE`, plus the standards files `RULES.md`, `AGENTS.md` and `CLAUDE.md`.
 
-`docs/` holds everything else: `PLAN.md`, `TODO.md`, `PROGRESS.md`, `FEATURES.md`, `ARCHITECTURE.md`, `daemon.md`, `desktop.md`, `vault.md`, `design.md`, `roadmap.md`. Docs are cross-linked by relative path and moved with `git mv` so history survives.
+`docs/` holds everything else: `PLAN.md`, `TODO.md`, `PROGRESS.md`, `FEATURES.md`, `ARCHITECTURE.md`, `LIMITATIONS.md`, `daemon.md`, `desktop.md`, `vault.md`, `design.md`, `roadmap.md`. Docs are cross-linked by relative path and moved with `git mv` so history survives.
 
 ## Tracking Conventions
 
 - `[ ]` todo, `[~]` in progress, `[x]` done.
 - Priority tags: `P0` critical, `P1` high, `P2` medium, `P3` low.
-- `PROGRESS.md` is chronological; `FEATURES.md` is a status matrix; `TODO.md` is the actionable checklist.
+- `PROGRESS.md` is chronological; `FEATURES.md` is a status matrix; `TODO.md` is the actionable checklist; `LIMITATIONS.md` is what is knowingly not possible today.
 
 ## Milestones
 
@@ -111,6 +111,7 @@ Root keeps only what convention demands: `README.md`, `CHANGELOG.md`, `CONTRIBUT
 | Git hooks | Husky + lint-staged + commitlint | The standards are enforced, not aspirational |
 | Branching | Short-lived `<type>/<description>` branches, PR into `main`, squash-merge | `main` stays releasable; every change is reviewable in isolation |
 | TypeScript version | One version (`~6.0.3`) across all workspaces | Avoids cross-package type mismatches |
+| Link scraping | Hand-written extraction in `@lumos/vault-utils/link`, no new dependency | `link-preview-js` and cheerio would add weight to a package that stays side-effect free and browser-safe; the subset needed (title, og tags, readable text) is a few pure functions the tests can pin. Given up: the edge cases a full HTML parser handles |
 
 ## Open Questions
 
@@ -118,6 +119,6 @@ Root keeps only what convention demands: `README.md`, `CHANGELOG.md`, `CONTRIBUT
 - Search scope (filename + content + frontmatter?).
 - Editor approach (plain textarea + preview first; richer editor later).
 - Vault location (keep default `../../vault`; make configurable in UI later).
-- Link expansion library (link-preview-js vs. fetch + cheerio).
+- ~~Link expansion library (link-preview-js vs. fetch + cheerio)~~ — resolved: neither (see the decisions log).
 
 These are resolved during implementation and recorded in the decisions log.

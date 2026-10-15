@@ -96,7 +96,8 @@ Valid types: `feat` · `fix` · `chore` · `docs` · `style` · `refactor` · `t
   (`.github/workflows/validate.yml` runs it on every pull request into `main`).
 - The docs your change affects are updated **in the same commit**: [docs/TODO.md](docs/TODO.md),
   [docs/PROGRESS.md](docs/PROGRESS.md), [docs/FEATURES.md](docs/FEATURES.md),
-  [CHANGELOG.md](CHANGELOG.md), and the matching `docs/*.md` reference file.
+  [docs/LIMITATIONS.md](docs/LIMITATIONS.md), [CHANGELOG.md](CHANGELOG.md), and the matching
+  `docs/*.md` reference file.
 - The PR is scoped to one logical change, and its body says what changed, why, how it was verified,
   and what is still open.
 - The commit message explains the *why*, not just the *what*.
