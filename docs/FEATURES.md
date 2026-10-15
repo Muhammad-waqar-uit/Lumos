@@ -9,7 +9,7 @@ Status values: **done** · **in-progress** · **planned** · **idea**
 | Vault writer | done | Markdown + YAML frontmatter, slugified filenames |
 | HTTP API | done | `POST /message`, `GET /health` |
 | Link expansion | planned | Fetch title/description/og:image for `/read` and `/interview` |
-| `/find` search | planned | Search vault from the daemon |
+| `/find` search | done | Searches title, tags and body; replies with up to five matches and counts the rest |
 | `/plan` with Ollama | planned | Local AI daily planning |
 | Tag extraction | planned | Hashtag extraction + auto-tagging |
 | Shared packages | done | `@lumos/shared` types + `@lumos/vault-utils` (parse/list/search/write) |

@@ -47,7 +47,7 @@
 ## Phase 3: Daemon Enhancements (P1)
 - [x] Read API for the desktop: `GET /notes`, `/notes/search`, `/folders`, `/note` (+ CORS, traversal guards)
 - [ ] Link expansion for `/read` and `/interview` (title, description, og:image)
-- [ ] Implement `/find <query>` search over the vault
+- [x] Implement `/find <query>` search over the vault (title, tags, body; 5 matches per reply)
 - [ ] `/plan today|tomorrow` with Ollama integration
 - [ ] Tag extraction / auto-tagging (`#tag`)
 - [ ] Config file support (dotenv / JSON)

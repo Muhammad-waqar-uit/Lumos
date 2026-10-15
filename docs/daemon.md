@@ -31,7 +31,7 @@ Markdown notes to the vault. It lives in [`apps/daemon`](../apps/daemon).
 | `/goal <text>` | `vault/Goals/` |
 | `/read <link>` | `vault/Reading/` |
 | `/plan today\|tomorrow` | (planned - Ollama) |
-| `/find <query>` | (planned) |
+| `/find <query>` | Search the vault; replies with the title and folder of each match |
 | `/help` | prints the command list |
 | plain text | `vault/Inbox/` |
 
@@ -99,5 +99,5 @@ built by a factory in `server.ts` so `app.inject()` can run without binding a po
 
 ## Planned enhancements
 
-See [`TODO.md`](TODO.md) Phase 3: link expansion, `/find`, `/plan` with Ollama, tag
-extraction, a config file, and unit tests.
+See [`TODO.md`](TODO.md) Phase 3: link expansion, `/plan` with Ollama, tag extraction and a config
+file. The parser, the filing path and `/find` are covered by tests (see Tests above).

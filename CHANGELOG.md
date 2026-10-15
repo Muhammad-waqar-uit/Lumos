@@ -42,6 +42,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and 32 for the daemon (`parseMessage` for every command and for malformed input, plus
   `handleMessage` filing real notes into a temporary vault).
 
+### Added (continued 5)
+- `/find <query>` searches the vault from WhatsApp or the HTTP API and replies with the title and
+  folder of each match — up to five, with the remainder counted. Matching is case-insensitive across
+  titles, tags and body text, and it reuses `@lumos/vault-utils` `searchNotes`, so `/find` and
+  `GET /notes/search` cannot drift apart.
+
 ### Changed
 - `pnpm validate` now includes the tests: lint + format:check + typecheck + test + build. Use
   `pnpm test` to run the suites on their own.
