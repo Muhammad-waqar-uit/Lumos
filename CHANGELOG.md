@@ -37,11 +37,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Note links open outside the window so the vault view is never navigated away.
 
 ### Added (continued 4)
-- A test suite run by vitest 5: 107 tests, 75 for `@lumos/vault-utils` (slugify, title choice,
+- A test suite run by vitest 5: 112 tests, 75 for `@lumos/vault-utils` (slugify, title choice,
   frontmatter parsing including BOM and CRLF files, save/read/list/search, link and tag extraction,
-  graph assembly and neighbourhoods, all against a temporary vault) and 32 for the daemon
-  (`parseMessage` for every command and for malformed input, plus `handleMessage` filing real notes
-  into a temporary vault).
+  graph assembly and neighbourhoods, all against a temporary vault) and 37 for the daemon
+  (`parseMessage` for every command and for malformed input, plus `handleMessage` filing real notes,
+  answering `/find` and filing `/find` matches).
 
 ### Added (continued 5)
 - A vault link graph. Note bodies are scanned for `[[wikilinks]]`, relative `.md` links and hashtags;
@@ -54,6 +54,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   curved edges, one hue per folder, and controls for tags, unlinked notes and a local depth that
   narrows the graph to the notes near the open one. Clicking a node selects it, and a button opens it
   in the Notes view. With the daemon down the pane shows the demo graph instead of an empty screen.
+
+### Added (continued 6)
+- `/find <query>` searches the vault from WhatsApp or the HTTP API and replies with the title and
+  folder of each match — up to five, with the remainder counted. Matching is case-insensitive across
+  titles, tags and body text, and it reuses `@lumos/vault-utils` `searchNotes`, so `/find` and
+  `GET /notes/search` cannot drift apart.
 
 ### Fixed
 - Palette steps that only TypeScript referenced never reached the browser: Tailwind prunes theme
