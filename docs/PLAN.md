@@ -41,6 +41,7 @@ Lumos is a local-first second brain that captures thoughts via WhatsApp and stor
 ### Shared / Infra
 - pnpm workspaces (pnpm only)
 - TypeScript project references, one TypeScript version across the workspace
+- vitest (tests), run inside the `pnpm validate` gate
 - oxlint (lint) + prettier (format)
 - Husky hooks, lint-staged, commitlint
 
@@ -103,6 +104,7 @@ Root keeps only what convention demands: `README.md`, `CHANGELOG.md`, `CONTRIBUT
 | Icons | lucide-react | Consistent, minimal |
 | WhatsApp | Baileys | Node-native, no Docker needed |
 | Local AI | Ollama (small model) | Local-first planning/enrichment |
+| Tests | vitest | One runner for the Node and React code, and it runs inside `pnpm validate` so a red suite blocks a push |
 | Linter | oxlint | Fast, and compatible with the TypeScript version in use |
 | Formatter | prettier | One formatter, no style debates; runs on staged files |
 | Git hooks | Husky + lint-staged + commitlint | The standards are enforced, not aspirational |

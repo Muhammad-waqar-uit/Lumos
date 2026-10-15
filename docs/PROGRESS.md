@@ -2,6 +2,24 @@
 
 Chronological record of what has been built. Newest entries first within each date.
 
+## 2026-10-15
+
+### Done — test gate (vitest)
+- [x] Both open PRs merged into `main` (`#1` tooling and rules, `#2` markdown viewer); `main` is now `df44395`
+- [x] vitest 5 added at the root, to `@lumos/vault-utils` and to the daemon; `pnpm test` runs every workspace that has a suite
+- [x] 34 tests for `@lumos/vault-utils`: slugify, title choice, frontmatter parse/serialize (BOM, CRLF, unterminated block, string tag), save/read/list and search against a temp vault
+- [x] 32 tests for the daemon: `parseMessage` for every command and for malformed input, plus `handleMessage` filing real notes into a temp vault
+- [x] `pnpm validate` now runs the tests between typecheck and build, so the pre-push hook cannot let a red suite through
+- [x] The gate was shown to fail, not just pass: mutating `slugify`'s trailing-dash trim turned the suite red (exit 1); the file was restored and the diff checked clean
+- [x] Two findings from writing the tests, recorded in `TODO.md`: `/help` does not list itself, and the filing reply echoes the title exactly as typed
+
+### Next up
+- [ ] GitHub Actions running `pnpm validate` on every PR, then branch protection on `main`
+- [ ] Route tests for the read API (needs a Fastify factory extracted from `server.ts`)
+- [ ] Tag filtering + syntax highlighting for fenced code
+- [ ] Resizable panes, TanStack Router, zustand
+- [ ] Phase 3: link expansion, `/find`, `/plan` with Ollama, tagging
+
 ## 2026-10-13
 
 ### Done
@@ -43,13 +61,6 @@ Chronological record of what has been built. Newest entries first within each da
 - [x] Note links open externally (`target="_blank"`, `rel="noreferrer"`) so the window never navigates away
 - [x] `.markdown` styles in `index.css` use the existing dark tokens — no hex values in a component
 - [x] Verified against the running daemon: an 11-block note renders with the expected DOM elements and computed styles, all requests 200, no console errors
-
-### Next up
-- [ ] Merge this branch through a PR into `main` (first run of the new branch workflow)
-- [ ] GitHub Actions running `pnpm validate` on every PR + branch protection on `main`
-- [ ] Tag filtering + syntax highlighting for fenced code
-- [ ] Resizable panes, TanStack Router, zustand
-- [ ] Phase 3: link expansion, `/find`, `/plan` with Ollama, tagging
 
 ## Template for new entries
 

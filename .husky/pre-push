@@ -1,2 +1,2 @@
-# Full gate before anything leaves the machine: lint + typecheck + build.
+# Full gate before anything leaves the machine: lint + format + typecheck + tests + build.
 pnpm run validate

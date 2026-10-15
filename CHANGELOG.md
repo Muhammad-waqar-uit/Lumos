@@ -36,7 +36,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   lists, tables, task lists, blockquotes, fenced code and links (`react-markdown` + `remark-gfm`).
   Note links open outside the window so the vault view is never navigated away.
 
+### Added (continued 4)
+- A test suite run by vitest 5: 66 tests, 34 for `@lumos/vault-utils` (slugify, title choice,
+  frontmatter parsing including BOM and CRLF files, save/read/list/search against a temporary vault)
+  and 32 for the daemon (`parseMessage` for every command and for malformed input, plus
+  `handleMessage` filing real notes into a temporary vault).
+
 ### Changed
+- `pnpm validate` now includes the tests: lint + format:check + typecheck + test + build. Use
+  `pnpm test` to run the suites on their own.
 - All four workspaces now pin the same TypeScript version (`~6.0.3`) and expose a `typecheck` script.
 - New dependencies in the desktop workspace: `react-markdown` and `remark-gfm` (lockfile updated).
   Note styling reuses the existing dark theme tokens, so no new colour values were introduced.
@@ -46,7 +54,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   derive state during render instead of repairing it inside an effect.
 
 ### Notes
-- The desktop vault browser renders note text; Markdown rendering, tag filtering, resizable panes,
-  routing, and a note editor are still to come.
+- The desktop vault browser renders Markdown notes; tag filtering, code syntax highlighting,
+  resizable panes, routing, and a note editor are still to come. There is no desktop test coverage
+  yet — the suites cover the daemon and the vault packages.
+- Writing the tests turned up two small gaps, both tracked in [docs/TODO.md](docs/TODO.md): `/help`
+  does not list itself in the command list it prints, and the read-API routes cannot be tested until
+  the Fastify app is extracted from `server.ts`.
 - `main` is protected by convention and by the hook; GitHub-side branch protection and CI are not
   configured yet (tracked in [docs/TODO.md](docs/TODO.md)).

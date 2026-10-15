@@ -7,7 +7,7 @@
 - [x] Husky hooks: `pre-commit` (lint-staged), `commit-msg` (commitlint), `pre-push` (`pnpm validate`)
 - [x] Root scripts: `lint`, `lint:fix`, `format`, `format:check`, `typecheck`, `build`, `validate`
 - [x] `pre-commit` refuses to commit while on `main` — the branch workflow is enforced, not just documented
-- [x] `pnpm validate` = lint + format:check + typecheck + build
+- [x] `pnpm validate` = lint + format:check + typecheck + test + build
 - [x] One TypeScript version (`~6.0.3`) across every workspace, with a `typecheck` script in each
 - [x] `RULES.md` (build / commit / branch standards), `AGENTS.md` (agent working agreement), `CLAUDE.md`
 - [x] Branching model in writing: short-lived `<type>/<description>` branches, PR into `main`, squash-merge
@@ -16,8 +16,10 @@
 ## Phase 0.1: Enforcement still to come (P1)
 - [ ] GitHub Actions workflow running `pnpm validate` on every pull request
 - [ ] Branch protection on `main` (require a PR and a green check) — needs repository settings
-- [ ] Test runner (vitest) wired up, then added to the pre-push gate
+- [x] Test runner (vitest) wired up and added to the validation gate — 66 tests over `@lumos/vault-utils` and the daemon
 - [ ] Schema validation for note frontmatter in CI
+- [ ] Route tests for the read API — extract the Fastify app from `server.ts` so `app.inject()` can hit `/note`, `/notes`, `/folders` without binding a port
+- [ ] Desktop component tests (jsdom + Testing Library) for the sidebar, list and viewer states
 
 ## Phase 1: Documentation & Tracking Foundation (P0)
 - [x] Create `PLAN.md`
@@ -50,7 +52,8 @@
 - [ ] Tag extraction / auto-tagging (`#tag`)
 - [ ] Config file support (dotenv / JSON)
 - [ ] Richer error messages and logging
-- [ ] Unit tests for commands / parser / vault
+- [x] Unit tests for the parser and the vault operations (vitest, `pnpm test`)
+- [ ] `/help` does not list itself in the command list it prints (found by the daemon tests)
 
 ## Phase 4: Desktop UI Foundation (P0)
 - [x] Tailwind CSS v4 + dark shadcn-style design tokens (near-black)

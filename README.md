@@ -33,6 +33,7 @@ Lumos consists of two main applications:
 - **Monorepo**: [pnpm workspaces](https://pnpm.io/workspaces)
 - **Desktop**: [Tauri](https://tauri.app/) + [React](https://react.dev/) + [Vite](https://vitejs.dev/)
 - **Logging**: [Pino](https://getpino.io/)
+- **Tests**: [vitest](https://vitest.dev/) - suites live beside the code as `*.test.ts` and run inside `pnpm validate`
 
 ## Commands
 
@@ -164,8 +165,11 @@ pnpm install
 # Run daemon in dev mode (from root)
 cd apps/daemon && pnpm dev
 
-# Lint + format check + typecheck + build (the gate)
+# Lint + format check + typecheck + test + build (the gate)
 pnpm validate
+
+# Run the test suites (vitest) on their own
+pnpm test
 
 # Start a branch before writing any code
 git checkout -b feat/my-change
@@ -178,6 +182,7 @@ git checkout -b feat/my-change
 - [ ] Full-text search with `/find <query>`
 - [ ] Tag extraction and auto-tagging
 - [~] Tauri desktop app UI for browsing/searching vault - dark shell, folder sidebar, note list and Markdown-rendering viewer are in place; tag filtering, code highlighting, resizable panes and an editor remain
+- [~] Test coverage - vitest suites for `@lumos/vault-utils` (34 tests) and the daemon (32 tests) run inside `pnpm validate`; the read-API routes and the desktop UI are still untested
 - [ ] Enrichment: extract summaries, key points from links
 - [ ] Sync/backups, exports
 

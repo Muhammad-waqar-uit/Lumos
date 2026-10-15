@@ -19,8 +19,9 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "pnpm -r run typecheck",
+    "test": "pnpm -r run test",
     "build": "pnpm -r run build",
-    "validate": "pnpm run lint && pnpm run format:check && pnpm run typecheck && pnpm run build",
+    "validate": "pnpm run lint && pnpm run format:check && pnpm run typecheck && pnpm run test && pnpm run build",
     "prepare": "husky"
   },
   "devDependencies": {
@@ -29,6 +30,7 @@
     "husky": "^9.1.7",
     "lint-staged": "^17.6.0",
     "oxlint": "^1.87.0",
-    "prettier": "^3.9.10"
+    "prettier": "^3.9.10",
+    "vitest": "^5.0.5"
   }
 }

@@ -26,7 +26,11 @@ Status values: **done** · **in-progress** · **planned** · **idea**
 | Graph view | idea | Not core; revisit later |
 | Lint + format gate | done | oxlint + prettier, run on staged files by lint-staged |
 | Commit message lint | done | commitlint enforces `<type>(<scope>): <description>` |
-| Pre-push validation | done | `pnpm validate` — lint + format:check + typecheck + build |
+| Pre-push validation | done | `pnpm validate` — lint + format:check + typecheck + test + build |
+| Test runner | done | vitest 5; `pnpm test` runs every workspace that has a suite |
+| Parser & vault tests | done | 66 tests: `parseMessage` for every command, plus save/read/list/search against a temp vault |
+| Read API route tests | planned | Needs a Fastify factory in `server.ts` so `app.inject()` can run without a port |
+| Desktop component tests | planned | jsdom + Testing Library for the sidebar, list and viewer states |
 | Branch workflow | done | Short-lived `<type>/<description>` branches; `pre-commit` blocks commits on `main` |
 | Agent working agreement | done | `RULES.md`, `AGENTS.md`, `CLAUDE.md` at the repo root |
 | CI validation | planned | GitHub Actions running `pnpm validate` on every PR |

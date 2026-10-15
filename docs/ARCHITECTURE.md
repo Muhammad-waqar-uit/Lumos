@@ -38,6 +38,10 @@ WhatsApp ──► Daemon ──► vault/*.md ◄── Desktop (Tauri UI)
   - `server.ts` - Fastify routes + start WhatsApp.
   - `whatsapp.ts` - Baileys connection, allowlist, message handling.
 
+Tests sit beside the modules they cover (`commands.test.ts`, `handler.test.ts`). The handler test
+points `VAULT_PATH` at a fresh temporary directory before importing the handler, so the real vault is
+never read or written.
+
 ## Desktop
 
 - **Shell**: Tauri 2.x (Rust backend) hosting a Vite/React frontend.
@@ -63,6 +67,14 @@ WhatsApp ──► Daemon ──► vault/*.md ◄── Desktop (Tauri UI)
 - **Portable vault**: files remain readable in Obsidian and any Markdown editor.
 - **Daemon is standalone**: it can run headless with just the HTTP API.
 - **Desktop is the primary UI** going forward; the HTTP API is an integration path, not the main one.
+
+## Tests
+
+- **Runner**: vitest, run by `pnpm test` from the root (every workspace that has a suite).
+- **Location**: `*.test.ts` next to the module it covers - no separate `tests/` tree.
+- **Coverage today**: `@lumos/vault-utils` (slugify, frontmatter parsing, save/read/list/search) and
+  the daemon (the parser and the filing path). The HTTP routes and the desktop UI are not covered yet.
+- The suites run inside `pnpm validate`, so a failing test blocks a push exactly like a failing build.
 
 ## Repository Layout
 
@@ -90,7 +102,7 @@ lumos/
 - **Lint:** oxlint, kept in step with the TypeScript version. **Format:** prettier.
 - **Husky hooks** — `pre-commit` refuses to commit while on `main`, then runs lint-staged on the
   staged files; `commit-msg` runs commitlint; `pre-push` runs `pnpm validate`
-  (lint + format:check + typecheck + build). None of the hooks can be bypassed.
+  (lint + format:check + typecheck + test + build). None of the hooks can be bypassed.
 - **One TypeScript version** (`~6.0.3`) across all four workspaces, each with a `typecheck` script.
 - **Workflow:** every change lives on a short-lived `<type>/<short-description>` branch and lands in
   `main` through a pull request (squash-merge). `main` is always releasable. See [RULES.md §6](../RULES.md).
