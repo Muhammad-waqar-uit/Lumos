@@ -35,8 +35,9 @@ browses it. Shared code lives in `packages/shared` and `packages/vault-utils`. p
 - **Report honestly.** "Done" means verified. Limitations, open questions and things you guessed at
   belong in the final message, not left implicit.
 - **Docs move with the code, in the same commit.** Update [docs/TODO.md](docs/TODO.md),
-  [docs/PROGRESS.md](docs/PROGRESS.md), [docs/FEATURES.md](docs/FEATURES.md) and
-  [CHANGELOG.md](CHANGELOG.md) whenever the corresponding state changes.
+  [docs/PROGRESS.md](docs/PROGRESS.md), [docs/FEATURES.md](docs/FEATURES.md),
+  [docs/LIMITATIONS.md](docs/LIMITATIONS.md) and [CHANGELOG.md](CHANGELOG.md) whenever the
+  corresponding state changes.
 - **Match the surrounding code.** Read the neighbouring files before writing a new one; reuse the
   existing helpers and tokens instead of introducing a parallel style.
 - **Ask when a decision is the user's** (scope, a trade-off, something destructive or irreversible)

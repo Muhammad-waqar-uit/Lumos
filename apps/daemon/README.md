@@ -17,6 +17,7 @@ The daemon acts as a bridge between WhatsApp and your second brain. It:
 - **Command Parsing**: Handles `/idea`, `/interview`, `/goal`, `/read`, `/plan`, `/find`, `/help`
 - **Smart Note Generation**: Creates timestamped, slugified filenames with frontmatter
 - **URL Extraction**: Automatically detects and stores URLs in note metadata
+- **Link Fetching**: `GET /link` reads a page's title, description, lead image and readable text for the desktop, refusing anything that is not a public http(s) page
 - **Auto-Reconnection**: Automatically reconnects on disconnects with exponential backoff
 - **Sender Allowlist**: Restricts processing to pre-approved phone numbers
 - **Robust Error Handling**: Graceful fallbacks and user-friendly error messages
@@ -26,11 +27,12 @@ The daemon acts as a bridge between WhatsApp and your second brain. It:
 
 ```
 src/
-├── commands.ts  # Command parsing and type definitions
-├── handler.ts   # Message routing and response generation
-├── server.ts    # Fastify HTTP server + WhatsApp startup
-├── vault.ts     # Markdown file writing with frontmatter
-└── whatsapp.ts  # Baileys WhatsApp integration
+├── commands.ts    # Command parsing and type definitions
+├── handler.ts     # Message routing and response generation
+├── fetch-link.ts  # Remote page fetching for the desktop, with its guards and caps
+├── server.ts      # Fastify HTTP server + WhatsApp startup
+├── vault.ts       # Markdown file writing with frontmatter
+└── whatsapp.ts    # Baileys WhatsApp integration
 ```
 
 ## API
@@ -71,6 +73,27 @@ Health check endpoint.
 }
 ```
 
+### Read API
+
+The desktop reads the vault over HTTP rather than from disk. CORS is enabled for local origins only
+(`localhost`, `127.0.0.1`, `tauri://`), and every path that comes from a request is checked before it
+touches the vault.
+
+| Endpoint | Returns |
+| --- | --- |
+| `GET /notes` | every note, newest first |
+| `GET /notes/search?q=<query>` | case-insensitive matches across title, tags and body |
+| `GET /folders` | note counts per folder |
+| `GET /note?folder=<Folder>&name=<file.md>` | one note; `400` for an unsafe name, `404` when missing |
+| `GET /graph` | the vault's link graph: notes, tags, links and unresolved targets |
+| `GET /link?url=<url>` | one remote link, described for the desktop: playable media, or the page's metadata and readable text |
+
+`GET /link` is the only endpoint that makes an outbound request. It accepts `http` and `https` only,
+refuses local and private addresses on every redirect hop, and caps time (8 s), redirects (3) and body
+size (1 MiB). A refusal is a `400` with a message, an unreachable page a `502`; the URL is never
+logged. See [docs/daemon.md](../../docs/daemon.md) for the full contract and
+[docs/LIMITATIONS.md](../../docs/LIMITATIONS.md) for what it deliberately cannot read.
+
 ## Environment Variables
 
 | Variable | Default | Description |
@@ -109,7 +132,7 @@ pnpm -w validate
 ### Tests
 
 ```bash
-# The daemon suite: the command parser and the filing path
+# The daemon suite: the command parser, the filing path, `/find`, and the link fetcher
 pnpm test
 ```
 

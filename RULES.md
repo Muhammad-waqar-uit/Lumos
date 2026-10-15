@@ -236,5 +236,7 @@ A change is finished when **all** of these hold:
       the exact manual check that was performed.
 - [ ] Docs updated in the same change: [docs/TODO.md](docs/TODO.md), [docs/PROGRESS.md](docs/PROGRESS.md),
       [CHANGELOG.md](CHANGELOG.md), and the matching [docs/](docs/) reference file.
+- [ ] A new known limit is written down in [docs/LIMITATIONS.md](docs/LIMITATIONS.md), not only in a
+      commit message or a TODO.
 - [ ] Links still resolve (relative links checked by the [docs/](docs/) link check in CI or by hand).
 - [ ] Working tree clean, branch pushed, PR opened — **never a direct commit to `main`**.

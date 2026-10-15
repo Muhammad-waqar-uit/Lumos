@@ -1,4 +1,4 @@
-import type { Folder, GraphData, Note, VaultEntry } from "@lumos/shared";
+import type { Folder, GraphData, LinkCard, Note, VaultEntry } from "@lumos/shared";
 
 /** Where the desktop is getting its data from. */
 export type Connection = "connecting" | "daemon" | "demo";
@@ -41,6 +41,21 @@ export async function searchNotes(query: string): Promise<VaultEntry[]> {
 export async function getGraph(): Promise<GraphData> {
   const { graph } = await getJson<{ graph: GraphData }>("/graph");
   return graph;
+}
+
+/**
+ * One link, scraped by the daemon: media the app can play, plus the page's readable
+ * text. A refusal (a private host, a bad scheme) arrives as an Error with its message.
+ */
+export async function getLink(url: string): Promise<LinkCard> {
+  const res = await fetch(`${BASE}/link?url=${encodeURIComponent(url)}`, {
+    headers: { accept: "application/json" },
+  });
+  const body = (await res.json().catch(() => null)) as
+    { link: LinkCard } | { error: string } | null;
+  if (!res.ok) throw new Error(body && "error" in body ? body.error : `GET /link -> ${res.status}`);
+  if (!body || !("link" in body)) throw new Error("GET /link returned an unexpected body");
+  return body.link;
 }
 
 /** Read a single note by folder + filename. */

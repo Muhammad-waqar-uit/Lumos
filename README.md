@@ -16,6 +16,7 @@ Lumos transforms WhatsApp into an effortless capture tool for your second brain.
 - **Auto-Reconnection**: Robust connection handling with automatic reconnection on disconnects
 - **Allowlist Security**: Only messages from whitelisted phone numbers are processed
 - **Monorepo Architecture**: Clean separation between daemon (capture) and desktop app (viewing)
+- **Links in place**: A YouTube or Vimeo link plays in the note viewer, an image link shows the image, and any other page is scraped by the daemon and read as text without leaving the app (private hosts are refused)
 
 ## Architecture
 
@@ -177,12 +178,12 @@ git checkout -b feat/my-change
 
 ## Roadmap
 
-- [ ] Link expansion for `/read` and `/interview` (fetch page titles and readable content)
+- [x] Link expansion for `/read` and `/interview` — the daemon fetches the page and the desktop plays a video, shows an image, or reads the text in place
 - [ ] Daily planner with `/plan today|tomorrow` (AI-assisted via Ollama)
 - [ ] Full-text search with `/find <query>`
 - [ ] Tag extraction and auto-tagging
 - [~] Tauri desktop app UI for browsing/searching vault - dark shell, folder sidebar, note list, Markdown-rendering viewer and the link graph are in place; tag filtering, code highlighting, resizable panes and an editor remain
-- [~] Test coverage - vitest suites for `@lumos/vault-utils` (75 tests) and the daemon (37 tests) run inside `pnpm validate`; the read-API routes and the desktop UI are still untested
+- [~] Test coverage - vitest suites for `@lumos/vault-utils` (99 tests) and the daemon (59 tests) run inside `pnpm validate`; the read-API routes and the desktop UI are still untested
 - [ ] Enrichment: extract summaries, key points from links
 - [ ] Sync/backups, exports
 
@@ -213,6 +214,7 @@ Reference:
 - [docs/vault.md](docs/vault.md) - vault format, frontmatter, conventions
 - [docs/design.md](docs/design.md) - design system, dark color tokens, spacing
 - [docs/roadmap.md](docs/roadmap.md) - milestones
+- [docs/LIMITATIONS.md](docs/LIMITATIONS.md) - what Lumos does not do, or does partly, and what each limit gives up
 
 ## Contributing
 

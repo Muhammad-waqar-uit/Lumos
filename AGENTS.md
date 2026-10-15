@@ -120,6 +120,7 @@ The daemon runs headless with `LUMOS_DISABLE_WHATSAPP=1` — use that when you o
 | [docs/daemon.md](docs/daemon.md)        | endpoints, commands, or env vars change                  |
 | [docs/desktop.md](docs/desktop.md)      | UI structure, state or theming changes                   |
 | [docs/roadmap.md](docs/roadmap.md)      | priorities or scope move                                 |
+| [docs/LIMITATIONS.md](docs/LIMITATIONS.md) | something is knowingly not possible, or a limit changes |
 
 Docs are cross-linked by relative path — after moving or renaming a file, re-run the link check so
 no reference dangles.

@@ -17,8 +17,11 @@ import type {
 } from "@lumos/shared";
 import { slugify } from "./slug";
 
-/** Fenced blocks and inline code are skipped, the way Obsidian ignores links in code. */
-function stripCode(content: string): string {
+/**
+ * Fenced blocks and inline code are skipped, the way Obsidian ignores links in code.
+ * Exported because scanning a note for external URLs has the same blind spot.
+ */
+export function stripCode(content: string): string {
   const fenced = content.replace(/^[ \t]*(```|~~~)[^\n]*\n[\s\S]*?^[ \t]*\1[ \t]*$/gm, "");
   return fenced.replace(/`[^`\n]*`/g, "");
 }
