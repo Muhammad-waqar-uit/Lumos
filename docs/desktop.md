@@ -17,7 +17,7 @@ daemon (falling back to demo data when the daemon is offline):
 - `src/components/PaneBoundary.tsx` - error boundary around the lazily loaded graph pane
 - `src/components/StatusBar.tsx` - connection state + note count
 - `src/lib/api.ts` - daemon client (`/notes`, `/notes/search`, `/folders`, `/note`, `/graph`, `/link`)
-- `src/lib/graph-palette.ts` - pure helpers mapping a node to its colour index and radius
+- `src/lib/graph-palette.ts` - reads the `--color-graph-*` tokens and maps a folder to its hue, with a fallback token per lookup
 - `src/lib/demo.ts` - demo data used when the daemon is not running
 - `src/index.css` - Tailwind v4 import + dark design tokens + `.markdown` typography for notes
 
@@ -123,14 +123,18 @@ app works without the daemon running. Both are kept possible by keeping logic in
 
 ## Keyboard
 
+Specified but **not wired up**: no key handler is registered anywhere in `src/` yet, so none of these
+work today. They are recorded here as the intended scheme, and tracked in [`TODO.md`](TODO.md).
+
 - `Cmd/Ctrl+K` - open the search modal.
 - Arrow keys / `j` `k` - move through the note list.
 - `Esc` - close overlays.
 
 ## Planned capabilities
 
-- Folder sidebar with note counts.
-- Note list with date, tags, and a text preview.
-- Note viewer with frontmatter metadata (done) and syntax-highlighted code (planned).
-- Full-text search across titles, content, and tags.
+- Syntax-highlighted code blocks (styled today, not highlighted).
+- Resizable panes, TanStack Router and zustand - the shell is plain React state in one component.
+- Every entry in the Keyboard section above.
+- Full-text search with fuse.js and tag filtering (a client-side filter over the loaded list works
+  today; the daemon's `/find` and `/notes/search` cover the vault itself).
 - Markdown editor with live preview and save-to-disk.

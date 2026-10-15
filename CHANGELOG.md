@@ -89,6 +89,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   network request.
 
 ### Fixed
+- Documentation that had drifted from the code, found by auditing every Markdown file against the
+  repository. `docs/design.md` described tokens the stylesheet does not use (shadcn-style `--background:
+  0 0% 3.9%`, `--card` at 3.9%, `--radius`, and a `--destructive` pair that does not exist) while the
+  real ones are Tailwind v4 `@theme` entries named `--color-*`, and it omitted the graph tokens and
+  why they sit outside `@theme`. `docs/desktop.md` presented `Cmd/Ctrl+K`, `j`/`k` and `Esc` as
+  working shortcuts when no key handler is registered, and listed two already-built features as
+  planned. `docs/PLAN.md` named TanStack Router, zustand, fuse.js and lucide-react as the desktop
+  stack although none is installed. `README.md` still advertised `/find` as "coming soon", dated a
+  note `2025-10-13`, and documented two of the eight endpoints; `PORT` and `LUMOS_DISABLE_WHATSAPP`
+  were undocumented in both the README and `docs/daemon.md`. `docs/FEATURES.md` described the HTTP API
+  as `POST /message` and `GET /health` only.
 - Palette steps that only TypeScript referenced never reached the browser: Tailwind prunes theme
   values it cannot see used in a class name, so the graph colours are declared as plain `:root`
   custom properties.

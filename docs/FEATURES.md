@@ -7,7 +7,7 @@ Status values: **done** · **in-progress** · **planned** · **idea**
 | WhatsApp capture | done | Baileys multi-device, allowlist, auto-reconnect |
 | Command parsing | done | `/idea`, `/interview`, `/goal`, `/read`, `/plan`, `/find`, `/help` |
 | Vault writer | done | Markdown + YAML frontmatter, slugified filenames |
-| HTTP API | done | `POST /message`, `GET /health` |
+| HTTP API | done | `POST /message`, `GET /health`, plus the six read-API routes in the row below |
 | Link expansion | done | `GET /link` reads title/description/og:image and the readable text of a page, for `/read` and `/interview` links |
 | In-app playback | done | A YouTube or Vimeo link plays in the note viewer (no-cookie embed), an image link renders as the image; neither needs the daemon |
 | Page reader | done | The scraped text of a link, capped at 6,000 characters, rendered as text with a loading, error and retry state |
