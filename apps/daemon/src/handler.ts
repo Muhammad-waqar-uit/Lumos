@@ -1,5 +1,7 @@
-﻿import { parseMessage } from "./commands.js";
-import { saveNote } from "./vault.js";
+﻿import type { VaultEntry } from "@lumos/shared";
+import { searchNotes } from "@lumos/vault-utils";
+import { parseMessage } from "./commands.js";
+import { saveNote, VAULT } from "./vault.js";
 
 const HELP = [
   "Commands:",
@@ -12,6 +14,23 @@ const HELP = [
   "Anything without a command goes to Inbox.",
 ].join("\n");
 
+/** How many matches a `/find` reply lists before it counts the rest instead. */
+const FIND_LIMIT = 5;
+
+/** Turn search hits into a short reply: title and folder, capped at FIND_LIMIT. */
+function formatFind(query: string, hits: VaultEntry[]): string {
+  if (hits.length === 0) return `No notes match "${query}".`;
+  const shown = hits.slice(0, FIND_LIMIT);
+  const hidden = hits.length - shown.length;
+  const count = hits.length === 1 ? "1 note" : `${hits.length} notes`;
+  const rest = hidden > 0 ? [`and ${hidden} more.`] : [];
+  return [
+    `Found ${count} for "${query}":`,
+    ...shown.map((hit) => `- ${hit.title} (${hit.folder})`),
+    ...rest,
+  ].join("\n");
+}
+
 export async function handleMessage(text: string): Promise<string> {
   const parsed = parseMessage(text);
   switch (parsed.kind) {
@@ -22,8 +41,11 @@ export async function handleMessage(text: string): Promise<string> {
     }
     case "plan":
       return `Lumos Maxima (${parsed.when}) isn't built yet.`;
-    case "find":
-      return "Search isn't built yet.";
+    case "find": {
+      const query = parsed.query.trim();
+      if (!query) return "Usage: /find <query>";
+      return formatFind(query, await searchNotes(VAULT, query));
+    }
     case "help":
       return HELP;
     case "unknown":
