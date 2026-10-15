@@ -17,7 +17,7 @@ browses it. Shared code lives in `packages/shared` and `packages/vault-utils`. p
 2. **Never bypass the hooks.** `git commit --no-verify` and `git push --no-verify` are not options.
    Pre-commit blocks commits on `main` and runs lint-staged, commit-msg runs commitlint, pre-push
    runs `pnpm validate`.
-3. **`pnpm validate` must be green** (lint + format:check + typecheck + build) before you finish.
+3. **`pnpm validate` must be green** (lint + format:check + typecheck + test + build) before you finish.
    Never finish on red, and never make it green by disabling a rule.
 4. **No suppressions to pass a check.** No `@ts-ignore` / `@ts-expect-error` without a written
    reason, no `eslint-disable`/`oxlint-disable` to hide a real problem, no `any`, no deleted or
@@ -59,7 +59,7 @@ browses it. Shared code lives in `packages/shared` and `packages/vault-utils`. p
 
 ```bash
 pnpm install                       # bootstrap
-pnpm validate                      # the gate: lint + format:check + typecheck + build
+pnpm validate                      # the gate: lint + format:check + typecheck + test + build
 pnpm --filter daemon dev           # daemon (LUMOS_DISABLE_WHATSAPP=1 for headless)
 pnpm --filter desktop dev          # Vite UI on :1420
 pnpm --filter desktop tauri dev    # full desktop window

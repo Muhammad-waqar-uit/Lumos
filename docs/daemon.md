@@ -83,6 +83,20 @@ The daemon uses [`@lumos/shared`](../packages/shared) for its types and
 [`@lumos/vault-utils`](../packages/vault-utils) for vault operations (parse, read, list, search,
 write). Keeping this logic in packages lets the desktop app reuse it.
 
+## Tests
+
+`pnpm --filter daemon test` runs the daemon suite (vitest):
+
+- `src/commands.test.ts` - `parseMessage` over every command and over malformed input: blank
+  messages, a bare `/`, unknown commands, `https` links inside plain text, and `/plan` falling back
+  to `today` for anything it does not recognise.
+- `src/handler.test.ts` - `handleMessage` from the message to the file on disk: the reply strings, the
+  generated filename, and the frontmatter that was written. It points `VAULT_PATH` at a temporary
+  directory before importing the handler, so your own vault is never touched.
+
+Not covered yet: the Fastify routes (`/note`, `/notes`, `/folders`, `/message`), which need the app
+built by a factory in `server.ts` so `app.inject()` can run without binding a port.
+
 ## Planned enhancements
 
 See [`TODO.md`](TODO.md) Phase 3: link expansion, `/find`, `/plan` with Ollama, tag

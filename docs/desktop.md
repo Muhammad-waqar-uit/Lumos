@@ -30,6 +30,9 @@ colour is hardcoded in a component. Fenced code blocks are styled but not yet sy
 Still to come: tag filtering, code syntax highlighting, resizable panes, routing, and a note editor
 (see [`TODO.md`](TODO.md) Phases 4-7).
 
+There is no desktop test coverage yet: the vitest suites cover `@lumos/vault-utils` and the daemon.
+Component tests need jsdom + Testing Library and are tracked in [`TODO.md`](TODO.md) Phase 0.1.
+
 ## Planned structure
 
 - **Shell**: Tauri 2.x (Rust backend) hosting a Vite + React frontend.

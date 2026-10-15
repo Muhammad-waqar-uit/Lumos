@@ -11,7 +11,7 @@ Git hooks are installed with **Husky** and **cannot be bypassed** — no `--no-v
 | ------------ | ---------------------------------------------------------------------- |
 | `pre-commit` | rejects commits on `main`, then `lint-staged` on staged files only      |
 | `commit-msg` | `commitlint` validates the message format                              |
-| `pre-push`   | `pnpm validate` — lint + format:check + typecheck + build              |
+| `pre-push`   | `pnpm validate` — lint + format:check + typecheck + test + build        |
 
 Root scripts:
 
@@ -20,11 +20,16 @@ pnpm lint          # oxlint across apps + packages
 pnpm format        # prettier --write .
 pnpm format:check  # prettier --check .  (no writing)
 pnpm typecheck     # tsc --noEmit in every workspace
+pnpm test          # vitest run in every workspace that has a suite
 pnpm build         # build every workspace that has a build step
-pnpm validate      # lint && format:check && typecheck && build — the gate that matters
+pnpm validate      # lint && format:check && typecheck && test && build — the gate that matters
 ```
 
 If any check fails, the commit or push is blocked.
+
+Tests belong beside the code they cover (`*.test.ts`, run by vitest). They run inside `pnpm validate`,
+so a red suite blocks a push exactly like a red build. Anything that touches the vault does it in a
+temporary directory created by the test — **tests never read or write the real `vault/`**.
 
 ## 2. Linting & formatting
 
@@ -222,10 +227,11 @@ pnpm validate && git push -u origin feat/vault-search   # 4. push (pre-push runs
 
 A change is finished when **all** of these hold:
 
-- [ ] `pnpm validate` passes locally (lint + format:check + typecheck + build).
+- [ ] `pnpm validate` passes locally (lint + format:check + typecheck + test + build).
 - [ ] Zero `any`, zero unjustified suppressions, zero `console.log` left behind.
-- [ ] New behaviour has a test once the test setup lands (see [docs/TODO.md](docs/TODO.md)); until
-      then it was exercised by hand and the exact check is written in the commit or PR body.
+- [ ] New behaviour has a test beside the module (`*.test.ts`). If it genuinely cannot be tested —
+      Rust/Tauri shell code, a live WhatsApp session — say so in the commit or PR body and write down
+      the exact manual check that was performed.
 - [ ] Docs updated in the same change: [docs/TODO.md](docs/TODO.md), [docs/PROGRESS.md](docs/PROGRESS.md),
       [CHANGELOG.md](CHANGELOG.md), and the matching [docs/](docs/) reference file.
 - [ ] Links still resolve (relative links checked by the [docs/](docs/) link check in CI or by hand).

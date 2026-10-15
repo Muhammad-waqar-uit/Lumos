@@ -1,0 +1,127 @@
+import { describe, expect, it } from "vitest";
+import { parseMessage } from "./commands";
+
+describe("parseMessage - plain text", () => {
+  it("files anything without a command in the Inbox", () => {
+    expect(parseMessage("random thought")).toEqual({
+      kind: "note",
+      folder: "Inbox",
+      text: "random thought",
+    });
+  });
+
+  it("trims the surrounding whitespace", () => {
+    expect(parseMessage("  spaced out  ")).toEqual({
+      kind: "note",
+      folder: "Inbox",
+      text: "spaced out",
+    });
+  });
+
+  it("keeps line breaks inside a multi-line message", () => {
+    const parsed = parseMessage("first line\nsecond line");
+    expect(parsed).toMatchObject({ kind: "note", folder: "Inbox" });
+    expect(parsed.kind === "note" && parsed.text).toBe("first line\nsecond line");
+  });
+
+  it("returns an empty note for a blank message", () => {
+    expect(parseMessage("   ")).toEqual({ kind: "note", folder: "Inbox", text: "" });
+  });
+
+  it("pulls a link out of plain text", () => {
+    const parsed = parseMessage("check this https://example.com/post out");
+    expect(parsed).toMatchObject({
+      kind: "note",
+      folder: "Inbox",
+      url: "https://example.com/post",
+    });
+    expect(parsed.kind === "note" && parsed.text).not.toContain("https://");
+  });
+});
+
+describe("parseMessage - folder commands", () => {
+  it.each([
+    ["/idea build a habit tracker", "Ideas"],
+    ["/interview tell me about the team", "Interviews"],
+    ["/goal ship one CLI", "Goals"],
+    ["/read https://example.com/post", "Reading"],
+  ])("routes %s to %s", (raw, folder) => {
+    expect(parseMessage(raw)).toMatchObject({ kind: "note", folder });
+  });
+
+  it("matches the command case-insensitively", () => {
+    expect(parseMessage("/IDEA shout")).toEqual({ kind: "note", folder: "Ideas", text: "shout" });
+  });
+
+  it("collapses the whitespace between command and body", () => {
+    expect(parseMessage("/idea    two   spaces")).toEqual({
+      kind: "note",
+      folder: "Ideas",
+      text: "two spaces",
+    });
+  });
+
+  it("keeps a bare command as an empty note", () => {
+    expect(parseMessage("/idea")).toEqual({ kind: "note", folder: "Ideas", text: "" });
+  });
+
+  it("stores a link-only /read without any text", () => {
+    expect(parseMessage("/read https://example.com/post")).toEqual({
+      kind: "note",
+      folder: "Reading",
+      text: "",
+      url: "https://example.com/post",
+    });
+  });
+
+  it("strips the link out of the text when both are given", () => {
+    expect(parseMessage("/read https://example.com/post read this later")).toEqual({
+      kind: "note",
+      folder: "Reading",
+      text: "read this later",
+      url: "https://example.com/post",
+    });
+  });
+
+  it("leaves the text intact when only text is given", () => {
+    expect(parseMessage("/interview phone screen notes")).toEqual({
+      kind: "note",
+      folder: "Interviews",
+      text: "phone screen notes",
+    });
+  });
+});
+
+describe("parseMessage - other commands", () => {
+  it("defaults /plan to today", () => {
+    expect(parseMessage("/plan")).toEqual({ kind: "plan", when: "today" });
+  });
+
+  it("understands /plan today and /plan tomorrow", () => {
+    expect(parseMessage("/plan today")).toEqual({ kind: "plan", when: "today" });
+    expect(parseMessage("/plan tomorrow")).toEqual({ kind: "plan", when: "tomorrow" });
+    expect(parseMessage("/plan TOMORROW")).toEqual({ kind: "plan", when: "tomorrow" });
+  });
+
+  it("falls back to today for an unrecognised /plan argument", () => {
+    expect(parseMessage("/plan next week")).toEqual({ kind: "plan", when: "today" });
+  });
+
+  it("keeps the whole query for /find", () => {
+    expect(parseMessage("/find rust async")).toEqual({ kind: "find", query: "rust async" });
+    expect(parseMessage("/find")).toEqual({ kind: "find", query: "" });
+  });
+
+  it("treats /help as help whatever follows it", () => {
+    expect(parseMessage("/help")).toEqual({ kind: "help" });
+    expect(parseMessage("/help me")).toEqual({ kind: "help" });
+  });
+
+  it.each(["/bogus", "/bogus ignored args", "/"])("reports %s as unknown", (raw) => {
+    expect(parseMessage(raw).kind).toBe("unknown");
+  });
+
+  it("names the unknown command so the reply can echo it", () => {
+    expect(parseMessage("/nope whatever")).toEqual({ kind: "unknown", command: "nope" });
+  });
+});

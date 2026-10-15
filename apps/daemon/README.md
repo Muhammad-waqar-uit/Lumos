@@ -102,9 +102,18 @@ pnpm dev
 # Type-check just this workspace
 pnpm typecheck
 
-# The full gate (lint + format:check + typecheck + build) before you push
+# The full gate (lint + format:check + typecheck + test + build) before you push
 pnpm -w validate
 ```
+
+### Tests
+
+```bash
+# The daemon suite: the command parser and the filing path
+pnpm test
+```
+
+The tests write into a temporary directory (`VAULT_PATH`), never into your `vault/`.
 
 The daemon can run headless with `LUMOS_DISABLE_WHATSAPP=1` when you only need the HTTP API. Read [RULES.md](../../RULES.md) before contributing — commits go on a branch, never on `main`.
 

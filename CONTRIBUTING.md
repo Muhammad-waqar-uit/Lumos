@@ -46,7 +46,7 @@ Prefixes match the commit types: `feat/` `fix/` `refactor/` `perf/` `docs/` `tes
 | ------------ | -------------------------------------------------------------------- |
 | `pre-commit` | blocks commits on `main`, then `lint-staged` (oxlint --fix + prettier) |
 | `commit-msg` | `commitlint` — enforces `<type>(<scope>): <description>`             |
-| `pre-push`   | `pnpm validate` — lint + format:check + typecheck + build            |
+| `pre-push`   | `pnpm validate` — lint + format:check + typecheck + test + build     |
 
 Run the same gate yourself whenever you like:
 
@@ -54,8 +54,12 @@ Run the same gate yourself whenever you like:
 pnpm lint          # oxlint across apps + packages
 pnpm format        # prettier --write .
 pnpm typecheck     # tsc --noEmit in every workspace
-pnpm validate      # lint + format:check + typecheck + build
+pnpm test          # vitest run in every workspace that has a suite
+pnpm validate      # lint + format:check + typecheck + test + build
 ```
+
+Tests live next to the code they cover (`*.test.ts`) and run through vitest; anything touching the
+vault does it in a temporary directory built by the test, never in your real `vault/`.
 
 A red gate blocks the commit or push. **Fix the cause — never silence the check.** No `any`, no
 `@ts-ignore`/disable comments without a written reason, no skipped or weakened tests.

@@ -52,8 +52,9 @@ pnpm lint             # oxlint over apps + packages
 pnpm format           # prettier --write .
 pnpm format:check     # prettier --check . (what validate runs)
 pnpm typecheck        # tsc --noEmit in every workspace
+pnpm test             # vitest run in every workspace that has a suite
 pnpm build            # build every workspace that has a build step
-pnpm validate         # lint + format:check + typecheck + build — run before every push
+pnpm validate         # lint + format:check + typecheck + test + build — run before every push
 
 pnpm --filter daemon dev        # WhatsApp capture service (tsx watch)
 pnpm --filter desktop dev       # Vite dev server for the UI (port 1420)
@@ -125,8 +126,13 @@ no reference dangles.
 ## Checks before you finish
 
 ```bash
-pnpm validate      # lint + format:check + typecheck + build (also runs on push)
+pnpm validate      # lint + format:check + typecheck + test + build (also runs on push)
 ```
+
+New behaviour gets a test beside the module it covers (`*.test.ts`). Anything that touches the vault
+does it in a temp directory created by the test — never the real `vault/`. A capability that genuinely
+cannot be tested (Rust shell, a live WhatsApp session) needs the exact manual check written down
+instead.
 
 Then, in prose to the user: what changed, what you actually ran, which checks passed, and what is
 still open. **Never claim something works because the build succeeded** — exercise the real
