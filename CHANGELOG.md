@@ -37,12 +37,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Note links open outside the window so the vault view is never navigated away.
 
 ### Added (continued 4)
-- A test suite run by vitest 5: 66 tests, 34 for `@lumos/vault-utils` (slugify, title choice,
-  frontmatter parsing including BOM and CRLF files, save/read/list/search against a temporary vault)
-  and 32 for the daemon (`parseMessage` for every command and for malformed input, plus
-  `handleMessage` filing real notes into a temporary vault).
+- A test suite run by vitest 5: 107 tests, 75 for `@lumos/vault-utils` (slugify, title choice,
+  frontmatter parsing including BOM and CRLF files, save/read/list/search, link and tag extraction,
+  graph assembly and neighbourhoods, all against a temporary vault) and 32 for the daemon
+  (`parseMessage` for every command and for malformed input, plus `handleMessage` filing real notes
+  into a temporary vault).
+
+### Added (continued 5)
+- A vault link graph. Note bodies are scanned for `[[wikilinks]]`, relative `.md` links and hashtags;
+  notes and tags become nodes, links and tag references become edges, and a note that nothing points
+  at is marked an orphan. Links whose target does not exist are reported as unresolved instead of
+  being invented as nodes. The pure graph code lives in `@lumos/vault-utils` (a browser-safe
+  `./graph` entry point), so the daemon and the desktop share one implementation.
+- `GET /graph` on the daemon read API returns that graph.
+- A Graph view in the desktop app: a canvas force layout with glow nodes sized by backlink count,
+  curved edges, one hue per folder, and controls for tags, unlinked notes and a local depth that
+  narrows the graph to the notes near the open one. Clicking a node selects it, and a button opens it
+  in the Notes view. With the daemon down the pane shows the demo graph instead of an empty screen.
+
+### Fixed
+- Palette steps that only TypeScript referenced never reached the browser: Tailwind prunes theme
+  values it cannot see used in a class name, so the graph colours are declared as plain `:root`
+  custom properties.
+- A failed lazily loaded chunk used to leave the whole app blank; the graph pane now renders an
+  error with a retry, so one broken pane cannot take the vault view down with it.
+- The Graph tab renders through the graph library's vanilla instance API. Its React wrapper forwards
+  props by method name and silently drops the canvas-object props and `autoPauseRedraw`, so styling
+  set as component props never applied.
 
 ### Changed
+- New dependency in the desktop workspace: `force-graph` (canvas), loaded lazily with the Graph tab
+  so the notes path is unaffected (lockfile updated). The graph colours reuse existing theme tokens.
 - `pnpm validate` now includes the tests: lint + format:check + typecheck + test + build. Use
   `pnpm test` to run the suites on their own.
 - All four workspaces now pin the same TypeScript version (`~6.0.3`) and expose a `typecheck` script.
@@ -63,5 +88,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Writing the tests turned up two small gaps, both tracked in [docs/TODO.md](docs/TODO.md): `/help`
   does not list itself in the command list it prints, and the read-API routes cannot be tested until
   the Fastify app is extracted from `server.ts`.
-- `main` is protected by convention and by the hook; GitHub-side branch protection and CI are not
-  configured yet (tracked in [docs/TODO.md](docs/TODO.md)).
+- `main` is protected by convention and by the hook, and the `pnpm validate` workflow now runs on
+  every PR and every push. GitHub-side branch protection is still off, so the check is not yet
+  required to merge (tracked in [docs/TODO.md](docs/TODO.md)).

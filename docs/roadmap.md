@@ -41,7 +41,9 @@ folder, so progress is always visible.
 
 - Folder sidebar, note list, note viewer. ✅
 - Vault load on mount via the daemon read API. ✅
-- Markdown rendering and tag filtering. ⏳
+- Markdown rendering. ✅
+- Link graph: notes and tags as nodes, links and tag references as edges, filters and local depth. ✅
+- Tag filtering. ⏳
 
 ## M6 - Search (Phase 6)
 
@@ -57,5 +59,7 @@ folder, so progress is always visible.
 
 ## Beyond
 
-Ideas not yet committed: link enrichment summaries, statistics/insights, optional
-sync/backups, and a graph view. These are recorded in [`FEATURES.md`](FEATURES.md) as `idea`.
+Ideas not yet committed: link enrichment summaries, statistics/insights, and optional
+sync/backups. These are recorded in [`FEATURES.md`](FEATURES.md) as `idea`. The graph view left this
+list and shipped in M5; what is left of it - a backlinks panel, tag nodes treated apart from notes -
+lives in [`TODO.md`](TODO.md) Phase 5.

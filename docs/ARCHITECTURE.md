@@ -6,7 +6,7 @@ Lumos is a pnpm monorepo. Two applications share a common Markdown vault:
 
 - **`apps/daemon`** - capture service. Connects to WhatsApp, parses messages, writes Markdown notes.
 - **`apps/desktop`** - Tauri desktop UI. Browses, searches, and (later) edits the vault.
-- **`packages/*`** - shared TypeScript: `@lumos/shared` (types) and `@lumos/vault-utils` (vault read/list/search/write).
+- **`packages/*`** - shared TypeScript: `@lumos/shared` (types) and `@lumos/vault-utils` (vault read/list/search/write, plus link/tag extraction and graph building).
 - **`vault/`** - the user's notes as plain Markdown files (created at runtime, git-ignored).
 
 ## Component Diagram
@@ -24,7 +24,7 @@ WhatsApp ──► Daemon ──► vault/*.md ◄── Desktop (Tauri UI)
 3. The message text is parsed into a command (`parseMessage`).
 4. For note commands the vault writer creates a Markdown file with YAML frontmatter.
 5. The daemon replies to the sender with a confirmation.
-6. The desktop app requests the vault from the daemon read API (`/notes`, `/folders`, `/note`) and renders it (demo data when the daemon is offline).
+6. The desktop app requests the vault from the daemon read API (`/notes`, `/folders`, `/note`, `/graph`) and renders it (demo data when the daemon is offline).
 
 ## Daemon
 
@@ -47,6 +47,7 @@ never read or written.
 - **Shell**: Tauri 2.x (Rust backend) hosting a Vite/React frontend.
 - **UI**: Tailwind CSS + shadcn/ui, dark minimal theme.
 - **Access to the vault**: the daemon HTTP read API today; Tauri filesystem commands are a possible future path so it can run without the daemon.
+- **Panes**: the notes list + viewer, or the link graph, sharing the folder sidebar. The graph renderer loads lazily with its tab, so the notes path stays light.
 
 ## Vault
 
@@ -72,8 +73,7 @@ never read or written.
 
 - **Runner**: vitest, run by `pnpm test` from the root (every workspace that has a suite).
 - **Location**: `*.test.ts` next to the module it covers - no separate `tests/` tree.
-- **Coverage today**: `@lumos/vault-utils` (slugify, frontmatter parsing, save/read/list/search) and
-  the daemon (the parser and the filing path). The HTTP routes and the desktop UI are not covered yet.
+- **Coverage today**: `@lumos/vault-utils` (slugify, frontmatter parsing, save/read/list/search, link and tag extraction, graph assembly and neighbourhoods) and the daemon (the parser and the filing path). The HTTP routes and the desktop UI are not covered yet.
 - The suites run inside `pnpm validate`, so a failing test blocks a push exactly like a failing build.
 
 ## Repository Layout

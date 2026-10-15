@@ -1,4 +1,4 @@
-import type { Folder, Note, VaultEntry } from "@lumos/shared";
+import type { Folder, GraphData, Note, VaultEntry } from "@lumos/shared";
 
 /** Where the desktop is getting its data from. */
 export type Connection = "connecting" | "daemon" | "demo";
@@ -35,6 +35,12 @@ export async function searchNotes(query: string): Promise<VaultEntry[]> {
     `/notes/search?q=${encodeURIComponent(query)}`,
   );
   return notes;
+}
+
+/** The vault's link graph: notes, internal links, tags, and links with no target yet. */
+export async function getGraph(): Promise<GraphData> {
+  const { graph } = await getJson<{ graph: GraphData }>("/graph");
+  return graph;
 }
 
 /** Read a single note by folder + filename. */

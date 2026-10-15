@@ -1,11 +1,24 @@
-import { useEffect, useMemo, useState } from "react";
-import type { Note, VaultEntry } from "@lumos/shared";
-import { getFolders, getNote, getNotes, type Connection, type FolderCount } from "./lib/api";
-import { DEMO_FOLDERS, DEMO_NOTES, demoNote } from "./lib/demo";
-import { Sidebar, type FolderFilter } from "./components/Sidebar";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
+import type { GraphData, Note, VaultEntry } from "@lumos/shared";
+import {
+  getFolders,
+  getGraph,
+  getNote,
+  getNotes,
+  type Connection,
+  type FolderCount,
+} from "./lib/api";
+import { DEMO_FOLDERS, DEMO_GRAPH, DEMO_NOTES, demoNote } from "./lib/demo";
 import { NoteList, keyOf } from "./components/NoteList";
 import { NoteViewer } from "./components/NoteViewer";
+import { PaneBoundary } from "./components/PaneBoundary";
+import { Sidebar, type FolderFilter, type ShellView } from "./components/Sidebar";
 import { StatusBar } from "./components/StatusBar";
+
+// The graph renderer is the heaviest dependency in the app, so it loads with the tab.
+const GraphView = lazy(() =>
+  import("./components/GraphView").then((module) => ({ default: module.GraphView })),
+);
 
 export default function App() {
   const [connection, setConnection] = useState<Connection>("connecting");
@@ -16,6 +29,9 @@ export default function App() {
   const [selected, setSelected] = useState<string | null>(null);
   const [fetched, setFetched] = useState<{ key: string; note: Note } | null>(null);
   const [loading, setLoading] = useState(true);
+  const [view, setView] = useState<ShellView>("notes");
+  // Null means the daemon could not serve a graph, so the demo vault is drawn instead.
+  const [graph, setGraph] = useState<GraphData | null>(null);
 
   // Load the vault from the daemon; fall back to demo data if it is not running.
   useEffect(() => {
@@ -34,6 +50,13 @@ export default function App() {
         setConnection("demo");
       } finally {
         if (alive) setLoading(false);
+      }
+      // The graph is a separate read: notes still work if it fails.
+      try {
+        const g = await getGraph();
+        if (alive) setGraph(g);
+      } catch {
+        if (alive) setGraph(null);
       }
     })();
     return () => {
@@ -84,6 +107,14 @@ export default function App() {
     return fetched && fetched.key === activeKey ? fetched.note : demoNote(activeEntry);
   }, [activeEntry, connection, fetched, activeKey]);
 
+  // Opening a node clears the list filters, so the note really becomes the active one.
+  const openNote = (id: string): void => {
+    setActiveFolder("All");
+    setQuery("");
+    setSelected(id);
+    setView("notes");
+  };
+
   return (
     <div className="flex h-full flex-col">
       <div className="flex flex-1 overflow-hidden">
@@ -92,16 +123,41 @@ export default function App() {
           total={notes.length}
           active={activeFolder}
           onSelect={setActiveFolder}
+          view={view}
+          onView={setView}
         />
-        <NoteList
-          notes={visible}
-          selected={activeKey}
-          query={query}
-          onQuery={setQuery}
-          onSelect={setSelected}
-          loading={loading}
-        />
-        <NoteViewer note={note} />
+        {view === "graph" ? (
+          <PaneBoundary title="The graph view">
+            <Suspense
+              fallback={
+                <p className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
+                  Loading the graph…
+                </p>
+              }
+            >
+              <GraphView
+                data={graph ?? DEMO_GRAPH}
+                source={graph ? "live" : "demo"}
+                connection={connection}
+                loading={loading}
+                activeKey={activeKey}
+                onOpen={openNote}
+              />
+            </Suspense>
+          </PaneBoundary>
+        ) : (
+          <>
+            <NoteList
+              notes={visible}
+              selected={activeKey}
+              query={query}
+              onQuery={setQuery}
+              onSelect={setSelected}
+              loading={loading}
+            />
+            <NoteViewer note={note} />
+          </>
+        )}
       </div>
       <StatusBar connection={connection} count={visible.length} />
     </div>

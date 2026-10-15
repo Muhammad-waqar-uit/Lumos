@@ -15,10 +15,10 @@
 
 ## Phase 0.1: Enforcement still to come (P1)
 - [x] GitHub Actions workflow (`.github/workflows/validate.yml`) running `pnpm validate` on every PR into `main` and every push to `main`
-- [ ] Branch protection on `main`: require a pull request and the `pnpm validate` check before merging (repository settings, plus a first green run on `main`)
-- [x] Test runner (vitest) wired up and added to the validation gate — 66 tests over `@lumos/vault-utils` and the daemon
+- [ ] Branch protection on `main`: require a pull request and the `pnpm validate` check before merging (a repository setting; the workflow's first run on `main` was green in `38790615355`)
+- [x] Test runner (vitest) wired up and added to the validation gate — 107 tests over `@lumos/vault-utils` and the daemon
 - [ ] Schema validation for note frontmatter in CI
-- [ ] Route tests for the read API — extract the Fastify app from `server.ts` so `app.inject()` can hit `/note`, `/notes`, `/folders` without binding a port
+- [ ] Route tests for the read API — extract the Fastify app from `server.ts` so `app.inject()` can hit `/note`, `/notes`, `/folders`, `/graph` without binding a port
 - [ ] Desktop component tests (jsdom + Testing Library) for the sidebar, list and viewer states
 
 ## Phase 1: Documentation & Tracking Foundation (P0)
@@ -45,7 +45,7 @@
 - [x] Refactor daemon to use shared packages
 
 ## Phase 3: Daemon Enhancements (P1)
-- [x] Read API for the desktop: `GET /notes`, `/notes/search`, `/folders`, `/note` (+ CORS, traversal guards)
+- [x] Read API for the desktop: `GET /notes`, `/notes/search`, `/folders`, `/note`, `/graph` (+ CORS, traversal guards)
 - [ ] Link expansion for `/read` and `/interview` (title, description, og:image)
 - [ ] Implement `/find <query>` search over the vault
 - [ ] `/plan today|tomorrow` with Ollama integration
@@ -70,6 +70,11 @@
 - [x] Note viewer - Markdown rendering via `react-markdown` + `remark-gfm` (headings, lists, tables, task lists, blockquotes, fenced code; note links open externally)
 - [ ] Syntax highlighting for fenced code blocks (`rehype-highlight` or shiki)
 - [ ] Tag filtering
+- [x] Graph view: canvas link graph from `GET /graph` — glow nodes sized by backlinks, curved edges, one hue per folder, tag and unlinked filters, local depth around the open note, demo graph offline
+- [ ] Graph: backlinks panel in the note viewer, fed by the same extracted links
+- [ ] Graph: tag nodes styled apart from notes, and tag nodes clickable as a filter
+- [ ] Graph: keep the node positions across tab switches instead of re-running the layout
+- [ ] Graph: re-fit after the pane is resized — today the transform is kept, so the graph can sit off-centre until `Fit` (or a filter change) is used
 
 ## Phase 6: Search & Discovery (P1)
 - [ ] Full-text search with fuse.js

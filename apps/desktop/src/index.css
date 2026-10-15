@@ -28,6 +28,20 @@
 
 :root {
   color-scheme: dark;
+
+  /*
+   * Graph view colours, one hue per vault folder plus tags and synapse edges.
+   * These live outside `@theme` on purpose: Tailwind drops unused theme variables that
+   * look like palette steps (`--colour-name-1`), and a canvas cannot use a utility class,
+   * so the graph reads them at runtime through src/lib/graph-palette.ts.
+   */
+  --color-graph-edge: hsl(215 75% 72%);
+  --color-graph-tag: hsl(280 55% 74%);
+  --color-graph-folder-1: hsl(210 85% 70%);
+  --color-graph-folder-2: hsl(165 65% 62%);
+  --color-graph-folder-3: hsl(38 90% 66%);
+  --color-graph-folder-4: hsl(330 75% 72%);
+  --color-graph-folder-5: hsl(265 80% 74%);
 }
 
 html,

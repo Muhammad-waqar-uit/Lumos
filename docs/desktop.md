@@ -12,8 +12,11 @@ daemon (falling back to demo data when the daemon is offline):
 - `src/components/Sidebar.tsx` - folders with note counts
 - `src/components/NoteList.tsx` - searchable note list (title, date, preview, tags)
 - `src/components/NoteViewer.tsx` - note header (folder, date, source, url) + Markdown body
+- `src/components/GraphView.tsx` - canvas link graph (routes, controls, click-to-open)
+- `src/components/PaneBoundary.tsx` - error boundary around the lazily loaded graph pane
 - `src/components/StatusBar.tsx` - connection state + note count
-- `src/lib/api.ts` - daemon client (`/notes`, `/notes/search`, `/folders`, `/note`)
+- `src/lib/api.ts` - daemon client (`/notes`, `/notes/search`, `/folders`, `/note`, `/graph`)
+- `src/lib/graph-palette.ts` - pure helpers mapping a node to its colour index and radius
 - `src/lib/demo.ts` - demo data used when the daemon is not running
 - `src/index.css` - Tailwind v4 import + dark design tokens + `.markdown` typography for notes
 
@@ -30,6 +33,32 @@ colour is hardcoded in a component. Fenced code blocks are styled but not yet sy
 Still to come: tag filtering, code syntax highlighting, resizable panes, routing, and a note editor
 (see [`TODO.md`](TODO.md) Phases 4-7).
 
+### Graph view
+
+The header switches between **Notes** and **Graph**. Both read the same vault: the graph pane draws
+`getGraph()` from the daemon, or `DEMO_GRAPH` when the daemon is down.
+
+- Nodes are notes and tags; edges are `[[wikilinks]]` / relative `.md` links plus tag references.
+  Radius grows with a note's `inDegree`, so linked-to notes read as hubs.
+- One hue per folder, taken from the `--color-graph-folder-*` tokens in `src/index.css`; tags use
+  `--color-graph-tag`. Nothing is hardcoded in the component.
+- Controls: tag and unlinked note filters, and a depth step that shrinks the graph to the notes
+  within *n* hops of the selected note. Depth filtering is local, using `neighborhood()` on data
+  already in memory - changing it does not refetch.
+- Clicking a node selects it: the panel shows its in/out degree and an **Open note** button that opens
+  it in the Notes view. Background clicks clear the selection.
+
+The renderer is `force-graph` (canvas), driven through its **vanilla instance API** rather than its
+React wrapper: in `force-graph` 1.52 those props are linked to the internal canvas graph and the
+wrapper's prop forwarding drops them silently, so the canvas-object props and `autoPauseRedraw`
+never reached the renderer. The pane is `React.lazy`-loaded, because the renderer is the heaviest
+dependency in the app, and wrapped in `PaneBoundary` so a failed chunk shows an error with a retry
+instead of a blank screen.
+
+The `--color-graph-*` tokens are declared as plain custom properties in `:root` rather than Tailwind
+theme entries: Tailwind prunes theme values it cannot see used in a class name, so palette steps
+referenced only from TypeScript would never reach the stylesheet.
+
 There is no desktop test coverage yet: the vitest suites cover `@lumos/vault-utils` and the daemon.
 Component tests need jsdom + Testing Library and are tracked in [`TODO.md`](TODO.md) Phase 0.1.
 
@@ -39,8 +68,8 @@ Component tests need jsdom + Testing Library and are tracked in [`TODO.md`](TODO
 - **UI**: Tailwind CSS + shadcn/ui, dark minimal theme (see [`design.md`](design.md)).
 - **Routing**: TanStack Router.
 - **State**: zustand stores for the vault index, current folder, current note, and filters.
-- **Rendering**: `react-markdown` + `remark-gfm` for notes (in use); `fuse.js` for search and
-  `lucide-react` for icons (planned).
+- **Rendering**: `react-markdown` + `remark-gfm` for notes and `force-graph` for the link graph (both
+  in use); `fuse.js` for search and `lucide-react` for icons (planned).
 
 ## Layout
 
@@ -51,6 +80,9 @@ A resizable three-pane shell:
 │ Sidebar   │ Notes list         │ Note viewer                │
 │ (folders) │ (sorted by date)   │ (Markdown rendered)        │
 └───────────┴────────────────────┴────────────────────────────┘
+
+On the **Graph** tab the list and viewer are replaced by the link graph, with its controls in a
+header bar above the canvas. The sidebar stays visible in both views.
 ```
 
 ## Access to the vault

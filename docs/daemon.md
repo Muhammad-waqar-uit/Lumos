@@ -61,6 +61,14 @@ Note counts per folder: `{ "folders": [{ "folder": "Ideas", "count": 3 }] }`.
 A single note (`frontmatter` + `content`). Returns `400` for an unknown folder or an unsafe
 filename, and `404` when the note is missing.
 
+### `GET /graph`
+The vault's link graph: `{ "graph": { "nodes": GraphNode[], "edges": GraphEdge[], "unresolved":
+UnresolvedLink[] } }`. Notes and tags are nodes; internal links (`[[wikilinks]]` and relative `.md`
+links) and tag references are edges. A note's `inDegree` counts the notes pointing at it, and
+`orphan` marks a note with no links and no tags. Links whose target does not exist are reported in
+`unresolved` instead of being invented as nodes. Built by `buildVaultGraph()` from
+`@lumos/vault-utils`, which reads every note body.
+
 CORS is enabled for local development origins (`localhost`, `127.0.0.1`, `tauri://`) since the
 server binds to `127.0.0.1` only.
 
@@ -94,8 +102,9 @@ write). Keeping this logic in packages lets the desktop app reuse it.
   generated filename, and the frontmatter that was written. It points `VAULT_PATH` at a temporary
   directory before importing the handler, so your own vault is never touched.
 
-Not covered yet: the Fastify routes (`/note`, `/notes`, `/folders`, `/message`), which need the app
-built by a factory in `server.ts` so `app.inject()` can run without binding a port.
+Not covered yet: the Fastify routes (`/note`, `/notes`, `/folders`, `/graph`, `/message`), which need
+the app built by a factory in `server.ts` so `app.inject()` can run without binding a port. The graph
+builder itself is covered by the `@lumos/vault-utils` suite, against a temporary vault.
 
 ## Planned enhancements
 

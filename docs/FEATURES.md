@@ -14,7 +14,8 @@ Status values: **done** · **in-progress** · **planned** · **idea**
 | Tag extraction | planned | Hashtag extraction + auto-tagging |
 | Shared packages | done | `@lumos/shared` types + `@lumos/vault-utils` (parse/list/search/write) |
 | Vault listing/search | done | `listNotes`, `getNotesByFolder`, `searchNotes`, `readNote` |
-| Daemon read API | done | `GET /notes`, `/notes/search`, `/folders`, `/note` + CORS |
+| Vault graph | done | `extractLinks`/`extractTags`/`buildGraphFromNotes`/`neighborhood` in `@lumos/vault-utils` (`./graph` subpath, browser-safe) |
+| Daemon read API | done | `GET /notes`, `/notes/search`, `/folders`, `/note`, `/graph` + CORS |
 | Dark UI theme | done | Tailwind v4 tokens, near-black background |
 | Desktop vault browser | in-progress | Folder sidebar + note list + viewer + status bar |
 | Note viewer | done | Markdown via `react-markdown` + `remark-gfm` (tables, task lists, fenced code) |
@@ -23,12 +24,12 @@ Status values: **done** · **in-progress** · **planned** · **idea**
 | Full-text search UI | in-progress | Client-side filter; fuse.js + Cmd/Ctrl+K pending |
 | Note editor | planned | Markdown editor with preview |
 | Link enrichment | idea | Summaries and key points from links |
-| Graph view | idea | Not core; revisit later |
+| Graph view | done | Canvas force graph: glow nodes sized by backlinks, curved synapse edges, one hue per folder, tag and unlinked filters, local depth around the open note, demo graph when the daemon is offline |
 | Lint + format gate | done | oxlint + prettier, run on staged files by lint-staged |
 | Commit message lint | done | commitlint enforces `<type>(<scope>): <description>` |
 | Pre-push validation | done | `pnpm validate` — lint + format:check + typecheck + test + build |
 | Test runner | done | vitest 5; `pnpm test` runs every workspace that has a suite |
-| Parser & vault tests | done | 66 tests: `parseMessage` for every command, plus save/read/list/search against a temp vault |
+| Parser & vault tests | done | 107 tests: 75 for `@lumos/vault-utils` (including link/tag extraction, graph assembly and neighbourhoods) and 32 for the daemon |
 | Read API route tests | planned | Needs a Fastify factory in `server.ts` so `app.inject()` can run without a port |
 | Desktop component tests | planned | jsdom + Testing Library for the sidebar, list and viewer states |
 | Branch workflow | done | Short-lived `<type>/<description>` branches; `pre-commit` blocks commits on `main` |

@@ -5,20 +5,20 @@ import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import type { Dirent } from "node:fs";
 import path from "node:path";
 import YAML from "yaml";
-import type { Frontmatter, Note, NoteInput, VaultEntry } from "@lumos/shared";
+import type {
+  Frontmatter,
+  GraphData,
+  GraphSourceNote,
+  Note,
+  NoteInput,
+  VaultEntry,
+} from "@lumos/shared";
+import { buildGraphFromNotes } from "./graph";
+import { slugify } from "./slug";
+
+export { slugify };
 
 const TITLE_MAX = 60;
-
-/** Turn a string into a filesystem-safe slug. */
-export function slugify(input: string): string {
-  return (
-    input
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "")
-      .slice(0, 50) || "note"
-  );
-}
 
 /** Choose a human title for a note from its text, URL, or a fallback. */
 export function makeTitle({ text, url }: Pick<NoteInput, "text" | "url">): string {
@@ -183,6 +183,39 @@ export async function searchNotes(vaultDir: string, query: string): Promise<Vaul
     if (full.includes(q)) results.push(entry);
   }
   return results;
+}
+
+/** Frontmatter aliases, which links may resolve to. */
+function readAliases(raw: unknown): string[] {
+  if (Array.isArray(raw)) return raw.map(String);
+  if (typeof raw === "string") return [raw];
+  return [];
+}
+
+/**
+ * Assemble the vault's link graph: notes, internal links, tags, and the links
+ * whose target does not exist yet. Unreadable files are skipped, as the listings do.
+ */
+export async function buildVaultGraph(vaultDir: string): Promise<GraphData> {
+  const entries = await listNotes(vaultDir);
+  const notes: GraphSourceNote[] = [];
+  for (const entry of entries) {
+    try {
+      const note = await readNote(entry.file, entry.folder);
+      notes.push({
+        id: `${entry.folder}/${entry.name}`,
+        title: note.title,
+        folder: entry.folder,
+        created: note.frontmatter.created,
+        tags: note.frontmatter.tags,
+        aliases: readAliases(note.frontmatter.aliases),
+        content: note.content,
+      });
+    } catch {
+      /* skip unreadable files */
+    }
+  }
+  return buildGraphFromNotes(notes);
 }
 
 /** Write a note to the vault, never overwriting an existing file. */

@@ -1,7 +1,13 @@
 import path from "node:path";
 import Fastify from "fastify";
 import cors from "@fastify/cors";
-import { listNotes, searchNotes, readNote, getNotesByFolder } from "@lumos/vault-utils";
+import {
+  buildVaultGraph,
+  listNotes,
+  searchNotes,
+  readNote,
+  getNotesByFolder,
+} from "@lumos/vault-utils";
 import { FOLDERS, type Folder } from "@lumos/shared";
 import { handleMessage } from "./handler.js";
 import { startWhatsApp } from "./whatsapp.js";
@@ -29,6 +35,9 @@ app.get("/notes", async () => ({ notes: await listNotes(VAULT) }));
 app.get<{ Querystring: { q?: string } }>("/notes/search", async (req) => {
   return { notes: await searchNotes(VAULT, req.query.q ?? "") };
 });
+
+/** The vault's link graph: notes, internal links, tags, and links with no target yet. */
+app.get("/graph", async () => ({ graph: await buildVaultGraph(VAULT) }));
 
 /** Note counts per vault folder. */
 app.get("/folders", async () => {

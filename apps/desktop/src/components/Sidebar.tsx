@@ -2,15 +2,23 @@ import type { Folder } from "@lumos/shared";
 import type { FolderCount } from "../lib/api";
 
 export type FolderFilter = Folder | "All";
+export type ShellView = "notes" | "graph";
+
+const VIEWS: { key: ShellView; label: string }[] = [
+  { key: "notes", label: "Notes" },
+  { key: "graph", label: "Graph" },
+];
 
 interface Props {
   folders: FolderCount[];
   total: number;
   active: FolderFilter;
   onSelect: (folder: FolderFilter) => void;
+  view: ShellView;
+  onView: (view: ShellView) => void;
 }
 
-export function Sidebar({ folders, total, active, onSelect }: Props) {
+export function Sidebar({ folders, total, active, onSelect, view, onView }: Props) {
   const items: { key: FolderFilter; label: string; count: number }[] = [
     { key: "All", label: "All notes", count: total },
     ...folders.map((f) => ({ key: f.folder as FolderFilter, label: f.folder, count: f.count })),
@@ -21,6 +29,31 @@ export function Sidebar({ folders, total, active, onSelect }: Props) {
       <div className="px-4 py-3.5">
         <h1 className="text-sm font-semibold tracking-wide">Lumos</h1>
         <p className="mt-0.5 text-xs text-muted-foreground">Second brain</p>
+      </div>
+      <div className="px-3 pb-3">
+        <div
+          role="tablist"
+          aria-label="View"
+          className="flex gap-0.5 rounded-md border border-border p-0.5"
+        >
+          {VIEWS.map((option) => (
+            <button
+              key={option.key}
+              type="button"
+              role="tab"
+              aria-selected={view === option.key}
+              onClick={() => onView(option.key)}
+              className={
+                "flex-1 rounded px-2 py-1 text-xs transition-colors " +
+                (view === option.key
+                  ? "bg-accent text-accent-foreground"
+                  : "text-muted-foreground hover:text-foreground")
+              }
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
       </div>
       <nav aria-label="Folders" className="flex-1 overflow-y-auto px-2 pb-3">
         {items.map((item) => {
