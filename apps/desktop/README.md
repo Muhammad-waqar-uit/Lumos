@@ -6,10 +6,10 @@ The Lumos Desktop app is a Tauri-based desktop client for browsing, searching, a
 
 While the daemon handles capture via WhatsApp, the desktop app is designed to help you:
 - Browse notes organized by folders (Inbox, Ideas, Interviews, Goals, Reading)
-- Search across your entire vault
+- Search the vault's titles, tags and previews (note bodies are not searched yet; the daemon's `/find` and `/notes/search` do search bodies)
 - View notes with their Markdown rendered
 - Play a link or read the page it points at without leaving the app — a YouTube or Vimeo link plays in place, an image link shows the image, any other page is read as text
-- Tag and filter your knowledge base
+- Filter by folder and by text; tag filtering is not built yet (see the roadmap below)
 - Get a bird's-eye view of your captured thoughts, as a link graph
 
 Notes are read-only today, and the vault is served by the daemon: with it stopped the app shows
@@ -75,7 +75,11 @@ apps/desktop/
 
 ## Integration with Lumos
 
-The desktop app reads from the same vault directory that the daemon writes to. By default, this is `../../vault` relative to the daemon, so the desktop app can access it directly from the filesystem.
+The desktop app does **not** read the vault directory itself. It reads through the daemon's HTTP API,
+which points at the same `../../vault` directory the daemon writes to — there is no `invoke` call and
+no filesystem plugin in `src/`, so every read goes through `src/lib/api.ts` and, with the daemon
+stopped, the app falls back to `src/lib/demo.ts`. Reading the vault directly over Tauri commands is a
+possible future path (see [docs/desktop.md](../../docs/desktop.md)); it does not exist today.
 
 ## Roadmap
 
