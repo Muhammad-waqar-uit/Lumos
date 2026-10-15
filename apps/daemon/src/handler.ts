@@ -1,7 +1,6 @@
 ﻿import type { VaultEntry } from "@lumos/shared";
-import { searchNotes } from "@lumos/vault-utils";
+import { saveNote, searchNotes } from "@lumos/vault-utils";
 import { parseMessage } from "./commands.js";
-import { saveNote, VAULT } from "./vault.js";
 
 const HELP = [
   "Commands:",
@@ -31,12 +30,17 @@ function formatFind(query: string, hits: VaultEntry[]): string {
   ].join("\n");
 }
 
-export async function handleMessage(text: string): Promise<string> {
+/**
+ * Answer one inbound message. The vault arrives as an argument rather than from module
+ * state, so a caller decides where the note lands - the daemon passes its own vault, and
+ * a test passes a temporary one.
+ */
+export async function handleMessage(text: string, vaultDir: string): Promise<string> {
   const parsed = parseMessage(text);
   switch (parsed.kind) {
     case "note": {
       if (!parsed.text && !parsed.url) return "Add some text or a link after the command.";
-      const { title } = await saveNote(parsed);
+      const { title } = await saveNote(vaultDir, parsed);
       return `Filed in ${parsed.folder}: ${title}`;
     }
     case "plan":
@@ -44,7 +48,7 @@ export async function handleMessage(text: string): Promise<string> {
     case "find": {
       const query = parsed.query.trim();
       if (!query) return "Usage: /find <query>";
-      return formatFind(query, await searchNotes(VAULT, query));
+      return formatFind(query, await searchNotes(vaultDir, query));
     }
     case "help":
       return HELP;

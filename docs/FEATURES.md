@@ -33,8 +33,8 @@ Status values: **done** · **in-progress** · **planned** · **idea**
 | Commit message lint | done | commitlint enforces `<type>(<scope>): <description>` |
 | Pre-push validation | done | `pnpm validate` — lint + format:check + typecheck + test + build |
 | Test runner | done | vitest 5; `pnpm test` runs every workspace that has a suite |
-| Parser & vault tests | done | 158 tests: 99 for `@lumos/vault-utils` (link/tag extraction, graph assembly, neighbourhoods, link parsing and page metadata) and 59 for the daemon (including `/find` and the link fetcher's refusals) |
-| Read API route tests | planned | Needs a Fastify factory in `server.ts` so `app.inject()` can run without a port |
+| Parser & vault tests | done | 180 tests: 99 for `@lumos/vault-utils` (link/tag extraction, graph assembly, neighbourhoods, link parsing and page metadata) and 81 for the daemon (including `/find`, the link fetcher's refusals, and every HTTP route driven through `app.inject()`) |
+| Read API route tests | done | `createApp()` in `apps/daemon/src/app.ts` builds the app over a vault directory; `app.test.ts` covers every route plus CORS through `app.inject()`, with the link fetcher injected |
 | Desktop component tests | planned | jsdom + Testing Library for the sidebar, list and viewer states |
 | Branch workflow | done | Short-lived `<type>/<description>` branches; `pre-commit` blocks commits on `main` |
 | Agent working agreement | done | `RULES.md`, `AGENTS.md`, `CLAUDE.md` at the repo root |

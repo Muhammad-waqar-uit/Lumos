@@ -3,20 +3,17 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { parseNote } from "@lumos/vault-utils";
+import { handleMessage } from "./handler";
 
-// The daemon resolves its vault from VAULT_PATH when the module loads, so the
-// temp directory is set up before ./handler is imported. The real vault is never touched.
+// The handler takes its vault as an argument, so the suite owns a temporary directory and
+// the real vault is never touched.
 let vault = "";
-let handleMessage: (text: string) => Promise<string>;
 
 beforeAll(async () => {
   vault = await mkdtemp(path.join(tmpdir(), "lumos-daemon-"));
-  process.env.VAULT_PATH = vault;
-  ({ handleMessage } = await import("./handler"));
 });
 
 afterAll(async () => {
-  delete process.env.VAULT_PATH;
   await rm(vault, { recursive: true, force: true });
 });
 
@@ -33,7 +30,7 @@ async function filesIn(folder: string): Promise<string[]> {
 describe("handleMessage - filing notes", () => {
   it("turns a /idea message into a Markdown note on disk", async () => {
     // The title is the first line of the message as typed, so the reply echoes it unchanged.
-    const reply = await handleMessage("/idea build a habit tracker");
+    const reply = await handleMessage("/idea build a habit tracker", vault);
     expect(reply).toBe("Filed in Ideas: build a habit tracker");
 
     const files = await filesIn("Ideas");
@@ -48,14 +45,14 @@ describe("handleMessage - filing notes", () => {
   });
 
   it("files plain text in the Inbox", async () => {
-    const reply = await handleMessage("a thought with no command");
+    const reply = await handleMessage("a thought with no command", vault);
     expect(reply).toBe("Filed in Inbox: a thought with no command");
     expect(await filesIn("Inbox")).toHaveLength(1);
   });
 
   it("keeps the link in the frontmatter", async () => {
     const url = "https://example.com/rust-async";
-    const reply = await handleMessage(`/read ${url}`);
+    const reply = await handleMessage(`/read ${url}`, vault);
     expect(reply).toBe("Filed in Reading: example.com");
 
     const files = await filesIn("Reading");
@@ -68,30 +65,34 @@ describe("handleMessage - filing notes", () => {
 
   it("asks for content instead of writing an empty note", async () => {
     const before = await filesIn("Interviews");
-    expect(await handleMessage("/interview")).toBe("Add some text or a link after the command.");
+    expect(await handleMessage("/interview", vault)).toBe(
+      "Add some text or a link after the command.",
+    );
     expect(await filesIn("Interviews")).toEqual(before);
   });
 });
 
 describe("handleMessage - replies", () => {
   it("says /plan is not built yet", async () => {
-    expect(await handleMessage("/plan tomorrow")).toBe("Lumos Maxima (tomorrow) isn't built yet.");
+    expect(await handleMessage("/plan tomorrow", vault)).toBe(
+      "Lumos Maxima (tomorrow) isn't built yet.",
+    );
   });
 
   it("answers /help with the command list", async () => {
-    const reply = await handleMessage("/help");
+    const reply = await handleMessage("/help", vault);
     expect(reply).toContain("/idea <text>");
     expect(reply).toContain("Anything without a command goes to Inbox.");
   });
 
   it("answers a malformed command instead of throwing", async () => {
-    const reply = await handleMessage("/");
+    const reply = await handleMessage("/", vault);
     expect(reply).toContain("Unknown command /");
     expect(reply).toContain("Commands:");
   });
 
   it("lists the commands for an unknown one", async () => {
-    const reply = await handleMessage("/bogus something");
+    const reply = await handleMessage("/bogus something", vault);
     expect(reply).toContain("Unknown command /bogus");
     expect(reply).toContain("/goal <text>");
   });
@@ -99,31 +100,31 @@ describe("handleMessage - replies", () => {
 
 describe("handleMessage - /find", () => {
   it("finds a note filed earlier and names its folder", async () => {
-    await handleMessage("/goal ship a zeta cli");
-    const reply = await handleMessage("/find zeta");
+    await handleMessage("/goal ship a zeta cli", vault);
+    const reply = await handleMessage("/find zeta", vault);
     expect(reply).toContain('Found 1 note for "zeta":');
     expect(reply).toContain("- ship a zeta cli (Goals)");
   });
 
   it("matches case-insensitively", async () => {
-    expect(await handleMessage("/find ZETA")).toContain("- ship a zeta cli (Goals)");
+    expect(await handleMessage("/find ZETA", vault)).toContain("- ship a zeta cli (Goals)");
   });
 
   it("says so when nothing matches", async () => {
-    expect(await handleMessage("/find quantum nonsense")).toBe(
+    expect(await handleMessage("/find quantum nonsense", vault)).toBe(
       'No notes match "quantum nonsense".',
     );
   });
 
   it("asks for a query when none is given", async () => {
-    expect(await handleMessage("/find")).toBe("Usage: /find <query>");
+    expect(await handleMessage("/find", vault)).toBe("Usage: /find <query>");
   });
 
   it("caps the list at five notes and counts the rest", async () => {
     for (let i = 1; i <= 6; i += 1) {
-      await handleMessage(`/idea streak goal ${i}`);
+      await handleMessage(`/idea streak goal ${i}`, vault);
     }
-    const lines = (await handleMessage("/find streak")).split("\n");
+    const lines = (await handleMessage("/find streak", vault)).split("\n");
     expect(lines[0]).toBe('Found 6 notes for "streak":');
     expect(lines).toHaveLength(7);
     expect(lines[6]).toBe("and 1 more.");

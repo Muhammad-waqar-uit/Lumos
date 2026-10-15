@@ -16,9 +16,9 @@
 ## Phase 0.1: Enforcement still to come (P1)
 - [x] GitHub Actions workflow (`.github/workflows/validate.yml`) running `pnpm validate` on every PR into `main` and every push to `main`
 - [ ] Branch protection on `main`: require a pull request and the `pnpm validate` check before merging (a repository setting; the workflow's first run on `main` was green in `38790615355`)
-- [x] Test runner (vitest) wired up and added to the validation gate — 158 tests over `@lumos/vault-utils` and the daemon
+- [x] Test runner (vitest) wired up and added to the validation gate — 180 tests over `@lumos/vault-utils` and the daemon
 - [ ] Schema validation for note frontmatter in CI
-- [ ] Route tests for the read API — extract the Fastify app from `server.ts` so `app.inject()` can hit `/note`, `/notes`, `/folders`, `/graph` without binding a port
+- [x] Route tests for the read API — `createApp()` in `app.ts` builds the Fastify app over a vault directory, so `app.inject()` covers `/health`, `/message`, `/notes`, `/notes/search`, `/folders`, `/note` (every guard), `/graph`, `/link` and CORS without binding a port, and with the link fetcher injected so the suite stays offline
 - [ ] Desktop component tests (jsdom + Testing Library) for the sidebar, list and viewer states
 
 ## Phase 1: Documentation & Tracking Foundation (P0)

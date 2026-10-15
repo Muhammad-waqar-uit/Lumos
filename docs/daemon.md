@@ -17,9 +17,10 @@ Markdown notes to the vault. It lives in [`apps/daemon`](../apps/daemon).
 | File | Responsibility |
 |---|---|
 | `src/commands.ts` | `parseMessage()` - turns raw text into a typed `Parsed` result.
-| `src/vault.ts` | Resolves the vault path and delegates to `@lumos/vault-utils` `saveNote()`.
-| `src/handler.ts` | `handleMessage()` - routes a parsed command to a reply string.
-| `src/server.ts` | Fastify routes + boots the WhatsApp connection.
+| `src/vault.ts` | Resolves the vault path from `VAULT_PATH`.
+| `src/handler.ts` | `handleMessage()` - routes a parsed command to a reply string. The vault directory is an argument, so the caller decides where a note lands.
+| `src/app.ts` | `createApp()` - builds the Fastify app (CORS + every route) over a vault directory, so a test can drive it without binding a port.
+| `src/server.ts` | Entry point: builds the app, listens on loopback, boots the WhatsApp connection.
 | `src/fetch-link.ts` | Fetches one link for the desktop, with the guards `GET /link` relies on.
 | `src/whatsapp.ts` | Baileys connection, QR auth, allowlist, message loop.
 
@@ -119,18 +120,23 @@ write). Keeping this logic in packages lets the desktop app reuse it.
   messages, a bare `/`, unknown commands, `https` links inside plain text, and `/plan` falling back
   to `today` for anything it does not recognise.
 - `src/handler.test.ts` - `handleMessage` from the message to the file on disk: the reply strings, the
-  generated filename, and the frontmatter that was written. It points `VAULT_PATH` at a temporary
-  directory before importing the handler, so your own vault is never touched.
+  generated filename, and the frontmatter that was written. It passes a temporary directory in as the
+  vault, so your own vault is never touched.
+- `src/app.test.ts` - every route through `app.inject()`: the note listings and their empty case, search
+  and its blank query, the folder counts, `/note`'s guards (a missing parameter, an unknown folder, and
+  each traversal shape tried against a decoy file left outside the folders), the graph's nodes, edges
+  and unresolved links, `/link`'s refusals and its status codes with the fetcher injected, and the CORS
+  allow-list.
 - `src/fetch-link.test.ts` - the link fetcher with `fetch` and DNS injected, so the suite stays
   offline: which addresses and hostnames are refused (including a redirect into the local network),
   the redirect limit, the byte cap, a missing content type, and the fact that a network error never
   leaks its detail into the message.
 
-Not covered yet: the Fastify routes (`/note`, `/notes`, `/folders`, `/graph`, `/message`), which need
-the app built by a factory in `server.ts` so `app.inject()` can run without binding a port. The graph
-builder itself is covered by the `@lumos/vault-utils` suite, against a temporary vault.
+Not covered yet: the WhatsApp session itself, which needs a real linked device, and the Tauri shell.
+The routes are covered without a port, and the graph builder by the `@lumos/vault-utils` suite, both
+against a temporary vault.
 
 ## Planned enhancements
 
 See [`TODO.md`](TODO.md) Phase 3: `/plan` with Ollama, tag extraction and a config file. The parser,
-the filing path, `/find` and the link fetcher are covered by tests (see Tests above).
+the filing path, `/find`, the link fetcher and the HTTP routes are covered by tests (see Tests above).

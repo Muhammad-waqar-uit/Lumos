@@ -37,12 +37,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Note links open outside the window so the vault view is never navigated away.
 
 ### Added (continued 4)
-- A test suite run by vitest 5: 158 tests, 99 for `@lumos/vault-utils` (slugify, title choice,
+- A test suite run by vitest 5: 180 tests, 99 for `@lumos/vault-utils` (slugify, title choice,
   frontmatter parsing including BOM and CRLF files, save/read/list/search, link and tag extraction,
   graph assembly and neighbourhoods, link parsing and page metadata, all against a temporary vault)
-  and 59 for the daemon (`parseMessage` for every command and for malformed input, `handleMessage`
-  filing real notes and answering `/find`, and the link fetcher's refusals and caps, with `fetch` and
-  DNS injected so the suite stays offline).
+  and 81 for the daemon (`parseMessage` for every command and for malformed input, `handleMessage`
+  filing real notes and answering `/find`, the link fetcher's refusals and caps, and every HTTP route
+  driven through `app.inject()`, with `fetch` and DNS injected so the suite stays offline).
 
 ### Added (continued 5)
 - A vault link graph. Note bodies are scanned for `[[wikilinks]]`, relative `.md` links and hashtags;
@@ -74,7 +74,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   implementation.
 - [`docs/LIMITATIONS.md`](docs/LIMITATIONS.md): what Lumos does not do, or does partly, gathered in one
   place with what each limit gives up — from the reader's JavaScript blind spot and the refused local
-  addresses to branch protection still being off and the HTTP routes having no tests.
+  addresses to branch protection still being off and the WhatsApp session having no automated coverage.
+
+### Added (continued 8)
+- The daemon's HTTP routes are testable and tested. `createApp()` in `apps/daemon/src/app.ts` builds the
+  Fastify app over a vault directory, so the suite reaches every route through `app.inject()` without
+  binding a port; `server.ts` is now only an entry point. `handleMessage()` takes the vault as an
+  argument instead of reading module state, so a test passes a temporary directory and the real vault is
+  never touched.
+- 22 route tests: the note listings and their empty case, search and its blank query, the folder counts,
+  `/note`'s guards (a missing parameter, an unknown folder, and each traversal shape tried against a
+  decoy file left outside the folders), the graph's nodes/edges/unresolved links, `/link`'s refusals and
+  its 200/400/502 mapping, and the CORS allow-list. The link fetcher is injected, so no test makes a
+  network request.
 
 ### Fixed
 - Palette steps that only TypeScript referenced never reached the browser: Tailwind prunes theme
@@ -116,9 +128,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The desktop vault browser renders Markdown notes; tag filtering, code syntax highlighting,
   resizable panes, routing, and a note editor are still to come. There is no desktop test coverage
   yet — the suites cover the daemon and the vault packages.
-- Writing the tests turned up two small gaps, both tracked in [docs/TODO.md](docs/TODO.md): `/help`
-  does not list itself in the command list it prints, and the read-API routes cannot be tested until
-  the Fastify app is extracted from `server.ts`.
+- Writing the tests turned up two small gaps. The read-API routes could not be tested until the Fastify
+  app was extracted from `server.ts`, which is now done. `/help` still does not list itself in the
+  command list it prints, tracked in [docs/TODO.md](docs/TODO.md).
 - `main` is protected by convention and by the hook, and the `pnpm validate` workflow now runs on
   every PR and every push. GitHub-side branch protection is still off, so the check is not yet
   required to merge (tracked in [docs/TODO.md](docs/TODO.md)).

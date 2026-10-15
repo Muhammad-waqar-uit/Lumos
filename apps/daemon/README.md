@@ -30,8 +30,9 @@ src/
 ├── commands.ts    # Command parsing and type definitions
 ├── handler.ts     # Message routing and response generation
 ├── fetch-link.ts  # Remote page fetching for the desktop, with its guards and caps
-├── server.ts      # Fastify HTTP server + WhatsApp startup
-├── vault.ts       # Markdown file writing with frontmatter
+├── app.ts         # The Fastify app: CORS + every route, built by a factory
+├── server.ts      # Entry point: builds the app, listens, starts WhatsApp
+├── vault.ts       # Vault path resolution
 └── whatsapp.ts    # Baileys WhatsApp integration
 ```
 

@@ -96,10 +96,6 @@ Each entry says what is given up. Where a limit is deliberate, the alternative i
 - **Branch protection on `main` is off.** The `pnpm validate` workflow runs on every PR and every push
   to `main`, but nothing forces a merge to wait for it: the check is reported, not required. Turning it
   on is a repository setting, tracked in [TODO.md](TODO.md).
-- **The HTTP routes have no tests.** `/link`, `/note`, `/notes`, `/folders`, `/graph` and `/message`
-  are verified by hand, because the Fastify app is built inline in `server.ts` rather than by a factory
-  that `app.inject()` could drive. That is why `/link`'s status codes were checked with `curl` rather
-  than by the suite.
 - **CI is Linux-only.** Windows and macOS are not exercised by the workflow, so CRLF handling, path
   separators and the Tauri build are local observations.
 - **Nothing is packaged or versioned.** There is no installer, no release, no tag and no published
