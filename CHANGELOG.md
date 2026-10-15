@@ -52,6 +52,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `CONTRIBUTING.md` and `README.md` now point at the enforced rules and the branch workflow.
 - Fixed two React anti-patterns the new React lint rules found: note text and the search box now
   derive state during render instead of repairing it inside an effect.
+- Continuous integration: `.github/workflows/validate.yml` runs `pnpm validate` on every pull request
+  into `main` and every push to `main`. It reads pnpm's version from `package.json`, caches the pnpm
+  store, and calls the same `validate` script the local hooks run, so the gate is defined in one place.
 
 ### Notes
 - The desktop vault browser renders Markdown notes; tag filtering, code syntax highlighting,

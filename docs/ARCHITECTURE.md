@@ -106,3 +106,7 @@ lumos/
 - **One TypeScript version** (`~6.0.3`) across all four workspaces, each with a `typecheck` script.
 - **Workflow:** every change lives on a short-lived `<type>/<short-description>` branch and lands in
   `main` through a pull request (squash-merge). `main` is always releasable. See [RULES.md §6](../RULES.md).
+- **CI:** `.github/workflows/validate.yml` runs `pnpm validate` on every PR into `main` and every push
+  to `main`. It calls the same `validate` script the hooks do, reads pnpm's version from the
+  `packageManager` field, and caches the pnpm store against `pnpm-lock.yaml`. Branch protection is not
+  enabled yet, so the check is not yet required to merge.

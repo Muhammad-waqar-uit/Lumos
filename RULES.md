@@ -159,7 +159,9 @@ pnpm validate && git push -u origin feat/vault-search   # 4. push (pre-push runs
 
 - Title follows the commit-message format (`feat(desktop): …`).
 - Body answers: *what changed*, *why*, *how it was verified*, *what is still open*.
-- Green `pnpm validate` is required. A reviewer does not read a red PR.
+- Green `pnpm validate` is required, and GitHub Actions runs the same gate on every pull request
+  (`.github/workflows/validate.yml`) — wait for the check to pass before asking for review. A reviewer
+  does not read a red PR.
 - Keep the diff focused; unrelated drive-by edits belong in their own PR.
 - Reference the issue (`Closes #12`) when one exists.
 

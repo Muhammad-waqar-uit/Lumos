@@ -13,8 +13,17 @@ Chronological record of what has been built. Newest entries first within each da
 - [x] The gate was shown to fail, not just pass: mutating `slugify`'s trailing-dash trim turned the suite red (exit 1); the file was restored and the diff checked clean
 - [x] Two findings from writing the tests, recorded in `TODO.md`: `/help` does not list itself, and the filing reply echoes the title exactly as typed
 
+### Done — CI gate (`.github/workflows/validate.yml`)
+- [x] The gate the local hooks run now also runs on the repository: every PR into `main` and every push to `main`
+- [x] pnpm's version comes from the `packageManager` field in `package.json` (nothing to keep in sync by hand); Node 24, with pnpm's store cached off `pnpm-lock.yaml`
+- [x] The validate step calls `pnpm run validate`, so the workflow never restates the gate — the suites that landed with `test/vitest-gate` (PR #3) ride inside it
+- [x] Pinned `actions/checkout@v7`, `actions/setup-node@v7` and `pnpm/action-setup@v6`: the v4-era actions run on a Node 20 runtime that GitHub removed in September 2026
+- [x] Verified locally: the YAML parses to the intended shape (triggers, five steps, concurrency group), prettier accepts it, and `pnpm install --frozen-lockfile` then `pnpm run validate` both exit 0
+- [x] Exercised on the pull request itself, not just described: the `pnpm validate` check ran on PR #4 and finished green (run `38783175553`), so the gate works before it exists on `main`
+- [!] Branch protection is repository-side and still off: the check is not yet required to merge
+
 ### Next up
-- [ ] GitHub Actions running `pnpm validate` on every PR, then branch protection on `main`
+- [ ] Merge `ci/validate-workflow`, confirm the first run on `main` is green, then turn on branch protection on `main`
 - [ ] Route tests for the read API (needs a Fastify factory extracted from `server.ts`)
 - [ ] Tag filtering + syntax highlighting for fenced code
 - [ ] Resizable panes, TanStack Router, zustand
