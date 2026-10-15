@@ -44,8 +44,8 @@ Lumos consists of two main applications:
 | `/interview <text or link>` | Save interview notes/resources | `vault/Interviews/` |
 | `/goal <text>` | Save a goal | `vault/Goals/` |
 | `/read <link>` | Save something to read | `vault/Reading/` |
-| `/plan today\|tomorrow` | Plan command (coming soon) | - |
-| `/find <query>` | Search command (coming soon) | - |
+| `/plan today\|tomorrow` | Plan command - answers that it is not built yet | - |
+| `/find <query>` | Search the vault (title, tags, body; five matches per reply) | - |
 | `/help` | Show available commands | - |
 | *(plain text)* | Quick capture | `vault/Inbox/` |
 
@@ -108,14 +108,14 @@ The session is saved in `apps/daemon/auth_info/` - you only need to scan once. T
 
 1. From your personal WhatsApp (the allowed number), message the Lumos number
 2. Try it: `/idea Build a habit tracker`
-3. Check your vault: `vault/Ideas/2025-10-13-build-a-habit-tracker.md` will be created
+3. Check your vault: a note like `vault/Ideas/2026-10-13-build-a-habit-tracker.md` is created
 4. Open the vault in [Obsidian](https://obsidian.md/) to browse your notes
 
 Example note:
 ```markdown
 ---
 source: whatsapp
-created: 2025-10-13T12:34:56.789Z
+created: 2026-10-13T12:34:56.789Z
 tags: []
 status: new
 ---
@@ -136,6 +136,11 @@ curl -X POST http://127.0.0.1:3001/message \
 curl http://127.0.0.1:3001/health
 ```
 
+The daemon also serves the read API the desktop uses — `GET /notes`, `/notes/search?q=`, `/folders`,
+`/note?folder=&name=`, `/graph` and `/link?url=` — with its own guards (unknown folders and unsafe
+filenames are a `400`, local addresses are refused by `/link`) and CORS limited to local origins.
+[docs/daemon.md](docs/daemon.md) documents each one.
+
 ## Configuration Reference
 
 ### Environment Variables (Daemon)
@@ -144,6 +149,8 @@ curl http://127.0.0.1:3001/health
 | --- | --- | --- |
 | `ALLOWED_NUMBERS` | `""` | Comma-separated list of allowed sender phone numbers (country code + number) |
 | `VAULT_PATH` | `../../vault` | Path to store Markdown notes (relative to daemon cwd) |
+| `PORT` | `3001` | Port the daemon listens on (bound to `127.0.0.1` only) |
+| `LUMOS_DISABLE_WHATSAPP` | unset | Set to `1` to run the HTTP API without connecting to WhatsApp |
 
 ## Security & Privacy
 

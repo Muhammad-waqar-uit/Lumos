@@ -99,6 +99,8 @@ server binds to `127.0.0.1` only.
 |---|---|---|
 | `ALLOWED_NUMBERS` | `""` | Comma-separated sender numbers (country code + number, no `+`). Empty blocks all. |
 | `VAULT_PATH` | `../../vault` | Vault directory, relative to the daemon's working directory. |
+| `PORT` | `3001` | Port to listen on. The host is always `127.0.0.1`. |
+| `LUMOS_DISABLE_WHATSAPP` | unset | Set to `1` to run the HTTP API on its own, with no WhatsApp connection (what the route tests use). |
 
 ## WhatsApp authentication
 

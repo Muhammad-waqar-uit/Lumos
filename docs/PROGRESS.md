@@ -4,6 +4,35 @@ Chronological record of what has been built. Newest entries first within each da
 
 ## 2026-10-16
 
+### Done — every doc audited against the code
+- [x] All 18 Markdown files were read against the repository rather than trusted: 89 internal file
+  links all resolve, every referenced path exists, and all eight HTTP routes appear in each doc that
+  claims to document them
+- [x] `docs/LIMITATIONS.md` needed no change - every entry was re-checked against the code and still
+  holds (no component tests, the Tauri shell untested, the graph rough edges, frontmatter not
+  validated, branch protection off, CI Linux-only)
+- [x] `vault/` was confirmed still git-ignored and untracked (0 files tracked, 0 visible), and was
+  not read, written or logged
+- [x] The largest drift was `docs/design.md`: it documented shadcn-style tokens (`--background: 0 0%
+  3.9%`, `--card` at 3.9%, `--radius`, a `--destructive` pair) while the stylesheet actually declares
+  Tailwind v4 `@theme` entries named `--color-*` holding complete `hsl()` values, with `--card` and
+  `--popover` at 5.5%, `--radius-lg`, and no destructive token at all. The graph tokens - the part
+  with a real reason for existing - were missing entirely, as was the reason they sit outside `@theme`
+- [x] `docs/desktop.md` presented `Cmd/Ctrl+K`, arrow/`j`/`k` and `Esc` as working shortcuts; there is
+  no key handler anywhere in `src/`. Now marked specified-but-not-wired, alongside the two already
+  built features that were listed under "Planned capabilities" and a `graph-palette.ts` description
+  that claimed helpers for radii the module never computes
+- [x] `docs/PLAN.md` listed TanStack Router, zustand, fuse.js and lucide-react as the desktop stack;
+  none is installed. Split into "in use today" and "chosen, not installed", and the search-scope
+  open question is now marked resolved by `searchNotes`
+- [x] `README.md` still sold `/find` as "coming soon" after it shipped, dated a note `2025-10-13`, and
+  documented two of the eight endpoints; the read API is now named there, and `PORT` and
+  `LUMOS_DISABLE_WHATSAPP` are documented in both the README and `docs/daemon.md` (they were in
+  neither)
+- [x] `docs/FEATURES.md` described the HTTP API as `POST /message` and `GET /health` only
+- [x] No file links were broken by the corrections, and the fix commits carry the doc changes with
+  them, as the repository requires
+
 ### Done — the daemon's routes are tested
 - [x] The Fastify app moved out of the entry point: `createApp()` in `apps/daemon/src/app.ts` builds it
   (CORS + every route) over a vault directory, and `server.ts` is now only the bootstrap that listens and

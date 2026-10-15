@@ -12,33 +12,46 @@ high-contrast text, and a restrained accent. No gradients, no heavy shadows, no 
 
 ## Color tokens (dark)
 
-shadcn/ui uses HSL custom properties. These are the dark-theme values, tuned toward near-black:
+The tokens live in one place, `apps/desktop/src/index.css`, under Tailwind v4's `@theme`, which
+turns each one into a custom property *and* a utility class. Values are complete `hsl()` colours
+rather than the bare `H S% L%` triplets shadcn/ui uses, because Tailwind v4 does not wrap the value
+in `hsl()` for you.
 
 ```css
---background: 0 0% 3.9%;        /* ~#0a0a0a */
---foreground: 0 0% 98%;
---card: 0 0% 3.9%;
---card-foreground: 0 0% 98%;
---popover: 0 0% 3.9%;
---popover-foreground: 0 0% 98%;
---primary: 0 0% 98%;
---primary-foreground: 0 0% 9%;
---secondary: 0 0% 14.9%;
---secondary-foreground: 0 0% 98%;
---muted: 0 0% 14.9%;
---muted-foreground: 0 0% 63.9%;
---accent: 0 0% 14.9%;
---accent-foreground: 0 0% 98%;
---destructive: 0 62.8% 30.6%;
---destructive-foreground: 0 0% 98%;
---border: 0 0% 14.9%;
---input: 0 0% 14.9%;
---ring: 0 0% 83.1%;
---radius: 0.5rem;
+@theme {
+  --color-background: hsl(0 0% 3.9%);        /* ~#0a0a0a */
+  --color-foreground: hsl(0 0% 98%);
+  --color-card: hsl(0 0% 5.5%);
+  --color-card-foreground: hsl(0 0% 98%);
+  --color-popover: hsl(0 0% 5.5%);
+  --color-popover-foreground: hsl(0 0% 98%);
+  --color-primary: hsl(0 0% 98%);
+  --color-primary-foreground: hsl(0 0% 9%);
+  --color-secondary: hsl(0 0% 14.9%);
+  --color-secondary-foreground: hsl(0 0% 98%);
+  --color-muted: hsl(0 0% 14.9%);
+  --color-muted-foreground: hsl(0 0% 63.9%);
+  --color-accent: hsl(0 0% 14.9%);
+  --color-accent-foreground: hsl(0 0% 98%);
+  --color-border: hsl(0 0% 14.9%);
+  --color-input: hsl(0 0% 14.9%);
+  --color-ring: hsl(0 0% 83.1%);
+  --radius-lg: 0.5rem;
+}
 ```
 
-Use `hsl(var(--token))` (or the shadcn Tailwind aliases such as `bg-background`, `text-muted-foreground`)
-rather than hard-coded colors.
+Use the generated utilities (`bg-background`, `text-muted-foreground`, `border-border`) or
+`var(--color-…)` in hand-written CSS, rather than a hard-coded colour.
+
+A `--destructive` pair was specified here, but nothing destructive exists yet, so it is not declared
+— an unused token is a lie the stylesheet tells. The first piece of UI that deletes something should
+add it back.
+
+The graph view is the exception: a canvas cannot use a utility class. Its colours are plain custom
+properties on `:root` (`--color-graph-edge`, `--color-graph-tag`, `--color-graph-folder-1` … `-5`),
+read at runtime by `src/lib/graph-palette.ts`. They are deliberately *not* `@theme` entries: Tailwind
+prunes theme values it cannot see used in a class name, so a token referenced only from TypeScript
+would never reach the stylesheet.
 
 ## Typography
 
@@ -58,7 +71,7 @@ rather than hard-coded colors.
 
 ## Layout
 
-Resizable three-pane shell:
+Three-pane shell (resizing is specified here but not wired up yet — see [TODO.md](TODO.md) Phase 4):
 
 ```
 ┌───────────┬────────────────────┬────────────────────────────┐
@@ -81,4 +94,4 @@ Resizable three-pane shell:
 
 - Maintain WCAG AA contrast (the tokens above are chosen for this).
 - Never rely on color alone to convey state; pair with text or icons.
-- Full keyboard navigation, including the `Cmd/Ctrl+K` search modal.
+- Full keyboard navigation, including the `Cmd/Ctrl+K` search modal (specified, not wired up yet).

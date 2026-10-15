@@ -29,19 +29,26 @@ Lumos is a local-first second brain that captures thoughts via WhatsApp and stor
 - ollama-js (planned) for local AI planning/enrichment
 
 ### Desktop (UI)
+
+In use today:
+
 - Tauri 2.x + Rust backend
 - React 19 + TypeScript + Vite
 - Tailwind CSS v4 + shadcn/ui-style tokens (components)
-- TanStack Router (routing)
-- zustand (state)
 - react-markdown + remark-gfm (rendering)
 - force-graph (link graph, canvas)
+
+Chosen and recorded in the decisions log, but **not installed yet** - the UI currently does the job
+with plain React state and a local filter:
+
+- TanStack Router (routing)
+- zustand (state)
 - fuse.js (full-text search)
 - lucide-react (icons)
 
 ### Shared / Infra
 - pnpm workspaces (pnpm only)
-- TypeScript project references, one TypeScript version across the workspace
+- One TypeScript version (`~6.0.3`) across all four workspaces; the desktop app additionally uses a tsconfig project reference for its Vite config
 - vitest (tests), run inside the `pnpm validate` gate
 - oxlint (lint) + prettier (format)
 - Husky hooks, lint-staged, commitlint
@@ -116,7 +123,7 @@ Root keeps only what convention demands: `README.md`, `CHANGELOG.md`, `CONTRIBUT
 ## Open Questions
 
 - Default Ollama model for `/plan` (candidates: `llama3.2:3b`, `gemma2:2b`).
-- Search scope (filename + content + frontmatter?).
+- ~~Search scope (filename + content + frontmatter?)~~ - resolved: title, tags and body, in `searchNotes`, shared by `/find` and `GET /notes/search`.
 - Editor approach (plain textarea + preview first; richer editor later).
 - Vault location (keep default `../../vault`; make configurable in UI later).
 - ~~Link expansion library (link-preview-js vs. fetch + cheerio)~~ — resolved: neither (see the decisions log).

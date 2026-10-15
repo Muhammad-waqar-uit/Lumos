@@ -96,5 +96,5 @@
 ## Phase 8: Polish & Docs (P2)
 - [ ] UI polish (empty/loading states, subtle transitions)
 - [ ] Performance: lazy loading, list virtualization, search index
-- [ ] Tests (daemon unit, desktop component, E2E smoke)
+- [ ] Desktop component tests and an E2E smoke test (the daemon unit and route tests are done)
 - [ ] Complete docs with screenshots and `USAGE.md`
