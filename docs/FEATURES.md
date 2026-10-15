@@ -33,4 +33,5 @@ Status values: **done** · **in-progress** · **planned** · **idea**
 | Desktop component tests | planned | jsdom + Testing Library for the sidebar, list and viewer states |
 | Branch workflow | done | Short-lived `<type>/<description>` branches; `pre-commit` blocks commits on `main` |
 | Agent working agreement | done | `RULES.md`, `AGENTS.md`, `CLAUDE.md` at the repo root |
-| CI validation | planned | GitHub Actions running `pnpm validate` on every PR |
+| CI validation | done | GitHub Actions runs `pnpm validate` on every PR into `main` and every push to `main` |
+| Branch protection | planned | Require the `pnpm validate` check on `main` (repository setting) |

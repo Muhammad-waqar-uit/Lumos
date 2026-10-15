@@ -14,8 +14,8 @@
 - [x] Generated Tauri schemas excluded from formatting; prettier clean across the repo
 
 ## Phase 0.1: Enforcement still to come (P1)
-- [ ] GitHub Actions workflow running `pnpm validate` on every pull request
-- [ ] Branch protection on `main` (require a PR and a green check) — needs repository settings
+- [x] GitHub Actions workflow (`.github/workflows/validate.yml`) running `pnpm validate` on every PR into `main` and every push to `main`
+- [ ] Branch protection on `main`: require a pull request and the `pnpm validate` check before merging (repository settings, plus a first green run on `main`)
 - [x] Test runner (vitest) wired up and added to the validation gate — 66 tests over `@lumos/vault-utils` and the daemon
 - [ ] Schema validation for note frontmatter in CI
 - [ ] Route tests for the read API — extract the Fastify app from `server.ts` so `app.inject()` can hit `/note`, `/notes`, `/folders` without binding a port

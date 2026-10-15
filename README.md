@@ -156,7 +156,7 @@ curl http://127.0.0.1:3001/health
 
 This is a pnpm monorepo. Commands can be run from root or from individual apps.
 
-**Every change must pass `pnpm validate` before it is pushed, and nothing is committed directly to `main`.** Work happens on a short-lived branch; the git hooks (Husky + lint-staged + commitlint) block a commit on `main`, a badly formatted commit message, or a red gate. See [RULES.md](RULES.md) for the enforced standard and [AGENTS.md](AGENTS.md) for the working agreement.
+**Every change must pass `pnpm validate` before it is pushed, and nothing is committed directly to `main`.** Work happens on a short-lived branch; the git hooks (Husky + lint-staged + commitlint) block a commit on `main`, a badly formatted commit message, or a red gate. See [RULES.md](RULES.md) for the enforced standard and [AGENTS.md](AGENTS.md) for the working agreement. GitHub Actions runs the same gate on every pull request ([.github/workflows/validate.yml](.github/workflows/validate.yml)).
 
 ```bash
 # Install all dependencies

@@ -92,7 +92,8 @@ Valid types: `feat` · `fix` · `chore` · `docs` · `style` · `refactor` · `t
 
 ## Before you open a pull request
 
-- `pnpm validate` is green locally.
+- `pnpm validate` is green locally, and the same check passes in CI
+  (`.github/workflows/validate.yml` runs it on every pull request into `main`).
 - The docs your change affects are updated **in the same commit**: [docs/TODO.md](docs/TODO.md),
   [docs/PROGRESS.md](docs/PROGRESS.md), [docs/FEATURES.md](docs/FEATURES.md),
   [CHANGELOG.md](CHANGELOG.md), and the matching `docs/*.md` reference file.

@@ -22,7 +22,8 @@ pnpm workspace (pnpm **only** — never npm or yarn):
 ## Non-negotiables
 
 1. **Never commit to `main`.** Every change goes on a short-lived branch and lands through a PR.
-2. **`pnpm validate` must pass** before you push. Husky enforces it; do not bypass hooks. The
+2. **`pnpm validate` must pass** before you push. Husky enforces it locally and GitHub Actions runs
+   the same gate on every pull request (`.github/workflows/validate.yml`); do not bypass hooks. The
    `pre-commit` hook also refuses to commit while you are on `main`.
 3. **Commit format** `<type>(<scope>): <description>` — the pre-commit and `commit-msg` hooks block
    anything else, and `git commit --no-verify` is not an option.
