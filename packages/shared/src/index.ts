@@ -124,18 +124,30 @@ export interface GraphSourceNote {
   content: string;
 }
 
-/** How a link can be shown inside the app. */
-export type LinkMediaKind = "youtube" | "vimeo" | "image" | "page";
+/**
+ * How a link can be shown inside the app. `youtube`, `vimeo`, `instagram` and `facebook`
+ * all carry an `embedUrl` and play in place; `image` renders itself, and `page` is fetched
+ * and read by the daemon.
+ */
+export type LinkMediaKind = "youtube" | "vimeo" | "instagram" | "facebook" | "image" | "page";
+
+/**
+ * The frame an embed needs: a 16:9 video, a vertical reel, or a tall post card.
+ * Omitted means `landscape`, which is the shape a note viewer already gives a video.
+ */
+export type LinkFrame = "landscape" | "portrait" | "tall";
 
 /** What the app can do with a link without asking the network. */
 export interface LinkMedia {
   /** The link itself, trimmed. */
   url: string;
   kind: LinkMediaKind;
-  /** Inline player URL, for the video hosts. */
+  /** Inline player URL, for the embeddable hosts. */
   embedUrl?: string;
   /** Poster image, when the host exposes one (a YouTube thumbnail). */
   poster?: string;
+  /** Frame shape the embed needs, when it is not the default 16:9. */
+  frame?: LinkFrame;
 }
 
 /** A link as the desktop shows it: whatever can be played, plus the scraped page details. */

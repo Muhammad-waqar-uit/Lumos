@@ -8,7 +8,7 @@
  */
 import { lookup } from "node:dns/promises";
 import { isIP } from "node:net";
-import type { LinkCard } from "@lumos/shared";
+import type { LinkCard, LinkMediaKind } from "@lumos/shared";
 import { asHttpUrl, extractPreview, parseLinkMedia } from "@lumos/vault-utils/link";
 
 const DEFAULT_TIMEOUT_MS = 8000;
@@ -196,12 +196,17 @@ function contentType(response: Response): string {
   return (response.headers.get("content-type") ?? "").split(";")[0].trim().toLowerCase();
 }
 
+/** Media the app plays from the URL alone, so the daemon has nothing to read for them. */
+const SELF_PLAYING: ReadonlySet<LinkMediaKind> = new Set(["youtube", "vimeo", "image"] as const);
+
 /**
  * The card the desktop renders for one link.
  *
  * A video or an image needs no fetch at all - the app plays it from the URL - which keeps
- * a YouTube link working with the daemon stopped. A page is fetched, read, and returned as
- * text plus its metadata.
+ * a YouTube link working with the daemon stopped. Everything else is fetched: a page for
+ * its readable text, and an Instagram or Facebook link for the caption, site and lead
+ * image its public page still publishes. Those two render nothing readable (the body is
+ * a JavaScript shell), so their card is metadata above the embed and no text at all.
  */
 export async function fetchLinkCard(
   raw: string,
@@ -210,7 +215,7 @@ export async function fetchLinkCard(
   const media = parseLinkMedia(raw);
   if (!media) throw new LinkFetchError("unsupported", "Only http and https links can be opened.");
 
-  if (media.kind !== "page") {
+  if (SELF_PLAYING.has(media.kind)) {
     return {
       media,
       title: null,

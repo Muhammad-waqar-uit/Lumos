@@ -64,10 +64,14 @@ A single note (`frontmatter` + `content`). Returns `400` for an unknown folder o
 filename, and `404` when the note is missing.
 
 ### `GET /link?url=<url>`
-One link, scraped for the desktop: `{ "link": LinkCard }` — the media the app can play inline
-(`kind`, `embedUrl`, `poster`) plus the page's `title`, `site`, `description`, `image` and
-readable `text`. A video or an image is answered from the URL alone, with no request at all, so a
-YouTube link plays with the daemon stopped.
+One link, scraped for the desktop: `{ "link": LinkCard }` — how the app shows it inline (`kind`,
+`embedUrl`, `poster`, `frame`) plus the page's `title`, `site`, `description`, `image` and readable
+`text`. `kind` is one of `youtube`, `vimeo`, `instagram`, `facebook`, `image` or `page`.
+
+A YouTube, Vimeo or image link is answered from the URL alone, with no request at all, so it plays
+with the daemon stopped. Everything else is fetched, including an Instagram or Facebook permalink:
+those two render nothing readable (their body is a JavaScript shell), but their page still publishes
+the caption, site and lead image the desktop shows as a card above the embed.
 
 The URL is untrusted like a vault path, so only `http` and `https` are accepted, and anything
 local is refused: `localhost`, `*.local`, `*.internal`, loopback, private, link-local and
