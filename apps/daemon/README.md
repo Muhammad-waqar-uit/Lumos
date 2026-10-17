@@ -17,6 +17,7 @@ The daemon acts as a bridge between WhatsApp and your second brain. It:
 - **Command Parsing**: Handles `/idea`, `/interview`, `/goal`, `/read`, `/plan`, `/find`, `/help`
 - **Smart Note Generation**: Creates timestamped, slugified filenames with frontmatter
 - **URL Extraction**: Automatically detects and stores URLs in note metadata
+- **Hashtag Tags**: `#tags` written in a message become the note's frontmatter tags, read with the same rules the link graph uses
 - **Link Fetching**: `GET /link` reads a page's title, description, lead image and readable text for the desktop, refusing anything that is not a public http(s) page
 - **Auto-Reconnection**: Automatically reconnects on disconnects with exponential backoff
 - **Sender Allowlist**: Restricts processing to pre-approved phone numbers
@@ -154,7 +155,7 @@ If you get logged out, delete `auth_info/` and restart to scan a new QR code.
 3. Extract text content (conversation, extended text, or image caption)
 4. Parse with `parseMessage()` to determine command type
 5. Route to appropriate handler
-6. For note commands, generate filename (date-slug) and write Markdown with frontmatter
+6. For note commands, generate filename (date-slug) and write Markdown with frontmatter, taking the frontmatter `tags` from the message's `#hashtags`
 7. Send reply back to sender
 
 ## Note Format
@@ -165,7 +166,9 @@ Notes are written as Markdown files with YAML frontmatter:
 ---
 source: whatsapp
 created: 2025-10-13T12:34:56.789Z
-tags: []
+tags:
+  - travel
+  - japan
 status: new
 url: https://example.com  # if URL was extracted
 ---
@@ -173,6 +176,10 @@ url: https://example.com  # if URL was extracted
 
 Note body content
 ```
+
+`tags` lists the `#hashtags` that were in the message, lower-cased and de-duplicated; it is `[]` when
+there were none. A markdown heading (`# Heading`) and a `#hash` inside code are not tags. Nothing is
+stripped from the body - the hashtag stays in the text as it was typed.
 
 Filenames follow the pattern: `YYYY-MM-DD-slugified-title.md`. If a collision occurs, a timestamp suffix is added.
 

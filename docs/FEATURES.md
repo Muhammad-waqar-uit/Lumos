@@ -16,7 +16,7 @@ Status values: **done** · **in-progress** · **planned** · **idea**
 | Link safety | done | `GET /link` refuses non-http(s) URLs, credentials in the URL, and anything local — including a redirect into a private address — with time, redirect and size caps |
 | `/find` search | done | Searches title, tags and body; replies with up to five matches and counts the rest |
 | `/plan` with Ollama | planned | Local AI daily planning |
-| Tag extraction | planned | Hashtag extraction + auto-tagging |
+| Tag extraction | done | `#hashtags` in a captured message become the note's frontmatter tags (lower-cased, de-duplicated), read by `extractTags()` - the same function the graph builds tag nodes with - so the tags in the file and the tag nodes in the graph cannot disagree |
 | Shared packages | done | `@lumos/shared` types + `@lumos/vault-utils` (parse/list/search/write) |
 | Vault listing/search | done | `listNotes`, `getNotesByFolder`, `searchNotes`, `readNote` |
 | Vault graph | done | `extractLinks`/`extractTags`/`buildGraphFromNotes`/`neighborhood` in `@lumos/vault-utils` (`./graph` subpath, browser-safe) |
@@ -35,7 +35,7 @@ Status values: **done** · **in-progress** · **planned** · **idea**
 | Commit message lint | done | commitlint enforces `<type>(<scope>): <description>` |
 | Pre-push validation | done | `pnpm validate` — lint + format:check + typecheck + test + build |
 | Test runner | done | vitest 5; `pnpm test` runs every workspace that has a suite |
-| Parser & vault tests | done | 188 tests: 107 for `@lumos/vault-utils` (link/tag extraction, graph assembly, neighbourhoods, link parsing and page metadata, and the Instagram/Facebook URL shapes) and 81 for the daemon (including `/find`, the link fetcher's refusals, and every HTTP route driven through `app.inject()`) |
+| Parser & vault tests | done | 193 tests: 111 for `@lumos/vault-utils` (link/tag extraction, graph assembly, neighbourhoods, link parsing and page metadata, the Instagram/Facebook URL shapes, and tags written at capture) and 82 for the daemon (including `/find`, the link fetcher's refusals, and every HTTP route driven through `app.inject()`) |
 | Read API route tests | done | `createApp()` in `apps/daemon/src/app.ts` builds the app over a vault directory; `app.test.ts` covers every route plus CORS through `app.inject()`, with the link fetcher injected |
 | Desktop component tests | planned | jsdom + Testing Library for the sidebar, list and viewer states |
 | Branch workflow | done | Short-lived `<type>/<description>` branches; `pre-commit` blocks commits on `main` |

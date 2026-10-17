@@ -13,7 +13,7 @@ import type {
   NoteInput,
   VaultEntry,
 } from "@lumos/shared";
-import { buildGraphFromNotes } from "./graph";
+import { buildGraphFromNotes, extractTags } from "./graph";
 import { slugify } from "./slug";
 
 export { slugify };
@@ -232,6 +232,9 @@ export async function saveNote(
   const frontmatter: Frontmatter = {
     ...defaultFrontmatter("whatsapp"),
     created: now.toISOString(),
+    // Hashtags in the message become the note's tags, read with the same rules the graph uses, so a
+    // tag in the frontmatter and a tag node in the graph can never be two different things.
+    tags: extractTags(input.text),
     ...(input.url ? { url: input.url } : {}),
   };
   const body = [`# ${title}`, "", input.text, input.url ?? ""]

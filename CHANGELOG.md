@@ -106,6 +106,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   are deliberately left to the reader, empty permalinks, and paths that only look like a video. The
   suite is 188 tests - 107 for `@lumos/vault-utils` and 81 for the daemon.
 
+### Added (continued 10)
+- A captured note now gets its tags from the `#hashtags` in the message: `/idea plan the Kyoto trip
+  #travel #Japan` lands in `Ideas/` with `tags: [travel, japan]` in its frontmatter, lower-cased and
+  de-duplicated. Until now every note was written with `tags: []` and nothing read the hashtags a
+  message already carried, so `/find`, the note list's tag display and the graph's tag nodes all had
+  nothing to work with.
+- The write path reuses `extractTags()` from `@lumos/vault-utils`, the function the graph already
+  reads tags with, instead of a second set of rules. One implementation means a tag in the frontmatter
+  and a tag node in the graph cannot disagree: a markdown heading and a `#hash` inside a code span or
+  fence are still not tags, and `#Rust` and `#rust` are still one tag.
+- 5 new tests over tags on the capture path: hashtags in a `/idea` message arriving as frontmatter
+  tags, a heading and a code span not producing one, an untagged message staying `[]`, and the tag
+  being findable through the folder listing and through `searchNotes`. The suite is 193 tests - 111
+  for `@lumos/vault-utils` and 82 for the daemon.
+
 ### Fixed
 - Documentation that had drifted from the code, found by auditing every Markdown file against the
   repository. `docs/design.md` described tokens the stylesheet does not use (shadcn-style `--background:
