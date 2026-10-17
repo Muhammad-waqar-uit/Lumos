@@ -50,6 +50,18 @@ describe("handleMessage - filing notes", () => {
     expect(await filesIn("Inbox")).toHaveLength(1);
   });
 
+  it("takes the hashtags of a message as the note's tags", async () => {
+    const reply = await handleMessage("/idea plan the Kyoto trip #travel #Japan", vault);
+    expect(reply).toBe("Filed in Ideas: plan the Kyoto trip #travel #Japan");
+
+    const file = (await filesIn("Ideas")).find((name) => name.includes("kyoto"));
+    expect(file).toBeDefined();
+    const { frontmatter } = parseNote(
+      await readFile(path.join(vault, "Ideas", file ?? ""), "utf8"),
+    );
+    expect(frontmatter.tags).toEqual(["travel", "japan"]);
+  });
+
   it("keeps the link in the frontmatter", async () => {
     const url = "https://example.com/rust-async";
     const reply = await handleMessage(`/read ${url}`, vault);

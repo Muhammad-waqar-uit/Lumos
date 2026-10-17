@@ -30,7 +30,7 @@ folder, so progress is always visible.
 - Instagram and Facebook links play in place through their own embeds, with the caption card the daemon reads. ✅
 - `/find <query>` over the vault. ✅ (title, tags and body; five matches per reply, the rest counted)
 - `/plan today|tomorrow` backed by a local Ollama model.
-- Tag extraction and auto-tagging.
+- Tag extraction and auto-tagging. ✅ (`#hashtags` in a message become the note's frontmatter tags, using the graph's own rules)
 
 ## M4 - Dark UI foundation (Phase 4) — mostly done
 

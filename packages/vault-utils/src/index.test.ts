@@ -177,6 +177,41 @@ describe("saveNote", () => {
     expect(frontmatter.url).toBe(url);
   });
 
+  it("turns hashtags in the message into frontmatter tags", async () => {
+    const { file } = await saveNote(vault, {
+      folder: "Ideas",
+      text: "A habit tracker #productivity #SideProject #productivity",
+    });
+    const { frontmatter } = parseNote(await readFile(file, "utf8"));
+    expect(frontmatter.tags).toEqual(["productivity", "sideproject"]);
+  });
+
+  it("does not read a heading or a line of code as a tag", async () => {
+    const { file } = await saveNote(vault, {
+      folder: "Ideas",
+      text: "# Not a tag\n\n```\n#also-not\n```\n\nbut #this-is",
+    });
+    const { frontmatter } = parseNote(await readFile(file, "utf8"));
+    expect(frontmatter.tags).toEqual(["this-is"]);
+  });
+
+  it("writes no tags when the message has none", async () => {
+    const { file } = await saveNote(vault, { folder: "Goals", text: "Learn Rust" });
+    const { frontmatter } = parseNote(await readFile(file, "utf8"));
+    expect(frontmatter.tags).toEqual([]);
+  });
+
+  it("makes those tags visible to the listing and to search", async () => {
+    await saveNote(vault, { folder: "Ideas", text: "A habit tracker #productivity" });
+    const [entry] = await getNotesByFolder(vault, "Ideas");
+    expect(entry.tags).toEqual(["productivity"]);
+
+    // The title keeps the hashtag - a title is the message's first line, verbatim - so the tag is
+    // what makes the note findable rather than something already visible in its name.
+    const hits = await searchNotes(vault, "productivity");
+    expect(hits.map((hit) => hit.title)).toEqual(["A habit tracker #productivity"]);
+  });
+
   it("never overwrites an existing note", async () => {
     const input = { folder: "Goals" as const, text: "Learn Rust" };
     const first = await saveNote(vault, input);

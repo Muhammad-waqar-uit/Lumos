@@ -188,9 +188,9 @@ git checkout -b feat/my-change
 - [x] Link expansion for `/read` and `/interview` — the daemon fetches the page and the desktop plays a video, shows an image, or reads the text in place
 - [ ] Daily planner with `/plan today|tomorrow` (AI-assisted via Ollama)
 - [x] Full-text search with `/find <query>` (title, tags and body; up to five matches per reply)
-- [ ] Tag extraction and auto-tagging
+- [x] Tag extraction and auto-tagging — `#hashtags` in a captured message become the note's frontmatter tags
 - [~] Tauri desktop app UI for browsing/searching vault - dark shell, folder sidebar, note list, Markdown-rendering viewer and the link graph are in place; tag filtering, code highlighting, resizable panes and an editor remain
-- [~] Test coverage - vitest suites for `@lumos/vault-utils` (107 tests) and the daemon (81 tests) run inside `pnpm validate`; the routes are covered through `app.inject()`, the desktop UI is still untested
+- [~] Test coverage - vitest suites for `@lumos/vault-utils` (111 tests) and the daemon (82 tests) run inside `pnpm validate`; the routes are covered through `app.inject()`, the desktop UI is still untested
 - [ ] Enrichment: extract summaries, key points from links
 - [ ] Sync/backups, exports
 
