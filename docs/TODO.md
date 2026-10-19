@@ -53,7 +53,7 @@
 - [ ] Config file support (dotenv / JSON)
 - [ ] Richer error messages and logging
 - [x] Unit tests for the parser and the vault operations (vitest, `pnpm test`)
-- [ ] `/help` does not list itself in the command list it prints (found by the daemon tests)
+- [x] `/help` lists itself: the list it prints is the whole list, and a test pins every line in order, so a new or renamed command cannot leave it behind (found by the daemon tests)
 
 ## Phase 4: Desktop UI Foundation (P0)
 - [x] Tailwind CSS v4 + dark shadcn-style design tokens (near-black)

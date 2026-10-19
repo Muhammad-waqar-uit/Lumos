@@ -10,6 +10,7 @@ const HELP = [
   "/read <link>",
   "/plan today | tomorrow",
   "/find <query>",
+  "/help",
   "Anything without a command goes to Inbox.",
 ].join("\n");
 

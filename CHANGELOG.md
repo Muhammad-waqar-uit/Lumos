@@ -178,8 +178,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   resizable panes, routing, and a note editor are still to come. There is no desktop test coverage
   yet — the suites cover the daemon and the vault packages.
 - Writing the tests turned up two small gaps. The read-API routes could not be tested until the Fastify
-  app was extracted from `server.ts`, which is now done. `/help` still does not list itself in the
-  command list it prints, tracked in [docs/TODO.md](docs/TODO.md).
+  app was extracted from `server.ts`, which is now done. `/help` did not list itself in the command
+  list it printed; that is fixed, and a test pins every line of the list in order so the next command
+  cannot be left out of it.
 - `main` is protected in three places: the `pre-commit` hook refuses a commit there, the
   `pnpm validate` workflow runs on every PR and every push, and GitHub branch protection requires
   that check before a pull request can merge, with the branch kept up to date and force pushes and
