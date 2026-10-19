@@ -22,6 +22,9 @@ Chronological record of what has been built. Newest entries first within each da
 - [x] Every doc that still said the check was "reported, not required" was corrected in the same
   commit: `TODO.md`, `FEATURES.md`, `LIMITATIONS.md`, `ARCHITECTURE.md`, `roadmap.md` and the
   CHANGELOG, so the repository does not record a state it has left
+- [x] `/help` lists itself now. The list had been one line short of the commands the parser accepts
+  since it was written, and nothing compared the two — so the new test asserts the whole reply line by
+  line, which makes a command that is added or renamed impossible to leave out of it silently
 
 ## 2026-10-17
 

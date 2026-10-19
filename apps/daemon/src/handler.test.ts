@@ -97,6 +97,21 @@ describe("handleMessage - replies", () => {
     expect(reply).toContain("Anything without a command goes to Inbox.");
   });
 
+  it("lists every command, including itself", async () => {
+    // The whole list, in order, so a command that is added or renamed has to be added here too.
+    expect((await handleMessage("/help", vault)).split("\n")).toEqual([
+      "Commands:",
+      "/idea <text>",
+      "/interview <link or text>",
+      "/goal <text>",
+      "/read <link>",
+      "/plan today | tomorrow",
+      "/find <query>",
+      "/help",
+      "Anything without a command goes to Inbox.",
+    ]);
+  });
+
   it("answers a malformed command instead of throwing", async () => {
     const reply = await handleMessage("/", vault);
     expect(reply).toContain("Unknown command /");
