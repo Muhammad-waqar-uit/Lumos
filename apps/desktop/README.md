@@ -9,7 +9,7 @@ While the daemon handles capture via WhatsApp, the desktop app is designed to he
 - Search the vault's titles, tags and previews (note bodies are not searched yet; the daemon's `/find` and `/notes/search` do search bodies)
 - View notes with their Markdown rendered
 - Play a link or read the page it points at without leaving the app — a YouTube or Vimeo link plays in place, an Instagram reel or post and a Facebook video or post render through the host's own embed with their caption beside them, an image link shows the image, any other page is read as text
-- Filter by folder and by text; tag filtering is not built yet (see the roadmap below)
+- Filter by folder, by text, and by tag — the tags in scope appear as chips with counts, and a note's own tag works the same way
 - Get a bird's-eye view of your captured thoughts, as a link graph
 
 Notes are read-only today, and the vault is served by the daemon: with it stopped the app shows
