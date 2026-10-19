@@ -89,9 +89,19 @@ interface Props {
   /** The note open in the notes view, outlined here so the two views stay in step. */
   activeKey: string | null;
   onOpen: (id: string) => void;
+  /** Show the notes carrying a tag in the notes view, so a tag node is also a filter. */
+  onFilterTag: (tag: string) => void;
 }
 
-export function GraphView({ data, source, connection, loading, activeKey, onOpen }: Props) {
+export function GraphView({
+  data,
+  source,
+  connection,
+  loading,
+  activeKey,
+  onOpen,
+  onFilterTag,
+}: Props) {
   const hostRef = useRef<HTMLDivElement | null>(null);
   const graphRef = useRef<GraphInstance | null>(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
@@ -432,7 +442,15 @@ export function GraphView({ data, source, connection, loading, activeKey, onOpen
                 >
                   Open note
                 </button>
-              ) : null}
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => onFilterTag(selectedNode.label)}
+                  className="rounded-md border border-border px-2 py-0.5 hover:bg-accent hover:text-foreground"
+                >
+                  Show notes
+                </button>
+              )}
             </>
           ) : (
             <span>

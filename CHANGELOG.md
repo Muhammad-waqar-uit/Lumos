@@ -158,6 +158,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   into `main` and every push to `main`. It reads pnpm's version from `package.json`, caches the pnpm
   store, and calls the same `validate` script the local hooks run, so the gate is defined in one place.
 
+### Added (continued 11)
+- Tag filtering in the note list: the tags present in the current folder and query are offered as
+  chips with their note counts, clicking one narrows the list, and a note's own tag is a clickable
+  filter too. A selected tag survives a folder change and the empty state names it, so the filter is
+  never silently hiding notes. Selecting a tag node in the graph offers **Show notes** with the same
+  filter. The matching lives in `src/lib/filter.ts` and is unit-tested - the desktop workspace now has
+  a `test` script of its own.
+
 ### Notes
 - The Instagram and Facebook embeds are the platforms' plugin endpoints, verified by hand rather than
   by a test: a public reel and a public video each played logged out, in the app and in the packaged

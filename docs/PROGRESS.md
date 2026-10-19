@@ -4,6 +4,29 @@ Chronological record of what has been built. Newest entries first within each da
 
 ## 2026-10-19
 
+### Done — tags are a filter, not just text
+- [x] The note list offers the tags in the current folder and query as chips with counts, most used
+  first; clicking one narrows the list and clicking it again clears it. A note's own tag is the same
+  control, so a tag filters wherever it appears
+- [x] Folder and query decide which tags are offered, then the tag narrows that same set - so a count
+  is always a count of what is listed, and an active tag stays in the row even when nothing matches,
+  so it can be switched off instead of trapping the view
+- [x] A selected tag survives a folder change and the empty state names it (`No notes tagged
+  #travel.`) instead of looking like an empty vault
+- [x] Selecting a tag node in the graph offers **Show notes**, which returns to the notes view with
+  that tag filtered - the same handler the chips use, so the two cannot disagree
+- [x] The logic moved out of the component into `src/lib/filter.ts` (`filterEntries`, `countTags`,
+  `nodeTag`) so it could be tested without a DOM. The desktop workspace gained a `test` script and
+  vitest, which is the first automated coverage of desktop code: 12 tests
+- [x] Verified in the running app against a throwaway vault seeded over `POST /message`: seven chips
+  with counts, `#rust` narrowed 5 notes to 2, `#travel` to 1, the `#japan` chip on a card filtered,
+  and Reading with `#travel` active showed `No notes tagged #travel.`
+- [!] Not exercised by hand: the graph's **Show notes** button. Selecting a node on the canvas needs a
+  real pointer hit and the automation could not place one; the wiring is typechecked and shares the
+  list's handler
+- [x] One duplicate TODO row dropped rather than left open twice: tag filtering was listed in both
+  Phase 5 and Phase 6
+
 ### Done — both features landed, and the gate is enforced now
 - [x] `feat/social-embeds` merged as `24495f4` (PR #15). The `pnpm validate` check ran on the pull
   request and finished green before the merge — the first time CI had seen this code, since the
