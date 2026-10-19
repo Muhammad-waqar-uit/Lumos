@@ -42,6 +42,15 @@ shows that link in the viewer instead of only linking out.
 - A **YouTube or Vimeo** link becomes a player in a 16:9 frame, on the no-cookie embed host, with an
   “Open on …” link beside it. The embed URL comes from the URL alone, so a video plays with the
   daemon stopped. Verified end to end: the frame loads the embed document and, once clicked, plays.
+- An **Instagram** permalink (`/p/`, `/reel/`, `/tv/`, including one written under the account name)
+  becomes the captioned embed in a portrait frame; a **Facebook** video, reel or `watch` link becomes
+  the plugin video player, and a Facebook post or photo the taller post card, which keeps the caption
+  and the reaction counts. The frame is chosen by `LinkMedia.frame` — `portrait` or `tall`, else 16:9 —
+  rather than guessed from the URL in the component.
+- Those four embed kinds are also fetched, for their metadata: the card under the frame carries the
+  caption or post text, the site and the lead image. The frame itself never waits on that fetch, so
+  with the daemon stopped a reel still plays; only the card is missing, and the pane says so instead
+  of leaving a gap.
 - An **image** link renders the image itself, capped in height, with its filename as the alt text.
 - Any other **page** is scraped by the daemon and shown as a card: title, site, description and lead
   image, with the page's readable text underneath. The text is rendered as text, never as HTML. If it
@@ -56,8 +65,10 @@ daemon scrapes with. `firstExternalLink()` finds the link in a note body when th
 none, ignoring code fences the way the graph does.
 
 The reader is text only - no layout, no in-body images, no code formatting, and JavaScript-rendered
-pages come back nearly empty. [LIMITATIONS.md](LIMITATIONS.md) is the list, with what each limit
-gives up.
+pages come back nearly empty. An Instagram or Facebook permalink is the extreme case of that: its
+readable text is empty (0 characters for a public reel), which is why those hosts get the embed and
+its metadata card instead of a reader. [LIMITATIONS.md](LIMITATIONS.md) is the list, with what each
+limit gives up.
 
 ### Graph view
 

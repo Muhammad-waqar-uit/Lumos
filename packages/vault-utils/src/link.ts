@@ -25,12 +25,45 @@ const YOUTUBE_HOSTS = new Set([
 
 const VIMEO_HOSTS = new Set(["vimeo.com", "www.vimeo.com", "player.vimeo.com"]);
 
+const INSTAGRAM_HOSTS = new Set(["instagram.com", "www.instagram.com", "m.instagram.com"]);
+
+const FACEBOOK_HOSTS = new Set([
+  "facebook.com",
+  "www.facebook.com",
+  "m.facebook.com",
+  "web.facebook.com",
+  "fb.com",
+  "www.fb.com",
+]);
+
 const IMAGE_PATH = /\.(png|jpe?g|gif|webp|avif|bmp|svg)$/i;
 
 /** YouTube ids are 11 characters of URL-safe base64; anything else is not a video. */
 const YOUTUBE_ID = /^[A-Za-z0-9_-]{11}$/;
 
 const VIMEO_ID = /^[0-9]{6,12}$/;
+
+/** Instagram shortcodes are URL-safe base64 of varying length. */
+const INSTAGRAM_CODE = /^[A-Za-z0-9_-]{5,20}$/;
+
+/** Facebook ids are long numeric strings. */
+const FACEBOOK_ID = /^[0-9]{6,25}$/;
+
+/** Instagram permalink segments that carry a post, reel or IGTV shortcode. */
+const INSTAGRAM_PERMALINKS = new Set(["p", "reel", "reels", "tv"]);
+
+/** Facebook paths whose id arrives in the query string or as the last segment. */
+const FACEBOOK_VIDEO_PATHS = new Set(["watch", "video", "video.php", "reel", "reels"]);
+
+const FACEBOOK_POST_PATHS = new Set(["posts", "permalink.php", "photo", "photo.php"]);
+
+/** `/page/videos/<id>`, `/page/photos/<id>` and their slugs. */
+const FACEBOOK_MARKERS: Record<string, "video" | "post"> = {
+  videos: "video",
+  reels: "video",
+  posts: "post",
+  photos: "post",
+};
 
 /** Parse a URL, keeping only the schemes a browser or the daemon may fetch. */
 export function asHttpUrl(raw: string): URL | null {
@@ -73,6 +106,51 @@ function vimeoId(url: URL): string | null {
   return VIMEO_ID.test(candidate) ? candidate : null;
 }
 
+/** The shortcode in an Instagram permalink, including `/<username>/reel/<code>`. */
+function instagramCode(url: URL): string | null {
+  if (!INSTAGRAM_HOSTS.has(url.hostname.toLowerCase())) return null;
+  const segments = url.pathname.split("/").filter(Boolean);
+  const at = segments.findIndex((segment) => INSTAGRAM_PERMALINKS.has(segment.toLowerCase()));
+  // A permalink sits at the root or one segment in, under the account name.
+  if (at === -1 || at > 1) return null;
+  const code = segments[at + 1] ?? "";
+  return INSTAGRAM_CODE.test(code) ? code : null;
+}
+
+/**
+ * The id in a Facebook video, reel or post URL, and which of the two it is.
+ * Share links (`/share/...`) and `fb.watch` are left alone: their target is only
+ * known after a redirect, so they cannot be classified without a request.
+ */
+function facebookTarget(url: URL): { kind: "video" | "post"; id: string } | null {
+  if (!FACEBOOK_HOSTS.has(url.hostname.toLowerCase())) return null;
+  const segments = url.pathname.split("/").filter(Boolean);
+  const first = (segments[0] ?? "").toLowerCase();
+  const query = url.searchParams;
+  const last = segments[segments.length - 1] ?? "";
+
+  if (FACEBOOK_VIDEO_PATHS.has(first)) {
+    const id = query.get("v") || last;
+    return FACEBOOK_ID.test(id) ? { kind: "video", id } : null;
+  }
+  if (first === "watch" && FACEBOOK_ID.test(query.get("v") ?? "")) {
+    return { kind: "video", id: query.get("v") ?? "" };
+  }
+  if (FACEBOOK_POST_PATHS.has(first)) {
+    const id = (first.startsWith("photo") ? query.get("fbid") : query.get("story_fbid")) || last;
+    return FACEBOOK_ID.test(id) ? { kind: "post", id } : null;
+  }
+
+  for (const [index, segment] of segments.entries()) {
+    const kind = FACEBOOK_MARKERS[segment.toLowerCase()];
+    if (!kind) continue;
+    // The id is the segment after the marker, or the last one when a slug sits between.
+    if (index >= segments.length - 1 || !FACEBOOK_ID.test(last)) return null;
+    return { kind, id: last };
+  }
+  return null;
+}
+
 /**
  * Decide how a link should be shown: a player, an image, or a page to scrape.
  * Returns null when the link is not something the app can open at all.
@@ -95,6 +173,35 @@ export function parseLinkMedia(raw: string): LinkMedia | null {
   const vimeo = vimeoId(url);
   if (vimeo) {
     return { url: url.href, kind: "vimeo", embedUrl: `https://player.vimeo.com/video/${vimeo}` };
+  }
+
+  const instagram = instagramCode(url);
+  if (instagram) {
+    return {
+      url: url.href,
+      kind: "instagram",
+      // The captioned embed carries the account and the caption, not just the frame.
+      embedUrl: `https://www.instagram.com/p/${instagram}/embed/captioned/`,
+      frame: "portrait",
+    };
+  }
+
+  const facebook = facebookTarget(url);
+  if (facebook) {
+    const href = encodeURIComponent(url.href);
+    return facebook.kind === "video"
+      ? {
+          url: url.href,
+          kind: "facebook",
+          embedUrl: `https://www.facebook.com/plugins/video.php?href=${href}&show_text=false&width=560`,
+        }
+      : {
+          url: url.href,
+          kind: "facebook",
+          // A post keeps its caption and reaction counts, so it needs a taller frame.
+          embedUrl: `https://www.facebook.com/plugins/post.php?href=${href}&show_text=true&width=552`,
+          frame: "tall",
+        };
   }
 
   if (IMAGE_PATH.test(url.pathname)) return { url: url.href, kind: "image" };

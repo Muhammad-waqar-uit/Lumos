@@ -10,7 +10,9 @@ Status values: **done** · **in-progress** · **planned** · **idea**
 | HTTP API | done | `POST /message`, `GET /health`, plus the six read-API routes in the row below |
 | Link expansion | done | `GET /link` reads title/description/og:image and the readable text of a page, for `/read` and `/interview` links |
 | In-app playback | done | A YouTube or Vimeo link plays in the note viewer (no-cookie embed), an image link renders as the image; neither needs the daemon |
-| Page reader | done | The scraped text of a link, capped at 6,000 characters, rendered as text with a loading, error and retry state |
+| Social embeds | done | An Instagram post, reel or IGTV link and a Facebook video, reel or post render in place through the host's own embed, classified from the URL alone. The caption, site and lead image come from the daemon's `/link` when it is running, so the embed plays with the daemon stopped and only loses its caption |
+| Embed frames | done | `LinkMedia.frame` picks the box: 16:9 for a video, portrait for an Instagram permalink, a taller card for a Facebook post that keeps its caption and reaction counts |
+| Page reader | done | The scraped text of a link, capped at 6,000 characters, rendered as text with a loading, error and retry state. An Instagram or Facebook permalink has no readable body (a JavaScript shell), so those show the embed and its metadata instead of an empty reader |
 | Link safety | done | `GET /link` refuses non-http(s) URLs, credentials in the URL, and anything local — including a redirect into a private address — with time, redirect and size caps |
 | `/find` search | done | Searches title, tags and body; replies with up to five matches and counts the rest |
 | `/plan` with Ollama | planned | Local AI daily planning |
@@ -33,7 +35,7 @@ Status values: **done** · **in-progress** · **planned** · **idea**
 | Commit message lint | done | commitlint enforces `<type>(<scope>): <description>` |
 | Pre-push validation | done | `pnpm validate` — lint + format:check + typecheck + test + build |
 | Test runner | done | vitest 5; `pnpm test` runs every workspace that has a suite |
-| Parser & vault tests | done | 180 tests: 99 for `@lumos/vault-utils` (link/tag extraction, graph assembly, neighbourhoods, link parsing and page metadata) and 81 for the daemon (including `/find`, the link fetcher's refusals, and every HTTP route driven through `app.inject()`) |
+| Parser & vault tests | done | 188 tests: 107 for `@lumos/vault-utils` (link/tag extraction, graph assembly, neighbourhoods, link parsing and page metadata, and the Instagram/Facebook URL shapes) and 81 for the daemon (including `/find`, the link fetcher's refusals, and every HTTP route driven through `app.inject()`) |
 | Read API route tests | done | `createApp()` in `apps/daemon/src/app.ts` builds the app over a vault directory; `app.test.ts` covers every route plus CORS through `app.inject()`, with the link fetcher injected |
 | Desktop component tests | planned | jsdom + Testing Library for the sidebar, list and viewer states |
 | Branch workflow | done | Short-lived `<type>/<description>` branches; `pre-commit` blocks commits on `main` |

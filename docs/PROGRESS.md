@@ -2,6 +2,42 @@
 
 Chronological record of what has been built. Newest entries first within each date.
 
+## 2026-10-17
+
+### Done — Instagram and Facebook links play in the app
+- [x] A public reel and a public Facebook video were each embedded in a browser logged out and played:
+  a real `<video>` element, unpaused, `readyState 4`, served from the platforms' own CDNs. A Facebook
+  `plugins/post.php` embed rendered the video *plus* the caption and reaction counts, which is what
+  made it the better choice for a post URL than the bare player
+- [x] `parseLinkMedia()` gained `instagram` and `facebook`: Instagram `/p/`, `/reel/`, `/reels/`, `/tv/`,
+  including a permalink written under the account name, normalised to `/p/<code>/embed/captioned/`;
+  Facebook `/watch`, `/video.php`, `/reel`, `/<page>/videos/<id>`, `/<page>/videos/<slug>/<id>`,
+  `/posts`, `/photos` and `/photo.php`, mapping to the plugin video player or the post card
+- [x] `LinkMedia.frame` (`landscape`, `portrait`, `tall`) was added rather than two more kinds, so the
+  pane sizes a frame from data instead of guessing from a URL
+- [x] Deliberately left to the reader: `/share/...`, `/share/r/...` and `fb.watch/...`, whose real
+  target is only known after a redirect, and any path that only looks like a video (`/videos/` with no
+  id, `?v=not-a-number`, `/reel/short`)
+- [x] The daemon now fetches Instagram and Facebook links for metadata as well. Measured first: a
+  public reel answers `200` with its whole caption in `og:title` and its thumbnail in `og:image`, but
+  `text` comes back 0 characters long - the body is a JavaScript shell - so those hosts show a caption
+  card above the embed instead of an empty reader
+- [x] `LinkPane` renders the frame from `LinkMedia.frame`, shows the metadata card under it, and says
+  what the daemon is needed for: the page text for a page, the caption and thumbnail for an embed. A
+  page that will not fetch and an embed without its card are now different, true statements
+- [x] Verified in the running app with a temporary vault (never `vault/`): the Instagram note renders a
+  portrait reel with the caption card, the Facebook note a 16:9 player with its card, and an article
+  note still renders the reader - so the existing path did not regress
+- [x] Verified with the daemon killed as well, by pointing a demo note at the reel: the frame still
+  plays, the card is gone, and the pane explains why. The temporary demo edit was reverted and the
+  file is byte-identical to `main`
+- [x] 8 new tests; the suite is 188 (107 in `@lumos/vault-utils`, 81 in the daemon)
+- [x] `docs/LIMITATIONS.md` gained the honest half: only public content, dead permalinks that still
+  answer `200`, a mixed-locale Facebook title, nothing downloaded, and no way for a test to warn you
+  when a platform changes its plugin
+- [x] Not verified: the same embeds inside the packaged Tauri window. They were checked in Chromium,
+  which is the engine's family but not the engine; the manual check is recorded in `LIMITATIONS.md`
+
 ## 2026-10-16
 
 ### Done — every doc audited against the code

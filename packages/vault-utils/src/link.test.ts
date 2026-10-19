@@ -85,6 +85,100 @@ describe("parseLinkMedia - other kinds", () => {
   });
 });
 
+describe("parseLinkMedia - Instagram", () => {
+  it("turns a reel into the captioned embed, in a portrait frame", () => {
+    expect(parseLinkMedia("https://www.instagram.com/reel/DN035iN2Dum/")).toEqual({
+      url: "https://www.instagram.com/reel/DN035iN2Dum/",
+      kind: "instagram",
+      embedUrl: "https://www.instagram.com/p/DN035iN2Dum/embed/captioned/",
+      frame: "portrait",
+    });
+  });
+
+  it("accepts every permalink shape, including one under the account name", () => {
+    const code = "DN035iN2Dum";
+    for (const raw of [
+      `https://instagram.com/p/${code}/`,
+      `https://www.instagram.com/reel/${code}/`,
+      `https://m.instagram.com/tv/${code}/`,
+      `https://www.instagram.com/zcairns/reel/${code}/`,
+    ]) {
+      expect(parseLinkMedia(raw)?.embedUrl).toBe(
+        `https://www.instagram.com/p/${code}/embed/captioned/`,
+      );
+    }
+  });
+
+  it("leaves a profile, the feed, an empty permalink and a lookalike host as pages", () => {
+    for (const raw of [
+      "https://www.instagram.com/zcairns/",
+      "https://www.instagram.com/reels/",
+      "https://www.instagram.com/p/",
+      "https://instagram.com.evil.example/reel/DN035iN2Dum",
+    ]) {
+      expect(parseLinkMedia(raw)?.kind).toBe("page");
+    }
+  });
+});
+
+describe("parseLinkMedia - Facebook", () => {
+  it("plays a video through the plugin player, in the default frame", () => {
+    const raw = "https://www.facebook.com/watch/?v=10153231379946729";
+    const media = parseLinkMedia(raw);
+    expect(media?.kind).toBe("facebook");
+    expect(media?.embedUrl).toBe(
+      `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(raw)}&show_text=false&width=560`,
+    );
+    expect(media?.frame).toBeUndefined();
+  });
+
+  it("reads the page video, slugged video, reel and video.php shapes", () => {
+    for (const raw of [
+      "https://www.facebook.com/facebook/videos/10153231379946729/",
+      "https://www.facebook.com/facebook/videos/how-to-share/10153231379946729/",
+      "https://www.facebook.com/reel/1234567890",
+      "https://www.facebook.com/video.php?v=10153231379946729",
+      "https://m.facebook.com/watch/?v=10153231379946729",
+    ]) {
+      expect(parseLinkMedia(raw)?.embedUrl).toContain("/plugins/video.php?href=");
+    }
+  });
+
+  it("gives a post the taller card that keeps its caption", () => {
+    for (const raw of [
+      "https://www.facebook.com/facebook/posts/10153231379946729",
+      "https://www.facebook.com/facebook/photos/a-title/10153231379946729/",
+      "https://www.facebook.com/photo.php?fbid=10153231379946729",
+      "https://www.facebook.com/permalink.php?story_fbid=10153231379946729&id=20531316728",
+    ]) {
+      const media = parseLinkMedia(raw);
+      expect(media?.embedUrl).toContain("/plugins/post.php?href=");
+      expect(media?.frame).toBe("tall");
+    }
+  });
+
+  it("leaves a profile, a share link, a short link and a lookalike host as pages", () => {
+    for (const raw of [
+      "https://www.facebook.com/facebook/",
+      "https://www.facebook.com/share/r/AbCdEfGhIj/",
+      "https://fb.watch/abc123/",
+      "https://facebook.com.evil.example/watch/?v=10153231379946729",
+    ]) {
+      expect(parseLinkMedia(raw)?.kind).toBe("page");
+    }
+  });
+
+  it("refuses a path that only looks like a video", () => {
+    for (const raw of [
+      "https://www.facebook.com/facebook/videos/",
+      "https://www.facebook.com/watch/?v=not-a-number",
+      "https://www.facebook.com/reel/short",
+    ]) {
+      expect(parseLinkMedia(raw)?.kind).toBe("page");
+    }
+  });
+});
+
 describe("extractPreview", () => {
   const page = [
     "<html><head>",

@@ -37,10 +37,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Note links open outside the window so the vault view is never navigated away.
 
 ### Added (continued 4)
-- A test suite run by vitest 5: 180 tests, 99 for `@lumos/vault-utils` (slugify, title choice,
+- A test suite run by vitest 5, covering `@lumos/vault-utils` (slugify, title choice,
   frontmatter parsing including BOM and CRLF files, save/read/list/search, link and tag extraction,
   graph assembly and neighbourhoods, link parsing and page metadata, all against a temporary vault)
-  and 81 for the daemon (`parseMessage` for every command and for malformed input, `handleMessage`
+  and the daemon (`parseMessage` for every command and for malformed input, `handleMessage`
   filing real notes and answering `/find`, the link fetcher's refusals and caps, and every HTTP route
   driven through `app.inject()`, with `fetch` and DNS injected so the suite stays offline).
 
@@ -88,6 +88,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   its 200/400/502 mapping, and the CORS allow-list. The link fetcher is injected, so no test makes a
   network request.
 
+### Added (continued 9)
+- Instagram and Facebook links render in place instead of only linking out. `parseLinkMedia()` now
+  recognises Instagram permalinks (`/p/`, `/reel/`, `/tv/`, including one written under the account
+  name) and Facebook videos, reels, posts and photos, and builds the platform's own embed URL for
+  each: the captioned Instagram embed, the Facebook plugin video player, or the taller plugin post
+  card that keeps the caption and reaction counts. The classification is pure string work, so an
+  embedded reel plays with the daemon stopped, exactly as a YouTube link already did.
+- `LinkMedia.frame` (`landscape`, `portrait`, `tall`) tells the desktop how to size an embed, so every
+  player is no longer forced into a 16:9 box: an Instagram reel gets a portrait frame and a Facebook
+  post a taller card.
+- An Instagram or Facebook link is now fetched by `GET /link` for its metadata too. Those pages
+  publish no readable text (measured: 0 characters for a public reel), but the caption, site and lead
+  image do come through, and they are shown as a card under the embed. With the daemon stopped the
+  embed still plays; only the card is missing, and the pane says which part needs the daemon.
+- 8 new tests over the new URL shapes: lookalike hosts, `/share/...` and `fb.watch` short links that
+  are deliberately left to the reader, empty permalinks, and paths that only look like a video. The
+  suite is 188 tests - 107 for `@lumos/vault-utils` and 81 for the daemon.
+
 ### Fixed
 - Documentation that had drifted from the code, found by auditing every Markdown file against the
   repository. `docs/design.md` described tokens the stylesheet does not use (shadcn-style `--background:
@@ -126,6 +144,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   store, and calls the same `validate` script the local hooks run, so the gate is defined in one place.
 
 ### Notes
+- The Instagram and Facebook embeds are the platforms' plugin endpoints, verified by hand rather than
+  by a test: a public reel and a public video each played logged out, in the app and in the packaged
+  window's engine, and a post embed rendered its caption and reactions. Nothing is downloaded, so a
+  reel stays a link rather than a copy in the vault, and private or embeds-off content will never
+  render. What that gives up is written down in [docs/LIMITATIONS.md](docs/LIMITATIONS.md).
 - Link fetching is guarded, and the guards are the interesting part: only `http(s)`, no credentials in
   the URL, and a refusal for anything local — `localhost`, `*.local`, `*.internal`, loopback, private,
   link-local, CGNAT and reserved addresses — including a public URL that redirects into them, because

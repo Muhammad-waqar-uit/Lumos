@@ -8,7 +8,7 @@ While the daemon handles capture via WhatsApp, the desktop app is designed to he
 - Browse notes organized by folders (Inbox, Ideas, Interviews, Goals, Reading)
 - Search the vault's titles, tags and previews (note bodies are not searched yet; the daemon's `/find` and `/notes/search` do search bodies)
 - View notes with their Markdown rendered
-- Play a link or read the page it points at without leaving the app — a YouTube or Vimeo link plays in place, an image link shows the image, any other page is read as text
+- Play a link or read the page it points at without leaving the app — a YouTube or Vimeo link plays in place, an Instagram reel or post and a Facebook video or post render through the host's own embed with their caption beside them, an image link shows the image, any other page is read as text
 - Filter by folder and by text; tag filtering is not built yet (see the roadmap below)
 - Get a bird's-eye view of your captured thoughts, as a link graph
 
@@ -88,7 +88,7 @@ possible future path (see [docs/desktop.md](../../docs/desktop.md)); it does not
 - [ ] Note editor with Markdown preview
 - [ ] Tag management and filtering
 - [x] Graph view (link graph from the daemon, canvas force layout, per-folder hues, filters, local depth)
-- [x] Links in place (a YouTube or Vimeo link plays in the note viewer, an image link shows the image, any other page is scraped by the daemon and read as text)
+- [x] Links in place (a YouTube or Vimeo link plays in the note viewer, an Instagram reel/post and a Facebook video/post render through their own embeds with the caption the daemon reads, an image link shows the image, any other page is scraped and read as text)
 - [ ] Link reader polish (session cache, less site chrome in the extracted text) — see [docs/LIMITATIONS.md](../../docs/LIMITATIONS.md)
 - [ ] Daily notes view
 - [ ] Statistics and insights

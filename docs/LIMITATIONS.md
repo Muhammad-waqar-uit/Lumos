@@ -9,9 +9,11 @@ Each entry says what is given up. Where a limit is deliberate, the alternative i
 
 ## Link playback and the reader
 
-- **Only YouTube and Vimeo play inline.** Any other media URL is not recognised as media. A direct
-  `.mp4` or `.webm` link is treated as a page, fetched, and then refused with its content type, so
-  there is no `<video>` element and no `<audio>` support at all.
+- **Only YouTube, Vimeo, Instagram and Facebook play inline.** Every other media URL is not
+  recognised as media: a direct `.mp4` or `.webm` link is treated as a page, fetched, and then refused
+  with its content type, so there is no `<video>` element for it and no `<audio>` support at all. The
+  Instagram and Facebook limits are their own section below, because they are different in kind -
+  those two play through the platform's embed, not from a URL the app can build for itself.
 - **Age-restricted, region-blocked, rented or DRM-protected videos fail inside the player.** The
   embed refuses them with its own message; Lumos does not detect that state, so the pane looks normal
   and the failure belongs to YouTube.
@@ -50,6 +52,42 @@ Each entry says what is given up. Where a limit is deliberate, the alternative i
   behalf are possible.
 - **The URL itself is not shown for a scraped page** beyond the note's own header and an "open" link,
   so it is easy to lose track of which page a card came from when it redirected.
+
+## Social embeds (Instagram, Facebook)
+
+An Instagram or Facebook link is shown through the platform's own embed, which is the only way to
+play it — neither page can be read or copied.
+
+- **Only public content, and only where the account allows it.** Private, inactive and age-restricted
+  accounts, accounts with embeds turned off, and Stories cannot be embedded at all. The frame shows
+  the platform's own message; Lumos cannot tell that apart from a reel that was deleted.
+- **An unavailable permalink still answers HTTP 200.** Instagram serves its "Unavailable" page with a
+  success status, so nothing can be validated before the frame loads, and a dead link and a private
+  one look identical.
+- **The reader gives nothing for these two hosts.** Their pages are JavaScript shells, so the readable
+  text is empty (measured: 0 characters for a public reel, where the caption instead arrived in the
+  page title). A social link is therefore a player plus a metadata card, never text in the vault.
+- **The caption and thumbnail depend on the daemon.** They come from the page's own meta tags, fetched
+  by `/link`. With the daemon stopped the embed still plays, but the caption, site and thumbnail are
+  gone and the pane says so.
+- **What those meta tags say is the platform's choice.** A Facebook video answered with a mixed-locale
+  title (Urdu and English in one string) during testing, because the crawler is served whatever
+  Facebook picks for it. There is no request-language header and no normalisation.
+- **Nothing is downloaded.** The embed is loaded from `instagram.com` / `facebook.com` on every open,
+  so playback needs the network, the platform sees the request, and no copy of the media is kept. A
+  reel in a note is a link, not part of the vault.
+- **Share links and short links are not recognised.** `/share/…`, `/share/r/…` and `fb.watch/…` are
+  classified as ordinary pages, because their real target is only known after a redirect; they get the
+  reader, which returns nothing for them.
+- **The Instagram captioned embed scrolls.** Its own document is taller than any sensible frame (it
+  wraps the video, the account header and the caption), so the frame is scrollable rather than exactly
+  sized.
+- **Which Facebook shape you pasted decides the plugin.** A video/reel/watch URL goes to the video
+  player, a post or photo URL to the post card. A URL that is neither falls back to the reader.
+- **Tested in Chromium, not in the Tauri window.** The embeds were verified by hand in both shapes
+  (a reel and a video, each playing logged out) and a post embed; the same check inside the packaged
+  app is still manual, like the rest of the Tauri shell. Embedding is the platform's to change — a
+  plugin URL could stop working without notice, and no test can fail to warn you.
 
 ## Capture (WhatsApp)
 
