@@ -41,4 +41,4 @@ Status values: **done** · **in-progress** · **planned** · **idea**
 | Branch workflow | done | Short-lived `<type>/<description>` branches; `pre-commit` blocks commits on `main` |
 | Agent working agreement | done | `RULES.md`, `AGENTS.md`, `CLAUDE.md` at the repo root |
 | CI validation | done | GitHub Actions runs `pnpm validate` on every PR into `main` and every push to `main` |
-| Branch protection | planned | Require the `pnpm validate` check on `main` (repository setting) |
+| Branch protection | done | `pnpm validate` is required on `main` together with a pull request and an up-to-date branch; force pushes and deletions are blocked |
