@@ -166,6 +166,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   filter. The matching lives in `src/lib/filter.ts` and is unit-tested - the desktop workspace now has
   a `test` script of its own.
 
+### Fixed
+- The offline demo vault now lists the tags its note bodies already carried, so the chip row is no
+  longer empty while the graph draws tag nodes. Two demo notes share `#rust`, which is what makes the
+  counts mean something offline, and one note stays untagged so that case is visible too. A test
+  compares the listing to the bodies and fails if a body tag is left out.
+
 ### Notes
 - The Instagram and Facebook embeds are the platforms' plugin endpoints, verified by hand rather than
   by a test: a public reel and a public video each played logged out, in the app and in the packaged
