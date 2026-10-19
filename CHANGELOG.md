@@ -74,7 +74,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   implementation.
 - [`docs/LIMITATIONS.md`](docs/LIMITATIONS.md): what Lumos does not do, or does partly, gathered in one
   place with what each limit gives up — from the reader's JavaScript blind spot and the refused local
-  addresses to branch protection still being off and the WhatsApp session having no automated coverage.
+  addresses to the WhatsApp session having no automated coverage.
 
 ### Added (continued 8)
 - The daemon's HTTP routes are testable and tested. `createApp()` in `apps/daemon/src/app.ts` builds the
@@ -180,6 +180,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Writing the tests turned up two small gaps. The read-API routes could not be tested until the Fastify
   app was extracted from `server.ts`, which is now done. `/help` still does not list itself in the
   command list it prints, tracked in [docs/TODO.md](docs/TODO.md).
-- `main` is protected by convention and by the hook, and the `pnpm validate` workflow now runs on
-  every PR and every push. GitHub-side branch protection is still off, so the check is not yet
-  required to merge (tracked in [docs/TODO.md](docs/TODO.md)).
+- `main` is protected in three places: the `pre-commit` hook refuses a commit there, the
+  `pnpm validate` workflow runs on every PR and every push, and GitHub branch protection requires
+  that check before a pull request can merge, with the branch kept up to date and force pushes and
+  deletions blocked. Administrators can still push directly, so it is a guardrail rather than a
+  lock — [docs/LIMITATIONS.md](docs/LIMITATIONS.md) says so.

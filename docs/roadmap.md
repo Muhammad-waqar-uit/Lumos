@@ -9,8 +9,8 @@ oxlint + prettier, Husky hooks (pre-commit / commit-msg / pre-push), lint-staged
 `pnpm validate` gate, a single TypeScript version across the workspace, and the branch-based
 workflow written down in [`RULES.md`](../RULES.md) with [`AGENTS.md`](../AGENTS.md) and
 [`CLAUDE.md`](../CLAUDE.md) for agents. GitHub Actions runs the same gate on every PR into `main`
-(`.github/workflows/validate.yml`). Remaining: branch protection on `main`, so the check is actually
-required.
+(`.github/workflows/validate.yml`), and branch protection on `main` requires that check before a pull
+request can merge, so the gate is enforced rather than only reported.
 
 ## M1 - Tracking docs (Phase 1) ✅
 

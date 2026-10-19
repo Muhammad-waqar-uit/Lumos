@@ -137,9 +137,9 @@ play it — neither page can be read or copied.
 
 ## Delivery and process
 
-- **Branch protection on `main` is off.** The `pnpm validate` workflow runs on every PR and every push
-  to `main`, but nothing forces a merge to wait for it: the check is reported, not required. Turning it
-  on is a repository setting, tracked in [TODO.md](TODO.md).
+- **An administrator can still push to `main` directly.** Branch protection requires a pull request,
+  the `pnpm validate` check and an up-to-date branch, but `enforce_admins` is off, so a break-glass
+  push stays possible on a personal repository. The gate is a guardrail, not a lock.
 - **CI is Linux-only.** Windows and macOS are not exercised by the workflow, so CRLF handling, path
   separators and the Tauri build are local observations.
 - **Nothing is packaged or versioned.** There is no installer, no release, no tag and no published

@@ -2,6 +2,27 @@
 
 Chronological record of what has been built. Newest entries first within each date.
 
+## 2026-10-19
+
+### Done — both features landed, and the gate is enforced now
+- [x] `feat/social-embeds` merged as `24495f4` (PR #15). The `pnpm validate` check ran on the pull
+  request and finished green before the merge — the first time CI had seen this code, since the
+  workflow only triggers on PRs into `main` and pushes to `main`
+- [x] `feat/hashtag-tags` was rebased onto the squash with `git rebase --onto origin/main 9cdb84c`,
+  which produced no conflicts for a structural reason worth keeping: the squash tree was identical to
+  the tree the branch already sat on, so the replay had the same base. Its diff was the 13 tag files,
+  not the 16 embed files — the stacked order the branches were split in did what it was meant to
+- [x] Merged as `53aab37` (PR #16). `main` carries both features; both branches deleted locally and on
+  the remote
+- [x] Branch protection turned on for `main`: `pnpm validate` is required, `strict` is on so a stale
+  branch cannot merge, force pushes and deletions are blocked. Administrators are deliberately not
+  enforced — one developer cannot approve their own review, and a break-glass push should stay
+  possible on a personal repository. The cost is that it is a guardrail, not a lock, which is now
+  written down in `docs/LIMITATIONS.md`
+- [x] Every doc that still said the check was "reported, not required" was corrected in the same
+  commit: `TODO.md`, `FEATURES.md`, `LIMITATIONS.md`, `ARCHITECTURE.md`, `roadmap.md` and the
+  CHANGELOG, so the repository does not record a state it has left
+
 ## 2026-10-17
 
 ### Done — a captured message tags itself
