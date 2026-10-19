@@ -4,6 +4,31 @@ Chronological record of what has been built. Newest entries first within each da
 
 ## 2026-10-17
 
+### Done — a captured message tags itself
+- [x] `saveNote()` now takes the `#hashtags` out of the message and writes them as the note's
+  frontmatter tags. Every note used to be written with `tags: []` and nothing read the hashtags a
+  message already carried - which was most obvious on an Instagram caption, where the platform hands
+  back thirteen of them
+- [x] The rules were **reused, not re-invented**: `extractTags()` from `@lumos/vault-utils/graph`,
+  which the link graph already reads tags with. A second implementation would have let a frontmatter
+  tag and a graph tag node drift apart, which is precisely the bug this feature would otherwise create
+- [x] So the existing tested behaviour comes with it: a markdown heading is not a tag, a `#hash` inside
+  a code span or fenced block is not a tag, `#Rust` and `#rust` are one tag, and the frontmatter wins
+  the ordering
+- [x] Verified through the real interface, not just the units: `POST /message` with `/idea plan the
+  Kyoto trip #travel #Japan #travel` wrote `tags: [travel, japan]` on disk, `/notes/search?q=japan`
+  returned the note by its tag, and the desktop's note list showed `#travel #japan` beside it
+- [x] The first attempt failed for an instructive reason: the check came back `tags: []` because the
+  daemon under test had been started *before* the change and `tsx src/server.ts` loads its imports
+  once. Restarting it produced the tags - the code was right and the process was stale
+- [x] One wrong expectation in a new test, caught by the test itself: the note's *title* keeps the
+  hashtag, because a title is the message's first line verbatim, so the tag is what makes a note
+  findable rather than something already visible in its name
+- [x] 5 new tests (111 in `@lumos/vault-utils`, 82 in the daemon, 193 overall)
+- [x] One narrow edge found by hand and written down rather than hidden: a body starting with `# `
+  loses its tags, because the parser collapses a message to one line and the tag reader skips a line
+  that looks like a heading. `docs/LIMITATIONS.md` now says so, with what would fix it
+
 ### Done — Instagram and Facebook links play in the app
 - [x] A public reel and a public Facebook video were each embedded in a browser logged out and played:
   a real `<video>` element, unpaused, `readyState 4`, served from the platforms' own CDNs. A Facebook

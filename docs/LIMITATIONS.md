@@ -124,6 +124,12 @@ play it — neither page can be read or copied.
   support, no sync, no backup and no export.
 - **Notes are plain Markdown at rest.** That is the point of the product, but it also means no
   encryption: anything with access to the directory can read every note.
+- **A message whose body starts with `# ` keeps no tags.** The command parser collapses a message to
+  a single line, and the tag reader skips a line that looks like a Markdown heading, so
+  `/goal # quarter review and #ship` files the note with `tags: []` even though `#ship` was written.
+  The text is still filed, nothing is lost from the note, and `#ship` written anywhere other than at
+  the very start of the body is picked up normally. Capturing a message with its line breaks intact
+  would close it.
 - **Same-title collisions get a timestamp.** `saveNote` never overwrites, so two notes with the same
   title on the same day land as `…-<slug>.md` and `…-<slug>-<millis>.md`, which is safe but ugly.
 - **Frontmatter is not schema-validated**, in CI or at write time. A malformed file is skipped by the
