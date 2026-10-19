@@ -1,7 +1,7 @@
-import type { Folder } from "@lumos/shared";
 import type { FolderCount } from "../lib/api";
+import type { FolderFilter } from "../lib/filter";
 
-export type FolderFilter = Folder | "All";
+export type { FolderFilter } from "../lib/filter";
 export type ShellView = "notes" | "graph";
 
 const VIEWS: { key: ShellView; label: string }[] = [

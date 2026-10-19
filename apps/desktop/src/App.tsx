@@ -9,6 +9,7 @@ import {
   type FolderCount,
 } from "./lib/api";
 import { DEMO_FOLDERS, DEMO_GRAPH, DEMO_NOTES, demoNote } from "./lib/demo";
+import { countTags, filterEntries, nodeTag } from "./lib/filter";
 import { NoteList, keyOf } from "./components/NoteList";
 import { NoteViewer } from "./components/NoteViewer";
 import { PaneBoundary } from "./components/PaneBoundary";
@@ -26,6 +27,8 @@ export default function App() {
   const [notes, setNotes] = useState<VaultEntry[]>([]);
   const [activeFolder, setActiveFolder] = useState<FolderFilter>("All");
   const [query, setQuery] = useState("");
+  // A tag filter outlives a folder change on purpose; it is switched off explicitly.
+  const [tag, setTag] = useState<string | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
   const [fetched, setFetched] = useState<{ key: string; note: Note } | null>(null);
   const [loading, setLoading] = useState(true);
@@ -64,14 +67,19 @@ export default function App() {
     };
   }, []);
 
-  const visible = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return notes.filter((n) => {
-      if (activeFolder !== "All" && n.folder !== activeFolder) return false;
-      if (!q) return true;
-      return `${n.title} ${n.excerpt} ${n.tags.join(" ")}`.toLowerCase().includes(q);
-    });
-  }, [notes, activeFolder, query]);
+  // Folder and query decide which tags are on offer; the tag then narrows that same set, so a
+  // count is always a count of what is actually listed.
+  const scoped = useMemo(
+    () => filterEntries(notes, { folder: activeFolder, query, tag: null }),
+    [notes, activeFolder, query],
+  );
+
+  const visible = useMemo(
+    () => filterEntries(scoped, { folder: "All", query: "", tag }),
+    [scoped, tag],
+  );
+
+  const tagCounts = useMemo(() => countTags(scoped), [scoped]);
 
   // The active note key is derived from the list and the user's choice - never repaired in an effect.
   const activeKey = useMemo(() => {
@@ -111,7 +119,16 @@ export default function App() {
   const openNote = (id: string): void => {
     setActiveFolder("All");
     setQuery("");
+    setTag(null);
     setSelected(id);
+    setView("notes");
+  };
+
+  /** A tag picked in the list or on a graph node shows that tag's notes and drops the rest. */
+  const filterByTag = (value: string): void => {
+    setTag(nodeTag(value) ?? value);
+    setActiveFolder("All");
+    setQuery("");
     setView("notes");
   };
 
@@ -142,6 +159,7 @@ export default function App() {
                 loading={loading}
                 activeKey={activeKey}
                 onOpen={openNote}
+                onFilterTag={filterByTag}
               />
             </Suspense>
           </PaneBoundary>
@@ -153,6 +171,9 @@ export default function App() {
               query={query}
               onQuery={setQuery}
               onSelect={setSelected}
+              tag={tag}
+              onTag={setTag}
+              tagCounts={tagCounts}
               loading={loading}
             />
             <NoteViewer note={note} connection={connection} />

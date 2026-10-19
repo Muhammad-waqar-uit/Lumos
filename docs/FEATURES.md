@@ -23,7 +23,8 @@ Status values: **done** · **in-progress** · **planned** · **idea**
 | Link parsing | done | `parseLinkMedia`/`extractPreview`/`firstExternalLink` in `@lumos/vault-utils` (`./link` subpath, browser-safe) |
 | Daemon read API | done | `GET /notes`, `/notes/search`, `/folders`, `/note`, `/graph` + CORS |
 | Dark UI theme | done | Tailwind v4 tokens, near-black background |
-| Desktop vault browser | in-progress | Folder sidebar + note list + viewer + status bar |
+| Desktop vault browser | done | Folder sidebar + note list + viewer + status bar, with tag filtering |
+| Tag filtering | done | The tags in the current folder and query become chips with counts; a chip, or a tag on a note card, narrows the list. A tag node in the graph offers **Show notes** with the same filter (`src/lib/filter.ts`, unit-tested) |
 | Note viewer | done | Markdown via `react-markdown` + `remark-gfm` (tables, task lists, fenced code) |
 | Markdown rendering | done | Headings, lists, tables, blockquotes, task lists, links; styled with the dark tokens |
 | Code syntax highlighting | planned | Highlight fenced code blocks in the viewer |

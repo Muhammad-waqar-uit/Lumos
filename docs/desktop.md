@@ -99,6 +99,22 @@ referenced only from TypeScript would never reach the stylesheet.
 There is no desktop test coverage yet: the vitest suites cover `@lumos/vault-utils` and the daemon.
 Component tests need jsdom + Testing Library and are tracked in [`TODO.md`](TODO.md) Phase 0.1.
 
+### Tag filtering
+
+- The note list offers the tags present in the current folder and query as chips, most used first,
+  each with how many of the listed notes carry it.
+- Clicking a chip narrows the list to that tag and clicking it again clears it. A note's own tag in
+  its card is the same control, so a tag is a filter wherever it appears.
+- Folder and query decide which tags are on offer; the tag then narrows that same set, which is why a
+  count is always a count of what is listed. An active tag stays in the row even when nothing matches,
+  so it can be switched off.
+- A selected tag survives a folder change, and the empty state names it (`No notes tagged #travel.`)
+  rather than looking like an empty vault.
+- Selecting a tag node in the graph offers **Show notes**, which returns to the notes view with that
+  tag filtered - the same handler the chips use.
+- The filtering is pure logic in `src/lib/filter.ts`, covered by `src/lib/filter.test.ts`. The desktop
+  workspace has its own `test` script, so `pnpm --filter desktop test` checks it.
+
 ## Planned structure
 
 - **Shell**: Tauri 2.x (Rust backend) hosting a Vite + React frontend.

@@ -69,10 +69,10 @@
 - [x] Vault load on mount via the daemon read API (demo fallback when offline)
 - [x] Note viewer - Markdown rendering via `react-markdown` + `remark-gfm` (headings, lists, tables, task lists, blockquotes, fenced code; note links open externally)
 - [ ] Syntax highlighting for fenced code blocks (`rehype-highlight` or shiki)
-- [ ] Tag filtering
+- [x] Tag filtering: the note list offers the tags in the current folder and query as chips with counts, a chip filters to that tag and toggles off, a note's own tag is the same control, and the active tag survives a folder change (`src/lib/filter.ts`, 12 unit tests)
 - [x] Graph view: canvas link graph from `GET /graph` — glow nodes sized by backlinks, curved edges, one hue per folder, tag and unlinked filters, local depth around the open note, demo graph offline
 - [ ] Graph: backlinks panel in the note viewer, fed by the same extracted links
-- [ ] Graph: tag nodes styled apart from notes, and tag nodes clickable as a filter
+- [x] Graph: tag nodes are drawn in the tag hue and sized separately, and selecting one offers **Show notes**, which switches to the notes view filtered to that tag
 - [ ] Graph: keep the node positions across tab switches instead of re-running the layout
 - [ ] Graph: re-fit after the pane is resized — today the transform is kept, so the graph can sit off-centre until `Fit` (or a filter change) is used
 - [x] Link pane: a note's link plays (YouTube/Vimeo), shows as an image, or scrapes into a reader card with loading, error and retry states
@@ -84,7 +84,6 @@
 ## Phase 6: Search & Discovery (P1)
 - [ ] Full-text search with fuse.js
 - [ ] Cmd/Ctrl+K search modal
-- [ ] Tag filtering UI
 - [ ] Recent notes quick access
 - [ ] Share search logic with daemon `/find`
 

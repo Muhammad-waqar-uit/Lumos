@@ -78,7 +78,7 @@ injected, so no port is bound and no network request is made.
 
 - **Runner**: vitest, run by `pnpm test` from the root (every workspace that has a suite).
 - **Location**: `*.test.ts` next to the module it covers - no separate `tests/` tree.
-- **Coverage today**: `@lumos/vault-utils` (slugify, frontmatter parsing, save/read/list/search, link and tag extraction, graph assembly and neighbourhoods, the link classifier's URL shapes and page metadata) and the daemon (the parser, the filing path, the link fetcher's guards and caps, and every HTTP route driven through `app.inject()` without binding a port). The desktop UI is still uncovered - it needs jsdom and Testing Library, tracked in [`TODO.md`](TODO.md).
+- **Coverage today**: `@lumos/vault-utils` (slugify, frontmatter parsing, save/read/list/search, link and tag extraction, graph assembly and neighbourhoods, the link classifier's URL shapes and page metadata) and the daemon (the parser, the filing path, the link fetcher's guards and caps, and every HTTP route driven through `app.inject()` without binding a port). The desktop's pure logic is covered too: `src/lib/filter.ts` (the note-list filtering and tag counts) has its own suite behind the desktop workspace's vitest script. The desktop *components* are still uncovered - they need jsdom and Testing Library, tracked in [`TODO.md`](TODO.md).
 - The suites run inside `pnpm validate`, so a failing test blocks a push exactly like a failing build.
 
 ## Repository Layout
