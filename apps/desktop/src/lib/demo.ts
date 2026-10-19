@@ -34,6 +34,7 @@ export const DEMO_NOTES: VaultEntry[] = [
     "Build a habit tracker",
     "2026-10-13T09:12:00.000Z",
     "A small app that tracks daily habits with streaks and gentle reminders.",
+    { tags: ["ideas"] },
   ),
   entry(
     "Interviews",
@@ -41,7 +42,7 @@ export const DEMO_NOTES: VaultEntry[] = [
     "System design top questions",
     "2026-10-12T14:30:00.000Z",
     "Caching, rate limiting, sharding, and consistency trade-offs.",
-    { url: "https://example.com/system-design" },
+    { url: "https://example.com/system-design", tags: ["interview"] },
   ),
   entry(
     "Reading",
@@ -49,7 +50,7 @@ export const DEMO_NOTES: VaultEntry[] = [
     "Async Rust guide",
     "2026-10-11T08:05:00.000Z",
     "Futures, executors, and the pinning model explained.",
-    { url: "https://example.com/rust-async" },
+    { url: "https://example.com/rust-async", tags: ["reading", "rust"] },
   ),
   entry(
     "Goals",
@@ -57,6 +58,7 @@ export const DEMO_NOTES: VaultEntry[] = [
     "Learn Rust",
     "2026-10-10T07:00:00.000Z",
     "Ship one small CLI in Rust this quarter.",
+    { tags: ["goal", "rust"] },
   ),
   entry(
     "Inbox",
@@ -77,9 +79,9 @@ const DEMO_BODIES: Record<string, string> = {
   "2026-10-12-system-design-top-questions.md":
     "Caching, rate limiting, sharding, consistency. Reread [[Async Rust guide]] for the executor part. #interview",
   "2026-10-11-async-rust-guide.md":
-    "Futures, executors, and the pinning model, which backs the [[Learn Rust]] goal. #reading",
+    "Futures, executors, and the pinning model, which backs the [[Learn Rust]] goal. #reading #rust",
   "2026-10-10-learn-rust.md":
-    "Ship one small CLI this quarter. [[Build a habit tracker]] is the obvious first target. #goal",
+    "Ship one small CLI this quarter. [[Build a habit tracker]] is the obvious first target. #goal #rust",
   "2026-10-09-random-thought.md":
     "A thought captured straight from WhatsApp, with nothing linking to it yet.",
 };

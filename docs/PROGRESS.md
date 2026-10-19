@@ -4,6 +4,17 @@ Chronological record of what has been built. Newest entries first within each da
 
 ## 2026-10-19
 
+### Done — the demo vault shows its tags
+- [x] Testing the tag filter offline found the demo vault half-built: its note bodies carried `#tags`
+  (the graph drew tag nodes for them) while the listing entries had `tags: []`, so the chip row was
+  empty with the daemon stopped - the one path a first-run user sees could not show the feature
+- [x] Each demo note now lists the tags its body declares, with `#rust` on two of them so the counts
+  have something to show, and one note deliberately untagged
+- [x] A test compares every demo note's listing tags with `extractTags()` of its body, so the two
+  cannot drift again; it was shown to fail by removing one tag, then restored
+- [x] Verified offline in the browser with only Vite running: chips `#rust 2, #goal 1, #ideas 1,
+  #interview 1, #reading 1`, and clicking `#rust` narrowed five demo notes to two
+
 ### Done — tags are a filter, not just text
 - [x] The note list offers the tags in the current folder and query as chips with counts, most used
   first; clicking one narrows the list and clicking it again clears it. A note's own tag is the same

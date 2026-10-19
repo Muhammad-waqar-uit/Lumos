@@ -114,6 +114,9 @@ Component tests need jsdom + Testing Library and are tracked in [`TODO.md`](TODO
   tag filtered - the same handler the chips use.
 - The filtering is pure logic in `src/lib/filter.ts`, covered by `src/lib/filter.test.ts`. The desktop
   workspace has its own `test` script, so `pnpm --filter desktop test` checks it.
+- The offline demo notes carry the same tags their bodies declare (`src/lib/demo.ts`), so the chips
+  and the filter work with the daemon stopped; `demo.test.ts` keeps the listing and the bodies in
+  step.
 
 ## Planned structure
 
