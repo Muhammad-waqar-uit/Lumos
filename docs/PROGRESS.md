@@ -4,6 +4,15 @@ Chronological record of what has been built. Newest entries first within each da
 
 ## 2026-10-19
 
+### Done — a docs sweep, so nothing still calls tag filtering unbuilt
+- [x] The feature had landed while four documents still described it as future work: the M5 roadmap
+  line, both READMEs, and `desktop.md`'s "still to come" list. A reader following them would have
+  concluded the chips did not exist
+- [x] Fixed those, and the stale test counts they sat next to (`README.md` said 82 daemon tests with
+  the desktop untested; it is 83 and 15). Two tracking files needed it: the desktop-component row is
+  now listed once, not twice
+- [x] Historical `PROGRESS.md` checklists are left as written - the entries above supersede them
+
 ### Done — the demo vault shows its tags
 - [x] Testing the tag filter offline found the demo vault half-built: its note bodies carried `#tags`
   (the graph drew tag nodes for them) while the listing entries had `tags: []`, so the chip row was

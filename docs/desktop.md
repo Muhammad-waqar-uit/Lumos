@@ -31,7 +31,7 @@ navigate the app window away from the vault.
 Styling lives in the `.markdown` rules in `src/index.css` and uses the existing theme tokens, so no
 colour is hardcoded in a component. Fenced code blocks are styled but not yet syntax-highlighted.
 
-Still to come: tag filtering, code syntax highlighting, resizable panes, routing, and a note editor
+Still to come: code syntax highlighting, resizable panes, routing, and a note editor
 (see [`TODO.md`](TODO.md) Phases 4-7).
 
 ### Link pane
@@ -165,6 +165,6 @@ work today. They are recorded here as the intended scheme, and tracked in [`TODO
 - Syntax-highlighted code blocks (styled today, not highlighted).
 - Resizable panes, TanStack Router and zustand - the shell is plain React state in one component.
 - Every entry in the Keyboard section above.
-- Full-text search with fuse.js and tag filtering (a client-side filter over the loaded list works
-  today; the daemon's `/find` and `/notes/search` cover the vault itself).
+- Full-text search with fuse.js (the tag chips already filter the loaded list; the daemon's `/find`
+  and `/notes/search` cover the vault itself).
 - Markdown editor with live preview and save-to-disk.

@@ -44,7 +44,7 @@ folder, so progress is always visible.
 - Vault load on mount via the daemon read API. ✅
 - Markdown rendering. ✅
 - Link graph: notes and tags as nodes, links and tag references as edges, filters and local depth. ✅
-- Tag filtering. ⏳
+- Tag filtering: the tags in the current folder and query become chips with counts, a chip or a note's own tag narrows the list, and a tag node offers **Show notes** with the same filter. ✅
 
 ## M6 - Search (Phase 6)
 
