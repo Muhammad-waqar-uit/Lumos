@@ -123,6 +123,10 @@ play it — neither page can be read or copied.
   and the body match is not scrolled to. Results are also capped at 12 (10 local, plus body-only
   matches), so a very broad query is a shortlist rather than a list. Recent notes are not offered
   yet, so an empty palette has nothing to show.
+- **Backlinks are link-only.** A note that shares a tag with the open one is deliberately not listed
+  as a backlink - it is a neighbour in the graph, not something that points here - so "Linked from"
+  can be empty on a tag-heavy vault. With the daemon down the list comes from the demo graph, so a demo
+  note that links to another demo note shows its sources, while a real note offline simply shows none.
 - **No keyboard navigation for the link pane.** The reader and the player are inside the note scroll
   area, and only the note list has `j`/`k`-style movement planned.
 

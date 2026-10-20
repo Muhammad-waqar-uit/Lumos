@@ -4,6 +4,21 @@ Chronological record of what has been built. Newest entries first within each da
 
 ## 2026-10-20
 
+### Done — every note shows what points at it
+- [x] Phase 5's backlinks panel: the note viewer lists the notes that link to the open one, and each
+  row is a button that opens that note
+- [x] `backlinks()` lives in `@lumos/vault-utils/graph` beside `neighborhood()`, so the rule for what
+  counts is one implementation: only `link` edges pointing at the note, in the graph's own node order
+- [x] A shared tag is deliberately not a backlink. The graph draws tag edges, so returning them here
+  would have listed every note carrying `#rust` as "linked from", which is not what the word means
+- [x] The viewer reads the graph the app already loaded (the demo graph offline), so the panel costs
+  no request and works with the daemon stopped
+- [x] 5 unit tests for the new function: the source list, a note nobody points at, the tag case, the
+  tag node itself, de-duplication of a note that links twice, and an unknown id- [x] Verified in the browser against a temporary vault: three notes, two linking to the third, the
+  panel showing "Linked from 2", and clicking a row opening that note in the Notes view. With the
+  daemon stopped, the demo vault's **Learn Rust** listed its two sources, so the panel is not another
+  feature that dies offline
+
 ### Done — the vault answers Cmd/Ctrl+K
 - [x] Phase 6's search modal, built on `fuse.js`, the dependency the decisions log had already chosen
 - [x] Title, tag and preview matches are ranked locally, so the palette works with the daemon stopped;

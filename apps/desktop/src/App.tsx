@@ -8,6 +8,7 @@ import {
   type Connection,
   type FolderCount,
 } from "./lib/api";
+import { backlinks } from "@lumos/vault-utils/graph";
 import { DEMO_FOLDERS, DEMO_GRAPH, DEMO_NOTES, demoNote } from "./lib/demo";
 import { countTags, filterEntries, nodeTag } from "./lib/filter";
 import { NoteList, keyOf } from "./components/NoteList";
@@ -92,6 +93,13 @@ export default function App() {
   const activeEntry = useMemo(
     () => (activeKey ? (notes.find((n) => keyOf(n) === activeKey) ?? null) : null),
     [activeKey, notes],
+  );
+
+  // The graph already knows every link, so the viewer's backlinks need no second request. Offline it
+  // is the demo graph, whose ids match the demo notes; a real note simply has none.
+  const linkedFrom = useMemo(
+    () => (activeKey ? backlinks(graph ?? DEMO_GRAPH, activeKey) : []),
+    [graph, activeKey],
   );
 
   // Fetch the full note from the daemon (async only - the demo path needs no effect).
@@ -199,7 +207,12 @@ export default function App() {
               tagCounts={tagCounts}
               loading={loading}
             />
-            <NoteViewer note={note} connection={connection} />
+            <NoteViewer
+              note={note}
+              connection={connection}
+              backlinks={linkedFrom}
+              onOpenNote={openNote}
+            />
           </>
         )}
       </div>

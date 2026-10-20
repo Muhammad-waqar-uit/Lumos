@@ -191,7 +191,7 @@ git checkout -b feat/my-change
 - [x] Full-text search with `/find <query>` (title, tags and body; up to five matches per reply)
 - [x] Tag extraction and auto-tagging — `#hashtags` in a captured message become the note's frontmatter tags
 - [~] Tauri desktop app UI for browsing/searching vault - dark shell, folder sidebar, note list, Markdown-rendering viewer, link graph, tag filtering and a `Cmd/Ctrl+K` search palette are in place; code highlighting, resizable panes and an editor remain
-- [~] Test coverage - vitest suites for `@lumos/vault-utils` (111 tests), the daemon (83 tests) and the desktop's pure logic (25 tests) run inside `pnpm validate`; the daemon routes are covered through `app.inject()`, the desktop components are still untested
+- [~] Test coverage - vitest suites for `@lumos/vault-utils` (116 tests), the daemon (83 tests) and the desktop's pure logic (25 tests) run inside `pnpm validate`; the daemon routes are covered through `app.inject()`, the desktop components are still untested
 - [ ] Enrichment: extract summaries, key points from links
 - [ ] Sync/backups, exports
 
