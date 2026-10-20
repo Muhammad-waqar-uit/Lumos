@@ -48,8 +48,8 @@ folder, so progress is always visible.
 
 ## M6 - Search (Phase 6)
 
-- Full-text search with `fuse.js`.
-- `Cmd/Ctrl+K` search modal.
+- Full-text search with `fuse.js`. ✅ (ranked over titles, tags and previews, and usable offline)
+- `Cmd/Ctrl+K` search modal. ✅ (arrows, `Enter`, `Esc`; body matches come from `GET /notes/search`)
 - Recent notes.
 
 ## M7 - Editing + polish (Phases 7-8)

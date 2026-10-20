@@ -17,6 +17,7 @@ Lumos transforms WhatsApp into an effortless capture tool for your second brain.
 - **Allowlist Security**: Only messages from whitelisted phone numbers are processed
 - **Monorepo Architecture**: Clean separation between daemon (capture) and desktop app (viewing)
 - **Links in place**: A YouTube or Vimeo link plays in the note viewer, an Instagram reel or post and a Facebook video or post render through the platform's own embed with their caption beside them, an image link shows the image, and any other page is scraped by the daemon and read as text without leaving the app (private hosts are refused)
+- **Keyboard search**: `Cmd/Ctrl+K` opens a palette over the vault - typo-tolerant matches on titles, tags and previews, plus body matches from the daemon - and `Enter` opens the note
 
 ## Architecture
 
@@ -189,8 +190,8 @@ git checkout -b feat/my-change
 - [ ] Daily planner with `/plan today|tomorrow` (AI-assisted via Ollama)
 - [x] Full-text search with `/find <query>` (title, tags and body; up to five matches per reply)
 - [x] Tag extraction and auto-tagging — `#hashtags` in a captured message become the note's frontmatter tags
-- [~] Tauri desktop app UI for browsing/searching vault - dark shell, folder sidebar, note list, Markdown-rendering viewer, link graph and tag filtering are in place; code highlighting, resizable panes and an editor remain
-- [~] Test coverage - vitest suites for `@lumos/vault-utils` (111 tests), the daemon (83 tests) and the desktop's pure logic (15 tests) run inside `pnpm validate`; the daemon routes are covered through `app.inject()`, the desktop components are still untested
+- [~] Tauri desktop app UI for browsing/searching vault - dark shell, folder sidebar, note list, Markdown-rendering viewer, link graph, tag filtering and a `Cmd/Ctrl+K` search palette are in place; code highlighting, resizable panes and an editor remain
+- [~] Test coverage - vitest suites for `@lumos/vault-utils` (111 tests), the daemon (83 tests) and the desktop's pure logic (25 tests) run inside `pnpm validate`; the daemon routes are covered through `app.inject()`, the desktop components are still untested
 - [ ] Enrichment: extract summaries, key points from links
 - [ ] Sync/backups, exports
 

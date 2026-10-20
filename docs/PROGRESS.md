@@ -2,6 +2,23 @@
 
 Chronological record of what has been built. Newest entries first within each date.
 
+## 2026-10-20
+
+### Done — the vault answers Cmd/Ctrl+K
+- [x] Phase 6's search modal, built on `fuse.js`, the dependency the decisions log had already chosen
+- [x] Title, tag and preview matches are ranked locally, so the palette works with the daemon stopped;
+  the same query also goes to `GET /notes/search`, so a word that only appears deep in a body finds
+  the note, and those rows are marked "in the body"
+- [x] Keyboard: `Cmd/Ctrl+K` from anywhere, arrows to move, `Enter` to open the note in the Notes view,
+  `Esc` to close with focus handed back; a status-bar button carries the shortcut so it is findable
+- [x] The body search is debounced and stamped with the query it answered, so a slow reply cannot
+  appear under newer text; a failed body search says so in the footer instead of silently falling
+  back to local matches only
+- [x] Verified in the browser against a temporary vault: `kubernetes` (only in a body) found the note
+  with the marker, `kyoto` + Enter opened that note, `ArrowDown` + `Enter` opened the second result,
+  and with the daemon stopped the same palette searched the five demo notes and said body search needs
+  the daemon
+
 ## 2026-10-19
 
 ### Done — a docs sweep, so nothing still calls tag filtering unbuilt

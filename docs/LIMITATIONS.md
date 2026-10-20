@@ -108,13 +108,21 @@ play it — neither page can be read or copied.
 - **The Tauri shell is untested by CI.** Only the web UI is exercised (in a browser). The Rust side,
   the window configuration and the packaged bundle are manual checks: `pnpm --filter desktop tauri dev`.
 - **No component tests.** There is no jsdom or Testing Library setup, so the sidebar, list, viewer,
-  graph and link pane have no automated coverage — the states were checked by hand.
+  graph, search palette and link pane have no automated coverage — the states were checked by hand.
+  Only the pure logic (filtering, demo data, search ranking) is tested.
 - **Read-only.** Notes cannot be created, edited, moved or deleted from the app; the desktop reads
   through the daemon HTTP API and writes nothing. With the daemon down it falls back to
   `src/lib/demo.ts`, so it shows demo data rather than your vault.
 - **Graph rough edges.** The canvas transform is kept across a pane resize, so the graph can sit
-  off-centre until *Fit* or a filter change; node positions are not kept across tab switches; tag
-  nodes cannot be clicked as a filter yet.
+  off-centre until *Fit* or a filter change; node positions are not kept across tab switches.
+- **Search needs the daemon for body text.** The palette ranks titles, tags and previews from the
+  loaded listing, which holds only an excerpt. A word that appears deep in a note body is found by
+  `GET /notes/search`, so with the daemon stopped that match is simply absent — and the demo vault
+  has no body index either. The footer says so rather than pretending the vault is fully searched.
+- **Search finds notes, not lines.** A result opens the note; the matching passage is not highlighted
+  and the body match is not scrolled to. Results are also capped at 12 (10 local, plus body-only
+  matches), so a very broad query is a shortlist rather than a list. Recent notes are not offered
+  yet, so an empty palette has nothing to show.
 - **No keyboard navigation for the link pane.** The reader and the player are inside the note scroll
   area, and only the note list has `j`/`k`-style movement planned.
 

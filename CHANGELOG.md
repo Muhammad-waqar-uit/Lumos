@@ -172,6 +172,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   counts mean something offline, and one note stays untagged so that case is visible too. A test
   compares the listing to the bodies and fails if a body tag is left out.
 
+### Added (continued 12)
+- Full-text search from the keyboard: `Cmd/Ctrl+K` opens a palette over the whole vault. Titles, tags
+  and previews are ranked locally with `fuse.js` - typo-tolerant, and it works with the daemon
+  stopped. When the daemon is running the same query also goes to `GET /notes/search`, so a word that
+  only appears deep in a note body still finds it, and those rows are marked "in the body". Arrow keys
+  move, `Enter` opens the note in the Notes view, `Esc` closes, and focus goes back where it was. The
+  status bar carries a Search button with the shortcut beside it, so the palette is reachable without
+  knowing the key.
+- `src/lib/search.ts`: the ranking and the merge of local and body matches, with 10 unit tests.
+- New dependency in the desktop workspace: `fuse.js` (lockfile updated).
+
 ### Notes
 - The Instagram and Facebook embeds are the platforms' plugin endpoints, verified by hand rather than
   by a test: a public reel and a public video each played logged out, in the app and in the packaged
