@@ -108,8 +108,9 @@ play it — neither page can be read or copied.
 - **The Tauri shell is untested by CI.** Only the web UI is exercised (in a browser). The Rust side,
   the window configuration and the packaged bundle are manual checks: `pnpm --filter desktop tauri dev`.
 - **No component tests.** There is no jsdom or Testing Library setup, so the sidebar, list, viewer,
-  graph, search palette and link pane have no automated coverage — the states were checked by hand.
-  Only the pure logic (filtering, demo data, search ranking) is tested.
+  graph, search palette and link pane have no automated coverage - the states were checked by hand.
+  Only the pure logic (filtering, demo data, search ranking, graph layout memory) is tested, so a
+  component can still regress without a test noticing.
 - **Read-only.** Notes cannot be created, edited, moved or deleted from the app; the desktop reads
   through the daemon HTTP API and writes nothing. With the daemon down it falls back to
   `src/lib/demo.ts`, so it shows demo data rather than your vault.

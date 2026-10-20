@@ -46,6 +46,11 @@ folder, so progress is always visible.
 - Link graph: notes and tags as nodes, links and tag references as edges, filters and local depth. ✅
 - Tag filtering: the tags in the current folder and query become chips with counts, a chip or a note's own tag narrows the list, and a tag node offers **Show notes** with the same filter. ✅
 - Backlinks in the note viewer: the notes that link to the open one, from the same graph, each one a button that opens it. ✅
+- The graph keeps its layout: node positions and a view you placed survive a tab switch, and a resized
+  pane re-fits a view the app fitted itself. ✅
+
+With those, every Phase 5 item is built; what remains in the phase list is optional polish rather than
+an unfinished capability.
 
 ## M6 - Search (Phase 6)
 
