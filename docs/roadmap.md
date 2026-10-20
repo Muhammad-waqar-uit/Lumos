@@ -49,8 +49,9 @@ folder, so progress is always visible.
 - The graph keeps its layout: node positions and a view you placed survive a tab switch, and a resized
   pane re-fits a view the app fitted itself. ✅
 
-With those, every Phase 5 item is built; what remains in the phase list is optional polish rather than
-an unfinished capability.
+That finishes the graph. The phase itself is not finished: syntax highlighting and three link-pane
+items - a session cache for a scraped page, less site chrome in the reader's text, and reading a PDF
+or plain HTML file - are still open in [`TODO.md`](TODO.md) Phase 5.
 
 ## M6 - Search (Phase 6)
 
