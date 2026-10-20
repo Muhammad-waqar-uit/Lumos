@@ -45,6 +45,7 @@ folder, so progress is always visible.
 - Markdown rendering. ✅
 - Link graph: notes and tags as nodes, links and tag references as edges, filters and local depth. ✅
 - Tag filtering: the tags in the current folder and query become chips with counts, a chip or a note's own tag narrows the list, and a tag node offers **Show notes** with the same filter. ✅
+- Backlinks in the note viewer: the notes that link to the open one, from the same graph, each one a button that opens it. ✅
 
 ## M6 - Search (Phase 6)
 

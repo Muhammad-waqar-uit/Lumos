@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
-import type { Note } from "@lumos/shared";
+import type { GraphNode, Note } from "@lumos/shared";
 import { firstExternalLink } from "@lumos/vault-utils/link";
 import { type Connection } from "../lib/api";
 import { LinkPane } from "./LinkPane";
@@ -27,7 +27,15 @@ function formatDate(iso: string): string {
   });
 }
 
-export function NoteViewer({ note, connection }: { note: Note | null; connection: Connection }) {
+interface Props {
+  note: Note | null;
+  connection: Connection;
+  /** Notes that link here, from the same graph the Graph tab draws. */
+  backlinks: GraphNode[];
+  onOpenNote: (id: string) => void;
+}
+
+export function NoteViewer({ note, connection, backlinks, onOpenNote }: Props) {
   // A note captured from WhatsApp carries its link in the frontmatter and in the body;
   // either one is enough to play or read it here.
   const link = useMemo(() => {
@@ -65,6 +73,28 @@ export function NoteViewer({ note, connection }: { note: Note | null; connection
           ) : null}
         </p>
       </header>
+      {backlinks.length > 0 ? (
+        <section aria-label="Linked from" className="border-b border-border px-6 py-2.5">
+          <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
+            Linked from {backlinks.length}
+          </p>
+          <ul className="mt-1 flex flex-wrap gap-1.5">
+            {backlinks.map((node) => (
+              <li key={node.id}>
+                <button
+                  type="button"
+                  onClick={() => onOpenNote(node.id)}
+                  title={node.id}
+                  className="flex items-center gap-1.5 rounded-md border border-border px-1.5 py-0.5 text-[11px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                >
+                  <span className="truncate">{node.label}</span>
+                  {node.folder ? <span className="opacity-60">{node.folder}</span> : null}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
       {link ? <LinkPane url={link} connection={connection} /> : null}
       <div className="flex-1 overflow-y-auto px-6 py-5">
         {note.content.trim() ? (

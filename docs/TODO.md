@@ -71,7 +71,7 @@
 - [ ] Syntax highlighting for fenced code blocks (`rehype-highlight` or shiki)
 - [x] Tag filtering: the note list offers the tags in the current folder and query as chips with counts, a chip filters to that tag and toggles off, a note's own tag is the same control, and the active tag survives a folder change (`src/lib/filter.ts`, 12 unit tests)
 - [x] Graph view: canvas link graph from `GET /graph` — glow nodes sized by backlinks, curved edges, one hue per folder, tag and unlinked filters, local depth around the open note, demo graph offline
-- [ ] Graph: backlinks panel in the note viewer, fed by the same extracted links
+- [x] Graph: backlinks panel in the note viewer, fed by the same extracted links — `backlinks()` in `@lumos/vault-utils/graph` returns the notes whose *links* point at the open one (a shared tag is a neighbour, not a backlink), and the viewer lists them as buttons that open the note; offline it reads the demo graph, so it works with the daemon stopped (5 unit tests)
 - [x] Graph: tag nodes are drawn in the tag hue and sized separately, and selecting one offers **Show notes**, which switches to the notes view filtered to that tag
 - [ ] Graph: keep the node positions across tab switches instead of re-running the layout
 - [ ] Graph: re-fit after the pane is resized — today the transform is kept, so the graph can sit off-centre until `Fit` (or a filter change) is used

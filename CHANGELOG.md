@@ -183,6 +183,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `src/lib/search.ts`: the ranking and the merge of local and body matches, with 10 unit tests.
 - New dependency in the desktop workspace: `fuse.js` (lockfile updated).
 
+### Added (continued 13)
+- Backlinks in the note viewer: a note now shows the notes that link to it, and each one opens on
+  click. The list comes from the graph the app already loaded, so it needs no request and works with
+  the daemon stopped. Only note links count - a shared tag is a neighbour in the graph, not something
+  that points at the note - and the rule lives in `backlinks()` in `@lumos/vault-utils/graph`, beside
+  the neighbourhood code, with 5 unit tests.
+
+
 ### Notes
 - The Instagram and Facebook embeds are the platforms' plugin endpoints, verified by hand rather than
   by a test: a public reel and a public video each played logged out, in the app and in the packaged

@@ -11,7 +11,7 @@ daemon (falling back to demo data when the daemon is offline):
 - `src/App.tsx` - state, vault loading, folder + search filtering, selection
 - `src/components/Sidebar.tsx` - folders with note counts
 - `src/components/NoteList.tsx` - searchable note list (title, date, preview, tags)
-- `src/components/NoteViewer.tsx` - note header (folder, date, source, url) + link pane + Markdown body
+- `src/components/NoteViewer.tsx` - note header (folder, date, source, url) + backlinks + link pane + Markdown body
 - `src/components/LinkPane.tsx` - the note's link: video player, image, or scraped reader card
 - `src/components/GraphView.tsx` - canvas link graph (routes, controls, click-to-open)
 - `src/components/PaneBoundary.tsx` - error boundary around the lazily loaded graph pane
@@ -152,6 +152,14 @@ it defaults to `http://127.0.0.1:3001`.
 A future path is **Tauri filesystem/Rust commands** to read and parse Markdown directly, so the
 app works without the daemon running. Both are kept possible by keeping logic in `packages/`
 (see [`ARCHITECTURE.md`](ARCHITECTURE.md)).
+
+### Backlinks
+
+Under the header, a note lists the notes that link to it ("Linked from 2"), each a button that opens
+that note. The list is computed by `backlinks()` in `@lumos/vault-utils/graph` from the graph the app
+already holds, so it costs no request and works offline against the demo graph. Only note links count:
+a note that merely shares a tag is a neighbour in the graph view, not a backlink, because "linked
+from" would otherwise mean every note carrying the same hashtag.
 
 ## Search palette
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { GraphSourceNote } from "@lumos/shared";
-import { buildGraphFromNotes, extractLinks, extractTags, neighborhood } from "./graph";
+import { backlinks, buildGraphFromNotes, extractLinks, extractTags, neighborhood } from "./graph";
 
 /** A note fixture with sensible defaults, so each test only states what it cares about. */
 function note(
@@ -229,6 +229,45 @@ describe("buildGraphFromNotes", () => {
 
   it("handles an empty vault", () => {
     expect(buildGraphFromNotes([])).toEqual({ nodes: [], edges: [], unresolved: [] });
+  });
+});
+
+describe("backlinks", () => {
+  const graph = buildGraphFromNotes(VAULT);
+
+  it("lists the notes that link to the target, even when they link more than once", () => {
+    // IDEAS links to Learn Rust twice, plus once by filename; one backlink, not three.
+    expect(backlinks(graph, GOALS).map((node) => node.id)).toEqual([IDEAS]);
+  });
+
+  it("returns nothing for a note that nothing points at", () => {
+    expect(backlinks(graph, IDEAS)).toEqual([]);
+  });
+
+  it("does not treat a shared tag as a backlink", () => {
+    const tagged = buildGraphFromNotes([
+      note("Inbox/a.md", "A", "# A\n\n#rust"),
+      note("Inbox/b.md", "B", "# B\n\n#rust"),
+    ]);
+    expect(backlinks(tagged, "Inbox/a.md")).toEqual([]);
+    // The tag node itself has tag edges pointing at it, which are not note backlinks either.
+    expect(backlinks(tagged, "#rust")).toEqual([]);
+  });
+
+  it("lists every source note once, in node order", () => {
+    const linked = buildGraphFromNotes([
+      note("Inbox/c.md", "C", "[[D]]"),
+      note("Inbox/b.md", "B", "[[D]]"),
+      note("Inbox/d.md", "D", "no links"),
+    ]);
+    expect(backlinks(linked, "Inbox/d.md").map((node) => node.id)).toEqual([
+      "Inbox/b.md",
+      "Inbox/c.md",
+    ]);
+  });
+
+  it("returns an empty list for an unknown id", () => {
+    expect(backlinks(graph, "Inbox/missing.md")).toEqual([]);
   });
 });
 

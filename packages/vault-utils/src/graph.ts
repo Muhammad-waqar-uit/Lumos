@@ -228,6 +228,21 @@ export function buildGraphFromNotes(notes: readonly GraphSourceNote[]): GraphDat
   return { nodes, edges, unresolved };
 }
 
+/**
+ * The notes that link to `id`. Tag references are deliberately not backlinks: a note that merely
+ * shares a tag is a neighbour in the graph, not something that points at this note.
+ *
+ * Order follows the graph's node order, which the builder sorts by id, so the list is stable.
+ */
+export function backlinks(graph: GraphData, id: string): GraphNode[] {
+  const sources = new Set(
+    graph.edges
+      .filter((edge) => edge.kind === "link" && edge.target === id)
+      .map((edge) => edge.source),
+  );
+  return graph.nodes.filter((node) => node.kind === "note" && sources.has(node.id));
+}
+
 /** The local graph around one node: the node itself plus `depth` hops of neighbours. */
 export function neighborhood(graph: GraphData, id: string, depth: number): GraphData {
   const start = graph.nodes.find((n) => n.id === id);
