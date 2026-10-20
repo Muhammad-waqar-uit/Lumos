@@ -191,6 +191,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the neighbourhood code, with 5 unit tests.
 
 
+### Added (continued 14)
+- The graph no longer reshuffles itself when you leave the tab and come back. Node coordinates are
+  remembered outside the component (`src/lib/graph-layout.ts`), so the next mount hands each node the
+  place it had and the layout resumes instead of running again. A view you panned or zoomed yourself
+  is restored exactly, down to the zoom and the graph-space centre; a view the app fitted itself is
+  fitted again, because the pane may be a different size by then. Coordinates for notes that have
+  left the vault are dropped, so a deleted note cannot leave a stale place behind for a new one.
+- The first fit now happens when the layout settles rather than on a timer. A fit taken 250 ms in
+  framed the graph where the nodes were on their way to, which left the outer ones off the edge
+  (`#goals` sat on the bottom border of a seven-note vault); the engine's stop is the honest signal.
+- A resized pane is refitted, so the graph stops drifting off-centre until someone presses *Fit*. A
+  view the user placed is left alone: only *Fit*, a filter change or a depth change takes it back,
+  which is a choice, not an oversight - an explicit pan is worth more than an automatic one.
+- 12 unit tests over the layout memory: a coordinate is kept, a node this pass did not see is kept, an
+  unplaced or NaN node is ignored, the input map is not mutated, pruning drops a gone note, seeded
+  nodes are copies, and an unusable camera (zoom 0 or NaN) is refused on the way in.
+
 ### Notes
 - The Instagram and Facebook embeds are the platforms' plugin endpoints, verified by hand rather than
   by a test: a public reel and a public video each played logged out, in the app and in the packaged

@@ -16,7 +16,7 @@
 ## Phase 0.1: Enforcement still to come (P1)
 - [x] GitHub Actions workflow (`.github/workflows/validate.yml`) running `pnpm validate` on every PR into `main` and every push to `main`
 - [x] Branch protection on `main`: requires a pull request and the `pnpm validate` check, with `strict` on so a stale branch cannot merge; force pushes and deletions blocked (on since 2026-10-19; the workflow's first run on `main` was green in `38790615355`)
-- [x] Test runner (vitest) wired up and added to the validation gate — 194 tests over `@lumos/vault-utils` and the daemon, plus 15 over the desktop's pure logic
+- [x] Test runner (vitest) wired up and added to the validation gate — 224 tests over `@lumos/vault-utils` and the daemon, plus 37 over the desktop's pure logic (filtering, demo data, search ranking, graph layout memory)
 - [ ] Schema validation for note frontmatter in CI
 - [x] Route tests for the read API — `createApp()` in `app.ts` builds the Fastify app over a vault directory, so `app.inject()` covers `/health`, `/message`, `/notes`, `/notes/search`, `/folders`, `/note` (every guard), `/graph`, `/link` and CORS without binding a port, and with the link fetcher injected so the suite stays offline
 - [ ] Desktop component tests (jsdom + Testing Library) for the sidebar, list and viewer states, plus an E2E smoke test (the daemon unit and route tests are done)
@@ -73,8 +73,8 @@
 - [x] Graph view: canvas link graph from `GET /graph` — glow nodes sized by backlinks, curved edges, one hue per folder, tag and unlinked filters, local depth around the open note, demo graph offline
 - [x] Graph: backlinks panel in the note viewer, fed by the same extracted links — `backlinks()` in `@lumos/vault-utils/graph` returns the notes whose *links* point at the open one (a shared tag is a neighbour, not a backlink), and the viewer lists them as buttons that open the note; offline it reads the demo graph, so it works with the daemon stopped (5 unit tests)
 - [x] Graph: tag nodes are drawn in the tag hue and sized separately, and selecting one offers **Show notes**, which switches to the notes view filtered to that tag
-- [ ] Graph: keep the node positions across tab switches instead of re-running the layout
-- [ ] Graph: re-fit after the pane is resized — today the transform is kept, so the graph can sit off-centre until `Fit` (or a filter change) is used
+- [x] Graph: node positions survive a tab switch — the coordinates and a camera the user placed are kept in `src/lib/graph-layout.ts` (module scope, so the unmount that a tab switch causes does not lose them), seeded back into the nodes on mount, and pruned when a note leaves the vault (12 unit tests)
+- [x] Graph: re-fit after the pane is resized — a resize refits so the graph cannot sit off-centre; a view the user panned or zoomed is preserved instead, because that is theirs to keep
 - [x] Link pane: a note's link plays (YouTube/Vimeo), shows as an image, or scrapes into a reader card with loading, error and retry states
 - [x] Link pane: an Instagram reel/post and a Facebook video/post render in place through the host's own embed, with the caption card from `/link` under it and a frame shape per kind (portrait, 16:9, tall)
 - [ ] Link pane: keep a scraped page for the session instead of refetching it every time the note is reopened

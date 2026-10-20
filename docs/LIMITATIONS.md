@@ -113,8 +113,11 @@ play it — neither page can be read or copied.
 - **Read-only.** Notes cannot be created, edited, moved or deleted from the app; the desktop reads
   through the daemon HTTP API and writes nothing. With the daemon down it falls back to
   `src/lib/demo.ts`, so it shows demo data rather than your vault.
-- **Graph rough edges.** The canvas transform is kept across a pane resize, so the graph can sit
-  off-centre until *Fit* or a filter change; node positions are not kept across tab switches.
+- **Graph layout is remembered per session, not per vault.** Node positions and a view the user
+  placed survive a tab switch while the app runs, in module scope rather than in storage, so a reload
+  starts from a fresh layout. Only a coordinate is remembered, not why the layout looked that way: a
+  note added between two visits is placed by the simulation among the seeded nodes, which can nudge
+  its neighbours a little.
 - **Search needs the daemon for body text.** The palette ranks titles, tags and previews from the
   loaded listing, which holds only an excerpt. A word that appears deep in a note body is found by
   `GET /notes/search`, so with the daemon stopped that match is simply absent — and the demo vault

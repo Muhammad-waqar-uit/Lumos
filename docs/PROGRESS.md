@@ -4,6 +4,21 @@ Chronological record of what has been built. Newest entries first within each da
 
 ## 2026-10-20
 
+### Done — the graph stops reshuffling when you leave the tab
+- [x] Node coordinates and a camera the user placed are kept in `src/lib/graph-layout.ts`, at module
+  scope, because a tab switch unmounts the canvas and force-graph lays a fresh graph out on
+  construction; the next mount seeds each node with the place it had, so the layout resumes
+- [x] A view the user panned or zoomed is restored exactly (zoom plus the graph-space centre); a view
+  the app fitted itself is fitted again, since the pane may be a different size by then
+- [x] Coordinates for notes that left the vault are pruned, so a deleted note cannot hand a stale
+  place to a note that arrives later with the same id
+- [x] The first fit waits for the engine to stop instead of a 250 ms timer, so the graph is framed
+  after it has settled rather than where its nodes were heading
+- [x] A resized pane refits when the view was the app's own, which fixes the graph sitting off-centre
+  until *Fit*; a manual view is left alone, and `Fit` takes it back on request
+- [x] 12 unit tests over the pure parts; the tab switch itself is still a manual check, since there is
+  no jsdom setup to mount the canvas in
+
 ### Done — every note shows what points at it
 - [x] Phase 5's backlinks panel: the note viewer lists the notes that link to the open one, and each
   row is a button that opens that note
