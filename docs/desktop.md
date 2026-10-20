@@ -15,10 +15,12 @@ daemon (falling back to demo data when the daemon is offline):
 - `src/components/LinkPane.tsx` - the note's link: video player, image, or scraped reader card
 - `src/components/GraphView.tsx` - canvas link graph (routes, controls, click-to-open)
 - `src/components/PaneBoundary.tsx` - error boundary around the lazily loaded graph pane
-- `src/components/StatusBar.tsx` - connection state + note count
+- `src/components/SearchModal.tsx` - the `Cmd/Ctrl+K` palette: ranked matches, keyboard selection, body matches from the daemon
+- `src/components/StatusBar.tsx` - connection state, the search shortcut and the note count
 - `src/lib/api.ts` - daemon client (`/notes`, `/notes/search`, `/folders`, `/note`, `/graph`, `/link`)
 - `src/lib/graph-palette.ts` - reads the `--color-graph-*` tokens and maps a folder to its hue, with a fallback token per lookup
 - `src/lib/demo.ts` - demo data used when the daemon is not running
+- `src/lib/search.ts` - fuse.js index over the loaded notes, plus the merge of local and body matches
 - `src/index.css` - Tailwind v4 import + dark design tokens + `.markdown` typography for notes
 
 ### Markdown rendering
@@ -124,8 +126,8 @@ Component tests need jsdom + Testing Library and are tracked in [`TODO.md`](TODO
 - **UI**: Tailwind CSS + shadcn/ui, dark minimal theme (see [`design.md`](design.md)).
 - **Routing**: TanStack Router.
 - **State**: zustand stores for the vault index, current folder, current note, and filters.
-- **Rendering**: `react-markdown` + `remark-gfm` for notes and `force-graph` for the link graph (both
-  in use); `fuse.js` for search and `lucide-react` for icons (planned).
+- **Rendering**: `react-markdown` + `remark-gfm` for notes, `force-graph` for the link graph and
+  `fuse.js` for search (all in use); `lucide-react` for icons (planned).
 
 ## Layout
 
@@ -151,20 +153,34 @@ A future path is **Tauri filesystem/Rust commands** to read and parse Markdown d
 app works without the daemon running. Both are kept possible by keeping logic in `packages/`
 (see [`ARCHITECTURE.md`](ARCHITECTURE.md)).
 
+## Search palette
+
+`Cmd/Ctrl+K`, or the **Search** button in the status bar, opens a palette over the whole vault rather
+than the filtered list. It narrows in two stages and says which one answered:
+
+- Titles, tags and previews are matched locally by `fuse.js` (weighted, typo-tolerant, ranked). This
+  needs no daemon, so it works against the demo vault too.
+- With the daemon running, the same query is sent to `GET /notes/search`, which reads whole files, so
+  a word that only appears deep in a body still finds the note. Those rows carry an **in the body**
+  marker. The request is debounced and stamped with the query it answered, so a slow reply cannot
+  appear under newer text; a failure is named in the footer instead of being hidden.
+- `↑`/`↓` move, `Enter` opens the note in the Notes view, `Esc` closes. Focus returns to the control
+  that had it before the palette opened.
+
 ## Keyboard
 
-Specified but **not wired up**: no key handler is registered anywhere in `src/` yet, so none of these
-work today. They are recorded here as the intended scheme, and tracked in [`TODO.md`](TODO.md).
+Wired today:
 
-- `Cmd/Ctrl+K` - open the search modal.
-- Arrow keys / `j` `k` - move through the note list.
-- `Esc` - close overlays.
+- `Cmd/Ctrl+K` - open or close the search palette.
+- `Esc` - close the palette.
+- `↑` `↓` `Enter` - move through the palette and open the selection.
+
+Still to come: `j`/`k`-style movement through the note list (tracked in [`TODO.md`](TODO.md)).
 
 ## Planned capabilities
 
 - Syntax-highlighted code blocks (styled today, not highlighted).
 - Resizable panes, TanStack Router and zustand - the shell is plain React state in one component.
 - Every entry in the Keyboard section above.
-- Full-text search with fuse.js (the tag chips already filter the loaded list; the daemon's `/find`
-  and `/notes/search` cover the vault itself).
+- Recent notes in the palette, so an untyped palette is useful rather than empty.
 - Markdown editor with live preview and save-to-disk.

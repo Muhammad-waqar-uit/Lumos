@@ -6,7 +6,7 @@ The Lumos Desktop app is a Tauri-based desktop client for browsing, searching, a
 
 While the daemon handles capture via WhatsApp, the desktop app is designed to help you:
 - Browse notes organized by folders (Inbox, Ideas, Interviews, Goals, Reading)
-- Search the vault's titles, tags and previews (note bodies are not searched yet; the daemon's `/find` and `/notes/search` do search bodies)
+- Search the vault from the keyboard: `Cmd/Ctrl+K` opens a palette that ranks titles, tags and previews with `fuse.js`, and adds the daemon's body matches when it is running (those rows are marked "in the body")
 - View notes with their Markdown rendered
 - Play a link or read the page it points at without leaving the app — a YouTube or Vimeo link plays in place, an Instagram reel or post and a Facebook video or post render through the host's own embed with their caption beside them, an image link shows the image, any other page is read as text
 - Filter by folder, by text, and by tag — the tags in scope appear as chips with counts, and a note's own tag works the same way
@@ -84,9 +84,9 @@ possible future path (see [docs/desktop.md](../../docs/desktop.md)); it does not
 ## Roadmap
 
 - [~] Vault browser with folder navigation (dark shell, folder sidebar, note list and viewer built)
-- [ ] Full-text search
+- [x] Full-text search (`Cmd/Ctrl+K` palette: `fuse.js` ranking over titles, tags and previews, plus the daemon's body matches)
 - [ ] Note editor with Markdown preview
-- [ ] Tag management and filtering
+- [x] Tag filtering (chips with counts, a note's own tag as a filter, tag nodes offering **Show notes**); bulk tag management is still to come
 - [x] Graph view (link graph from the daemon, canvas force layout, per-folder hues, filters, local depth)
 - [x] Links in place (a YouTube or Vimeo link plays in the note viewer, an Instagram reel/post and a Facebook video/post render through their own embeds with the caption the daemon reads, an image link shows the image, any other page is scraped and read as text)
 - [ ] Link reader polish (session cache, less site chrome in the extracted text) — see [docs/LIMITATIONS.md](../../docs/LIMITATIONS.md)

@@ -82,10 +82,10 @@
 - [ ] Link pane: read a PDF or a plain HTML file the same way (today a non-HTML content type is refused with its type named)
 
 ## Phase 6: Search & Discovery (P1)
-- [ ] Full-text search with fuse.js
-- [ ] Cmd/Ctrl+K search modal
+- [x] Full-text search with fuse.js — the palette ranks titles, tags and previews over the loaded vault, tolerant of typos, and works with the daemon stopped (`src/lib/search.ts`, 10 unit tests)
+- [x] Cmd/Ctrl+K search modal — opens from anywhere, arrows move the selection, Enter opens the note in the Notes view, Esc closes and focus goes back; the status bar carries a Search button with the shortcut beside it, so the key is discoverable without knowing it
 - [ ] Recent notes quick access
-- [ ] Share search logic with daemon `/find`
+- [x] Share search logic with daemon `/find` — the palette sends the same query to `GET /notes/search`, which calls `searchNotes` the way `/find` does, so body matches come from one implementation rather than a second index
 
 ## Phase 7: Editing & Enrichment (P2)
 - [ ] Markdown editor with preview

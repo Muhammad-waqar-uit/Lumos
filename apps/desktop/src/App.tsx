@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import type { GraphData, Note, VaultEntry } from "@lumos/shared";
 import {
   getFolders,
@@ -13,6 +13,7 @@ import { countTags, filterEntries, nodeTag } from "./lib/filter";
 import { NoteList, keyOf } from "./components/NoteList";
 import { NoteViewer } from "./components/NoteViewer";
 import { PaneBoundary } from "./components/PaneBoundary";
+import { SearchModal } from "./components/SearchModal";
 import { Sidebar, type FolderFilter, type ShellView } from "./components/Sidebar";
 import { StatusBar } from "./components/StatusBar";
 
@@ -35,6 +36,7 @@ export default function App() {
   const [view, setView] = useState<ShellView>("notes");
   // Null means the daemon could not serve a graph, so the demo vault is drawn instead.
   const [graph, setGraph] = useState<GraphData | null>(null);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   // Load the vault from the daemon; fall back to demo data if it is not running.
   useEffect(() => {
@@ -116,13 +118,34 @@ export default function App() {
   }, [activeEntry, connection, fetched, activeKey]);
 
   // Opening a node clears the list filters, so the note really becomes the active one.
-  const openNote = (id: string): void => {
+  const openNote = useCallback((id: string): void => {
     setActiveFolder("All");
     setQuery("");
     setTag(null);
     setSelected(id);
     setView("notes");
-  };
+  }, []);
+
+  const closeSearch = useCallback(() => setSearchOpen(false), []);
+
+  // The palette opens from anywhere, including while a note is scrolled or a field has focus.
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent): void => {
+      if (!(event.metaKey || event.ctrlKey) || event.key.toLowerCase() !== "k") return;
+      event.preventDefault();
+      setSearchOpen((open) => !open);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  const openFromSearch = useCallback(
+    (key: string): void => {
+      openNote(key);
+      setSearchOpen(false);
+    },
+    [openNote],
+  );
 
   /** A tag picked in the list or on a graph node shows that tag's notes and drops the rest. */
   const filterByTag = (value: string): void => {
@@ -180,7 +203,19 @@ export default function App() {
           </>
         )}
       </div>
-      <StatusBar connection={connection} count={visible.length} />
+      <StatusBar
+        connection={connection}
+        count={visible.length}
+        onSearch={() => setSearchOpen(true)}
+      />
+      {searchOpen ? (
+        <SearchModal
+          entries={notes}
+          connection={connection}
+          onOpen={openFromSearch}
+          onClose={closeSearch}
+        />
+      ) : null}
     </div>
   );
 }

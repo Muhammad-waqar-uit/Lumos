@@ -37,13 +37,13 @@ In use today:
 - Tailwind CSS v4 + shadcn/ui-style tokens (components)
 - react-markdown + remark-gfm (rendering)
 - force-graph (link graph, canvas)
+- fuse.js (the `Cmd/Ctrl+K` search palette)
 
 Chosen and recorded in the decisions log, but **not installed yet** - the UI currently does the job
 with plain React state and a local filter:
 
 - TanStack Router (routing)
 - zustand (state)
-- fuse.js (full-text search)
 - lucide-react (icons)
 
 ### Shared / Infra
