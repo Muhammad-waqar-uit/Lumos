@@ -4,10 +4,24 @@ import { FOLDERS, type GraphData, type GraphEdge, type GraphNode } from "@lumos/
 import { neighborhood } from "@lumos/vault-utils/graph";
 import type { Connection } from "../lib/api";
 import { folderColor, readGraphPalette } from "../lib/graph-palette";
+import {
+  prunePositions,
+  readLayout,
+  recordPositions,
+  seedPositions,
+  usableCamera,
+  writeLayout,
+  type GraphCamera,
+  type Point,
+} from "../lib/graph-layout";
 
 const TAU = Math.PI * 2;
 const LABEL_ZOOM = 1.15;
 const DEPTH_MAX = 3;
+/** Ticks the simulation runs before it is considered settled, once there is something new to place. */
+const COOLDOWN_TICKS = 200;
+/** Ticks run synchronously before the first frame, so a new layout starts out untangled. */
+const WARMUP_TICKS = 60;
 
 /**
  * The renderer adds its own positional fields to the objects it is handed, so the
@@ -43,6 +57,12 @@ function endpointId(end: unknown): string | null {
 
 function endpointNode(end: unknown): CanvasNode | null {
   return end !== null && typeof end === "object" ? (end as CanvasNode) : null;
+}
+
+/** The camera as force-graph reports it: a zoom, plus the graph-space point in the middle. */
+function cameraOf(graph: GraphInstance): GraphCamera {
+  const center = graph.centerAt();
+  return { zoom: graph.zoom(), center: { x: center.x, y: center.y } };
 }
 
 /** Nodes grow with their backlinks, the way Obsidian sizes a note by how many point at it. */
@@ -104,6 +124,14 @@ export function GraphView({
 }: Props) {
   const hostRef = useRef<HTMLDivElement | null>(null);
   const graphRef = useRef<GraphInstance | null>(null);
+  // True once the user has panned or zoomed: the app then stops fitting the view on its own.
+  const userMovedRef = useRef(false);
+  // The camera is restored once, on the first data set after a mount.
+  const restoredRef = useRef(false);
+  const pointerStartRef = useRef<Point | null>(null);
+  const previousSizeRef = useRef({ width: 0, height: 0 });
+  // A camera waiting to be put back once the renderer has taken the data it belongs to.
+  const pendingCameraRef = useRef<GraphCamera | null>(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
   const [showTags, setShowTags] = useState(true);
   const [showOrphans, setShowOrphans] = useState(true);
@@ -172,7 +200,7 @@ export function GraphView({
     [visible],
   );
 
-  // Fresh copies: the renderer takes ownership of the node and link objects it is given.
+  // The data effect below seeds these copies from the remembered layout before handing them over.
   const canvasData = useMemo<CanvasData>(
     () => ({
       nodes: visible.nodes.map((node) => ({ ...node })),
@@ -184,6 +212,46 @@ export function GraphView({
     }),
     [visible],
   );
+
+  // A note deleted from the vault must not leave a coordinate behind for a note that returns later.
+  useEffect(() => {
+    const layout = readLayout();
+    const positions = prunePositions(
+      layout.positions,
+      data.nodes.map((node) => node.id),
+    );
+    if (positions.size !== layout.positions.size) writeLayout({ ...layout, positions });
+  }, [data]);
+
+  // Only a gesture counts as the user taking the view. Model-driven zooms and fits fire no events.
+  useEffect(() => {
+    const host = hostRef.current;
+    if (!host) return;
+    const onWheel = (): void => {
+      userMovedRef.current = true;
+    };
+    const onPointerDown = (event: PointerEvent): void => {
+      pointerStartRef.current = { x: event.clientX, y: event.clientY };
+    };
+    const onPointerUp = (event: PointerEvent): void => {
+      const start = pointerStartRef.current;
+      pointerStartRef.current = null;
+      // A click that moved a few pixels was a drag, and a drag panned the graph.
+      if (start && Math.hypot(event.clientX - start.x, event.clientY - start.y) > 4) {
+        userMovedRef.current = true;
+      }
+    };
+    // Captured, not bubbled: the renderer's own zoom handler stops wheel and drag events from
+    // propagating, so a listener on the way up would never see the gesture.
+    host.addEventListener("wheel", onWheel, { passive: true, capture: true });
+    host.addEventListener("pointerdown", onPointerDown, { capture: true });
+    host.addEventListener("pointerup", onPointerUp, { capture: true });
+    return () => {
+      host.removeEventListener("wheel", onWheel, { capture: true });
+      host.removeEventListener("pointerdown", onPointerDown, { capture: true });
+      host.removeEventListener("pointerup", onPointerUp, { capture: true });
+    };
+  }, []);
 
   const paintPointerArea = useCallback(
     (node: CanvasNode, color: string, ctx: CanvasRenderingContext2D) => {
@@ -309,8 +377,8 @@ export function GraphView({
       .autoPauseRedraw(false)
       .minZoom(0.2)
       .maxZoom(9)
-      .cooldownTicks(200)
-      .warmupTicks(60)
+      .cooldownTicks(COOLDOWN_TICKS)
+      .warmupTicks(WARMUP_TICKS)
       .nodeCanvasObjectMode(() => "replace")
       .nodeCanvasObject((node, ctx, scale) => paintersRef.current.paintNode(node, ctx, scale))
       .nodePointerAreaPaint((node, color, ctx) =>
@@ -320,7 +388,31 @@ export function GraphView({
       .linkCanvasObject((link, ctx, scale) => paintersRef.current.paintLink(link, ctx, scale))
       .onNodeClick((node) => setSelected(endpointId(node.id)))
       .onNodeHover((node) => setHovered(node ? endpointId(node.id) : null))
-      .onBackgroundClick(() => setSelected(null));
+      .onBackgroundClick(() => setSelected(null))
+      // Fit once the layout has settled rather than on a timer: a fit taken mid-simulation frames
+      // where the nodes were on their way to, and leaves the outer ones off the edge.
+      .onEngineStop(() => {
+        const instance = graphRef.current;
+        if (!instance) return;
+        // A zero cooldown is how a remembered layout is frozen; give the next one room to relax.
+        if (instance.cooldownTicks() === 0) {
+          instance.cooldownTicks(COOLDOWN_TICKS);
+          instance.warmupTicks(WARMUP_TICKS);
+        }
+        // A placed view is restored here rather than in an effect: the renderer applies `graphData`
+        // on its next update, which would reset any transform set before it.
+        const camera = pendingCameraRef.current;
+        if (camera) {
+          pendingCameraRef.current = null;
+          userMovedRef.current = true;
+          instance.zoom(camera.zoom, 0);
+          instance.centerAt(camera.center.x, camera.center.y, 0);
+          return;
+        }
+        // A pane that has not been measured yet is fitted by the resize effect instead.
+        const host = hostRef.current;
+        if (!userMovedRef.current && host && host.clientWidth > 0) instance.zoomToFit(400, 60);
+      });
 
     // Physics the way a force graph wants it: repulsion wide, links short.
     const charge = graph.d3Force("charge");
@@ -330,6 +422,12 @@ export function GraphView({
 
     graphRef.current = graph;
     return () => {
+      // Read before teardown: the coordinates and the camera only exist while the instance does.
+      const layout = readLayout();
+      writeLayout({
+        positions: recordPositions(layout.positions, graph.graphData().nodes),
+        camera: userMovedRef.current ? cameraOf(graph) : null,
+      });
       graphRef.current = null;
       graph._destructor();
     };
@@ -342,17 +440,52 @@ export function GraphView({
   useEffect(() => {
     const graph = graphRef.current;
     if (!graph) return;
-    graph.graphData(canvasData);
-    graph.d3ReheatSimulation();
+    // Where the nodes stand right now, before the shape of the graph changes under them: without
+    // this, changing a filter would reseed from the last unmount and jumble a settled layout.
+    const layout = readLayout();
+    writeLayout({
+      positions: recordPositions(layout.positions, graph.graphData().nodes),
+      camera: layout.camera,
+    });
+    // Handing back the last coordinates lets the layout resume where the user left it.
+    const nodes = seedPositions(canvasData.nodes, readLayout().positions);
+    // Every node already has a place, so draw the remembered layout as it was. `graphData()` runs the
+    // warm-up ticks synchronously, which would relax it into a new arrangement, so they are skipped
+    // and the frame loop is stopped as well. A node the vault has added since has no place, so that
+    // set is laid out again.
+    const remembered = nodes.length > 0 && nodes.every((node) => node.x !== undefined);
+    // The renderer applies `graphData` on its next update, not in this call, so the warm-up has to
+    // stay off until the engine stops - restoring it here would only feed the deferred update.
+    if (remembered) graph.warmupTicks(0);
+    graph.graphData({ nodes, links: canvasData.links });
+    if (remembered) {
+      graph.cooldownTicks(0);
+    } else {
+      graph.warmupTicks(WARMUP_TICKS).d3ReheatSimulation();
+    }
   }, [canvasData]);
 
-  // Refit when the filters (or the vault itself) change the shape of the graph, not on every hover.
+  // The first data set after a mount queues a view the user placed; the engine-stop handler puts it
+  // back once the renderer has taken the data. An auto-fitted view is simply fitted again there.
   useEffect(() => {
-    const graph = graphRef.current;
-    if (!graph || canvasData.nodes.length === 0) return;
-    const timer = window.setTimeout(() => graph.zoomToFit(500, 60), 250);
-    return () => window.clearTimeout(timer);
+    if (restoredRef.current || canvasData.nodes.length === 0) return;
+    restoredRef.current = true;
+    const camera = readLayout().camera;
+    pendingCameraRef.current = camera && usableCamera(camera) ? camera : null;
   }, [canvasData]);
+
+  // A resized pane is refitted, so the graph does not drift off-centre. A view the user placed is
+  // theirs to keep: only the Fit button (or a filter change) takes it back.
+  useEffect(() => {
+    const previous = previousSizeRef.current;
+    previousSizeRef.current = { width: size.width, height: size.height };
+    const graph = graphRef.current;
+    if (!graph || size.width === 0 || size.height === 0) return;
+    if (previous.width === size.width && previous.height === size.height) return;
+    if (userMovedRef.current || pendingCameraRef.current) return;
+    const timer = window.setTimeout(() => graph.zoomToFit(300, 60), 150);
+    return () => window.clearTimeout(timer);
+  }, [size.width, size.height]);
 
   const selectedNode = selected ? (data.nodes.find((n) => n.id === selected) ?? null) : null;
   const noteCount = visible.nodes.filter((node) => node.kind === "note").length;
@@ -395,7 +528,10 @@ export function GraphView({
           </label>
           <button
             type="button"
-            onClick={() => graphRef.current?.zoomToFit(500, 60)}
+            onClick={() => {
+              userMovedRef.current = false;
+              graphRef.current?.zoomToFit(500, 60);
+            }}
             className="rounded-md border border-border px-2 py-0.5 hover:bg-accent hover:text-foreground"
           >
             Fit

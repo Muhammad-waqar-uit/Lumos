@@ -86,6 +86,21 @@ The header switches between **Notes** and **Graph**. Both read the same vault: t
   already in memory - changing it does not refetch.
 - Clicking a node selects it: the panel shows its in/out degree and an **Open note** button that opens
   it in the Notes view. Background clicks clear the selection.
+- The layout survives a tab switch. Switching tabs unmounts the canvas, and `force-graph` lays a new
+  graph out on construction, so the coordinates are kept outside the component in
+  `src/lib/graph-layout.ts` and seeded back into the nodes on mount. A view the user panned or zoomed
+  is restored as well (zoom plus the graph-space centre); a view the app fitted itself is fitted
+  again. Coordinates for notes the vault no longer has are pruned, so a deleted note cannot hand its
+  place to a new one with the same id.
+- The first fit waits for the simulation to stop rather than a timer: a fit taken mid-layout framed
+  the nodes where they were heading, which left the outer ones against the border. A remembered
+  layout is not relaxed at all - the warm-up ticks are skipped and the engine stopped, since
+  `graphData()` would otherwise re-solve a layout that was already correct.
+- A resized pane refits when the view was the app's own fit. A view the user placed is left alone -
+  an explicit pan outlasts an automatic one - and *Fit*, a filter change or a depth change takes it
+  back. Gestures are the signal: a wheel event or a pointer drag counts as taking over, while the
+  app's own zooms fire nothing. Those listeners are on the host in the *capture* phase, because the
+  renderer's zoom handler stops wheel and drag events from propagating.
 
 The renderer is `force-graph` (canvas), driven through its **vanilla instance API** rather than its
 React wrapper: in `force-graph` 1.52 those props are linked to the internal canvas graph and the
@@ -98,8 +113,10 @@ The `--color-graph-*` tokens are declared as plain custom properties in `:root` 
 theme entries: Tailwind prunes theme values it cannot see used in a class name, so palette steps
 referenced only from TypeScript would never reach the stylesheet.
 
-There is no desktop test coverage yet: the vitest suites cover `@lumos/vault-utils` and the daemon.
-Component tests need jsdom + Testing Library and are tracked in [`TODO.md`](TODO.md) Phase 0.1.
+The pure parts are tested: the layout memory (`src/lib/graph-layout.test.ts`, 12 cases) and the
+neighbourhood and backlink rules in `@lumos/vault-utils`. The canvas itself has no component test -
+that needs jsdom + Testing Library, tracked in [`TODO.md`](TODO.md) Phase 0.1 - so a tab switch is
+checked by hand.
 
 ### Tag filtering
 
