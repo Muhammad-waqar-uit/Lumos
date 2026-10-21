@@ -2,6 +2,30 @@
 
 Chronological record of what has been built. Newest entries first within each date.
 
+## 2026-10-21
+
+### Done — code in a note is highlighted
+- [x] Phase 5's last rendering gap: fenced code is highlighted by `rehype-highlight` (highlight.js
+  through lowlight), added to the markdown pipeline in `NoteViewer`
+- [x] Only a fence that names a language is highlighted — `detect` is off, so an untagged block is not
+  guessed at; a fence in an unregistered language is left as text and reported on the file rather than
+  throwing, which is what lowlight does with an unknown grammar
+- [x] The colours are `--color-code-*` tokens in `src/index.css`, beside the graph hues, with
+  desaturated values chosen for the near-black background: no highlight.js theme stylesheet is
+  imported and no colour sits in a component
+- [x] 3 render tests in `src/components/NoteViewer.test.tsx`, using `renderToStaticMarkup` so the
+  pipeline is asserted without a jsdom setup: a `js` fence yields `hljs-keyword`/`hljs-number` spans, a
+  `zig` fence stays plain text, an untagged fence gains no `hljs` class at all. Desktop suite 40, total
+  239
+- [x] Verified in the browser against a temporary vault on its own daemon port (3101) and vite port
+  (1422), so the real vault was never read: the JS, TS and Python blocks rendered coloured tokens
+  (computed styles: keyword rgb(205,160,227), string rgb(141,206,163), comment rgb(115,115,115),
+  number rgb(236,179,121), on a rgb(14,14,14) block), while the `zig` block and the untagged block
+  rendered as single uncoloured text nodes; no console errors
+- [x] The cost was measured rather than assumed: `vite build` on both sides of the change puts the
+  main desktop chunk at 434.78 kB → 602.37 kB (135.34 kB → 188.54 kB gzipped). Recorded in
+  `docs/LIMITATIONS.md` together with what is not there: no line numbers, no copy button, no theme
+
 ## 2026-10-20
 
 ### Done — the graph stops reshuffling when you leave the tab

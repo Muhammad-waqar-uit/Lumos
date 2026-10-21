@@ -31,10 +31,21 @@ Links are overridden to open with `target="_blank"` and `rel="noreferrer"` so a 
 navigate the app window away from the vault.
 
 Styling lives in the `.markdown` rules in `src/index.css` and uses the existing theme tokens, so no
-colour is hardcoded in a component. Fenced code blocks are styled but not yet syntax-highlighted.
+colour is hardcoded in a component.
 
-Still to come: code syntax highlighting, resizable panes, routing, and a note editor
-(see [`TODO.md`](TODO.md) Phases 4-7).
+Fenced code is highlighted by `rehype-highlight` (highlight.js through lowlight). Only a fence that
+names a language is highlighted: `detect` is off, because guessing colours prose as `json` and an
+unlabelled block as something it is not. A fence in a language the plugin does not register (it ships
+the 37 common ones) is left as plain text and reported on the file instead of throwing, so an
+unknown ` ```zig ` block cannot break a note. The colours are `--color-code-*` tokens defined beside
+the graph hues in `src/index.css`; no highlight theme stylesheet is imported, so the code blocks use
+the app's own near-black palette.
+
+The three cases - a registered language, an unregistered one, and an untagged fence - are rendered
+to a string in Node and asserted in `src/components/NoteViewer.test.tsx`, so the wiring has a test
+without a jsdom setup.
+
+Still to come: resizable panes, routing, and a note editor (see [`TODO.md`](TODO.md) Phases 4-7).
 
 ### Link pane
 

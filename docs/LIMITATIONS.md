@@ -168,5 +168,13 @@ These are design observations, not measurements — no vault large enough to sho
 - **Nothing is indexed.** `/graph` reads every note body on each request, and `searchNotes` reads
   whole files whenever the excerpt does not match, so both grow with the size of the vault.
 - **The link pane has no cache**, so each visit to a note costs a fetch and a scrape of up to 1 MiB.
-- **The graph renderer is the heaviest dependency** in the app; it is loaded lazily with its tab, so
-  the notes path does not pay for it.
+- **The highlighter is the largest thing in the main bundle.** `rehype-highlight` registers 37
+  grammars, which took the main desktop chunk from 435 kB to 602 kB (135 kB to 189 kB gzipped,
+  measured with `vite build` before and after). Trimming it to a handful of languages would need
+  `highlight.js` as a second direct dependency and a list to maintain, so the whole common set stays
+  and the cost is written down instead. The graph renderer is still the heavier *chunk* of the two,
+  but it is lazy-loaded with its tab, so the graph is not on the notes path.
+- **Only a fence that names its language is highlighted.** An untagged block stays plain (guessing
+  the language colours prose as code) and a language outside the 37 common ones is left as text, so
+  a block tagged `zig` or `haskell` reads uncoloured rather than wrong. There are no line numbers,
+  no copy button and no way to select a theme: the colours are the app's own `--color-code-*` tokens.

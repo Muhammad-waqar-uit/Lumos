@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import ReactMarkdown, { type Components } from "react-markdown";
+import rehypeHighlight from "rehype-highlight";
 import remarkGfm from "remark-gfm";
 import type { GraphNode, Note } from "@lumos/shared";
 import { firstExternalLink } from "@lumos/vault-utils/link";
@@ -99,7 +100,13 @@ export function NoteViewer({ note, connection, backlinks, onOpenNote }: Props) {
       <div className="flex-1 overflow-y-auto px-6 py-5">
         {note.content.trim() ? (
           <article className="markdown">
-            <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              // Only a block the author tagged gets highlighted: guessing the language of an
+              // untagged block colours prose and JSON alike as something they are not.
+              rehypePlugins={[[rehypeHighlight, { detect: false }]]}
+              components={markdownComponents}
+            >
               {note.content}
             </ReactMarkdown>
           </article>

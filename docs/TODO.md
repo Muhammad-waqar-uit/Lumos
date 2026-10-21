@@ -16,7 +16,7 @@
 ## Phase 0.1: Enforcement still to come (P1)
 - [x] GitHub Actions workflow (`.github/workflows/validate.yml`) running `pnpm validate` on every PR into `main` and every push to `main`
 - [x] Branch protection on `main`: requires a pull request and the `pnpm validate` check, with `strict` on so a stale branch cannot merge; force pushes and deletions blocked (on since 2026-10-19; the workflow's first run on `main` was green in `38790615355`)
-- [x] Test runner (vitest) wired up and added to the validation gate — 199 tests over `@lumos/vault-utils` and the daemon, plus 37 over the desktop's pure logic (filtering, demo data, search ranking, graph layout memory), so 236 in `pnpm validate`
+- [x] Test runner (vitest) wired up and added to the validation gate — 199 tests over `@lumos/vault-utils` and the daemon, plus 40 over the desktop (filtering, demo data, search ranking, graph layout memory, and the viewer's code highlighting), so 239 in `pnpm validate`
 - [ ] Schema validation for note frontmatter in CI
 - [x] Route tests for the read API — `createApp()` in `app.ts` builds the Fastify app over a vault directory, so `app.inject()` covers `/health`, `/message`, `/notes`, `/notes/search`, `/folders`, `/note` (every guard), `/graph`, `/link` and CORS without binding a port, and with the link fetcher injected so the suite stays offline
 - [ ] Desktop component tests (jsdom + Testing Library) for the sidebar, list and viewer states, plus an E2E smoke test (the daemon unit and route tests are done)
@@ -68,7 +68,7 @@
 - [x] Note list pane (sorted by date, preview, tags)
 - [x] Vault load on mount via the daemon read API (demo fallback when offline)
 - [x] Note viewer - Markdown rendering via `react-markdown` + `remark-gfm` (headings, lists, tables, task lists, blockquotes, fenced code; note links open externally)
-- [ ] Syntax highlighting for fenced code blocks (`rehype-highlight` or shiki)
+- [x] Syntax highlighting for fenced code blocks — `rehype-highlight` over the 37 common languages, only for a fence that names one (an untagged or unknown fence stays plain rather than being guessed at), with the token colours added to `src/index.css` instead of importing a theme file; 3 render tests cover the three cases
 - [x] Tag filtering: the note list offers the tags in the current folder and query as chips with counts, a chip filters to that tag and toggles off, a note's own tag is the same control, and the active tag survives a folder change (`src/lib/filter.ts`, 12 unit tests)
 - [x] Graph view: canvas link graph from `GET /graph` — glow nodes sized by backlinks, curved edges, one hue per folder, tag and unlinked filters, local depth around the open note, demo graph offline
 - [x] Graph: backlinks panel in the note viewer, fed by the same extracted links — `backlinks()` in `@lumos/vault-utils/graph` returns the notes whose *links* point at the open one (a shared tag is a neighbour, not a backlink), and the viewer lists them as buttons that open the note; offline it reads the demo graph, so it works with the daemon stopped (5 unit tests)
