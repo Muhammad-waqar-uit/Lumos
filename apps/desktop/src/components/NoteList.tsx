@@ -119,6 +119,14 @@ export function NoteList({
                     </button>
                     <div className="flex flex-wrap items-center gap-1.5 px-4 pb-3 pt-1.5 text-[11px] text-muted-foreground">
                       <span>{n.folder}</span>
+                      {n.problems && n.problems.length > 0 ? (
+                        <span
+                          title={n.problems.join("; ")}
+                          className="rounded border border-border px-1 text-foreground"
+                        >
+                          ! frontmatter
+                        </span>
+                      ) : null}
                       {n.tags.map((noteTag) => {
                         const isFiltered = noteTag === tag;
                         return (

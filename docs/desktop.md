@@ -206,6 +206,16 @@ already holds, so it costs no request and works offline against the demo graph. 
 a note that merely shares a tag is a neighbour in the graph view, not a backlink, because "linked
 from" would otherwise mean every note carrying the same hashtag.
 
+### Frontmatter warnings
+
+A note whose frontmatter block has a problem stays in the list and stays readable. The daemon reads
+the body anyway and returns the reasons as `problems` (see [vault.md](vault.md) for the rules), and
+the desktop shows them twice: a `! frontmatter` chip on the row, with every reason in its tooltip,
+and a box above the note body that says how many there are and names each one. It is a warning, not
+an error state - the markdown below it renders normally, because a broken `created` is no reason to
+refuse to read what you wrote. Nothing is repaired on disk, so the file keeps the value that is
+wrong and the note sorts by it until it is fixed.
+
 ## Search palette
 
 `Cmd/Ctrl+K`, or the **Search** button in the status bar, opens a palette over the whole vault rather

@@ -1,4 +1,4 @@
-import { mkdtemp, readdir, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import type { FastifyInstance } from "fastify";
@@ -97,6 +97,22 @@ describe("POST /message", () => {
 });
 
 describe("GET /notes", () => {
+  it("lists a broken note with its problems instead of dropping it", async () => {
+    const { vault, app } = await makeApp([NOTE]);
+    await mkdir(path.join(vault, "Goals"), { recursive: true });
+    await writeFile(
+      path.join(vault, "Goals", "2026-05-02-unclosed.md"),
+      "---\nsource: [x\n---\n\n# Unclosed\n",
+    );
+
+    const res = await app.inject({ method: "GET", url: "/notes" });
+    const { notes } = res.json<{ notes: { title: string; problems?: string[] }[] }>();
+    const broken = notes.find((n) => n.title === "Unclosed");
+    expect(broken?.problems).toEqual(["frontmatter is not valid YAML"]);
+    // A note that is fine carries no such field, so a clean listing stays unchanged.
+    expect(notes.find((n) => n.title === "build a habit tracker")).not.toHaveProperty("problems");
+  });
+
   it("lists the vault's notes with the fields the desktop renders", async () => {
     const { app } = await makeApp([NOTE, { folder: "Goals", text: "learn rust\n\nship a CLI" }]);
     const res = await app.inject({ method: "GET", url: "/notes" });
@@ -213,6 +229,27 @@ describe("GET /note", () => {
     const res = await app.inject({ method: "GET", url: "/note?folder=Ideas&name=missing.md" });
     expect(res.statusCode).toBe(404);
     expect(res.json()).toEqual({ error: "note not found" });
+  });
+
+  it("serves a note with broken frontmatter, problems and all", async () => {
+    const { vault, app } = await makeApp();
+    await mkdir(path.join(vault, "Ideas"), { recursive: true });
+    await writeFile(
+      path.join(vault, "Ideas", "2026-05-01-broken.md"),
+      "---\ncreated: soon\n---\n\n# Broken\n\nstill here\n",
+    );
+
+    const res = await app.inject({
+      method: "GET",
+      url: "/note?folder=Ideas&name=2026-05-01-broken.md",
+    });
+    expect(res.statusCode).toBe(200);
+    const { note } = res.json<{
+      note: { title: string; content: string; problems: string[] };
+    }>();
+    expect(note.title).toBe("Broken");
+    expect(note.content).toContain("still here");
+    expect(note.problems).toEqual(["created is not a date"]);
   });
 });
 

@@ -271,6 +271,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   it while the Graph tab has the list unmounted. Nothing is persisted, so a reload starts at 320px.
   Desktop suite 72, total 271.
 
+### Added (continued 20)
+- A note with broken frontmatter no longer disappears. Unparseable YAML, and a block that is a list
+  or a bare string rather than a mapping, used to throw inside `parseNote`; the listing swallowed the
+  error and the note vanished from the app with nothing said. The body is now read anyway, and the
+  reason travels with the note.
+- `validateFrontmatter()` in `@lumos/vault-utils` checks the fields the app actually depends on -
+  `created` (the date the list sorts by), `tags` (the filter), `source` (the header) and `url` (what
+  the viewer may play) - and lets every other key through, because frontmatter is meant to grow.
+- The problem is reported, not repaired: `Note.problems` carries it to the viewer, which shows a
+  warning above the body, and the list marks the row `! frontmatter` with the details in its tooltip.
+  A `created` that cannot be parsed is kept as written rather than replaced with "now", so the file
+  says what is wrong instead of quietly sorting somewhere else.
+- A note that is fine is unchanged: `VaultEntry.problems` is only present when there is something to
+  say, and an empty frontmatter block is still a note with defaults, not a broken one.
+- 12 validator tests, 8 over parsing and listing, 2 over the routes and 3 render tests for the
+  warning. Suite is 296: 136 in `@lumos/vault-utils`, 85 in the daemon, 75 in the desktop.
+
 ### Notes
 - The Instagram and Facebook embeds are the platforms' plugin endpoints, verified by hand rather than
   by a test: a public reel and a public video each played logged out, in the app and in the packaged

@@ -19,6 +19,7 @@ Status values: **done** · **in-progress** · **planned** · **idea**
 | Tag extraction | done | `#hashtags` in a captured message become the note's frontmatter tags (lower-cased, de-duplicated), read by `extractTags()` - the same function the graph builds tag nodes with - so the tags in the file and the tag nodes in the graph cannot disagree |
 | Shared packages | done | `@lumos/shared` types + `@lumos/vault-utils` (parse/list/search/write) |
 | Vault listing/search | done | `listNotes`, `getNotesByFolder`, `searchNotes`, `readNote` |
+| Frontmatter validation | done | `validateFrontmatter()` checks `created`, `tags`, `source` and `url` and reports one reason per broken field; a note with a broken block is still listed and readable, and the viewer shows the reasons above the body (`validateFrontmatter()` in `@lumos/vault-utils`, unit-tested) |
 | Vault graph | done | `extractLinks`/`extractTags`/`buildGraphFromNotes`/`neighborhood` in `@lumos/vault-utils` (`./graph` subpath, browser-safe) |
 | Link parsing | done | `parseLinkMedia`/`extractPreview`/`firstExternalLink` in `@lumos/vault-utils` (`./link` subpath, browser-safe) |
 | Daemon read API | done | `GET /notes`, `/notes/search`, `/folders`, `/note`, `/graph` + CORS |
@@ -41,8 +42,8 @@ Status values: **done** · **in-progress** · **planned** · **idea**
 | Commit message lint | done | commitlint enforces `<type>(<scope>): <description>` |
 | Pre-push validation | done | `pnpm validate` — lint + format:check + typecheck + test + build |
 | Test runner | done | vitest 5; `pnpm test` runs every workspace that has a suite |
-| Desktop tests | done | 72 tests over the note filter, the demo vault, the search ranking/merge, the recent-notes order, the link cache, list movement, the pane widths, the graph layout memory (`src/lib/*.test.ts`) and the viewer's code highlighting (an SSR render in `src/components/NoteViewer.test.tsx`), run by `pnpm test` |
-| Parser & vault tests | done | 199 tests: 116 for `@lumos/vault-utils` (link/tag extraction, graph assembly, neighbourhoods, link parsing and page metadata, the Instagram/Facebook URL shapes, and tags written at capture) and 83 for the daemon (including `/find`, the link fetcher's refusals, and every HTTP route driven through `app.inject()`) |
+| Desktop tests | done | 75 tests over the note filter, the demo vault, the search ranking/merge, the recent-notes order, the link cache, list movement, the pane widths, the graph layout memory (`src/lib/*.test.ts`) and the viewer's code highlighting and frontmatter warning (SSR renders in `src/components/NoteViewer.test.tsx`), run by `pnpm test` |
+| Parser & vault tests | done | 221 tests: 136 for `@lumos/vault-utils` (frontmatter rules, link/tag extraction, graph assembly, neighbourhoods, link parsing and page metadata, the Instagram/Facebook URL shapes, and tags written at capture) and 85 for the daemon (including `/find`, the link fetcher's refusals, and every HTTP route driven through `app.inject()`) |
 | Read API route tests | done | `createApp()` in `apps/daemon/src/app.ts` builds the app over a vault directory; `app.test.ts` covers every route plus CORS through `app.inject()`, with the link fetcher injected |
 | Desktop component tests | planned | jsdom + Testing Library for the sidebar, list and viewer states |
 | Branch workflow | done | Short-lived `<type>/<description>` branches; `pre-commit` blocks commits on `main` |

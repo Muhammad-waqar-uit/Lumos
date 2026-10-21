@@ -54,6 +54,26 @@ uses, so a tag in the frontmatter and a tag node in the graph are always the sam
 heading (`# Heading`) and a `#hash` inside a code span or fence are not tags; `#Rust` and `#rust`
 are one tag. Anything that reads the vault - Obsidian, `rg`, the desktop list - sees them.
 
+## When the frontmatter is wrong
+
+The vault is hand-editable, so a broken block is expected rather than exceptional. It is never a
+reason to hide the note: `parseNote()` reads the body anyway, and `validateFrontmatter()` reports
+what is wrong with the block.
+
+| Checked | Reported as |
+|---|---|
+| the block parses as YAML | `frontmatter is not valid YAML` |
+| the block is a mapping | `frontmatter is not a mapping` |
+| `created` is present and parses as a date | `created is missing` / `created is not a date` |
+| `tags` is a string or a list of non-empty names | `tags is not a list of names` |
+| `source` is a non-empty string | `source is not a name` |
+| `url` is an `http(s)` address | `url is not an http address` |
+
+Every other key is left alone, because forward compatibility is the point of frontmatter. A field
+that fails a check keeps the value that was written - the note is not rewritten and no timestamp is
+invented - so the file still shows what needs fixing. The desktop shows the reasons above the note
+body and marks the row in the list; the API returns them as `problems`.
+
 ## Body format
 
 ```markdown

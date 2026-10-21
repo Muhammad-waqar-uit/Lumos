@@ -51,7 +51,9 @@ Response: `{ "reply": "Filed in Ideas: build a habit tracker" }`. Missing `text`
 Response: `{ "ok": true }`.
 
 ### `GET /notes`
-Every note in the vault, newest first: `{ "notes": VaultEntry[] }`.
+Every note in the vault, newest first: `{ "notes": VaultEntry[] }`. An entry whose frontmatter has a
+problem carries `problems: string[]` with the reasons; a clean entry has no such field, so the usual
+response is unchanged. A note with a broken block is listed rather than dropped.
 
 ### `GET /notes/search?q=<query>`
 Case-insensitive search across titles, content, and tags: `{ "notes": VaultEntry[] }`.
@@ -60,8 +62,9 @@ Case-insensitive search across titles, content, and tags: `{ "notes": VaultEntry
 Note counts per folder: `{ "folders": [{ "folder": "Ideas", "count": 3 }] }`.
 
 ### `GET /note?folder=<Folder>&name=<file.md>`
-A single note (`frontmatter` + `content`). Returns `400` for an unknown folder or an unsafe
-filename, and `404` when the note is missing.
+A single note (`frontmatter` + `content`), plus `problems`: an array of frontmatter complaints, empty
+when the note is well formed (see [vault.md](vault.md)). A broken block is reported, never a `500`.
+Returns `400` for an unknown folder or an unsafe filename, and `404` when the note is missing.
 
 ### `GET /link?url=<url>`
 One link, scraped for the desktop: `{ "link": LinkCard }` — how the app shows it inline (`kind`,

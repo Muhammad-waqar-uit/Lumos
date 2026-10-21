@@ -121,5 +121,7 @@ export function demoNote(from: VaultEntry): Note {
     content: `# ${from.title}\n\n${from.excerpt}\n\n${
       DEMO_BODIES[from.name] ?? ""
     }${from.url ? `\n\n${from.url}` : ""}`,
+    // The demo vault is hand-written, so it has nothing to warn about.
+    problems: from.problems ?? [],
   };
 }
