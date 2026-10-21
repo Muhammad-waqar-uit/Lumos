@@ -90,6 +90,7 @@ possible future path (see [docs/desktop.md](../../docs/desktop.md)); it does not
 - [x] Graph view (link graph from the daemon, canvas force layout, per-folder hues, filters, local depth)
 - [x] Syntax-highlighted code blocks (37 common languages; only a fence that names one is highlighted)
 - [x] Recent notes in the palette (the five opened this session, newest first)
+- [x] Resizable list column (drag the separator, double-click to reset, or use the arrow keys)
 - [x] Links in place (a YouTube or Vimeo link plays in the note viewer, an Instagram reel/post and a Facebook video/post render through their own embeds with the caption the daemon reads, an image link shows the image, any other page is scraped and read as text, and a scraped page is kept for the session)
 - [ ] Link reader polish (less site chrome in the extracted text) — see [docs/LIMITATIONS.md](../../docs/LIMITATIONS.md)
 - [ ] Daily notes view

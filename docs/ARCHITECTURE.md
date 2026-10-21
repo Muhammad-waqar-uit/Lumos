@@ -51,7 +51,7 @@ injected, so no port is bound and no network request is made.
 - **Shell**: Tauri 2.x (Rust backend) hosting a Vite/React frontend.
 - **UI**: Tailwind CSS + shadcn/ui, dark minimal theme.
 - **Access to the vault**: the daemon HTTP read API today; Tauri filesystem commands are a possible future path so it can run without the daemon.
-- **Panes**: the notes list + viewer, or the link graph, sharing the folder sidebar. The graph renderer loads lazily with its tab, so the notes path stays light.
+- **Panes**: the notes list + viewer, or the link graph, sharing the folder sidebar. The list column is resizable through `PaneSplitter`, and the width lives in the shell rather than in the pane. The graph renderer loads lazily with its tab, so the notes path stays light.
 - **Link pane**: a note's link is shown in the viewer - a player, an image, or the scraped page - instead of only linking out. It reads through `src/lib/api.ts` like every other pane and has its own loading, error and retry states.
 
 ## Vault
