@@ -223,6 +223,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The bundle cost is measured, not assumed: `vite build` before and after puts the main desktop chunk
   at 435 kB → 602 kB (135 kB → 189 kB gzipped). The graph keeps its own lazy chunk.
 
+### Added (continued 16)
+- An empty `Cmd/Ctrl+K` palette is no longer a dead end: it lists the notes opened this session,
+  newest first, up to five. Every route into a note counts - the list, a graph node, a backlink or the
+  palette itself - because they all pick through one function in `App`, and the rows use the same
+  result shape as a search, so `↑`/`↓`/`Enter` work there without a second key handler.
+- `src/lib/recent.ts`: `rememberRecent()` (newest first, de-duplicated, capped, pure) and
+  `recentEntries()` (keys resolved against the live listing, so a note deleted or moved while the app
+  runs is skipped rather than offered as an empty row), with 10 unit tests. Desktop suite 50, total
+  249.
+- The history is session memory: no storage is written, so a reload starts empty, and the note the
+  app selects for you at launch is not recorded - only what you actually opened. Both stated in
+  [docs/LIMITATIONS.md](docs/LIMITATIONS.md).
+
 ### Notes
 - The Instagram and Facebook embeds are the platforms' plugin endpoints, verified by hand rather than
   by a test: a public reel and a public video each played logged out, in the app and in the packaged

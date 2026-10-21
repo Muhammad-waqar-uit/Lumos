@@ -4,6 +4,22 @@ Chronological record of what has been built. Newest entries first within each da
 
 ## 2026-10-21
 
+### Done — the empty palette offers what you just read
+- [x] Phase 6's last item: with nothing typed, `Cmd/Ctrl+K` lists the five notes opened this session,
+  newest first, instead of a hint line
+- [x] `src/lib/recent.ts`: `rememberRecent()` (newest first, de-duplicated, capped, does not mutate its
+  input) and `recentEntries()` (resolves keys against the loaded listing, so a note that left the
+  vault is skipped), with 10 unit tests; desktop suite 50, total 249
+- [x] Every route into a note goes through one `chooseNote()` in `App`, so the list, a graph node, a
+  backlink and the palette all record the same way; the note the app auto-selects is deliberately not
+  recorded, and the notes that become active because a filter narrowed the list are not either
+- [x] The palette reuses the search result shape for the history rows, so the existing arrow keys and
+  `Enter` needed no second code path
+- [x] Verified in the browser against the temporary vault: opening *Plain note* and then *Code
+  samples* put Code samples first in the Recent list and Plain note second; `↓` + `Enter` opened the
+  second row, closed the palette and left focus on a button; after a reload the palette showed the
+  hint line again, which is the real empty state
+
 ### Done — code in a note is highlighted
 - [x] Phase 5's last rendering gap: fenced code is highlighted by `rehype-highlight` (highlight.js
   through lowlight), added to the markdown pipeline in `NoteViewer`
