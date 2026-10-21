@@ -34,12 +34,13 @@ Status values: **done** · **in-progress** · **planned** · **idea**
 | Note editor | planned | Markdown editor with preview |
 | Link enrichment | idea | Summaries and key points from links |
 | Backlinks | done | The note viewer lists the notes that link to the open one, from the same graph the Graph tab draws, and each is a button that opens it. Tag references are not backlinks: sharing a tag makes a note a neighbour, not a source. Works offline against the demo graph (`backlinks()` in `@lumos/vault-utils/graph`) |
+| List keyboard | done | `j`/`k` move the note-list selection, clamped at both ends and disabled while a field has focus or the palette is open (`src/lib/list-nav.ts`) |
 | Graph view | done | Canvas force graph: glow nodes sized by backlinks, curved synapse edges, one hue per folder, tag and unlinked filters, local depth around the open note, demo graph when the daemon is offline. Node positions and a view the user placed survive a tab switch, and a resize refits a view the app fitted itself |
 | Lint + format gate | done | oxlint + prettier, run on staged files by lint-staged |
 | Commit message lint | done | commitlint enforces `<type>(<scope>): <description>` |
 | Pre-push validation | done | `pnpm validate` — lint + format:check + typecheck + test + build |
 | Test runner | done | vitest 5; `pnpm test` runs every workspace that has a suite |
-| Desktop tests | done | 57 tests over the note filter, the demo vault, the search ranking/merge, the recent-notes order, the link cache, the graph layout memory (`src/lib/*.test.ts`) and the viewer's code highlighting (an SSR render in `src/components/NoteViewer.test.tsx`), run by `pnpm test` |
+| Desktop tests | done | 65 tests over the note filter, the demo vault, the search ranking/merge, the recent-notes order, the link cache, list movement, the graph layout memory (`src/lib/*.test.ts`) and the viewer's code highlighting (an SSR render in `src/components/NoteViewer.test.tsx`), run by `pnpm test` |
 | Parser & vault tests | done | 199 tests: 116 for `@lumos/vault-utils` (link/tag extraction, graph assembly, neighbourhoods, link parsing and page metadata, the Instagram/Facebook URL shapes, and tags written at capture) and 83 for the daemon (including `/find`, the link fetcher's refusals, and every HTTP route driven through `app.inject()`) |
 | Read API route tests | done | `createApp()` in `apps/daemon/src/app.ts` builds the app over a vault directory; `app.test.ts` covers every route plus CORS through `app.inject()`, with the link fetcher injected |
 | Desktop component tests | planned | jsdom + Testing Library for the sidebar, list and viewer states |

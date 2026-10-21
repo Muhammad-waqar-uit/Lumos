@@ -252,6 +252,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   retried for real, one entry per URL, `peek` never starting a request, `peek` staying empty while a
   read is in flight, and `clear` forcing the next read out. Desktop suite 57, total 256.
 
+### Added (continued 18)
+- `j` and `k` move the note-list selection in the Notes view. The step stops at both ends rather than
+  wrapping, and a move counts as an ordinary pick, so it feeds the palette's recent notes; it stands
+  down while a field has focus or the palette is open, so the letter is never stolen from a search
+  box.
+- The arithmetic and the "is this a field?" rule live in `src/lib/list-nav.ts`, with 8 unit tests,
+  because a key handler is awkward to assert without a DOM and the rule is what tends to go wrong.
+  Desktop suite 65, total 264.
+
 ### Notes
 - The Instagram and Facebook embeds are the platforms' plugin endpoints, verified by hand rather than
   by a test: a public reel and a public video each played logged out, in the app and in the packaged

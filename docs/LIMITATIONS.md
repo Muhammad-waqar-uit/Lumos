@@ -143,8 +143,9 @@ play it — neither page can be read or copied.
   as a backlink - it is a neighbour in the graph, not something that points here - so "Linked from"
   can be empty on a tag-heavy vault. With the daemon down the list comes from the demo graph, so a demo
   note that links to another demo note shows its sources, while a real note offline simply shows none.
-- **No keyboard navigation for the link pane.** The reader and the player are inside the note scroll
-  area, and only the note list has `j`/`k`-style movement planned.
+- **Keyboard movement covers the list, not the panes.** `j`/`k` walk the note list, but the viewer,
+  the link pane and the tag chips are reached with `Tab`; there is no `j`/`k` inside a note body, and
+  no shortcut for the folder list or the tabs.
 
 ## Vault and data
 

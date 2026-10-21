@@ -4,6 +4,20 @@ Chronological record of what has been built. Newest entries first within each da
 
 ## 2026-10-21
 
+### Done — j/k through the note list
+- [x] The note list takes `j` and `k` in the Notes view: clamped at both ends rather than wrapping, and a
+  step is an ordinary pick, so it also feeds the palette's recent notes
+- [x] The handler stands down while a field has focus or the palette is open, which is the defect this
+  kind of shortcut usually ships with - a search box that cannot be typed into
+- [x] `src/lib/list-nav.ts` holds `stepIndex`/`stepForKey`/`isTypingTarget`, with 8 unit tests; the
+  typing rule is duck-typed on `tagName` so it is testable in Node and needs no jsdom. Desktop suite
+  65, total 264
+- [x] Verified in the browser against a temporary vault of four notes: `j` from the first note walked
+  to the second, third and stopped at the fourth on a fifth press; `k` at the top stayed put; typing
+  `j` into the note search box put `j` in the field and filtered the list instead of moving the
+  selection, and the same held with the palette open (`j` landed in its query, the note behind it
+  stayed put)
+
 ### Done — a scraped page is read once per session
 - [x] Phase 5's session cache: `src/lib/link-cache.ts` keeps a `LinkCard` by URL at module scope, so a
   note switch, a tab switch and StrictMode's double mount cost one fetch and one scrape
