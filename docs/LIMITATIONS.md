@@ -32,8 +32,13 @@ Each entry says what is given up. Where a limit is deliberate, the alternative i
   pages are in the same place.
 - **Non-HTML content is refused** (PDF, JSON, video, archives), named by its content type. Reading a
   PDF or a local HTML file the same way is in [TODO.md](TODO.md).
-- **Nothing is cached.** Reopening a note refetches the page; in development React StrictMode
-  invokes the effect twice, so it fetches twice. A page that changes between reads shows both versions.
+- **A page is cached for the session, not refreshed.** The first read of a URL is kept in memory
+  (`src/lib/link-cache.ts`), so reopening a note, switching tabs and StrictMode's double mount all
+  reuse one request and one scrape; a second caller while the first is still in flight joins it
+  instead of starting another. Nothing has a TTL, so a page that changed since the session started
+  is still shown as it was, and there is no per-page Refresh — only a reload, which empties the
+  cache. A refusal or a network failure is deliberately not remembered, so Retry makes a real
+  request.
 - **The reader is a snapshot, not a copy.** Scraped text is never written to the vault, so it is not
   searchable, not linked by the graph, and not preserved if the page disappears.
 - **Local addresses are refused on purpose.** `localhost`, `*.local`, `*.internal`, loopback, private,
@@ -174,7 +179,9 @@ These are design observations, not measurements — no vault large enough to sho
 
 - **Nothing is indexed.** `/graph` reads every note body on each request, and `searchNotes` reads
   whole files whenever the excerpt does not match, so both grow with the size of the vault.
-- **The link pane has no cache**, so each visit to a note costs a fetch and a scrape of up to 1 MiB.
+- **The link cache is memory only.** A URL costs one fetch and a scrape of up to 1 MiB per session,
+  reused for every later visit to it; the map is unbounded, which is fine for a session's worth of
+  links and is not a store.
 - **The highlighter is the largest thing in the main bundle.** `rehype-highlight` registers 37
   grammars, which took the main desktop chunk from 435 kB to 602 kB (135 kB to 189 kB gzipped,
   measured with `vite build` before and after). Trimming it to a handful of languages would need

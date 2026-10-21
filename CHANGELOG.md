@@ -236,6 +236,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   app selects for you at launch is not recorded - only what you actually opened. Both stated in
   [docs/LIMITATIONS.md](docs/LIMITATIONS.md).
 
+### Added (continued 17)
+- A scraped page is now kept for the session instead of being fetched again every time its note is
+  reopened. `src/lib/link-cache.ts` holds the card by URL at module scope - the pane unmounts on a
+  note or tab change, so a cache inside it would be gone exactly when it is worth having - and a
+  second caller joins the request already in flight, which also turns React StrictMode's double mount
+  into one request rather than two.
+- The pane reads the cache at render, so returning to a note with a page it already holds shows the
+  card immediately instead of flashing "Reading the page…" first.
+- A refusal or a network failure is deliberately not remembered, so **Retry** still makes a real
+  request. Nothing has a TTL and nothing is written to disk: a reload starts empty, and a page that
+  changed mid-session is still shown as it was. Both limits are in
+  [docs/LIMITATIONS.md](docs/LIMITATIONS.md).
+- 7 unit tests over an injected fetcher (no network): one fetch for two reads, a joiner, a failure
+  retried for real, one entry per URL, `peek` never starting a request, `peek` staying empty while a
+  read is in flight, and `clear` forcing the next read out. Desktop suite 57, total 256.
+
 ### Notes
 - The Instagram and Facebook embeds are the platforms' plugin endpoints, verified by hand rather than
   by a test: a public reel and a public video each played logged out, in the app and in the packaged

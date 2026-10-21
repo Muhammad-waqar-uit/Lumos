@@ -49,9 +49,9 @@ folder, so progress is always visible.
 - The graph keeps its layout: node positions and a view you placed survive a tab switch, and a resized
   pane re-fits a view the app fitted itself. ✅
 
-That finishes the graph, and code in a note is now highlighted. The phase itself is not finished:
-three link-pane items - a session cache for a scraped page, less site chrome in the reader's text, and
-reading a PDF or plain HTML file - are still open in [`TODO.md`](TODO.md) Phase 5.
+That finishes the graph, code in a note is highlighted, and a scraped page is now kept for the
+session. The phase itself is not finished: two link-pane items - less site chrome in the reader's
+text, and reading a PDF or plain HTML file - are still open in [`TODO.md`](TODO.md) Phase 5.
 
 ## M6 - Search (Phase 6)
 

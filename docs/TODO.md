@@ -16,7 +16,7 @@
 ## Phase 0.1: Enforcement still to come (P1)
 - [x] GitHub Actions workflow (`.github/workflows/validate.yml`) running `pnpm validate` on every PR into `main` and every push to `main`
 - [x] Branch protection on `main`: requires a pull request and the `pnpm validate` check, with `strict` on so a stale branch cannot merge; force pushes and deletions blocked (on since 2026-10-19; the workflow's first run on `main` was green in `38790615355`)
-- [x] Test runner (vitest) wired up and added to the validation gate — 199 tests over `@lumos/vault-utils` and the daemon, plus 50 over the desktop (filtering, demo data, search ranking, recent notes, graph layout memory, and the viewer's code highlighting), so 249 in `pnpm validate`
+- [x] Test runner (vitest) wired up and added to the validation gate — 199 tests over `@lumos/vault-utils` and the daemon, plus 57 over the desktop (filtering, demo data, search ranking, recent notes, the link cache, graph layout memory, and the viewer's code highlighting), so 256 in `pnpm validate`
 - [ ] Schema validation for note frontmatter in CI
 - [x] Route tests for the read API — `createApp()` in `app.ts` builds the Fastify app over a vault directory, so `app.inject()` covers `/health`, `/message`, `/notes`, `/notes/search`, `/folders`, `/note` (every guard), `/graph`, `/link` and CORS without binding a port, and with the link fetcher injected so the suite stays offline
 - [ ] Desktop component tests (jsdom + Testing Library) for the sidebar, list and viewer states, plus an E2E smoke test (the daemon unit and route tests are done)
@@ -77,7 +77,7 @@
 - [x] Graph: re-fit after the pane is resized — a resize refits so the graph cannot sit off-centre; a view the user panned or zoomed is preserved instead, because that is theirs to keep
 - [x] Link pane: a note's link plays (YouTube/Vimeo), shows as an image, or scrapes into a reader card with loading, error and retry states
 - [x] Link pane: an Instagram reel/post and a Facebook video/post render in place through the host's own embed, with the caption card from `/link` under it and a frame shape per kind (portrait, 16:9, tall)
-- [ ] Link pane: keep a scraped page for the session instead of refetching it every time the note is reopened
+- [x] Link pane: keep a scraped page for the session instead of refetching it every time the note is reopened — `src/lib/link-cache.ts` holds the card by URL at module scope and joins a second caller onto the request already in flight, so a remount, a tab switch and StrictMode's double mount cost one read; a refusal is not cached, so Retry still works (7 unit tests)
 - [ ] Link pane: strip site chrome harder — the reader still includes code samples and repeated navigation text from some pages
 - [ ] Link pane: read a PDF or a plain HTML file the same way (today a non-HTML content type is refused with its type named)
 
