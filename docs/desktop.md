@@ -17,6 +17,7 @@ daemon (falling back to demo data when the daemon is offline):
 - `src/components/PaneBoundary.tsx` - error boundary around the lazily loaded graph pane
 - `src/components/SearchModal.tsx` - the `Cmd/Ctrl+K` palette: ranked matches, keyboard selection, body matches from the daemon
 - `src/components/StatusBar.tsx` - connection state, the search shortcut and the note count
+- `src/lib/list-nav.ts` - the arithmetic behind `j`/`k` in the note list, plus the rule for when a key belongs to a field
 - `src/lib/api.ts` - daemon client (`/notes`, `/notes/search`, `/folders`, `/note`, `/graph`, `/link`)
 - `src/lib/graph-palette.ts` - reads the `--color-graph-*` tokens and maps a folder to its hue, with a fallback token per lookup
 - `src/lib/demo.ts` - demo data used when the daemon is not running
@@ -224,8 +225,10 @@ Wired today:
 - `Cmd/Ctrl+K` - open or close the search palette.
 - `Esc` - close the palette.
 - `↑` `↓` `Enter` - move through the palette and open the selection.
-
-Still to come: `j`/`k`-style movement through the note list (tracked in [`TODO.md`](TODO.md)).
+- `j` / `k` - move down and up the note list, in the Notes view only. It stops at both ends rather
+  than wrapping, and stands down while a field has focus (the list search, the palette) or while the
+  palette is open, so `j` stays a letter where a letter is expected. A step through the list is an
+  ordinary pick, so it also counts as a recent note.
 
 ## Planned capabilities
 

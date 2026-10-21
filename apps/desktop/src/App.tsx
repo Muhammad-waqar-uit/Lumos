@@ -11,6 +11,7 @@ import {
 import { backlinks } from "@lumos/vault-utils/graph";
 import { DEMO_FOLDERS, DEMO_GRAPH, DEMO_NOTES, demoNote } from "./lib/demo";
 import { countTags, filterEntries, nodeTag } from "./lib/filter";
+import { isTypingTarget, stepForKey, stepIndex } from "./lib/list-nav";
 import { recentEntries, rememberRecent } from "./lib/recent";
 import { NoteList, keyOf } from "./components/NoteList";
 import { NoteViewer } from "./components/NoteViewer";
@@ -148,6 +149,23 @@ export default function App() {
   );
 
   const closeSearch = useCallback(() => setSearchOpen(false), []);
+
+  // `j`/`k` walk the visible list, but never while a field has focus (where they are letters) or
+  // while the palette is open (where they belong to the query).
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent): void => {
+      if (searchOpen || view !== "notes" || loading) return;
+      if (event.metaKey || event.ctrlKey || event.altKey) return;
+      if (isTypingTarget(event.target)) return;
+      const delta = stepForKey(event.key);
+      if (delta === null || visible.length === 0) return;
+      event.preventDefault();
+      const index = visible.findIndex((n) => keyOf(n) === activeKey);
+      chooseNote(keyOf(visible[stepIndex(index, delta, visible.length)]));
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [searchOpen, view, loading, visible, activeKey, chooseNote]);
 
   // The palette opens from anywhere, including while a note is scrolled or a field has focus.
   useEffect(() => {
