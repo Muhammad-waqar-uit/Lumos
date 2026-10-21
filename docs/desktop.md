@@ -123,9 +123,10 @@ The header switches between **Notes** and **Graph**. Both read the same vault: t
 The renderer is `force-graph` (canvas), driven through its **vanilla instance API** rather than its
 React wrapper: in `force-graph` 1.52 those props are linked to the internal canvas graph and the
 wrapper's prop forwarding drops them silently, so the canvas-object props and `autoPauseRedraw`
-never reached the renderer. The pane is `React.lazy`-loaded, because the renderer is the heaviest
-dependency in the app, and wrapped in `PaneBoundary` so a failed chunk shows an error with a retry
-instead of a blank screen.
+never reached the renderer. The pane is `React.lazy`-loaded, because 184 kB of canvas renderer is only
+needed on its own tab (the syntax highlighter is the larger cost now, and it is on the notes path),
+and wrapped in `PaneBoundary` so a failed chunk shows an error with a retry instead of a blank
+screen.
 
 The `--color-graph-*` tokens are declared as plain custom properties in `:root` rather than Tailwind
 theme entries: Tailwind prunes theme values it cannot see used in a class name, so palette steps

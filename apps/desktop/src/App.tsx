@@ -19,7 +19,7 @@ import { SearchModal } from "./components/SearchModal";
 import { Sidebar, type FolderFilter, type ShellView } from "./components/Sidebar";
 import { StatusBar } from "./components/StatusBar";
 
-// The graph renderer is the heaviest dependency in the app, so it loads with the tab.
+// The graph renderer is a 184 kB chunk that only its own tab needs, so it loads with the tab.
 const GraphView = lazy(() =>
   import("./components/GraphView").then((module) => ({ default: module.GraphView })),
 );

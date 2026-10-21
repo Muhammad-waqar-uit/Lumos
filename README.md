@@ -17,7 +17,8 @@ Lumos transforms WhatsApp into an effortless capture tool for your second brain.
 - **Allowlist Security**: Only messages from whitelisted phone numbers are processed
 - **Monorepo Architecture**: Clean separation between daemon (capture) and desktop app (viewing)
 - **Links in place**: A YouTube or Vimeo link plays in the note viewer, an Instagram reel or post and a Facebook video or post render through the platform's own embed with their caption beside them, an image link shows the image, and any other page is scraped by the daemon and read as text without leaving the app (private hosts are refused)
-- **Keyboard search**: `Cmd/Ctrl+K` opens a palette over the vault - typo-tolerant matches on titles, tags and previews, plus body matches from the daemon - and `Enter` opens the note
+- **Keyboard search**: `Cmd/Ctrl+K` opens a palette over the vault - typo-tolerant matches on titles, tags and previews, plus body matches from the daemon - and `Enter` opens the note; with nothing typed it lists what you opened this session
+- **Readable notes**: Markdown with tables, task lists and syntax-highlighted code, and a link plays or reads in place instead of sending you to a browser
 
 ## Architecture
 
