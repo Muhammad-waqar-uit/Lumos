@@ -74,6 +74,26 @@ export function NoteViewer({ note, connection, backlinks, onOpenNote }: Props) {
           ) : null}
         </p>
       </header>
+      {note.problems.length > 0 ? (
+        <section
+          aria-label="Frontmatter problems"
+          className="border-b border-border bg-accent/40 px-6 py-2.5"
+        >
+          <p className="text-xs font-medium text-foreground">
+            {note.problems.length === 1
+              ? "This note's frontmatter has a problem"
+              : `This note's frontmatter has ${note.problems.length} problems`}
+          </p>
+          <ul className="mt-1 list-inside list-disc text-[11px] text-muted-foreground">
+            {note.problems.map((problem) => (
+              <li key={problem}>{problem}</li>
+            ))}
+          </ul>
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            The body is still readable; the file's frontmatter is what needs fixing.
+          </p>
+        </section>
+      ) : null}
       {backlinks.length > 0 ? (
         <section aria-label="Linked from" className="border-b border-border px-6 py-2.5">
           <p className="text-[11px] uppercase tracking-wide text-muted-foreground">

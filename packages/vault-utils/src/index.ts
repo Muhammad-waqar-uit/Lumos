@@ -14,9 +14,10 @@ import type {
   VaultEntry,
 } from "@lumos/shared";
 import { buildGraphFromNotes, extractTags } from "./graph";
+import { isMapping, validateFrontmatter } from "./frontmatter";
 import { slugify } from "./slug";
 
-export { slugify };
+export { slugify, validateFrontmatter };
 
 const TITLE_MAX = 60;
 
@@ -46,40 +47,76 @@ export function defaultFrontmatter(source = "whatsapp"): Frontmatter {
   };
 }
 
-/** Normalize a parsed mapping into a Frontmatter object. */
+/**
+ * Normalize a parsed mapping into a Frontmatter object.
+ *
+ * Unrecognised keys ride along, so a field someone wrote for another tool survives the read. The
+ * known fields are set after them, because a file that writes `created` as a number, or as a YAML
+ * timestamp that parses to a Date, must not put that value behind a `string` type.
+ */
 function normalizeFrontmatter(data: Record<string, unknown>): Frontmatter {
   const tags = Array.isArray(data.tags)
     ? data.tags.map(String)
     : typeof data.tags === "string"
       ? [data.tags]
       : [];
+  const created = data.created instanceof Date ? data.created.toISOString() : data.created;
+
+  const extra = { ...data };
+  for (const known of ["source", "created", "tags", "status", "url"]) delete extra[known];
+
   return {
+    ...extra,
     source: typeof data.source === "string" ? data.source : "whatsapp",
-    created: typeof data.created === "string" ? data.created : new Date().toISOString(),
+    created: typeof created === "string" ? created : new Date().toISOString(),
     status: typeof data.status === "string" ? data.status : "new",
-    ...(typeof data.url === "string" ? { url: data.url } : {}),
-    ...data,
     tags,
-  } as Frontmatter;
+    ...(typeof data.url === "string" ? { url: data.url } : {}),
+  };
+}
+
+/** What a note file parses to: the normalised frontmatter, the body, and anything wrong with it. */
+export interface ParsedNote {
+  frontmatter: Frontmatter;
+  content: string;
+  /** Problems with the frontmatter block, empty when the note is well formed. */
+  problems: string[];
+}
+
+/**
+ * Read the frontmatter block without trusting it: invalid YAML and a block that is not a mapping
+ * both come back as an empty mapping plus the reason, so the caller still gets the body.
+ */
+function readFrontmatter(block: string): { data: Record<string, unknown>; problems: string[] } {
+  let parsed: unknown;
+  try {
+    parsed = YAML.parse(block);
+  } catch {
+    return { data: {}, problems: ["frontmatter is not valid YAML"] };
+  }
+  // An empty block (`---\n---`) parses to null, which is a note with defaults, not a broken one.
+  if (parsed === null || parsed === undefined) return { data: {}, problems: [] };
+  if (!isMapping(parsed)) return { data: {}, problems: ["frontmatter is not a mapping"] };
+  return { data: parsed, problems: validateFrontmatter(parsed) };
 }
 
 /** Parse a raw note file into frontmatter + body content. */
-export function parseNote(raw: string): { frontmatter: Frontmatter; content: string } {
+export function parseNote(raw: string): ParsedNote {
   const normalized = raw.replace(/^\uFEFF/, "");
   if (!normalized.startsWith("---")) {
-    return { frontmatter: normalizeFrontmatter({}), content: normalized.trim() };
+    return { frontmatter: normalizeFrontmatter({}), content: normalized.trim(), problems: [] };
   }
   const end = normalized.indexOf("\n---", 3);
   if (end === -1) {
-    return { frontmatter: normalizeFrontmatter({}), content: normalized.trim() };
+    return { frontmatter: normalizeFrontmatter({}), content: normalized.trim(), problems: [] };
   }
   const block = normalized.slice(3, end).trim();
   const content = normalized
     .slice(end + 4)
     .replace(/^\r?\n/, "")
     .trim();
-  const data = (YAML.parse(block) ?? {}) as Record<string, unknown>;
-  return { frontmatter: normalizeFrontmatter(data), content };
+  const { data, problems } = readFrontmatter(block);
+  return { frontmatter: normalizeFrontmatter(data), content, problems };
 }
 
 /** Serialize frontmatter + body into a complete Markdown document. */
@@ -102,7 +139,7 @@ function excerptFromContent(content: string, max = 200): string {
 /** Read a single note file. */
 export async function readNote(file: string, folder: string): Promise<Note> {
   const raw = await readFile(file, "utf8");
-  const { frontmatter, content } = parseNote(raw);
+  const { frontmatter, content, problems } = parseNote(raw);
   const fallback = path.basename(file, ".md");
   return {
     title: titleFromContent(content, fallback),
@@ -110,6 +147,7 @@ export async function readNote(file: string, folder: string): Promise<Note> {
     file,
     frontmatter,
     content,
+    problems,
   };
 }
 
@@ -141,6 +179,7 @@ export async function getNotesByFolder(vaultDir: string, folder: string): Promis
         created: note.frontmatter.created,
         tags: note.frontmatter.tags,
         ...(note.frontmatter.url ? { url: note.frontmatter.url } : {}),
+        ...(note.problems.length > 0 ? { problems: note.problems } : {}),
         excerpt: excerptFromContent(note.content),
       });
     } catch {

@@ -4,6 +4,24 @@ Chronological record of what has been built. Newest entries first within each da
 
 ## 2026-10-21
 
+### Done — a broken note is reported, not hidden
+- [x] Phase 0.1's schema validation, as far as it can honestly go: `validateFrontmatter()` checks the
+  four fields the app depends on (`created`, `tags`, `source`, `url`) and lets every other key
+  through, because frontmatter is meant to grow
+- [x] The defect was real, not theoretical: `parseNote` called `YAML.parse` without a guard and then
+  spread the result into the frontmatter, so invalid YAML threw and the listing swallowed the error,
+  and a block that was a list spread its indices into the object. Both shapes made a note vanish
+  from the app with nothing said. The body is now read anyway and the reason is carried with it
+- [x] A field keeps the value that was written rather than being repaired: a `created: soon` is
+  reported and shown as an empty date instead of being replaced with now, so the file says what is
+  wrong instead of quietly sorting somewhere else
+- [x] `Note.problems` is always present; `VaultEntry.problems` only when there is something to say,
+  so a clean listing is byte-identical to before and the demo vault needs no change
+- [x] The viewer shows the reasons above the body and keeps rendering the note; the list marks the row
+  `! frontmatter` with the details in its tooltip
+- [x] 20 tests in `@lumos/vault-utils` (12 for the rules, 8 over parsing and listing), 2 route tests in
+  the daemon and 3 render tests for the warning. Suites are 136 / 85 / 75, so 296 in `pnpm validate`
+
 ### Done — the note list can be resized
 - [x] Phase 4's resizable panes: a `PaneSplitter` between the list and the viewer, draggable with the
   pointer, reset on double-click, and steppable with `←`/`→`/`Home` from the keyboard

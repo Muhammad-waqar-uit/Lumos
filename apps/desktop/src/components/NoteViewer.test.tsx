@@ -4,7 +4,7 @@ import type { Note } from "@lumos/shared";
 import { NoteViewer } from "./NoteViewer";
 
 /** The viewer renders to a string in Node, so the markdown pipeline is testable without jsdom. */
-function render(content: string): string {
+function render(content: string, problems: string[] = []): string {
   const note: Note = {
     title: "Snippet",
     folder: "Reading",
@@ -16,6 +16,7 @@ function render(content: string): string {
       status: "new",
     },
     content,
+    problems,
   };
   return renderToStaticMarkup(
     <NoteViewer note={note} connection="daemon" backlinks={[]} onOpenNote={() => {}} />,
@@ -42,5 +43,24 @@ describe("NoteViewer code blocks", () => {
     const html = render(fenced("", "const answer = 42;"));
     expect(html).toContain("const answer = 42;");
     expect(html).not.toContain("hljs");
+  });
+});
+
+describe("NoteViewer frontmatter problems", () => {
+  it("says nothing about a note that is fine", () => {
+    expect(render("body")).not.toContain("Frontmatter problems");
+  });
+
+  it("lists what is wrong, and still renders the body", () => {
+    const html = render("still readable", ["created is not a date"]);
+    // The apostrophe is escaped in the markup, so the assertion stops before it.
+    expect(html).toContain("frontmatter has a problem");
+    expect(html).toContain("created is not a date");
+    expect(html).toContain("still readable");
+  });
+
+  it("counts more than one problem", () => {
+    const html = render("body", ["created is missing", "url is not an http address"]);
+    expect(html).toContain("has 2 problems");
   });
 });

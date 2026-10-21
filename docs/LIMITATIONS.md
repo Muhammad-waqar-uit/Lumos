@@ -165,8 +165,11 @@ play it — neither page can be read or copied.
   would close it.
 - **Same-title collisions get a timestamp.** `saveNote` never overwrites, so two notes with the same
   title on the same day land as `…-<slug>.md` and `…-<slug>-<millis>.md`, which is safe but ugly.
-- **Frontmatter is not schema-validated**, in CI or at write time. A malformed file is skipped by the
-  listings rather than reported.
+- **Frontmatter validation is a report, not a repair.** The four fields the app reads are checked when
+  a note is loaded, and the reasons travel to the viewer and the API, but the file on disk is never
+  rewritten: a bad `created` keeps its written value, so the note sorts by it as a string until you
+  fix it. A field outside those four is not checked at all, on purpose. Nothing validates the vault
+  in CI either - it is git-ignored, so the gate can only run the rules over fixtures.
 
 ## Delivery and process
 

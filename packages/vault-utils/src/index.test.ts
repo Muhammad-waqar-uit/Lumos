@@ -135,6 +135,38 @@ describe("parseNote", () => {
     expect(frontmatter.source).toBe("desktop");
     expect(content).toBe("body");
   });
+
+  it("reports nothing for a note it can read", () => {
+    expect(parseNote(serializeNote(defaultFrontmatter("desktop"), "body")).problems).toEqual([]);
+    expect(parseNote("# Body only").problems).toEqual([]);
+  });
+
+  it("keeps a note whose frontmatter is not valid YAML, and says so", () => {
+    const { frontmatter, content, problems } = parseNote("---\nsource: [unclosed\n---\n\nbody");
+    expect(problems).toEqual(["frontmatter is not valid YAML"]);
+    expect(frontmatter.source).toBe("whatsapp");
+    expect(content).toBe("body");
+  });
+
+  it("keeps a note whose frontmatter is a list rather than a mapping", () => {
+    const { content, problems } = parseNote("---\n- one\n- two\n---\n\nbody");
+    expect(problems).toEqual(["frontmatter is not a mapping"]);
+    expect(content).toBe("body");
+  });
+
+  it("keeps a bad date as written and reports it, rather than inventing one", () => {
+    const { frontmatter, problems } = parseNote("---\ncreated: soon\n---\n\nbody");
+    expect(problems).toEqual(["created is not a date"]);
+    expect(frontmatter.created).toBe("soon");
+  });
+
+  it("turns a YAML timestamp into the string the rest of the app expects", () => {
+    const { frontmatter, problems } = parseNote(
+      "---\ncreated: !!timestamp 2026-10-13T09:12:00Z\n---\n\nbody",
+    );
+    expect(problems).toEqual([]);
+    expect(frontmatter.created).toBe("2026-10-13T09:12:00.000Z");
+  });
 });
 
 describe("readNote", () => {
@@ -149,6 +181,11 @@ describe("readNote", () => {
   it("falls back to the filename when there is no heading", async () => {
     const file = await put("Ideas", "2026-01-02-plain.md", "no heading in here");
     expect((await readNote(file, "Ideas")).title).toBe("2026-01-02-plain");
+  });
+
+  it("carries the frontmatter problems onto the note", async () => {
+    const file = await put("Ideas", "2026-01-02-broken.md", "---\ncreated: soon\n---\n\n# Broken");
+    expect((await readNote(file, "Ideas")).problems).toEqual(["created is not a date"]);
   });
 });
 
@@ -285,6 +322,33 @@ describe("listing notes", () => {
     const [entry] = await getNotesByFolder(vault, "Inbox");
     expect(entry.excerpt).toHaveLength(203);
     expect(entry.excerpt.endsWith("...")).toBe(true);
+  });
+
+  it("lists a note with broken frontmatter instead of dropping it", async () => {
+    // The two shapes that used to make the file disappear: YAML that does not parse, and a block
+    // that is not a mapping.
+    await put(
+      "Inbox",
+      "2026-05-01-unclosed.md",
+      "---\nsource: [unclosed\n---\n\n# Unclosed\n\nstill here",
+    );
+    await put("Inbox", "2026-05-02-list.md", "---\n- one\n- two\n---\n\n# List\n\nstill here");
+
+    const entries = await getNotesByFolder(vault, "Inbox");
+    expect(entries.map((e) => e.title).sort()).toEqual(["List", "Unclosed"]);
+    const unclosed = entries.find((e) => e.title === "Unclosed");
+    expect(unclosed?.problems).toEqual(["frontmatter is not valid YAML"]);
+    expect(unclosed?.excerpt).toBe("still here");
+  });
+
+  it("leaves problems off an entry that has none", async () => {
+    await put(
+      "Ideas",
+      "2026-05-03-fine.md",
+      serializeNote(defaultFrontmatter("whatsapp"), "# Fine\n\nbody"),
+    );
+    const [entry] = await getNotesByFolder(vault, "Ideas");
+    expect(entry).not.toHaveProperty("problems");
   });
 });
 

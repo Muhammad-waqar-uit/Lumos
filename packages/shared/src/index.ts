@@ -53,6 +53,8 @@ export interface Note {
   frontmatter: Frontmatter;
   /** Body content without the frontmatter block. */
   content: string;
+  /** What is wrong with the frontmatter block, empty when the note is well formed. */
+  problems: string[];
 }
 
 /** A link written inside a note body. */
@@ -179,6 +181,11 @@ export interface VaultEntry {
   created: string;
   tags: string[];
   url?: string;
+  /**
+   * What is wrong with the note's frontmatter, absent when it is fine. A note with problems is
+   * listed rather than skipped, so a hand-written file with a broken field cannot disappear.
+   */
+  problems?: string[];
   /** First ~200 characters of the body, for previews. */
   excerpt: string;
 }
