@@ -29,6 +29,7 @@ Status values: **done** · **in-progress** · **planned** · **idea**
 | Markdown rendering | done | Headings, lists, tables, blockquotes, task lists, links; styled with the dark tokens |
 | Code syntax highlighting | done | `rehype-highlight` over 37 common languages, only for a fence that names one; the token colours are `--color-code-*` tokens in `src/index.css`, not a pasted theme |
 | Full-text search UI | done | `Cmd/Ctrl+K` palette: fuse.js ranking over titles, tags and previews, plus the daemon's `/notes/search` for words that only appear in a note body (those rows are marked "in the body"). Arrows, Enter and Esc wired; the shortcut is also a button in the status bar |
+| Link pane cache | done | A scraped page is kept for the session by URL (`src/lib/link-cache.ts`): a remount, a tab switch and StrictMode's double mount reuse one read, and a second caller joins the request in flight. Failures are not cached, so Retry is real |
 | Recent notes | done | An empty `Cmd/Ctrl+K` palette lists the notes opened this session, newest first and up to five; arrow keys and `Enter` work there, and a note that left the vault is skipped (`src/lib/recent.ts`) |
 | Note editor | planned | Markdown editor with preview |
 | Link enrichment | idea | Summaries and key points from links |
@@ -38,7 +39,7 @@ Status values: **done** · **in-progress** · **planned** · **idea**
 | Commit message lint | done | commitlint enforces `<type>(<scope>): <description>` |
 | Pre-push validation | done | `pnpm validate` — lint + format:check + typecheck + test + build |
 | Test runner | done | vitest 5; `pnpm test` runs every workspace that has a suite |
-| Desktop tests | done | 50 tests over the note filter, the demo vault, the search ranking/merge, the recent-notes order, the graph layout memory (`src/lib/*.test.ts`) and the viewer's code highlighting (an SSR render in `src/components/NoteViewer.test.tsx`), run by `pnpm test` |
+| Desktop tests | done | 57 tests over the note filter, the demo vault, the search ranking/merge, the recent-notes order, the link cache, the graph layout memory (`src/lib/*.test.ts`) and the viewer's code highlighting (an SSR render in `src/components/NoteViewer.test.tsx`), run by `pnpm test` |
 | Parser & vault tests | done | 199 tests: 116 for `@lumos/vault-utils` (link/tag extraction, graph assembly, neighbourhoods, link parsing and page metadata, the Instagram/Facebook URL shapes, and tags written at capture) and 83 for the daemon (including `/find`, the link fetcher's refusals, and every HTTP route driven through `app.inject()`) |
 | Read API route tests | done | `createApp()` in `apps/daemon/src/app.ts` builds the app over a vault directory; `app.test.ts` covers every route plus CORS through `app.inject()`, with the link fetcher injected |
 | Desktop component tests | planned | jsdom + Testing Library for the sidebar, list and viewer states |

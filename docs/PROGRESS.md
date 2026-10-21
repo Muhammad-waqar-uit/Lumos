@@ -4,6 +4,20 @@ Chronological record of what has been built. Newest entries first within each da
 
 ## 2026-10-21
 
+### Done — a scraped page is read once per session
+- [x] Phase 5's session cache: `src/lib/link-cache.ts` keeps a `LinkCard` by URL at module scope, so a
+  note switch, a tab switch and StrictMode's double mount cost one fetch and one scrape
+- [x] A caller that arrives while the first request is still in flight joins that promise instead of
+  starting a second request, which is the same rule covering the dev double mount
+- [x] A refusal or a network failure is deleted from the cache, so **Retry** makes a real request
+  rather than replaying the same error; `peekLink()` reads without fetching, so the pane can show a
+  held card at render and never flash "Reading the page…" on the way back
+- [x] 7 unit tests against an injected fetcher, so the suite stays offline; desktop suite 57, total 256
+- [x] Verified in the browser against the temporary vault: opening a note whose link is
+  `https://example.com/` made exactly one `GET /link` request; switching to another note and back
+  made zero, and the reader card (title *Example Domain*, 156 characters of text) was present with
+  no "Reading the page" line and no console errors
+
 ### Done — the empty palette offers what you just read
 - [x] Phase 6's last item: with nothing typed, `Cmd/Ctrl+K` lists the five notes opened this session,
   newest first, instead of a hint line

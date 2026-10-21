@@ -72,6 +72,13 @@ shows that link in the viewer instead of only linking out.
   beside it (a private host, a non-page content type, a timeout), and — with the daemon down — a line
   saying the page cannot be read while the link itself stays clickable.
 
+A page is read once per session. `src/lib/link-cache.ts` keeps the card by URL at module scope,
+because the pane unmounts whenever the note or the tab changes, and it hands a second caller the
+request already in flight - which is also why StrictMode's double mount costs one request instead of
+two. The pane reads the cache at render, so a page it already holds never flashes “Reading the page…”
+on the way back. A refusal or a failure is not cached, so **Retry** really retries; a reload starts
+empty, and there is no per-page refresh beyond that.
+
 The classification is `parseLinkMedia()` and the text extraction is `extractPreview()`, both in
 `@lumos/vault-utils/link`: pure, browser-safe, so the desktop classifies with the same code the
 daemon scrapes with. `firstExternalLink()` finds the link in a note body when the frontmatter has

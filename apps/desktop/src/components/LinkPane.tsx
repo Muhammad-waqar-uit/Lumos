@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import type { LinkCard, LinkFrame, LinkMedia, LinkMediaKind } from "@lumos/shared";
 import { parseLinkMedia } from "@lumos/vault-utils/link";
-import { getLink, type Connection } from "../lib/api";
+import { type Connection } from "../lib/api";
+import { peekLink, readLinkOnce } from "../lib/link-cache";
 
 /** What one fetch of a page came back with, and which request it answers. */
 type FetchOutcome =
@@ -44,9 +45,13 @@ function derivePage(
   url: string,
   attempt: number,
   canFetch: boolean,
+  cached: LinkCard | null,
 ): PageState {
   if (!canFetch) return { status: "idle" };
-  if (!outcome || outcome.url !== url || outcome.attempt !== attempt) return { status: "loading" };
+  if (!outcome || outcome.url !== url || outcome.attempt !== attempt) {
+    // A page this session already read is shown at once instead of flashing "Reading the page…".
+    return cached ? { status: "ready", card: cached } : { status: "loading" };
+  }
   if (outcome.status === "ready") return { status: "ready", card: outcome.card };
   return { status: "error", message: outcome.message };
 }
@@ -140,7 +145,9 @@ export function LinkPane({ url, connection }: { url: string; connection: Connect
   useEffect(() => {
     if (!canFetch) return;
     let alive = true;
-    getLink(url).then(
+    // The cache is per URL and per session: a remount, a StrictMode double mount or a return to the
+    // note all reuse the same read instead of scraping the page again.
+    readLinkOnce(url).then(
       (card) => {
         if (alive) setOutcome({ url, attempt, status: "ready", card });
       },
@@ -158,7 +165,7 @@ export function LinkPane({ url, connection }: { url: string; connection: Connect
     };
   }, [url, canFetch, attempt]);
 
-  const page = derivePage(outcome, url, attempt, canFetch);
+  const page = derivePage(outcome, url, attempt, canFetch, canFetch ? peekLink(url) : null);
 
   if (!media) return null;
 
