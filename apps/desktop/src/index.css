@@ -42,6 +42,23 @@
   --color-graph-folder-3: hsl(38 90% 66%);
   --color-graph-folder-4: hsl(330 75% 72%);
   --color-graph-folder-5: hsl(265 80% 74%);
+
+  /*
+   * Code tokens for fenced blocks (`rehype-highlight`). Same reason as the graph hues:
+   * these are element classes, not utilities, so they cannot come from `@theme`.
+   * Desaturated on purpose - a note is read more than it is skimmed, and near-black
+   * backgrounds make saturated code colours shout.
+   */
+  --color-code-comment: hsl(0 0% 45%);
+  --color-code-keyword: hsl(280 55% 76%);
+  --color-code-string: hsl(140 40% 68%);
+  --color-code-number: hsl(30 75% 70%);
+  --color-code-function: hsl(210 80% 74%);
+  --color-code-type: hsl(180 50% 70%);
+  --color-code-variable: hsl(38 80% 72%);
+  --color-code-meta: hsl(0 0% 60%);
+  --color-code-added: hsl(140 50% 68%);
+  --color-code-removed: hsl(0 65% 70%);
 }
 
 html,
@@ -180,6 +197,78 @@ body {
   background-color: transparent;
   padding: 0;
   font-size: 0.8rem;
+}
+
+/*
+ * Code tokens, mapped onto the palette above. Only the classes highlight.js actually
+ * emits are listed; an unregistered language renders as plain text and keeps the
+ * surrounding colour, which is the honest result for a block that was not tagged.
+ */
+.markdown .hljs-comment,
+.markdown .hljs-quote {
+  color: var(--color-code-comment);
+  font-style: italic;
+}
+
+.markdown .hljs-keyword,
+.markdown .hljs-selector-tag,
+.markdown .hljs-literal,
+.markdown .hljs-doctag {
+  color: var(--color-code-keyword);
+}
+
+.markdown .hljs-string,
+.markdown .hljs-regexp,
+.markdown .hljs-char.escape_ {
+  color: var(--color-code-string);
+}
+
+.markdown .hljs-number,
+.markdown .hljs-symbol,
+.markdown .hljs-bullet {
+  color: var(--color-code-number);
+}
+
+.markdown .hljs-title,
+.markdown .hljs-section,
+.markdown .hljs-name {
+  color: var(--color-code-function);
+}
+
+.markdown .hljs-type,
+.markdown .hljs-built_in,
+.markdown .hljs-class .hljs-title {
+  color: var(--color-code-type);
+}
+
+.markdown .hljs-attr,
+.markdown .hljs-attribute,
+.markdown .hljs-variable,
+.markdown .hljs-template-variable,
+.markdown .hljs-params {
+  color: var(--color-code-variable);
+}
+
+.markdown .hljs-meta,
+.markdown .hljs-comment .hljs-doctag,
+.markdown .hljs-tag {
+  color: var(--color-code-meta);
+}
+
+.markdown .hljs-addition {
+  color: var(--color-code-added);
+}
+
+.markdown .hljs-deletion {
+  color: var(--color-code-removed);
+}
+
+.markdown .hljs-emphasis {
+  font-style: italic;
+}
+
+.markdown .hljs-strong {
+  font-weight: 600;
 }
 
 .markdown hr {

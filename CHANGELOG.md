@@ -208,6 +208,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   unplaced or NaN node is ignored, the input map is not mutated, pruning drops a gone note, seeded
   nodes are copies, and an unusable camera (zoom 0 or NaN) is refused on the way in.
 
+### Added (continued 15)
+- Fenced code in a note is syntax-highlighted. `rehype-highlight` (highlight.js through lowlight) runs
+  in the viewer's markdown pipeline over the 37 common languages, and the token colours are
+  `--color-code-*` tokens beside the graph hues in `src/index.css` rather than an imported theme, so a
+  keyword, a string, a comment and a number each read apart on the app's near-black background.
+- Only a fence that names its language is highlighted. An untagged block stays plain, and a language
+  outside the registered set is left as text and reported on the file instead of throwing, so an
+  unknown fence cannot break a note. Guessing would colour prose and JSON alike as something they are
+  not, so `detect` stays off.
+- Three render tests in `src/components/NoteViewer.test.tsx` (`renderToStaticMarkup`, no jsdom): a `js`
+  fence produces keyword and number spans, a `zig` fence stays plain, and an untagged fence gains no
+  highlighting. The desktop suite is 40 tests, 239 in `pnpm validate`.
+- The bundle cost is measured, not assumed: `vite build` before and after puts the main desktop chunk
+  at 435 kB → 602 kB (135 kB → 189 kB gzipped). The graph keeps its own lazy chunk.
+
 ### Notes
 - The Instagram and Facebook embeds are the platforms' plugin endpoints, verified by hand rather than
   by a test: a public reel and a public video each played logged out, in the app and in the packaged
