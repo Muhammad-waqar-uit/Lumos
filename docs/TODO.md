@@ -16,7 +16,7 @@
 ## Phase 0.1: Enforcement still to come (P1)
 - [x] GitHub Actions workflow (`.github/workflows/validate.yml`) running `pnpm validate` on every PR into `main` and every push to `main`
 - [x] Branch protection on `main`: requires a pull request and the `pnpm validate` check, with `strict` on so a stale branch cannot merge; force pushes and deletions blocked (on since 2026-10-19; the workflow's first run on `main` was green in `38790615355`)
-- [x] Test runner (vitest) wired up and added to the validation gate — 199 tests over `@lumos/vault-utils` and the daemon, plus 40 over the desktop (filtering, demo data, search ranking, graph layout memory, and the viewer's code highlighting), so 239 in `pnpm validate`
+- [x] Test runner (vitest) wired up and added to the validation gate — 199 tests over `@lumos/vault-utils` and the daemon, plus 50 over the desktop (filtering, demo data, search ranking, recent notes, graph layout memory, and the viewer's code highlighting), so 249 in `pnpm validate`
 - [ ] Schema validation for note frontmatter in CI
 - [x] Route tests for the read API — `createApp()` in `app.ts` builds the Fastify app over a vault directory, so `app.inject()` covers `/health`, `/message`, `/notes`, `/notes/search`, `/folders`, `/note` (every guard), `/graph`, `/link` and CORS without binding a port, and with the link fetcher injected so the suite stays offline
 - [ ] Desktop component tests (jsdom + Testing Library) for the sidebar, list and viewer states, plus an E2E smoke test (the daemon unit and route tests are done)
@@ -84,7 +84,7 @@
 ## Phase 6: Search & Discovery (P1)
 - [x] Full-text search with fuse.js — the palette ranks titles, tags and previews over the loaded vault, tolerant of typos, and works with the daemon stopped (`src/lib/search.ts`, 10 unit tests)
 - [x] Cmd/Ctrl+K search modal — opens from anywhere, arrows move the selection, Enter opens the note in the Notes view, Esc closes and focus goes back; the status bar carries a Search button with the shortcut beside it, so the key is discoverable without knowing it
-- [ ] Recent notes quick access
+- [x] Recent notes quick access — an empty palette lists the notes opened this session, newest first, up to five, with `↑`/`↓`/`Enter` working on them; the keys resolve against the live listing, so a deleted note disappears instead of leaving a dead row (`src/lib/recent.ts`, 10 unit tests)
 - [x] Share search logic with daemon `/find` — the palette sends the same query to `GET /notes/search`, which calls `searchNotes` the way `/find` does, so body matches come from one implementation rather than a second index
 
 ## Phase 7: Editing & Enrichment (P2)

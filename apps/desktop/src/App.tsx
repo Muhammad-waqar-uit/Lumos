@@ -11,6 +11,7 @@ import {
 import { backlinks } from "@lumos/vault-utils/graph";
 import { DEMO_FOLDERS, DEMO_GRAPH, DEMO_NOTES, demoNote } from "./lib/demo";
 import { countTags, filterEntries, nodeTag } from "./lib/filter";
+import { recentEntries, rememberRecent } from "./lib/recent";
 import { NoteList, keyOf } from "./components/NoteList";
 import { NoteViewer } from "./components/NoteViewer";
 import { PaneBoundary } from "./components/PaneBoundary";
@@ -38,6 +39,8 @@ export default function App() {
   // Null means the daemon could not serve a graph, so the demo vault is drawn instead.
   const [graph, setGraph] = useState<GraphData | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
+  // Keys of the notes opened this session, for the palette's empty state. A reload starts empty.
+  const [recent, setRecent] = useState<string[]>([]);
 
   // Load the vault from the daemon; fall back to demo data if it is not running.
   useEffect(() => {
@@ -125,14 +128,24 @@ export default function App() {
     return fetched && fetched.key === activeKey ? fetched.note : demoNote(activeEntry);
   }, [activeEntry, connection, fetched, activeKey]);
 
-  // Opening a node clears the list filters, so the note really becomes the active one.
-  const openNote = useCallback((id: string): void => {
-    setActiveFolder("All");
-    setQuery("");
-    setTag(null);
-    setSelected(id);
-    setView("notes");
+  // Every way of picking a note runs through here, so "recent" means what was opened, from the
+  // list, a graph node or the palette alike - and every route updates the history the same way.
+  const chooseNote = useCallback((key: string): void => {
+    setSelected(key);
+    setRecent((keys) => rememberRecent(keys, key));
   }, []);
+
+  // Opening a node clears the list filters, so the note really becomes the active one.
+  const openNote = useCallback(
+    (id: string): void => {
+      setActiveFolder("All");
+      setQuery("");
+      setTag(null);
+      chooseNote(id);
+      setView("notes");
+    },
+    [chooseNote],
+  );
 
   const closeSearch = useCallback(() => setSearchOpen(false), []);
 
@@ -154,6 +167,9 @@ export default function App() {
     },
     [openNote],
   );
+
+  // Resolved against the live listing, so a note that left the vault is not offered again.
+  const recentNotes = useMemo(() => recentEntries(recent, notes), [recent, notes]);
 
   /** A tag picked in the list or on a graph node shows that tag's notes and drops the rest. */
   const filterByTag = (value: string): void => {
@@ -201,7 +217,7 @@ export default function App() {
               selected={activeKey}
               query={query}
               onQuery={setQuery}
-              onSelect={setSelected}
+              onSelect={chooseNote}
               tag={tag}
               onTag={setTag}
               tagCounts={tagCounts}
@@ -224,6 +240,7 @@ export default function App() {
       {searchOpen ? (
         <SearchModal
           entries={notes}
+          recent={recentNotes}
           connection={connection}
           onOpen={openFromSearch}
           onClose={closeSearch}

@@ -18,6 +18,8 @@ import {
 interface Props {
   /** Every loaded note, not the filtered list: the modal searches the whole vault. */
   entries: readonly VaultEntry[];
+  /** Notes opened this session, newest first, shown while the field is empty. */
+  recent: readonly VaultEntry[];
   connection: Connection;
   onOpen: (key: string) => void;
   onClose: () => void;
@@ -36,7 +38,7 @@ function formatDate(iso: string): string {
  * The `Cmd/Ctrl+K` palette: fuzzy matches over the loaded notes, plus the daemon's body search when
  * it is running. It never needs the daemon to list a note — the local index answers first.
  */
-export function SearchModal({ entries, connection, onOpen, onClose }: Props) {
+export function SearchModal({ entries, recent, connection, onOpen, onClose }: Props) {
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
   // The answer is stamped with the query it answered, so a stale one is never shown under new text.
@@ -57,11 +59,14 @@ export function SearchModal({ entries, connection, onOpen, onClose }: Props) {
       ? body.state
       : "loading";
 
+  const typed = trimmed.length > 0;
   const index = useMemo(() => makeSearchIndex(entries), [entries]);
-  const results = useMemo(
-    () => searchVault(index, query, bodyMatches),
-    [index, query, bodyMatches],
-  );
+  // With nothing typed the palette offers the session's recent notes, in the same result shape, so
+  // the arrow keys, Enter and Esc work there without a second code path.
+  const results = useMemo<SearchResult[]>(() => {
+    if (!typed) return recent.map((entry) => ({ entry, body: false }));
+    return searchVault(index, query, bodyMatches);
+  }, [typed, recent, index, query, bodyMatches]);
 
   // Clamped at render, so a shorter result list cannot leave the selection past its end.
   const current = Math.min(active, Math.max(results.length - 1, 0));
@@ -128,8 +133,6 @@ export function SearchModal({ entries, connection, onOpen, onClose }: Props) {
     }
   };
 
-  const typed = trimmed.length > 0;
-
   return (
     <div
       className="fixed inset-0 z-50 flex items-start justify-center bg-background/80 p-4 pt-[12vh]"
@@ -164,52 +167,59 @@ export function SearchModal({ entries, connection, onOpen, onClose }: Props) {
         </p>
 
         <div className="max-h-[50vh] overflow-y-auto">
-          {!typed ? (
+          {!typed && results.length === 0 ? (
             <p className="p-4 text-sm text-muted-foreground">
               Search titles, tags and previews. Body text needs the daemon.
             </p>
-          ) : results.length === 0 ? (
+          ) : typed && results.length === 0 ? (
             <p className="p-4 text-sm text-muted-foreground">
               {bodyState === "loading" ? "Searching…" : `No notes match “${trimmed}”.`}
             </p>
           ) : (
-            <ul className="divide-y divide-border">
-              {results.map((result, i) => {
-                const { entry } = result;
-                const key = keyOfEntry(entry);
-                const isActive = i === current;
-                return (
-                  <li key={key}>
-                    <button
-                      type="button"
-                      onClick={() => open(result)}
-                      onMouseMove={() => setActive(i)}
-                      aria-current={isActive ? "true" : undefined}
-                      className={
-                        "block w-full px-4 py-2.5 text-left transition-colors " +
-                        (isActive ? "bg-accent" : "hover:bg-accent/40")
-                      }
-                    >
-                      <span className="flex items-baseline justify-between gap-2">
-                        <span className="truncate text-sm font-medium">{entry.title}</span>
-                        <span className="shrink-0 text-[11px] text-muted-foreground">
-                          {formatDate(entry.created)}
+            <>
+              {!typed ? (
+                <p className="px-4 pb-1 pt-3 text-[11px] uppercase tracking-wide text-muted-foreground">
+                  Recent
+                </p>
+              ) : null}
+              <ul className="divide-y divide-border">
+                {results.map((result, i) => {
+                  const { entry } = result;
+                  const key = keyOfEntry(entry);
+                  const isActive = i === current;
+                  return (
+                    <li key={key}>
+                      <button
+                        type="button"
+                        onClick={() => open(result)}
+                        onMouseMove={() => setActive(i)}
+                        aria-current={isActive ? "true" : undefined}
+                        className={
+                          "block w-full px-4 py-2.5 text-left transition-colors " +
+                          (isActive ? "bg-accent" : "hover:bg-accent/40")
+                        }
+                      >
+                        <span className="flex items-baseline justify-between gap-2">
+                          <span className="truncate text-sm font-medium">{entry.title}</span>
+                          <span className="shrink-0 text-[11px] text-muted-foreground">
+                            {formatDate(entry.created)}
+                          </span>
                         </span>
-                      </span>
-                      <span className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
-                        <span>{entry.folder}</span>
-                        {entry.tags.map((tag) => (
-                          <span key={tag}>#{tag}</span>
-                        ))}
-                        {result.body ? (
-                          <span className="rounded border border-border px-1">in the body</span>
-                        ) : null}
-                      </span>
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
+                        <span className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
+                          <span>{entry.folder}</span>
+                          {entry.tags.map((tag) => (
+                            <span key={tag}>#{tag}</span>
+                          ))}
+                          {result.body ? (
+                            <span className="rounded border border-border px-1">in the body</span>
+                          ) : null}
+                        </span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </>
           )}
         </div>
 

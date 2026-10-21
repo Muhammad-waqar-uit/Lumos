@@ -202,6 +202,12 @@ than the filtered list. It narrows in two stages and says which one answered:
   appear under newer text; a failure is named in the footer instead of being hidden.
 - `↑`/`↓` move, `Enter` opens the note in the Notes view, `Esc` closes. Focus returns to the control
   that had it before the palette opened.
+- With nothing typed, the palette lists the notes opened this session, newest first (up to five).
+  The history is kept in `App` as note keys, so every route into a note counts - the list, a graph
+  node, a backlink or the palette itself - and the rows are the same result shape, which is why the
+  arrow keys work there without a second code path. `recentEntries()` resolves the keys against the
+  loaded listing, so a note that left the vault is skipped instead of leaving a dead row. A reload
+  starts empty: the history is session memory, not storage.
 
 ## Keyboard
 
@@ -215,7 +221,6 @@ Still to come: `j`/`k`-style movement through the note list (tracked in [`TODO.m
 
 ## Planned capabilities
 
-- Syntax-highlighted code blocks (styled today, not highlighted).
 - Resizable panes, TanStack Router and zustand - the shell is plain React state in one component.
 - Every entry in the Keyboard section above.
 - Recent notes in the palette, so an untyped palette is useful rather than empty.

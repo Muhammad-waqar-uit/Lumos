@@ -107,10 +107,11 @@ play it — neither page can be read or copied.
 
 - **The Tauri shell is untested by CI.** Only the web UI is exercised (in a browser). The Rust side,
   the window configuration and the packaged bundle are manual checks: `pnpm --filter desktop tauri dev`.
-- **No component tests.** There is no jsdom or Testing Library setup, so the sidebar, list, viewer,
-  graph, search palette and link pane have no automated coverage - the states were checked by hand.
-  Only the pure logic (filtering, demo data, search ranking, graph layout memory) is tested, so a
-  component can still regress without a test noticing.
+- **No component tests.** There is no jsdom or Testing Library setup, so the sidebar, list, graph,
+  search palette and link pane have no automated coverage - the states were checked by hand. The
+  viewer is the exception: it renders to a string in Node, which is how its code highlighting is
+  asserted. The pure logic (filtering, demo data, search ranking, the recent-notes order, graph
+  layout memory) is tested, so a component can still regress without a test noticing.
 - **Read-only.** Notes cannot be created, edited, moved or deleted from the app; the desktop reads
   through the daemon HTTP API and writes nothing. With the daemon down it falls back to
   `src/lib/demo.ts`, so it shows demo data rather than your vault.
@@ -125,8 +126,14 @@ play it — neither page can be read or copied.
   has no body index either. The footer says so rather than pretending the vault is fully searched.
 - **Search finds notes, not lines.** A result opens the note; the matching passage is not highlighted
   and the body match is not scrolled to. Results are also capped at 12 (10 local, plus body-only
-  matches), so a very broad query is a shortlist rather than a list. Recent notes are not offered
-  yet, so an empty palette has nothing to show.
+  matches), so a very broad query is a shortlist rather than a list.
+- **Recent notes are the session's, not history.** The empty palette lists up to five notes opened
+  while the app is running, and a reload clears the list. Nothing is persisted, so there is no
+  "recently opened" on a cold start, and the order is opening order rather than last-edited time.
+  Only an actual pick counts: the note the app selects for you at launch, or one that becomes active
+  because a folder or tag filter narrowed the list, is not recorded - the history is what you opened,
+  not what the shell happened to show. A note deleted while the app runs drops out of the list,
+  which is deliberate: a dead row is worse than a shorter list.
 - **Backlinks are link-only.** A note that shares a tag with the open one is deliberately not listed
   as a backlink - it is a neighbour in the graph, not something that points here - so "Linked from"
   can be empty on a tag-heavy vault. With the daemon down the list comes from the demo graph, so a demo

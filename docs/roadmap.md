@@ -57,7 +57,7 @@ reading a PDF or plain HTML file - are still open in [`TODO.md`](TODO.md) Phase 
 
 - Full-text search with `fuse.js`. ✅ (ranked over titles, tags and previews, and usable offline)
 - `Cmd/Ctrl+K` search modal. ✅ (arrows, `Enter`, `Esc`; body matches come from `GET /notes/search`)
-- Recent notes.
+- Recent notes. ✅ (an empty palette lists what was opened this session; a reload starts empty)
 
 ## M7 - Editing + polish (Phases 7-8)
 
