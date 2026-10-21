@@ -4,6 +4,25 @@ Chronological record of what has been built. Newest entries first within each da
 
 ## 2026-10-21
 
+### Done — the note list can be resized
+- [x] Phase 4's resizable panes: a `PaneSplitter` between the list and the viewer, draggable with the
+  pointer, reset on double-click, and steppable with `←`/`→`/`Home` from the keyboard
+- [x] It is a real `separator`: `aria-orientation`, `aria-valuemin`/`max`/`now`, and an
+  `aria-valuetext` in pixels, because a resize handle that only works with a mouse is not finished
+- [x] The bounds (240-560px) and the clamping live in `src/lib/pane-size.ts` with 7 unit tests, so the
+  drag and the keys cannot disagree; a non-number falls back to the default rather than collapsing
+  the column to nothing. Desktop suite 72, total 271
+- [x] The width is held in `App`, not in `NoteList`: the Graph tab unmounts the list, and a width that
+  reset every time someone looked at the graph would be worse than no splitter at all
+- [x] The drag listens on the window rather than the 8px handle, because the pointer leaves that
+  target almost immediately; a right-click is ignored instead of starting a drag
+- [x] Verified in the browser against a temporary vault: the default measured 320px with the viewer at
+  888px; two `→` presses gave 352/856; five `←` presses stopped at 240 and a sixth changed nothing;
+  `Home` returned to 320; a simulated pointer drag of +120px gave 440/768 with `col-resize` set during
+  the drag and cleared after; double-click reset it to 320; and switching to the Graph tab and back
+  kept 440, which is the case a component-local width would have failed
+- [x] One stray code fence in `docs/desktop.md` found while editing the layout diagram and removed
+
 ### Done — j/k through the note list
 - [x] The note list takes `j` and `k` in the Notes view: clamped at both ends rather than wrapping, and a
   step is an ordinary pick, so it also feeds the palette's recent notes

@@ -46,7 +46,7 @@ The three cases - a registered language, an unregistered one, and an untagged fe
 to a string in Node and asserted in `src/components/NoteViewer.test.tsx`, so the wiring has a test
 without a jsdom setup.
 
-Still to come: resizable panes, routing, and a note editor (see [`TODO.md`](TODO.md) Phases 4-7).
+Still to come: routing and a note editor (see [`TODO.md`](TODO.md) Phases 4-7).
 
 ### Link pane
 
@@ -168,17 +168,25 @@ checked by hand.
 
 ## Layout
 
-A resizable three-pane shell:
+A three-pane shell, with the list column resizable:
 
 ```
-┌───────────┬────────────────────┬────────────────────────────┐
-│ Sidebar   │ Notes list         │ Note viewer                │
-│ (folders) │ (sorted by date)   │ (Markdown rendered)        │
-└───────────┴────────────────────┴────────────────────────────┘
+┌───────────┬────────────────────╥────────────────────────────┐
+│ Sidebar   │ Notes list         ║ Note viewer                │
+│ (folders) │ (sorted by date)   ║ (Markdown rendered)        │
+└───────────┴────────────────────╨────────────────────────────┘
+```
+
+The ║ between the list and the viewer is `PaneSplitter`: drag it, double-click it to reset, or focus
+it and use `←`/`→` for a 16px step and `Home` for the default 320px. It is a real `separator` with
+`aria-valuemin`/`max`/`now` and a pixel `aria-valuetext`, because a control that only works with a
+mouse is not finished. The bounds (240-560px) live in `src/lib/pane-size.ts` with the clamping, so
+the drag and the keys cannot disagree; the width is held in `App`, which is what keeps it while the
+Graph tab has the list unmounted. It is not persisted, so a reload starts at 320px again, and the
+sidebar's own width is fixed.
 
 On the **Graph** tab the list and viewer are replaced by the link graph, with its controls in a
 header bar above the canvas. The sidebar stays visible in both views.
-```
 
 ## Access to the vault
 
@@ -232,7 +240,7 @@ Wired today:
 
 ## Planned capabilities
 
-- Resizable panes, TanStack Router and zustand - the shell is plain React state in one component.
+- TanStack Router and zustand - the shell is plain React state in one component.
 - Every entry in the Keyboard section above.
 - Recent notes in the palette, so an untyped palette is useful rather than empty.
 - Markdown editor with live preview and save-to-disk.

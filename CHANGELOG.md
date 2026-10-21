@@ -261,6 +261,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   because a key handler is awkward to assert without a DOM and the rule is what tends to go wrong.
   Desktop suite 65, total 264.
 
+### Added (continued 19)
+- The note list is resizable, so a long title or a narrow window no longer decides the split for you.
+  `PaneSplitter` sits between the list and the viewer: drag it, double-click to reset, or focus it and
+  use `←`/`→` for a 16px step and `Home` for the default. It is a real `separator` with
+  `aria-valuemin`/`max`/`now` and a pixel `aria-valuetext`.
+- The 240-560px bounds and the clamping live in `src/lib/pane-size.ts` with 7 unit tests, so the drag
+  and the arrow keys cannot disagree; the width is held in `App` rather than in the list, which keeps
+  it while the Graph tab has the list unmounted. Nothing is persisted, so a reload starts at 320px.
+  Desktop suite 72, total 271.
+
 ### Notes
 - The Instagram and Facebook embeds are the platforms' plugin endpoints, verified by hand rather than
   by a test: a public reel and a public video each played logged out, in the app and in the packaged

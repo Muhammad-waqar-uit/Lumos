@@ -143,6 +143,10 @@ play it — neither page can be read or copied.
   as a backlink - it is a neighbour in the graph, not something that points here - so "Linked from"
   can be empty on a tag-heavy vault. With the daemon down the list comes from the demo graph, so a demo
   note that links to another demo note shows its sources, while a real note offline simply shows none.
+- **The pane width is not remembered.** The list column is resizable between 240 and 560px, but the
+  width lives in the running app only: a reload starts at 320px, and nothing is written to storage.
+  The sidebar's own width is fixed, so the folder list cannot be narrowed or widened, and the Graph
+  tab has no panes to size.
 - **Keyboard movement covers the list, not the panes.** `j`/`k` walk the note list, but the viewer,
   the link pane and the tag chips are reached with `Tab`; there is no `j`/`k` inside a note body, and
   no shortcut for the folder list or the tabs.
