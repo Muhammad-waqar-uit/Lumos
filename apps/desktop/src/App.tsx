@@ -12,10 +12,12 @@ import { backlinks } from "@lumos/vault-utils/graph";
 import { DEMO_FOLDERS, DEMO_GRAPH, DEMO_NOTES, demoNote } from "./lib/demo";
 import { countTags, filterEntries, nodeTag } from "./lib/filter";
 import { isTypingTarget, stepForKey, stepIndex } from "./lib/list-nav";
+import { PANE_DEFAULT, clampPaneWidth } from "./lib/pane-size";
 import { recentEntries, rememberRecent } from "./lib/recent";
 import { NoteList, keyOf } from "./components/NoteList";
 import { NoteViewer } from "./components/NoteViewer";
 import { PaneBoundary } from "./components/PaneBoundary";
+import { PaneSplitter } from "./components/PaneSplitter";
 import { SearchModal } from "./components/SearchModal";
 import { Sidebar, type FolderFilter, type ShellView } from "./components/Sidebar";
 import { StatusBar } from "./components/StatusBar";
@@ -42,6 +44,9 @@ export default function App() {
   const [searchOpen, setSearchOpen] = useState(false);
   // Keys of the notes opened this session, for the palette's empty state. A reload starts empty.
   const [recent, setRecent] = useState<string[]>([]);
+  // The list's width lives here, not in NoteList: the Graph tab unmounts the list, and a width that
+  // reset every time someone looked at the graph would be worse than no splitter at all.
+  const [listWidth, setListWidth] = useState(PANE_DEFAULT);
 
   // Load the vault from the daemon; fall back to demo data if it is not running.
   useEffect(() => {
@@ -150,6 +155,8 @@ export default function App() {
 
   const closeSearch = useCallback(() => setSearchOpen(false), []);
 
+  const resizeList = useCallback((width: number): void => setListWidth(clampPaneWidth(width)), []);
+
   // `j`/`k` walk the visible list, but never while a field has focus (where they are letters) or
   // while the palette is open (where they belong to the query).
   useEffect(() => {
@@ -240,7 +247,9 @@ export default function App() {
               onTag={setTag}
               tagCounts={tagCounts}
               loading={loading}
+              width={listWidth}
             />
+            <PaneSplitter width={listWidth} onWidth={resizeList} />
             <NoteViewer
               note={note}
               connection={connection}

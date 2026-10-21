@@ -35,7 +35,7 @@ folder, so progress is always visible.
 ## M4 - Dark UI foundation (Phase 4) — mostly done
 
 - Dark tokens from [`design.md`](design.md) applied via Tailwind v4. ✅
-- App shell with sidebar and panes. ✅ (resizable panes pending)
+- App shell with sidebar and panes. ✅ (the list column is resizable by drag, double-click or arrow keys)
 - TanStack Router + zustand wired up. ⏳ (currently plain React state)
 
 ## M5 - Vault browser MVP (Phase 5) — in progress

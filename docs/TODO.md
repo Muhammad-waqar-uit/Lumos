@@ -16,7 +16,7 @@
 ## Phase 0.1: Enforcement still to come (P1)
 - [x] GitHub Actions workflow (`.github/workflows/validate.yml`) running `pnpm validate` on every PR into `main` and every push to `main`
 - [x] Branch protection on `main`: requires a pull request and the `pnpm validate` check, with `strict` on so a stale branch cannot merge; force pushes and deletions blocked (on since 2026-10-19; the workflow's first run on `main` was green in `38790615355`)
-- [x] Test runner (vitest) wired up and added to the validation gate — 199 tests over `@lumos/vault-utils` and the daemon, plus 65 over the desktop (filtering, demo data, search ranking, recent notes, the link cache, list movement, graph layout memory, and the viewer's code highlighting), so 264 in `pnpm validate`
+- [x] Test runner (vitest) wired up and added to the validation gate — 199 tests over `@lumos/vault-utils` and the daemon, plus 72 over the desktop (filtering, demo data, search ranking, recent notes, the link cache, list movement, pane widths, graph layout memory, and the viewer's code highlighting), so 271 in `pnpm validate`
 - [ ] Schema validation for note frontmatter in CI
 - [x] Route tests for the read API — `createApp()` in `app.ts` builds the Fastify app over a vault directory, so `app.inject()` covers `/health`, `/message`, `/notes`, `/notes/search`, `/folders`, `/note` (every guard), `/graph`, `/link` and CORS without binding a port, and with the link fetcher injected so the suite stays offline
 - [ ] Desktop component tests (jsdom + Testing Library) for the sidebar, list and viewer states, plus an E2E smoke test (the daemon unit and route tests are done)
@@ -59,7 +59,7 @@
 - [x] Tailwind CSS v4 + dark shadcn-style design tokens (near-black)
 - [x] Core components (Sidebar, NoteList, NoteViewer, StatusBar, search input)
 - [x] App shell layout: sidebar + note list + note viewer + status bar
-- [ ] Resizable panes
+- [x] Resizable panes — `PaneSplitter` between the list and the viewer: drag, double-click to reset, or focus it and use `←`/`→`/`Home`. A real `separator` with `aria-valuemin`/`max`/`now`; the 240-560px bounds and the clamping are `src/lib/pane-size.ts` (7 unit tests), the width lives in `App` so the Graph tab does not reset it
 - [ ] TanStack Router setup
 - [ ] zustand state management (currently plain React state)
 

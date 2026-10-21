@@ -13,6 +13,8 @@ interface Props {
   /** Tags available in the current folder and query, with how many notes carry each. */
   tagCounts: TagCount[];
   loading: boolean;
+  /** Width in pixels, owned by the shell so the splitter and the pane cannot disagree. */
+  width: number;
 }
 
 export const keyOf = (n: VaultEntry): string => `${n.folder}/${n.name}`;
@@ -33,6 +35,7 @@ export function NoteList({
   onTag,
   tagCounts,
   loading,
+  width,
 }: Props) {
   // A tag filter can outlive the folder it was set in; keep its chip so it can be switched off.
   const chips: TagCount[] =
@@ -41,7 +44,7 @@ export function NoteList({
       : tagCounts;
 
   return (
-    <section className="flex w-80 shrink-0 flex-col border-r border-border">
+    <section className="flex shrink-0 flex-col" style={{ width }}>
       <div className="border-b border-border p-3">
         <label htmlFor="note-search" className="sr-only">
           Search notes
