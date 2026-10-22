@@ -71,6 +71,13 @@ One link, scraped for the desktop: `{ "link": LinkCard }` — how the app shows 
 `embedUrl`, `poster`, `frame`) plus the page's `title`, `site`, `description`, `image` and readable
 `text`. `kind` is one of `youtube`, `vimeo`, `instagram`, `facebook`, `image` or `page`.
 
+The `text` is the page's prose, not its markup: `<script>`, `<style>`, `<nav>`, `<header>`,
+`<footer>`, `<aside>`, `<form>`, `<dialog>`, `<button>`, `<select>` and whole `<pre>` code samples
+are dropped, along with a line that merely repeats the one before it and a line that is only a
+bracketed label such as `[ edit ]`. `data-` attributes are removed before anything else, because a
+machine payload (Wikipedia's `data-mw`) can contain a `>` that would otherwise end the tag early and
+leak into the text. [LIMITATIONS.md](LIMITATIONS.md) names what this gives up.
+
 A YouTube, Vimeo or image link is answered from the URL alone, with no request at all, so it plays
 with the daemon stopped. Everything else is fetched, including an Instagram or Facebook permalink:
 those two render nothing readable (their body is a JavaScript shell), but their page still publishes

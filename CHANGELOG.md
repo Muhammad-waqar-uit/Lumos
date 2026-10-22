@@ -346,3 +346,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   The graph canvas remains untested - it draws through the graph library and jsdom cannot render it -
   and an end-to-end test in a real browser is still open, tracked under **Plan** in
   [docs/TODO.md](docs/TODO.md).
+
+### Changed (continued)
+- The link reader now shows the page's prose instead of whatever the markup contained. Whole `<pre>`
+  code samples are dropped, together with the chrome elements (`nav`, `header`, `footer`, `aside`,
+  `form`, `dialog`, `button`, `select`), a line that only repeats the line before it, a line that is
+  nothing but a bracketed label such as `[ edit ]`, and the payload of any `data-` attribute. Inline
+  `<code>` inside a sentence stays, because that is part of the sentence.
+- Measured through `GET /link`, before and after, on pages that show both symptoms. MDN's `if...else`:
+  206 lines with 37 code-ish lines and 32 repeated, down to 115 lines with none of either.
+  Wikipedia's Markdown article: it used to open with "33 languages" and the whole language list, and
+  carried one enormous serialized-template line; it now opens with "From Wikipedia, the free
+  encyclopedia" and the blob is gone. The blob was the interesting one - it lived in a `data-mw`
+  attribute whose JSON contains a `>`, which ended the tag early.
+- This is still a string pass, not a parser, so a block nested in the same tag closes at the first end
+  tag and chrome inside a plain `<div>` comes through. [docs/LIMITATIONS.md](docs/LIMITATIONS.md) says
+  what that gives up.
+- 6 new tests in `@lumos/vault-utils` for the behaviour rather than the line counts. Suite is 337: 142
+  in `@lumos/vault-utils`, 87 in the daemon, 108 in the desktop.

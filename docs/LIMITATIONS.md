@@ -23,8 +23,12 @@ Each entry says what is given up. Where a limit is deliberate, the alternative i
 - **A playlist or channel URL is a page, not a video.** `/playlist?list=…`, `@channel` and a `watch`
   URL with a malformed id all fall through to the reader.
 - **The reader is text.** Layout, in-body images, tables, code formatting, footnotes and math are not
-  reproduced: the extraction flattens structure into lines. Code samples and repeated navigation text
-  do come through from some sites (MDN is the example the tests use).
+  reproduced: the extraction flattens structure into lines. It leaves out what is not prose - the
+  chrome elements (`nav`, `header`, `footer`, `aside`, `form`, `dialog`, `button`, `select`), whole
+  `<pre>` code samples, a line that repeats the one before it, a bare bracketed label such as
+  `[ edit ]`, and the payload of any `data-` attribute - but it is a string pass, not a parser: a
+  block nested inside the same tag closes at the first end tag, chrome that sits in a plain `<div>`
+  still comes through, and a page whose whole article is inside an `<aside>` would read as empty.
 - **Text is capped at 6,000 characters.** Past that the pane says so and offers the real page. There
   is no "load the rest" path, and no way to raise the cap from the UI.
 - **JavaScript-rendered pages come back nearly empty.** Only the initial HTML is fetched — no browser,

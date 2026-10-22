@@ -43,8 +43,6 @@ else on this page can close them.
 
 ### Phase 5 - Vault browser (P0) - open items
 
-- [ ] Link pane: strip site chrome harder - the reader still includes code samples and repeated
-  navigation text from some pages
 - [ ] Link pane: read a PDF or a plain HTML file the same way (today a non-HTML content type is
   refused with its type named)
 
@@ -173,6 +171,13 @@ Nothing in flight. The next item to pick up is the first one under **Plan**.
   in `App` so the Graph tab does not reset it
 
 ### Phase 5: Vault browser (P0)
+
+- [x] Link pane: site chrome stripped harder - the reader drops whole `<pre>` code samples, the
+  chrome elements (`header`, `footer`, `aside`, `nav`, `form`, `dialog`, `button`, `select`), a bare
+  bracketed label like `[ edit ]`, a line the page repeats back-to-back, and the payload of a `data-`
+  attribute. Measured through `GET /link` on MDN's `if...else` page: 37 code-ish lines and 32 repeats
+  before, 0 and 0 after; Wikipedia now opens with its first sentence instead of its language sidebar
+  and no longer leaks a template JSON blob (6 tests in `packages/vault-utils/src/link.test.ts`)
 
 - [x] Sidebar with vault folders + note counts
 - [x] Note list pane (sorted by date, preview, tags)

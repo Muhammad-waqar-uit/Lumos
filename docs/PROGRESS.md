@@ -4,6 +4,28 @@ Chronological record of what has been built. Newest entries first within each da
 
 ## 2026-10-22
 
+### Done — the reader drops the page's chrome
+- [x] The link pane's reader stopped carrying things nobody wrote. `toText()` in
+  `packages/vault-utils/src/link.ts` now drops whole `<pre>` code samples, the page's `header`,
+  `footer`, `aside`, `nav`, `form`, `dialog`, `button` and `select`, a line that repeats the line
+  before it, and a line that is nothing but a bare bracketed lowercase label (`[ edit ]`)
+- [x] One defect that measuring turned up and reading would not have: Wikipedia's `data-mw`
+  attribute holds serialized template JSON containing a `>`, which ended the tag early and spilled
+  the payload into the reader as one enormous line. `data-` attributes are never visible text, so
+  they are stripped first
+- [x] Measured before and after through `GET /link`, on pages that show both symptoms. MDN's
+  `if...else`: 206 lines with 37 code-ish and 32 repeated, to 115 lines with 0 and 0. Wikipedia's
+  Markdown article: it opened with "33 languages" and the language list, and carried the JSON blob;
+  it now opens "From Wikipedia, the free encyclopedia" with 0 code-ish lines
+- [x] 6 tests in `link.test.ts` for the behaviour rather than the byte count: a code sample leaving the
+  prose around it intact, header/sidebar/controls/footer gone, a duplicated menu line collapsed, a
+  bracketed label dropped, a `data-` payload dropped, and inline `<code>` in a sentence kept, since
+  that is part of the sentence
+- [x] The limit is written down rather than hidden: this is a string pass, not a parser, so a block
+  nested in the same tag closes at the first end tag and chrome inside a plain `<div>` still comes
+  through, and [LIMITATIONS.md](LIMITATIONS.md) says so
+- [x] `pnpm validate` green - 337 tests (142 vault-utils, +6)
+
 ### Done — the desktop components have tests
 - [x] jsdom and Testing Library are in the desktop workspace (`jsdom`, `@testing-library/react`,
   `@testing-library/dom`), which closes the gap that kept every panel's states on a manual check
