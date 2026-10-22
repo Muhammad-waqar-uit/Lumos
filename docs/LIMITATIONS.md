@@ -115,11 +115,12 @@ play it — neither page can be read or copied.
 - **The Tauri shell is untested by CI.** Only the web UI is exercised (in a browser). The Rust side,
   the window configuration and the packaged bundle are manual checks: `pnpm --filter desktop tauri dev`.
   The check is listed under **Needs your testing** in [TODO.md](TODO.md).
-- **No component tests.** There is no jsdom or Testing Library setup, so the sidebar, list, graph,
-  search palette and link pane have no automated coverage - the states were checked by hand. The
-  viewer is the exception: it renders to a string in Node, which is how its code highlighting is
-  asserted. The pure logic (filtering, demo data, search ranking, the recent-notes order, graph
-  layout memory) is tested, so a component can still regress without a test noticing.
+- **No end-to-end test.** The sidebar, note list, search palette and link pane are now covered as
+  components in jsdom, and the viewer through SSR renders, but nothing drives the built app in a
+  real browser: a broken route, a chunk that fails to load or a bad Tauri bundle would not be
+  caught. The graph canvas is the one component with no test at all, because it draws through the
+  graph library and jsdom cannot render it. An E2E runner is tracked under **Plan** in
+  [TODO.md](TODO.md).
 - **Read-only.** Notes cannot be created, edited, moved or deleted from the app; the desktop reads
   through the daemon HTTP API and writes nothing. With the daemon down it falls back to
   `src/lib/demo.ts`, so it shows demo data rather than your vault.

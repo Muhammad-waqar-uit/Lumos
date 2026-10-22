@@ -328,3 +328,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and the failure is real rather than a stub, asserting the plain `500` and that the body carries
   neither the path nor the error code; and a malformed body asserting the `400` still names its
   cause. Suite is 298: 136 in `@lumos/vault-utils`, 87 in the daemon, 75 in the desktop.
+
+### Added (continued 21)
+- The desktop's components have tests. jsdom and Testing Library (`@testing-library/react`,
+  `@testing-library/dom`) are dev dependencies of the desktop workspace, and 33 tests cover the four
+  components that carry state: the folder sidebar, the note list, the `Cmd/Ctrl+K` palette and the
+  link pane. Each test file declares `// @vitest-environment jsdom` at the top, so the pure-logic
+  suites keep running in Node and no global test configuration changed.
+- What they assert is behaviour: which folder and view are marked active and what a click hands
+  back, the loading state, the empty state and the one that names an over-narrowing tag, a row
+  opening the note it belongs to, a note with broken frontmatter showing its badge and the reasons
+  in its title, a tag chip switching a filter on and off (including for a tag whose notes are gone),
+  the palette's recent notes with the arrow keys and `Enter`, `Escape` closing it, a body match
+  arriving marked "in the body", and the link pane's YouTube and Instagram embeds, its image case,
+  its reader states and a **Retry** that costs a second request because a failure is not cached.
+- The suite is 331: 136 in `@lumos/vault-utils`, 87 in the daemon, 108 in the desktop (75 before).
+  The graph canvas remains untested - it draws through the graph library and jsdom cannot render it -
+  and an end-to-end test in a real browser is still open, tracked under **Plan** in
+  [docs/TODO.md](docs/TODO.md).

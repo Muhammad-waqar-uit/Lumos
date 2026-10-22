@@ -4,6 +4,28 @@ Chronological record of what has been built. Newest entries first within each da
 
 ## 2026-10-22
 
+### Done — the desktop components have tests
+- [x] jsdom and Testing Library are in the desktop workspace (`jsdom`, `@testing-library/react`,
+  `@testing-library/dom`), which closes the gap that kept every panel's states on a manual check
+- [x] The four components that carry state are covered: `Sidebar`, `NoteList`, `SearchModal` and
+  `LinkPane`, 33 tests. Each file declares `// @vitest-environment jsdom` at the top, so the
+  pure-logic suites keep running in Node and nothing global changed
+- [x] The tests assert behaviour, not markup: which folder is marked active and what a click hands
+  back, the loading and empty states including the one that names a tag, a row opening the note it
+  belongs to, the badge and the reasons on a note with broken frontmatter, a tag chip switching a
+  filter on and off, the palette's recent notes with the arrow keys and `Enter`, `Escape` closing
+  it, a body match arriving marked "in the body", and the link pane's embeds, its reader states
+  and a **Retry** that asks again
+- [x] Two behaviours the tests settled rather than assumed. A page that the daemon refuses shows
+  the daemon's own sentence (`GET /link -> 400`) and **Retry** costs a second request, because a
+  failure is not cached. And with the daemon up, an empty local result reads "Searching…" until
+  the body search answers - my first version of that test expected "No notes match" and failed,
+  which is the test doing its job
+- [x] The app still renders: the dev server on 1420 (already running, reused) showed the folder
+  sidebar with its counts, the Notes/Graph tabs, "No notes here yet.", and the palette opening on
+  `Ctrl+K` and closing on `Esc`, with no console errors
+- [x] `pnpm validate` green - 331 tests (136 vault-utils, 87 daemon, 108 desktop, +33)
+
 ### Done — an unexpected failure answers a plain 500
 - [x] The daemon has one error handler now (`app.setErrorHandler` in `app.ts`). The routes already
   answered their own refusals with a sentence naming the cause; what they did not anticipate went

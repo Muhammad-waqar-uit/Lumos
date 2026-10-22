@@ -27,9 +27,9 @@ else on this page can close them.
 
 ### Phase 0.1 - Enforcement (P1) - open items
 
-- [ ] Desktop component tests (jsdom + Testing Library) for the sidebar, the list, the search
-  palette and the link pane, plus an E2E smoke test. The viewer is already asserted by SSR renders
-  (`src/components/NoteViewer.test.tsx`), and the daemon's unit and route tests are done.
+- [ ] An E2E smoke test - the components are covered by jsdom tests now, but nothing drives the
+  built app in a real browser. That needs a runner that is not installed (Playwright or similar),
+  so it is a decision before it is a task.
 
 ### Phase 3 - Daemon enhancements (P1) - open items
 
@@ -90,10 +90,17 @@ Nothing in flight. The next item to pick up is the first one under **Plan**.
 - [x] Branch protection on `main`: requires a pull request and the `pnpm validate` check, with
   `strict` on so a stale branch cannot merge; force pushes and deletions blocked (on since
   2026-10-19; the workflow's first run on `main` was green in `38790615355`)
-- [x] Test runner (vitest) wired up and added to the validation gate - 221 tests over
-  `@lumos/vault-utils` and the daemon, plus 75 over the desktop (filtering, demo data, search
-  ranking, recent notes, the link cache, list movement, pane widths, graph layout memory, and the
-  viewer's code highlighting and frontmatter warning), so 296 in `pnpm validate`
+- [x] Test runner (vitest) wired up and added to the validation gate - 223 tests over
+  `@lumos/vault-utils` and the daemon, plus 108 over the desktop (filtering, demo data, search
+  ranking, recent notes, the link cache, list movement, pane widths, graph layout memory, the
+  viewer's code highlighting, and the sidebar, note list, search palette and link pane as
+  components), so 331 in `pnpm validate`
+- [x] Desktop component tests - jsdom + Testing Library (`@testing-library/react`, jsdom) over the
+  four components that carry state, each file declaring its own `jsdom` environment so the pure-logic
+  suites stay in Node. They assert behaviour rather than markup: the active folder and view, the
+  loading/empty/tag-empty states, a row opening its note, a broken note's badge and reasons, a tag
+  chip switching a filter on and off, the palette's recent notes and Enter/Escape, and the link
+  pane's embeds, reader states and a **Retry** that really asks again
 - [x] Schema validation for note frontmatter - `validateFrontmatter()` in `@lumos/vault-utils`
   checks the fields the app relies on and the problems travel with the note (`Note.problems`,
   `VaultEntry.problems`) instead of the file being skipped. It runs when a note is read, and the
