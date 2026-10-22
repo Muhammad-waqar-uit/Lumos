@@ -1,6 +1,7 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
-import type { GraphData, Note, VaultEntry } from "@lumos/shared";
+import type { Folder, GraphData, Note, VaultEntry } from "@lumos/shared";
 import {
+  createNote,
   getFolders,
   getGraph,
   getNote,
@@ -191,6 +192,38 @@ export default function App() {
 
   const resizeList = useCallback((width: number): void => setListWidth(clampPaneWidth(width)), []);
 
+  /**
+   * Write a new note, then re-read the vault and open what was just written.
+   *
+   * The listing, the folder counts and the graph are all re-read rather than patched: the note is
+   * new, and the graph may have gained an edge or a tag node from its body. Opening it by the key
+   * the daemon answers is what makes "created" feel like a result rather than a submission.
+   */
+  const createNoteAndOpen = useCallback(
+    async (folder: Folder, text: string): Promise<Note> => {
+      const created = await createNote(folder, text);
+      setNotice(null);
+      try {
+        const [notesAfter, foldersAfter, graphAfter] = await Promise.all([
+          getNotes(),
+          getFolders(),
+          getGraph(),
+        ]);
+        setNotes(notesAfter);
+        setFolders(foldersAfter);
+        setGraph(graphAfter);
+        // `file` is absolute and `name` is its last segment, which is the key the list uses.
+        const name = created.file.split(/[\\/]/).pop() ?? "";
+        openNote(`${created.folder}/${name}`);
+      } catch (err: unknown) {
+        const reason = err instanceof Error ? err.message : "unknown error";
+        setNotice(`Created, but the list could not be refreshed (${reason}).`);
+      }
+      return created;
+    },
+    [openNote],
+  );
+
   // `j`/`k` walk the visible list, but never while a field has focus (where they are letters) or
   // while the palette is open (where they belong to the query).
   useEffect(() => {
@@ -282,6 +315,9 @@ export default function App() {
               tagCounts={tagCounts}
               loading={loading}
               width={listWidth}
+              onCreate={createNoteAndOpen}
+              canCreate={connection === "daemon"}
+              activeFolder={activeFolder}
             />
             <PaneSplitter width={listWidth} onWidth={resizeList} />
             <NoteViewer

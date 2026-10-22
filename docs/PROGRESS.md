@@ -4,6 +4,33 @@ Chronological record of what has been built. Newest entries first within each da
 
 ## 2026-10-22
 
+### Done — a note can be created from the desktop
+- [x] The editor could rewrite a note that existed; nothing could make a new one, so an empty vault
+  could only be filled from WhatsApp. **New** in the note list opens a composer in the list's own
+  pane - a folder picker and a textarea - and Create (`Cmd/Ctrl+Enter`) files it and opens it.
+  Enter stays a newline, because the textarea is a textarea first
+- [x] The composer reuses the capture writer rather than growing a second one: the first line is the
+  title, `#hashtags` become tags, and the filename is the usual `YYYY-MM-DD-slug.md`, so a note
+  typed here and a note captured on a phone are the same shape of file. The allowlist does not
+  apply - that belongs to WhatsApp, not to the machine you are sitting at
+- [x] The one difference is `source: desktop`. `saveNote()` took the source as an option defaulting
+  to `whatsapp`, so the capture path is unchanged. The field is shown to the person reading the
+  note, and a note that claims the wrong origin is worse than one that says nothing
+- [x] The folder starts where the list is looking (Inbox when it is showing all), because a new note
+  usually belongs where you already are. A failed create keeps the draft and shows the daemon's own
+  sentence, exactly as a failed save does
+- [x] `POST /notes` on the daemon, beside `PUT /note`: a missing folder, a missing text or text that
+  is only spaces is a `400`; a folder outside the known set is a `400` and nothing is written
+  anywhere; a second note with the same text gets its own file
+- [x] After a create the listing, folder counts and graph are re-read and the new note is opened by
+  the key the daemon answers, so "created" is a result rather than a submission
+- [x] 14 tests: 1 in `@lumos/vault-utils` (the source, defaulting to WhatsApp), 5 in the daemon
+  (the create and its origin, the listing after it, every bad payload, the unknown folder leaving
+  the vault untouched, and never overwriting) and 8 in the desktop (the folder list, the create,
+  the failure keeping the draft, `Cmd/Ctrl+Enter`, a plain Enter staying a newline, one create at a
+  time, and cancel). Suite is 391: 156 vault-utils, 111 daemon, 124 desktop
+- [x] `pnpm validate` green - 391 tests: 156 vault-utils, 111 daemon, 124 desktop
+
 ### Done — a note can be edited and saved from the desktop
 - [x] Until now only WhatsApp could write to the vault, which made a "second brain" a read-only
   archive. **Edit** in the note header turns the body into a textarea, Save (`Cmd/Ctrl+S`) writes it

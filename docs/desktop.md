@@ -10,7 +10,8 @@ daemon (falling back to demo data when the daemon is offline):
 
 - `src/App.tsx` - state, vault loading, folder + search filtering, selection
 - `src/components/Sidebar.tsx` - folders with note counts
-- `src/components/NoteList.tsx` - searchable note list (title, date, preview, tags)
+- `src/components/NoteList.tsx` - searchable note list (title, date, preview, tags) and the **New** button that opens the composer
+- `src/components/NoteComposer.tsx` - a new note: a folder picker, a textarea, Create, Cancel, and a failure that keeps the draft
 - `src/components/NoteViewer.tsx` - note header (folder, date, source, url) + backlinks + link pane + Markdown body, and the Edit button that turns the body into the editor
 - `src/components/NoteEditor.tsx` - the body as a textarea: Save, Cancel, the unsaved marker and a failure that keeps the draft
 - `src/components/LinkPane.tsx` - the note's link: video player, image, or scraped reader card
@@ -47,8 +48,27 @@ The three cases - a registered language, an unregistered one, and an untagged fe
 to a string in Node and asserted in `src/components/NoteViewer.test.tsx`, so the wiring has a test
 without a jsdom setup.
 
-Still to come: routing, a markdown preview beside the textarea, and creating a note (see the **Plan**
+Still to come: routing and a markdown preview beside the textarea (see the **Plan**
 section of [`TODO.md`](TODO.md)).
+
+### Creating a note
+
+**New** at the top of the note list opens a composer in the list's own pane: a folder picker and a
+textarea. It is the same writer WhatsApp capture uses, minus the command parsing, so a note typed
+here and a note captured on a phone are the same shape of file — the first line becomes the title,
+`#hashtags` become frontmatter tags, and the filename is `YYYY-MM-DD-slug.md`.
+
+- **Create** (`Cmd/Ctrl+Enter`) files the note and opens it in the viewer; **Cancel** (`Esc`) drops
+  the draft. Enter on its own is a newline, as it is in any textarea.
+- The folder starts where the list is looking (or Inbox when it is showing all), because a new note
+  usually belongs where you already are.
+- A failed create keeps the draft and shows the daemon's own sentence, exactly as a failed save does.
+  Nothing typed is lost to a daemon that went away.
+- The note is stamped `source: desktop`, so the viewer can tell it apart from a capture.
+- With the daemon down the button is disabled and its tooltip says why: the demo vault is not a
+  vault, and there is nothing behind it to write to.
+- Covered by `src/components/NoteComposer.test.tsx` (the folder list, the create, the failure keeping
+  the draft, the shortcut, one create at a time, cancel) and by the daemon's route tests.
 
 ### Editing a note
 
@@ -279,13 +299,15 @@ Wired today:
   ordinary pick, so it also counts as a recent note.
 - `Cmd/Ctrl+S` - save the note being edited. `Esc` cancels that edit and drops the draft; neither does
   anything to a note that is not being edited.
+- `Cmd/Ctrl+Enter` - file the note being composed. `Esc` closes the composer and drops what was typed.
 
 ## Planned capabilities
 
 - TanStack Router and zustand - the shell is plain React state in one component.
-- A Markdown preview beside the editor. Editing and saving exist (see **Editing a note** above); the
-  rendered form is what the viewer shows after a save, not a live pane.
-- Creating a note from the app. An empty vault can still only be filled from WhatsApp.
+- A Markdown preview beside the editor. Editing, creating and saving exist (see **Creating a note**
+  and **Editing a note** above); the rendered form is what the viewer shows after a save, not a live
+  pane.
+- Renaming, moving or deleting a note from the app.
 
 Everything else in the Keyboard section above is wired, and an untyped palette already lists the
 notes opened this session.

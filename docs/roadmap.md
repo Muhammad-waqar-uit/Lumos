@@ -66,7 +66,9 @@ text, and reading a PDF or plain HTML file - are still open under **Plan** in
 - Desktop component tests in jsdom with Testing Library: the sidebar, note list, palette, link pane
   and note editor. ✅
 - Editing a note's body in the app and saving it to disk. ✅ (the frontmatter is left as written;
-  there is no preview beside the textarea and no way to create a note, both still open)
+  there is no preview beside the textarea)
+- Creating a note from the app. ✅ (a composer in the list's own pane: a folder picker and a
+  textarea, filed with the same writer WhatsApp uses, stamped `source: desktop`)
 - A preflight the browser actually sends. ✅ (found while exercising the editor: the CORS default
   omitted `PUT`, so `curl` could save while the app could not)
 - Bulk operations (move, tag, archive).

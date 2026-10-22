@@ -55,6 +55,24 @@ Every note in the vault, newest first: `{ "notes": VaultEntry[] }`. An entry who
 problem carries `problems: string[]` with the reasons; a clean entry has no such field, so the usual
 response is unchanged. A note with a broken block is listed rather than dropped.
 
+### `POST /notes`
+```json
+{ "folder": "Ideas", "text": "Book the flights #travel\n\nTwo weeks in October." }
+```
+Creates a note and answers it as the vault now reads it: `{ "note": { title, folder, file,
+frontmatter, content, problems } }`.
+
+The writer is the one WhatsApp capture uses, minus the command parsing — the first line becomes the
+title, `#hashtags` become frontmatter tags, and the filename is `YYYY-MM-DD-slug.md`, so a note
+written here and a note captured on a phone are the same shape of file. The one difference is
+`source: desktop`: the field is shown to the person reading the note, and a note that claims the
+wrong origin is worse than one that says nothing.
+
+The allowlist does not apply: that belongs to WhatsApp, not to the machine you are sitting at.
+A missing folder, a missing `text` or text that is only spaces is `400 folder and text are
+required`; a folder outside the known set is `400 unknown folder`, and nothing is written anywhere.
+A second note with the same text gets its own file — the writer never overwrites.
+
 ### `GET /notes/search?q=<query>`
 Case-insensitive search across titles, content, and tags: `{ "notes": VaultEntry[] }`.
 
@@ -201,7 +219,8 @@ write). Keeping this logic in packages lets the desktop app reuse it.
   generated filename, and the frontmatter that was written. It passes a temporary directory in as the
   vault, so your own vault is never touched.
 - `src/app.test.ts` - every route through `app.inject()`: the note listings and their empty case, search
-  and its blank query, the folder counts, `/note`'s guards (a missing parameter, an unknown folder, and
+  and its blank query, `POST /notes` creating a note with the right source and refusing every bad
+  payload, the folder counts, `/note`'s guards (a missing parameter, an unknown folder, and
   each traversal shape tried against a decoy file left outside the folders), `PUT /note` saving a body
   with the frontmatter untouched and refusing every one of those shapes, the graph's nodes, edges
   and unresolved links, `/link`'s refusals and its status codes with the fetcher injected, the plain

@@ -152,6 +152,95 @@ describe("GET /notes/search", () => {
   });
 });
 
+describe("POST /notes", () => {
+  it("files the note, names it from the first line and stamps its origin", async () => {
+    const { vault, app } = await makeApp();
+    const res = await app.inject({
+      method: "POST",
+      url: "/notes",
+      payload: { folder: "Ideas", text: "Book the flights #travel\n\nTwo weeks in October." },
+    });
+
+    expect(res.statusCode).toBe(200);
+    const { note } = res.json<{
+      note: {
+        title: string;
+        folder: string;
+        file: string;
+        frontmatter: { source: string; tags: string[] };
+        content: string;
+      };
+    }>();
+    expect(note.title).toBe("Book the flights #travel");
+    expect(note.folder).toBe("Ideas");
+    expect(path.dirname(note.file)).toBe(path.join(vault, "Ideas"));
+    // Written by the app, so the note says so rather than claiming a WhatsApp capture.
+    expect(note.frontmatter.source).toBe("desktop");
+    // The capture writer's rules apply here too: the same tags, from the same function.
+    expect(note.frontmatter.tags).toEqual(["travel"]);
+    expect(note.content).toContain("Two weeks in October.");
+  });
+
+  it("appears in the listing afterwards", async () => {
+    const { app } = await makeApp();
+    await app.inject({
+      method: "POST",
+      url: "/notes",
+      payload: { folder: "Goals", text: "Learn Rust" },
+    });
+
+    const res = await app.inject({ method: "GET", url: "/notes" });
+    const { notes } = res.json<{ notes: { title: string; folder: string }[] }>();
+    expect(notes).toHaveLength(1);
+    expect(notes[0]).toMatchObject({ title: "Learn Rust", folder: "Goals" });
+  });
+
+  it("refuses a request without a folder or text, and one that is only spaces", async () => {
+    const { app } = await makeApp();
+    const cases = [
+      { payload: {}, error: "folder and text are required" },
+      { payload: { folder: "Ideas" }, error: "folder and text are required" },
+      { payload: { text: "somewhere" }, error: "folder and text are required" },
+      { payload: { folder: "Ideas", text: "   " }, error: "folder and text are required" },
+    ];
+
+    for (const { payload, error } of cases) {
+      const res = await app.inject({ method: "POST", url: "/notes", payload });
+      expect(res.statusCode, JSON.stringify(payload)).toBe(400);
+      expect(res.json(), JSON.stringify(payload)).toEqual({ error });
+    }
+  });
+
+  it("refuses a folder outside the known set", async () => {
+    const { vault, app } = await makeApp();
+    const res = await app.inject({
+      method: "POST",
+      url: "/notes",
+      payload: { folder: "../secrets", text: "somewhere it does not belong" },
+    });
+
+    expect(res.statusCode).toBe(400);
+    expect(res.json()).toEqual({ error: "unknown folder" });
+    // Nothing was written anywhere, including outside the vault.
+    expect(await readdir(vault)).toEqual([]);
+  });
+
+  it("never overwrites: a second note with the same text gets its own file", async () => {
+    const { vault, app } = await makeApp();
+    for (let i = 0; i < 2; i++) {
+      await app.inject({
+        method: "POST",
+        url: "/notes",
+        payload: { folder: "Ideas", text: "Same title" },
+      });
+    }
+
+    const written = await readdir(path.join(vault, "Ideas"));
+    expect(written).toHaveLength(2);
+    expect(new Set(written).size).toBe(2);
+  });
+});
+
 describe("GET /folders", () => {
   it("counts every known folder, including the empty ones", async () => {
     const { app } = await makeApp([NOTE, { folder: "Ideas", text: "a second idea" }]);

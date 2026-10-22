@@ -125,11 +125,10 @@ play it — neither page can be read or copied.
   caught. The graph canvas is the one component with no test at all, because it draws through the
   graph library and jsdom cannot render it. An E2E runner is tracked under **Plan** in
   [TODO.md](TODO.md).
-- **Only an existing note's body can be written.** Notes cannot be created, renamed, moved or
-  deleted from the app, and the frontmatter is not editable there at all — `tags`, `status`, `url`
-  and every other field are the file's own business, so the app does not offer an input that would
-  silently do nothing. A note whose text someone deleted is still an edit; an empty vault cannot be
-  filled from the desktop.
+- **Notes can be written, but not renamed, moved or deleted from the app.** Creating and editing a
+  body both work; the filename, the folder and the frontmatter do not. `tags`, `status`, `url` and
+  every other field are the file's own business, so the app does not offer an input that would
+  silently do nothing. There is no delete, so nothing in the app can lose a note.
 - **A draft belongs to the note that was open.** Opening another note while editing closes the editor
   and drops what was typed, because there is no draft store and no "unsaved changes" prompt on
   navigation. The draft does survive a failed save. There is also no undo, no edit history and no

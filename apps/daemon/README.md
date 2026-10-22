@@ -90,6 +90,10 @@ touches the vault.
 | `GET /graph` | the vault's link graph: notes, tags, links and unresolved targets |
 | `GET /link?url=<url>` | one remote link, described for the desktop: playable media, or the page's metadata and readable text |
 
+Two write routes serve the desktop: `PUT /note` replaces a note's body and `POST /notes` creates
+one through the capture writer (stamped `source: desktop`). Both carry the same folder and filename
+guards as the read routes, and a bad payload is a `400` that writes nothing.
+
 `GET /link` is the only endpoint that makes an outbound request. It accepts `http` and `https` only,
 refuses local and private addresses on every redirect hop, and caps time (8 s), redirects (3) and body
 size (1 MiB). A refusal is a `400` with a message, an unreachable page a `502`; the URL is never
