@@ -69,8 +69,8 @@ The daemon runs headless with `LUMOS_DISABLE_WHATSAPP=1` — use that when you o
 **Daemon (`apps/daemon`)**
 
 - Fastify on `127.0.0.1:3001`. One concern per module: `app.ts` (routes, built by a factory over a
-  vault directory), `server.ts` (bootstrap), `commands.ts` (pure message parsing), `vault.ts` (vault
-  path), `handler.ts` (dispatch).
+  vault directory), `server.ts` (bootstrap), `commands.ts` (pure message parsing), `config.ts`
+  (settings: file + environment), `handler.ts` (dispatch).
 - Parsing is pure and testable — it must not touch the filesystem or the network.
 - **Every path that comes from a request is untrusted.** Validate the folder against the known set,
   reject `..` and absolute paths, then resolve and confirm the result is still inside the vault

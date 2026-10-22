@@ -34,7 +34,7 @@ WhatsApp ──► Daemon ──► vault/*.md ◄── Desktop (Tauri UI)
 - **WhatsApp**: Baileys multi-device; auth persists in `apps/daemon/auth_info/`.
 - **Modules**:
   - `commands.ts` - parse command text into a typed result.
-  - `vault.ts` - resolve the vault path from `VAULT_PATH`.
+  - `config.ts` - read `lumos.config.json` and the environment into one `Config`, refusing a setting it cannot use.
   - `handler.ts` - route a parsed command to a reply; the vault directory arrives as an argument.
   - `app.ts` - `createApp()`, which builds the Fastify app (CORS + routes) over a given vault, so the routes can be tested without binding a port.
   - `server.ts` - entry point: build the app, listen on loopback, start WhatsApp.

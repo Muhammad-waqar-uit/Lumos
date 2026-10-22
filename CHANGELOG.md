@@ -364,3 +364,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   what that gives up.
 - 6 new tests in `@lumos/vault-utils` for the behaviour rather than the line counts. Suite is 337: 142
   in `@lumos/vault-utils`, 87 in the daemon, 108 in the desktop.
+
+### Added (continued 22)
+- The daemon reads its settings from `lumos.config.json` - `vaultPath`, `port`, `allowedNumbers` and
+  `whatsapp` - with the environment overriding it. Precedence is environment > file > default, so a
+  one-off `VAULT_PATH=... pnpm dev` keeps working while a file is present. The file is git-ignored,
+  because a vault path and phone numbers belong to one machine, and `LUMOS_CONFIG` points elsewhere.
+- A relative `vaultPath` resolves against the file that named it rather than the working directory,
+  so the same file means the same vault however the daemon was launched.
+- A missing file is not an error. A file that is unreadable, not JSON, carries an unknown key or a
+  setting that cannot be used stops the daemon with one sentence on stderr and exit code 1 - an
+  unknown key is refused instead of ignored, so a typo cannot silently do nothing.
+- `PORT=0` is refused rather than listened on: the old code accepted it and bound a random port,
+  which the desktop could not find.
+- `vault.ts` is gone; `config.ts` is the one place settings are decided. 12 tests, and the process
+  was run against a real file (configured port 3111, relative vault, environment override to 3112).
+  Suite is 349: 142 in `@lumos/vault-utils`, 99 in the daemon, 108 in the desktop.

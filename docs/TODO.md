@@ -34,7 +34,6 @@ else on this page can close them.
 ### Phase 3 - Daemon enhancements (P1) - open items
 
 - [ ] `/plan today|tomorrow` with Ollama integration
-- [ ] Config file support (dotenv / JSON)
 
 ### Phase 4 - Desktop UI foundation (P0) - open items
 
@@ -145,6 +144,13 @@ Nothing in flight. The next item to pick up is the first one under **Plan**.
 - [x] Tag extraction: `#hashtags` in a captured message become the note's frontmatter tags, using
   the graph's own `extractTags()` rules (headings and code excluded, lower-cased, de-duplicated); no
   model, so it stays deterministic and offline
+- [x] Config file support - `lumos.config.json` (`vaultPath`, `port`, `allowedNumbers`, `whatsapp`)
+  with the environment overriding it, so a one-off `VAULT_PATH=... pnpm dev` still wins while the
+  file stays the thing a person edits. A relative `vaultPath` resolves against the file, not the
+  working directory; a missing file is not an error; an unknown key, a bad port or a malformed file
+  stops the daemon with one sentence and exit 1 rather than starting on a guess; numbers are
+  normalised however they were typed. `vault.ts` is gone - `config.ts` is the one place settings are
+  decided (12 tests, and the process was run against a real file on a configured port)
 - [x] One error handler on the Fastify app - the routes answer their own refusals with a sentence
   that names the cause, and anything they did not anticipate answers a plain
   `500 { "error": "The daemon could not finish that request." }`. The raw message is neither sent

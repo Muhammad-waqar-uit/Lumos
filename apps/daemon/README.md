@@ -32,8 +32,8 @@ src/
 ├── handler.ts     # Message routing and response generation
 ├── fetch-link.ts  # Remote page fetching for the desktop, with its guards and caps
 ├── app.ts         # The Fastify app: CORS + every route, built by a factory
-├── server.ts      # Entry point: builds the app, listens, starts WhatsApp
-├── vault.ts       # Vault path resolution
+├── server.ts      # Entry point: reads settings, builds the app, listens, starts WhatsApp
+├── config.ts      # Settings from lumos.config.json, with the environment overriding it
 └── whatsapp.ts    # Baileys WhatsApp integration
 ```
 
@@ -96,12 +96,32 @@ size (1 MiB). A refusal is a `400` with a message, an unreachable page a `502`; 
 logged. See [docs/daemon.md](../../docs/daemon.md) for the full contract and
 [docs/LIMITATIONS.md](../../docs/LIMITATIONS.md) for what it deliberately cannot read.
 
-## Environment Variables
+## Configuration
+
+Settings come from `lumos.config.json` in this folder, and the environment overrides it.
+
+```json
+{
+  "vaultPath": "../../vault",
+  "port": 3001,
+  "allowedNumbers": ["15550100000"],
+  "whatsapp": true
+}
+```
+
+A relative `vaultPath` resolves against the file, not the working directory. An unknown key is
+refused rather than ignored, and a setting that cannot be used stops the daemon with one sentence.
+The file is git-ignored: it holds a vault path and phone numbers that belong to one machine.
+`LUMOS_CONFIG` points at a different file. See [docs/daemon.md](../../docs/daemon.md) for the
+precedence and every setting.
 
 | Variable | Default | Description |
 | --- | --- | --- |
-| `ALLOWED_NUMBERS` | `""` (empty - blocks all) | Comma-separated list of allowed sender numbers in E.164 format without + sign. Example: `1234567890,0987654321` |
-| `VAULT_PATH` | `../../vault` | Absolute or relative path to vault directory. Relative paths are resolved from cwd. |
+| `ALLOWED_NUMBERS` | `""` (empty - blocks all) | Comma-separated list of allowed sender numbers in E.164 format without + sign. Example: `1234567890,0987654321`. Overrides the file. |
+| `VAULT_PATH` | `../../vault` | Absolute or relative path to vault directory. Relative paths are resolved from cwd. Overrides the file. |
+| `PORT` | `3001` | Port to listen on, 1-65535. Overrides the file. |
+| `LUMOS_CONFIG` | `lumos.config.json` | Where to read the settings from. |
+| `LUMOS_DISABLE_WHATSAPP` | unset | Set to `1` to run the HTTP API without connecting to WhatsApp. |
 
 ## Development
 

@@ -4,6 +4,31 @@ Chronological record of what has been built. Newest entries first within each da
 
 ## 2026-10-22
 
+### Done — the daemon reads a config file
+- [x] Four settings in four environment variables was workable from a shell and awkward for anything
+  that has to start the daemon itself. `loadConfig()` in `config.ts` reads `lumos.config.json`
+  (`vaultPath`, `port`, `allowedNumbers`, `whatsapp`) with the environment overriding it, so
+  `VAULT_PATH=... pnpm dev` still wins when a file exists
+- [x] The decisions that mattered: a relative `vaultPath` resolves against the file that named it,
+  not the working directory, so the same file means the same vault from any shortcut; a missing file
+  is not an error; an unknown key is refused rather than ignored, because a typo that silently does
+  nothing is the worst outcome for a setting; and a bad file stops the daemon with one sentence and
+  exit 1 instead of a stack trace
+- [x] `vault.ts` is deleted rather than left as a second source of truth, and the docs that listed it
+  (module tables in this repo, `AGENTS.md`, both READMEs) now name `config.ts`
+- [x] One behaviour the environment exposed: this shell sets `PORT=0` globally, which the old code
+  would have used to listen on a random port without saying so. `PORT=0` is now refused, with a
+  sentence that names the variable - a random port is one the desktop cannot find
+- [x] 12 tests over precedence (env over file over default, per setting), resolution against the
+  file's directory, normalising `+1 (555) 010-0000`, and every refusal: unknown key, bad port from
+  either source, not-an-object, invalid JSON, wrong types, and an unreadable file (surfaced, not
+  swallowed)
+- [x] Exercised the process, not only the function: with the file served through `LUMOS_CONFIG`, the
+  daemon listened on the configured 3111 and served the note from the file's relative vault; `PORT`
+  in the environment moved it to 3112 and 3111 stopped answering; a `port: 70000` file and a
+  `prot` typo each printed one line and exited 1
+- [x] `pnpm validate` green - 349 tests: 142 vault-utils, 99 daemon (12 of them new), 108 desktop
+
 ### Done — the reader drops the page's chrome
 - [x] The link pane's reader stopped carrying things nobody wrote. `toText()` in
   `packages/vault-utils/src/link.ts` now drops whole `<pre>` code samples, the page's `header`,

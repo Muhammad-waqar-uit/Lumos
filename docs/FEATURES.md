@@ -21,6 +21,7 @@ Nothing in progress.
 
 | Feature | Notes |
 |---|---|
+| Config file | `lumos.config.json` for the vault path, port, allowlist and the WhatsApp switch, with the environment overriding it. A missing file means the defaults; a bad one stops the daemon with one sentence naming the setting |
 | WhatsApp capture | Baileys multi-device, allowlist, auto-reconnect |
 | Command parsing | `/idea`, `/interview`, `/goal`, `/read`, `/plan`, `/find`, `/help` |
 | Vault writer | Markdown + YAML frontmatter, slugified filenames |

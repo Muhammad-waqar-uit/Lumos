@@ -10,21 +10,14 @@ import { handleMessage } from "./handler.js";
 
 const AUTH_DIR = path.resolve(process.cwd(), "auth_info");
 
-// Comma-separated numbers (country code + number, no + or spaces)
-const allowed = new Set(
-  (process.env.ALLOWED_NUMBERS ?? "")
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean),
-);
-
 const userPart = (jid?: string | null) => jid?.split("@")[0]?.split(":")[0] ?? "";
 
 /**
- * Connect to WhatsApp and answer messages. The vault arrives as an argument, so this module
- * never decides where a note lands.
+ * Connect to WhatsApp and answer messages. The vault and the allowlist arrive as arguments, so
+ * this module never decides where a note lands or whose message is filed - `config.ts` owns those.
  */
-export async function startWhatsApp(vault: string) {
+export async function startWhatsApp(vault: string, allowedNumbers: readonly string[]) {
+  const allowed = new Set(allowedNumbers);
   const { state, saveCreds } = await useMultiFileAuthState(AUTH_DIR);
   const { version } = await fetchLatestBaileysVersion();
 
@@ -50,7 +43,7 @@ export async function startWhatsApp(vault: string) {
         console.log("Logged out. Delete the auth_info folder and restart to link again.");
       } else {
         console.log(`Connection closed (${code}). Reconnecting...`);
-        setTimeout(() => startWhatsApp(vault).catch(console.error), 3000);
+        setTimeout(() => startWhatsApp(vault, allowedNumbers).catch(console.error), 3000);
       }
     }
   });
@@ -64,7 +57,7 @@ export async function startWhatsApp(vault: string) {
 
       const ids = [jid, (msg.key as any).remoteJidAlt].map(userPart).filter(Boolean);
       if (!ids.some((id) => allowed.has(id))) {
-        console.log(`Ignored message from ${ids.join(" / ")} (not in ALLOWED_NUMBERS)`);
+        console.log(`Ignored message from ${ids.join(" / ")} (not in the allowlist)`);
         continue;
       }
 
