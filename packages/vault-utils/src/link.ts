@@ -280,12 +280,39 @@ function readHead(html: string): Pick<PagePreview, "title" | "site" | "descripti
 
 const BLOCK_END =
   /<(?:\/p|\/div|\/li|\/ul|\/ol|\/h[1-6]|\/tr|\/table|\/section|\/article|\/blockquote|\/pre|\/figure)[^>]*>|<br\s*\/?>/gi;
+/**
+ * Whole elements that are never the page's prose: the head and its metadata, code the site runs,
+ * and the chrome around the content - navigation, headers, footers, sidebars, forms and code
+ * samples. A reader that keeps them shows a menu of languages where the article should start.
+ *
+ * This is deliberately a string pass, not a parser, so a block nested inside the same tag
+ * (`<aside>` in an `<aside>`) closes at the first end tag. Chrome is allowed to be approximate;
+ * missing a wrapper costs a stray line, while parsing HTML properly would cost a dependency.
+ */
 const DROPPED =
-  /<(script|style|noscript|svg|template|iframe|head|nav|footer|form)\b[^>]*>[\s\S]*?<\/\1>/gi;
+  /<(script|style|noscript|svg|template|iframe|head|nav|header|footer|aside|form|dialog|button|select|pre)\b[^>]*>[\s\S]*?<\/\1>/gi;
+
+/**
+ * `data-` attributes carry machine payload, not prose, and they are the one attribute whose value
+ * routinely holds a `>` - Wikipedia's `data-mw` is serialized template JSON - which would end the
+ * tag early and spill the payload into the reader as text. An attribute is never read aloud, so
+ * removing them cannot lose a word.
+ */
+const MACHINE_ATTRIBUTES = /\sdata-[^\s=>/]+=(?:"[^"]*"|'[^']*')/gi;
+
+/**
+ * A line that is nothing but a bracketed lowercase label is a control the site adds to every
+ * heading - Wikipedia's "[ edit ]" - not a sentence anyone wrote. Prose does not end up as one
+ * bare bracketed phrase on its own line.
+ */
+const CHROME_LABEL = /^\[\s*[a-z][a-z ]{0,24}\]$/;
 
 /** Turn an HTML fragment into readable text: block ends become lines, tags and entities go. */
 function toText(html: string): string {
-  const withoutNoise = html.replace(DROPPED, " ").replace(/<!--[\s\S]*?-->/g, " ");
+  const withoutNoise = html
+    .replace(DROPPED, " ")
+    .replace(MACHINE_ATTRIBUTES, "")
+    .replace(/<!--[\s\S]*?-->/g, " ");
   const plain = decodeEntities(withoutNoise.replace(BLOCK_END, "\n").replace(/<[^>]*>/g, " "));
 
   const lines: string[] = [];
@@ -293,6 +320,9 @@ function toText(html: string): string {
     const line = raw.replace(/[ \t\u00a0]+/g, " ").trim();
     // A run of blank lines becomes one break, so prose keeps its paragraphs.
     if (line === "" && (lines.length === 0 || lines[lines.length - 1] === "")) continue;
+    // The same line twice in a row is a duplicated nav or a repeated label, never prose.
+    if (line !== "" && line === lines[lines.length - 1]) continue;
+    if (CHROME_LABEL.test(line)) continue;
     lines.push(line);
   }
   return lines.join("\n").trim();

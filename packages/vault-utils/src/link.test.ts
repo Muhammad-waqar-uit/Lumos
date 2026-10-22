@@ -259,6 +259,71 @@ describe("extractPreview", () => {
   });
 });
 
+describe("extractPreview - site chrome", () => {
+  it("leaves a code sample out of the reader, and keeps the prose around it", () => {
+    const html = [
+      "<body><article>",
+      "<p>Before the example.</p>",
+      "<pre><code>const answer = 42;</code></pre>",
+      "<p>After the example.</p>",
+      "</article></body>",
+    ].join("");
+
+    const { text } = extractPreview(html);
+    // Blocks become lines, so the two paragraphs sit next to each other once the example is gone.
+    expect(text).toBe("Before the example.\nAfter the example.");
+    expect(text).not.toContain("const answer");
+  });
+
+  it("keeps the site's header, sidebar, controls and footer out of the text", () => {
+    const html = [
+      "<body>",
+      "<header>Site name</header>",
+      "<aside>Related: another post</aside>",
+      "<div><button>Share</button><p>Real prose.</p></div>",
+      "<footer>© 2026</footer>",
+      "</body>",
+    ].join("");
+
+    expect(extractPreview(html).text).toBe("Real prose.");
+  });
+
+  it("collapses a line the page repeats, as a mobile and desktop menu do", () => {
+    const html = "<body><p>Guides</p><p>Guides</p><p>Real prose.</p></body>";
+    expect(extractPreview(html).text).toBe("Guides\nReal prose.");
+  });
+
+  it("drops a bare bracketed control label the site puts after every heading", () => {
+    const html =
+      "<body><h2>Section</h2><p>[ edit ]</p><p>Prose.</p><p>[citation needed]</p></body>";
+
+    const { text } = extractPreview(html);
+    expect(text).toContain("Section");
+    expect(text).toContain("Prose.");
+    expect(text).not.toContain("[ edit ]");
+    expect(text).not.toContain("citation needed");
+  });
+
+  it("drops a data attribute's payload instead of reading it as text", () => {
+    // Wikipedia's `data-mw` holds serialized template JSON, and the `>` inside it used to end
+    // the tag early and spill the payload into the reader.
+    const html = [
+      '<body><div data-mw=\'{"wt":"<b>machine payload</b>"}\' data-x="1">',
+      "<p>Visible prose.</p>",
+      "</div></body>",
+    ].join("");
+
+    const { text } = extractPreview(html);
+    expect(text).toBe("Visible prose.");
+    expect(text).not.toContain("machine payload");
+  });
+
+  it("keeps an inline code word, which is part of the sentence", () => {
+    const html = "<body><p>Run <code>pnpm install</code> first.</p></body>";
+    expect(extractPreview(html).text).toBe("Run pnpm install first.");
+  });
+});
+
 describe("decodeEntities", () => {
   it("decodes named, decimal and hex entities", () => {
     expect(decodeEntities("a &amp; b &lt;c&gt; &#39;d&#39; &#x27;e&#x27;")).toBe(
