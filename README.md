@@ -209,8 +209,8 @@ git checkout -b feat/my-change
 - [ ] Daily planner with `/plan today|tomorrow` (AI-assisted via Ollama)
 - [x] Full-text search with `/find <query>` (title, tags and body; up to five matches per reply)
 - [x] Tag extraction and auto-tagging — `#hashtags` in a captured message become the note's frontmatter tags
-- [~] Tauri desktop app UI for browsing/searching vault - dark shell, folder sidebar, note list, Markdown-rendering viewer with syntax-highlighted code, link graph, tag filtering and a `Cmd/Ctrl+K` search palette are in place; routing and an editor remain
-- [x] Test coverage - 349 vitest tests run inside `pnpm validate`: 142 for `@lumos/vault-utils`, 99 for the daemon (every route through `app.inject()`, with the link fetcher and config injected) and 108 for the desktop (pure logic, SSR renders, and the sidebar, note list, palette and link pane in jsdom). The graph canvas and an end-to-end run in a real browser are the gaps, both tracked in [docs/TODO.md](docs/TODO.md)
+- [~] Tauri desktop app UI for browsing/searching/editing vault - dark shell, folder sidebar, note list, Markdown-rendering viewer with syntax-highlighted code, link graph, tag filtering, a `Cmd/Ctrl+K` search palette and an editor that saves a note's body back to the vault are in place; routing remains
+- [x] Test coverage - 377 vitest tests run inside `pnpm validate`: 155 for `@lumos/vault-utils`, 106 for the daemon (every route through `app.inject()`, with the link fetcher and config injected) and 116 for the desktop (pure logic, SSR renders, and the sidebar, note list, palette, link pane and note editor in jsdom). The graph canvas and an end-to-end run in a real browser are the gaps, both tracked in [docs/TODO.md](docs/TODO.md)
 - [ ] Enrichment: extract summaries, key points from links
 - [ ] Sync/backups, exports
 

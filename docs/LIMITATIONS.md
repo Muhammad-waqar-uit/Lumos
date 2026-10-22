@@ -125,9 +125,23 @@ play it — neither page can be read or copied.
   caught. The graph canvas is the one component with no test at all, because it draws through the
   graph library and jsdom cannot render it. An E2E runner is tracked under **Plan** in
   [TODO.md](TODO.md).
-- **Read-only.** Notes cannot be created, edited, moved or deleted from the app; the desktop reads
-  through the daemon HTTP API and writes nothing. With the daemon down it falls back to
-  `src/lib/demo.ts`, so it shows demo data rather than your vault.
+- **Only an existing note's body can be written.** Notes cannot be created, renamed, moved or
+  deleted from the app, and the frontmatter is not editable there at all — `tags`, `status`, `url`
+  and every other field are the file's own business, so the app does not offer an input that would
+  silently do nothing. A note whose text someone deleted is still an edit; an empty vault cannot be
+  filled from the desktop.
+- **A draft belongs to the note that was open.** Opening another note while editing closes the editor
+  and drops what was typed, because there is no draft store and no "unsaved changes" prompt on
+  navigation. The draft does survive a failed save. There is also no undo, no edit history and no
+  conflict detection: if the same file is changed in Obsidian while it is open here, the save wins
+  over those changes rather than merging or asking.
+- **The editor is a textarea.** Body text is edited as Markdown, with no preview beside it and no
+  toolbar; the rendered form is what the viewer shows after a save. Anything the textarea does not do
+  — tabs, a stored cursor position, the spell-check language — is the browser's behaviour, not the
+  app's.
+- **With the daemon down the app reads demo data, not your vault**, and Edit is disabled because
+  there is nothing to save to. `src/lib/demo.ts` is the fallback, so a stopped daemon shows demo
+  notes rather than a blank screen.
 - **Graph layout is remembered per session, not per vault.** Node positions and a view the user
   placed survive a tab switch while the app runs, in module scope rather than in storage, so a reload
   starts from a fresh layout. Only a coordinate is remembered, not why the layout looked that way: a

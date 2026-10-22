@@ -5,6 +5,7 @@ import {
   getGraph,
   getNote,
   getNotes,
+  saveNote,
   type Connection,
   type FolderCount,
 } from "./lib/api";
@@ -47,6 +48,8 @@ export default function App() {
   // The list's width lives here, not in NoteList: the Graph tab unmounts the list, and a width that
   // reset every time someone looked at the graph would be worse than no splitter at all.
   const [listWidth, setListWidth] = useState(PANE_DEFAULT);
+  // Something the daemon did or could not do, said in the status bar. Never a silent failure.
+  const [notice, setNotice] = useState<string | null>(null);
 
   // Load the vault from the daemon; fall back to demo data if it is not running.
   useEffect(() => {
@@ -155,6 +158,37 @@ export default function App() {
 
   const closeSearch = useCallback(() => setSearchOpen(false), []);
 
+  /**
+   * Save a new body into the note that was open, then re-read what the save may have changed.
+   *
+   * The body can change the note's title, its tags and its links, so the listing, the graph and the
+   * folder counts are all refreshed rather than patched by guesswork. The save itself has already
+   * landed by then: a refresh that fails is reported as a notice and not as a failed save.
+   */
+  const saveActiveNote = useCallback(
+    async (content: string): Promise<Note> => {
+      if (!activeEntry || !activeKey) throw new Error("There is no note open to save.");
+      const saved = await saveNote(activeEntry.folder, activeEntry.name, content);
+      setFetched({ key: activeKey, note: saved });
+      setNotice(null);
+      try {
+        const [notesAfter, graphAfter, foldersAfter] = await Promise.all([
+          getNotes(),
+          getGraph(),
+          getFolders(),
+        ]);
+        setNotes(notesAfter);
+        setGraph(graphAfter);
+        setFolders(foldersAfter);
+      } catch (err: unknown) {
+        const reason = err instanceof Error ? err.message : "unknown error";
+        setNotice(`Saved, but the list could not be refreshed (${reason}).`);
+      }
+      return saved;
+    },
+    [activeEntry, activeKey],
+  );
+
   const resizeList = useCallback((width: number): void => setListWidth(clampPaneWidth(width)), []);
 
   // `j`/`k` walk the visible list, but never while a field has focus (where they are letters) or
@@ -255,6 +289,7 @@ export default function App() {
               connection={connection}
               backlinks={linkedFrom}
               onOpenNote={openNote}
+              onSave={saveActiveNote}
             />
           </>
         )}
@@ -263,6 +298,8 @@ export default function App() {
         connection={connection}
         count={visible.length}
         onSearch={() => setSearchOpen(true)}
+        notice={notice}
+        onDismissNotice={() => setNotice(null)}
       />
       {searchOpen ? (
         <SearchModal

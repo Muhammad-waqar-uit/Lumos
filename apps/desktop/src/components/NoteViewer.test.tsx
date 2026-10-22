@@ -4,7 +4,11 @@ import type { Note } from "@lumos/shared";
 import { NoteViewer } from "./NoteViewer";
 
 /** The viewer renders to a string in Node, so the markdown pipeline is testable without jsdom. */
-function render(content: string, problems: string[] = []): string {
+function render(
+  content: string,
+  problems: string[] = [],
+  connection: "daemon" | "demo" = "daemon",
+): string {
   const note: Note = {
     title: "Snippet",
     folder: "Reading",
@@ -19,7 +23,13 @@ function render(content: string, problems: string[] = []): string {
     problems,
   };
   return renderToStaticMarkup(
-    <NoteViewer note={note} connection="daemon" backlinks={[]} onOpenNote={() => {}} />,
+    <NoteViewer
+      note={note}
+      connection={connection}
+      backlinks={[]}
+      onOpenNote={() => {}}
+      onSave={async () => note}
+    />,
   );
 }
 
@@ -43,6 +53,18 @@ describe("NoteViewer code blocks", () => {
     const html = render(fenced("", "const answer = 42;"));
     expect(html).toContain("const answer = 42;");
     expect(html).not.toContain("hljs");
+  });
+});
+
+describe("NoteViewer editing", () => {
+  it("offers to edit the open note", () => {
+    expect(render("body")).toContain(">Edit</button>");
+  });
+
+  it("offers no edit offline, and says why", () => {
+    const html = render("body", [], "demo");
+    expect(html).toContain("disabled");
+    expect(html).toContain('title="Editing needs the daemon"');
   });
 });
 

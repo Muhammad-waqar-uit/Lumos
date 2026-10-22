@@ -65,3 +65,22 @@ export async function getNote(folder: string, name: string): Promise<Note> {
   );
   return note;
 }
+
+/**
+ * Save an edited body into an existing note and answer the note as it now reads.
+ *
+ * The daemon rewrites the body only and never the frontmatter. A refusal arrives as an Error
+ * carrying the daemon's own sentence (a bad name, a folder it does not know), so the editor can
+ * show it above the draft instead of replacing the text with a status code.
+ */
+export async function saveNote(folder: string, name: string, content: string): Promise<Note> {
+  const res = await fetch(`${BASE}/note`, {
+    method: "PUT",
+    headers: { "content-type": "application/json", accept: "application/json" },
+    body: JSON.stringify({ folder, name, content }),
+  });
+  const body = (await res.json().catch(() => null)) as { note: Note } | { error: string } | null;
+  if (!res.ok) throw new Error(body && "error" in body ? body.error : `PUT /note -> ${res.status}`);
+  if (!body || !("note" in body)) throw new Error("PUT /note returned an unexpected body");
+  return body.note;
+}

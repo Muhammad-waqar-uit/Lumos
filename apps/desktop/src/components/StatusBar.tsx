@@ -17,16 +17,32 @@ export function StatusBar({
   connection,
   count,
   onSearch,
+  notice,
+  onDismissNotice,
 }: {
   connection: Connection;
   count: number;
   onSearch: () => void;
+  /** Something the app could not do, said out loud until it is dismissed. */
+  notice?: string | null;
+  onDismissNotice?: () => void;
 }) {
   return (
     <footer className="flex shrink-0 items-center justify-between border-t border-border px-4 py-1 text-[11px] text-muted-foreground">
-      <span className="flex items-center gap-2">
+      <span className="flex min-w-0 items-center gap-2">
         <span aria-hidden className={`inline-block h-1.5 w-1.5 rounded-full ${DOT[connection]}`} />
-        {LABEL[connection]}
+        {notice ? (
+          <button
+            type="button"
+            onClick={onDismissNotice}
+            title="Dismiss"
+            className="truncate text-amber-400 hover:underline"
+          >
+            {notice}
+          </button>
+        ) : (
+          LABEL[connection]
+        )}
       </span>
       <span className="flex items-center gap-3">
         <button

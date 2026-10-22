@@ -88,6 +88,26 @@ The title is the first line of the message (truncated to 60 characters, then the
 `Untitled`). A hashtag in the message stays in the title and in the body as typed - it becomes a
 frontmatter tag as well, rather than being stripped out of the text.
 
+## Editing a note
+
+The desktop can rewrite a note's body (`PUT /note` on the daemon, `updateNote()` in
+`@lumos/vault-utils`). The write is deliberately narrow:
+
+| What | How |
+|---|---|
+| The body | Replaced wholesale with what was submitted, trimmed. Blank lines inside it are kept |
+| The frontmatter block | Left character for character as written — an invalid value, a comment, a foreign key and the block's ordering all survive |
+| The filename | Unchanged. A new heading changes the *title* the app shows, not the file's name |
+| The file on disk | Written to a temporary name in the same folder, then renamed over the note, so an interrupted save leaves the old note intact rather than truncated |
+
+An empty body is a valid edit: the frontmatter stays and the note renders as empty, with its title
+falling back to the filename. The write never creates a file — a name that is not already there is a
+`404` — and the folder and filename are checked against the vault root before anything is read, which
+is why a hand-written edit and an edit from the app cannot disagree about what a note is.
+
+Editing `tags`, `status` or any other field from the app is not supported; those are still the file's
+own business. [LIMITATIONS.md](LIMITATIONS.md) lists what that gives up.
+
 ## Compatibility
 
 Everything is standard Markdown + YAML frontmatter, so any tool that understands those - Obsidian,

@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import ReactMarkdown, { type Components } from "react-markdown";
 import rehypeHighlight from "rehype-highlight";
 import remarkGfm from "remark-gfm";
@@ -6,6 +6,7 @@ import type { GraphNode, Note } from "@lumos/shared";
 import { firstExternalLink } from "@lumos/vault-utils/link";
 import { type Connection } from "../lib/api";
 import { LinkPane } from "./LinkPane";
+import { NoteEditor } from "./NoteEditor";
 
 /** Note links open outside the app window instead of navigating the UI away. */
 const markdownComponents: Components = {
@@ -34,9 +35,15 @@ interface Props {
   /** Notes that link here, from the same graph the Graph tab draws. */
   backlinks: GraphNode[];
   onOpenNote: (id: string) => void;
+  /** Writes a new body to the open note; only reachable while the daemon answers. */
+  onSave: (content: string) => Promise<Note>;
 }
 
-export function NoteViewer({ note, connection, backlinks, onOpenNote }: Props) {
+export function NoteViewer({ note, connection, backlinks, onOpenNote, onSave }: Props) {
+  // The file being edited rather than a boolean: opening another note closes the editor instead of
+  // presenting its body inside a draft that belongs to the note before it.
+  const [editing, setEditing] = useState<string | null>(null);
+
   // A note captured from WhatsApp carries its link in the frontmatter and in the body;
   // either one is enough to play or read it here.
   const link = useMemo(() => {
@@ -53,26 +60,40 @@ export function NoteViewer({ note, connection, backlinks, onOpenNote }: Props) {
   }
 
   const fm = note.frontmatter;
+  const isEditing = editing === note.file;
 
   return (
     <main className="flex flex-1 flex-col overflow-hidden">
-      <header className="border-b border-border px-6 py-4">
-        <h2 className="text-lg font-semibold">{note.title}</h2>
-        <p className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-          <span>{note.folder}</span>
-          <span>{formatDate(fm.created)}</span>
-          <span>source: {fm.source}</span>
-          {fm.url ? (
-            <a
-              href={fm.url}
-              target="_blank"
-              rel="noreferrer"
-              className="underline hover:text-foreground"
-            >
-              {fm.url}
-            </a>
-          ) : null}
-        </p>
+      <header className="flex items-start justify-between gap-4 border-b border-border px-6 py-4">
+        <div className="min-w-0">
+          <h2 className="text-lg font-semibold">{note.title}</h2>
+          <p className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+            <span>{note.folder}</span>
+            <span>{formatDate(fm.created)}</span>
+            <span>source: {fm.source}</span>
+            {fm.url ? (
+              <a
+                href={fm.url}
+                target="_blank"
+                rel="noreferrer"
+                className="underline hover:text-foreground"
+              >
+                {fm.url}
+              </a>
+            ) : null}
+          </p>
+        </div>
+        {isEditing ? null : (
+          <button
+            type="button"
+            onClick={() => setEditing(note.file)}
+            disabled={connection !== "daemon"}
+            title={connection === "daemon" ? undefined : "Editing needs the daemon"}
+            className="shrink-0 rounded-md border border-border px-2 py-1 text-[11px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-50"
+          >
+            Edit
+          </button>
+        )}
       </header>
       {note.problems.length > 0 ? (
         <section
@@ -94,7 +115,17 @@ export function NoteViewer({ note, connection, backlinks, onOpenNote }: Props) {
           </p>
         </section>
       ) : null}
-      {backlinks.length > 0 ? (
+      {isEditing ? (
+        <NoteEditor
+          // A fresh draft per file: the key is what stops one note's text landing in another.
+          key={note.file}
+          note={note}
+          onSave={onSave}
+          onSaved={() => setEditing(null)}
+          onCancel={() => setEditing(null)}
+        />
+      ) : null}
+      {!isEditing && backlinks.length > 0 ? (
         <section aria-label="Linked from" className="border-b border-border px-6 py-2.5">
           <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
             Linked from {backlinks.length}
@@ -116,24 +147,26 @@ export function NoteViewer({ note, connection, backlinks, onOpenNote }: Props) {
           </ul>
         </section>
       ) : null}
-      {link ? <LinkPane url={link} connection={connection} /> : null}
-      <div className="flex-1 overflow-y-auto px-6 py-5">
-        {note.content.trim() ? (
-          <article className="markdown">
-            <ReactMarkdown
-              remarkPlugins={[remarkGfm]}
-              // Only a block the author tagged gets highlighted: guessing the language of an
-              // untagged block colours prose and JSON alike as something they are not.
-              rehypePlugins={[[rehypeHighlight, { detect: false }]]}
-              components={markdownComponents}
-            >
-              {note.content}
-            </ReactMarkdown>
-          </article>
-        ) : (
-          <p className="text-sm text-muted-foreground">This note is empty.</p>
-        )}
-      </div>
+      {!isEditing && link ? <LinkPane url={link} connection={connection} /> : null}
+      {isEditing ? null : (
+        <div className="flex-1 overflow-y-auto px-6 py-5">
+          {note.content.trim() ? (
+            <article className="markdown">
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                // Only a block the author tagged gets highlighted: guessing the language of an
+                // untagged block colours prose and JSON alike as something they are not.
+                rehypePlugins={[[rehypeHighlight, { detect: false }]]}
+                components={markdownComponents}
+              >
+                {note.content}
+              </ReactMarkdown>
+            </article>
+          ) : (
+            <p className="text-sm text-muted-foreground">This note is empty.</p>
+          )}
+        </div>
+      )}
     </main>
   );
 }

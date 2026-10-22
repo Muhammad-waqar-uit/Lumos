@@ -47,8 +47,9 @@ else on this page can close them.
 
 ### Phase 7 - Editing & enrichment (P2) - open items
 
-- [ ] Markdown editor with preview
-- [ ] Edit/save notes to disk
+- [ ] Markdown preview beside the editor (today the rendered note is what you see after a save)
+- [ ] Create a note from the desktop - an empty vault can only be filled from WhatsApp so far
+- [ ] Edit a note's frontmatter (tags, status) from the app, rather than only its body
 - [ ] Bulk operations (move, tag, archive)
 
 ### Phase 8 - Polish & docs (P2) - open items
@@ -91,13 +92,14 @@ Nothing in flight. The next item to pick up is the first one under **Plan**.
   `@lumos/vault-utils` and the daemon, plus 108 over the desktop (filtering, demo data, search
   ranking, recent notes, the link cache, list movement, pane widths, graph layout memory, the
   viewer's code highlighting, and the sidebar, note list, search palette and link pane as
-  components), so 349 in `pnpm validate`
+  components), so 377 in `pnpm validate`
 - [x] Desktop component tests - jsdom + Testing Library (`@testing-library/react`, jsdom) over the
-  four components that carry state, each file declaring its own `jsdom` environment so the pure-logic
+  five components that carry state, each file declaring its own `jsdom` environment so the pure-logic
   suites stay in Node. They assert behaviour rather than markup: the active folder and view, the
   loading/empty/tag-empty states, a row opening its note, a broken note's badge and reasons, a tag
-  chip switching a filter on and off, the palette's recent notes and Enter/Escape, and the link
-  pane's embeds, reader states and a **Retry** that really asks again
+  chip switching a filter on and off, the palette's recent notes and Enter/Escape, the link
+  pane's embeds, reader states and a **Retry** that really asks again, and the editor's draft, its
+  failed save keeping the text, `Cmd/Ctrl+S`, and a second click while the first save is in flight
 - [x] Schema validation for note frontmatter - `validateFrontmatter()` in `@lumos/vault-utils`
   checks the fields the app relies on and the problems travel with the note (`Note.problems`,
   `VaultEntry.problems`) instead of the file being skipped. It runs when a note is read, and the
@@ -106,7 +108,9 @@ Nothing in flight. The next item to pick up is the first one under **Plan**.
 - [x] Route tests for the read API - `createApp()` in `app.ts` builds the Fastify app over a vault
   directory, so `app.inject()` covers `/health`, `/message`, `/notes`, `/notes/search`, `/folders`,
   `/note` (every guard), `/graph`, `/link` and CORS without binding a port, and with the link
-  fetcher injected so the suite stays offline
+  fetcher injected so the suite stays offline. `PUT /note` and the `OPTIONS` preflight a browser
+  sends before it were added with the editor - the preflight one caught a real bug (`@fastify/cors`
+  defaults to `GET,HEAD,POST`, so a `PUT` was refused in the browser while `curl` worked)
 
 ### Phase 1: Documentation & Tracking Foundation (P0)
 
@@ -240,6 +244,13 @@ Nothing in flight. The next item to pick up is the first one under **Plan**.
 
 - [x] Link metadata enrichment + previews - the viewer's link pane plays a video, shows an image, or
   reads the page in place
+- [x] Edit/save notes to disk - **Edit** in the note header, Save (`Cmd/Ctrl+S`) or Cancel (`Esc`),
+  with a failed save keeping the draft and showing the daemon's sentence (`src/components/NoteEditor.tsx`,
+  `PUT /note`, `updateNote()`). Only the body is written: the frontmatter block survives character
+  for character, the write goes through a temporary file and a rename, and the route shares every
+  guard `GET /note` has (unknown folder, unsafe name, `404` rather than a create). After a save the
+  listing, folder counts and graph are re-read, and a refresh that fails is said in the status bar
+  instead of being reported as a failed save
 
 ### Phase 8: Polish & Docs (P2)
 

@@ -382,3 +382,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `vault.ts` is gone; `config.ts` is the one place settings are decided. 12 tests, and the process
   was run against a real file (configured port 3111, relative vault, environment override to 3112).
   Suite is 349: 142 in `@lumos/vault-utils`, 99 in the daemon, 108 in the desktop.
+
+### Added (continued 23)
+- A note can now be edited in the desktop and saved back to the vault, which until now only WhatsApp
+  could write to. **Edit** in the note header turns the body into a textarea; **Save** (`Cmd/Ctrl+S`)
+  writes it, **Cancel** (`Esc`) drops the draft, and the header says when there is something unsaved.
+  A save that fails keeps the text and shows the daemon's own sentence above it, so a daemon that
+  went away cannot cost the user their typing.
+- Only the body is written. The frontmatter block is left exactly as the file has it - an invalid
+  block, a comment, a key another tool owns and its ordering all survive, because the reader reports
+  a broken block instead of hiding the note and the editor has no business repairing it quietly.
+- `PUT /note` on the daemon takes `{ folder, name, content }` and answers the note as it now reads.
+  The same folder and filename guards as `GET /note`, and a note that does not exist is a `404`
+  rather than being created; an empty `content` is a real request (the text was deleted) and is told
+  apart from a missing one.
+- `@lumos/vault-utils` gained `replaceNoteBody()` (the pure body swap) and `updateNote()` (the write):
+  the path is checked against the vault root before anything is read, and the file is written to a
+  temporary name and renamed over the note, so a failure part-way leaves the old note intact rather
+  than truncated.
+- After a save the listing, the folder counts and the graph are re-read, because a new heading
+  changes the title, new hashtags change the tags and a new `[[link]]` changes the graph. When that
+  refresh fails the status bar says so - the save itself already landed, and that is worth being
+  precise about.
+- A CORS bug that only the running app could show: `@fastify/cors` defaults to `GET,HEAD,POST`, so
+  the browser's preflight for a `PUT` was refused and the editor reported "Failed to fetch" while
+  `curl` against the same route succeeded. The daemon now names the methods it serves, and a
+  preflight test covers it - the suite had only ever asked with a `GET`.
+- 28 new tests: 13 in `@lumos/vault-utils` (the block surviving verbatim, a broken block still
+  broken after a save, an empty body, a horizontal rule not being mistaken for the end of the block,
+  traversal refused on both the folder and the name, a missing file never created), 7 in the daemon
+  (the save, the empty body, every refusal, `404`, other notes untouched, the preflight) and 8 in the
+  desktop (the editor's draft, its failure path, `Cmd/Ctrl+S`, one save at a time, cancel, and the
+  header offering Edit only while the daemon answers). Suite is 377: 155 in `@lumos/vault-utils`,
+  106 in the daemon, 116 in the desktop. Exercised in the running app: the body was rewritten from
+  the UI, the file on disk kept its frontmatter, the list title followed the new heading, and with
+  the daemon stopped the button is disabled and says why.

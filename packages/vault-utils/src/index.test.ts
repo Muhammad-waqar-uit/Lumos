@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -10,10 +10,12 @@ import {
   makeTitle,
   parseNote,
   readNote,
+  replaceNoteBody,
   saveNote,
   searchNotes,
   serializeNote,
   slugify,
+  updateNote,
 } from "./index";
 
 let vault = "";
@@ -263,6 +265,129 @@ describe("saveNote", () => {
     const { file } = await saveNote(vault, { folder: "Ideas", text: "../../etc/passwd" });
     expect(path.dirname(file)).toBe(path.join(vault, "Ideas"));
     expect(path.basename(file)).toBe(`${ISO_DATE}-etc-passwd.md`);
+  });
+});
+
+describe("replaceNoteBody", () => {
+  const BLOCK = "---\nsource: desktop\ncreated: 2026-01-02T00:00:00.000Z\ntags:\n  - rust\n---";
+
+  it("keeps the frontmatter block character for character", () => {
+    const raw = `${BLOCK}\n\n# Old title\n\nold body\n`;
+    expect(replaceNoteBody(raw, "# New title\n\nnew body")).toBe(
+      `${BLOCK}\n\n# New title\n\nnew body\n`,
+    );
+  });
+
+  it("does not repair, reorder or drop a block it does not understand", () => {
+    // An invalid block, a key another tool owns and a comment: all three survive the save.
+    const block = "---\nsource: [x\nfoo: 1  # keep me\ncreated: soon\n---";
+    const next = replaceNoteBody(`${block}\n\n# Broken\n\nrest\n`, "# Broken\n\nrewritten");
+    expect(next).toBe(`${block}\n\n# Broken\n\nrewritten\n`);
+  });
+
+  it("writes just the body when the file has no frontmatter", () => {
+    expect(replaceNoteBody("# Loose\n\nno block here\n", "# Loose\n\nrewritten")).toBe(
+      "# Loose\n\nrewritten\n",
+    );
+  });
+
+  it("keeps the block and leaves an empty body when the body is cleared", () => {
+    expect(replaceNoteBody(`${BLOCK}\n\n# Old\n\nbody\n`, "")).toBe(`${BLOCK}\n`);
+    expect(replaceNoteBody("no block\n", "   \n")).toBe("");
+  });
+
+  it("trims the submitted body without collapsing the blank lines inside it", () => {
+    expect(replaceNoteBody(`${BLOCK}\n\n# A\n`, "\n\n# A\n\npara one\n\npara two\n\n")).toBe(
+      `${BLOCK}\n\n# A\n\npara one\n\npara two\n`,
+    );
+  });
+
+  it("does not mistake a horizontal rule in the body for the end of a block", () => {
+    const raw = "no frontmatter\n\n---\n\nstill the body\n";
+    expect(replaceNoteBody(raw, "# Kept\n\n---\n\nrule stays")).toBe(
+      "# Kept\n\n---\n\nrule stays\n",
+    );
+  });
+});
+
+describe("updateNote", () => {
+  const RAW =
+    "---\nsource: desktop\ncreated: 2026-01-02T00:00:00.000Z\ntags:\n  - rust\n---\n\n# Learn Rust\n\nship a CLI\n";
+
+  it("saves the body and returns the note as it now reads", async () => {
+    await put("Goals", "2026-01-02-learn-rust.md", RAW);
+    const note = await updateNote(vault, {
+      folder: "Goals",
+      name: "2026-01-02-learn-rust.md",
+      content: "# Ship in October\n\nthe CLI first",
+    });
+
+    expect(note.title).toBe("Ship in October");
+    expect(note.content).toBe("# Ship in October\n\nthe CLI first");
+    expect(note.frontmatter.tags).toEqual(["rust"]);
+    expect(note.frontmatter.created).toBe("2026-01-02T00:00:00.000Z");
+
+    const raw = await readFile(path.join(vault, "Goals", "2026-01-02-learn-rust.md"), "utf8");
+    expect(raw).toContain("created: 2026-01-02T00:00:00.000Z");
+    expect(raw).toContain("the CLI first");
+    expect(raw).not.toContain("ship a CLI");
+  });
+
+  it("still reports a broken block after the save, so it can be fixed", async () => {
+    await put("Ideas", "2026-01-02-broken.md", "---\ncreated: soon\n---\n\n# Broken\n\nold\n");
+    const note = await updateNote(vault, {
+      folder: "Ideas",
+      name: "2026-01-02-broken.md",
+      content: "# Broken\n\nnew",
+    });
+
+    expect(note.problems).toEqual(["created is not a date"]);
+    const raw = await readFile(path.join(vault, "Ideas", "2026-01-02-broken.md"), "utf8");
+    // The invalid value is left as written rather than replaced with a guess.
+    expect(raw).toContain("created: soon");
+  });
+
+  it("leaves no temporary file behind", async () => {
+    await put("Ideas", "2026-01-02-a.md", RAW);
+    await updateNote(vault, { folder: "Ideas", name: "2026-01-02-a.md", content: "# A\n\nb" });
+    expect(await readdir(path.join(vault, "Ideas"))).toEqual(["2026-01-02-a.md"]);
+  });
+
+  it("touches only the note it was given", async () => {
+    await put("Ideas", "2026-01-02-a.md", RAW);
+    await put("Ideas", "2026-01-02-b.md", RAW);
+    await updateNote(vault, {
+      folder: "Ideas",
+      name: "2026-01-02-a.md",
+      content: "# A\n\nonly me",
+    });
+
+    const neighbour = await readFile(path.join(vault, "Ideas", "2026-01-02-b.md"), "utf8");
+    expect(neighbour).toBe(RAW);
+  });
+
+  it("refuses a name that escapes the folder, and writes nothing", async () => {
+    const outside = await put("", "secret.md", "# Secret\n\ntop secret\n");
+    await expect(
+      updateNote(vault, { folder: "Ideas", name: "../secret.md", content: "# Pwned\n\nha" }),
+    ).rejects.toThrow("name escapes the folder");
+    expect(await readFile(outside, "utf8")).toContain("top secret");
+  });
+
+  it("refuses a folder that escapes the vault, and refuses a name that is not Markdown", async () => {
+    await expect(
+      updateNote(vault, { folder: "..", name: "secret.md", content: "x" }),
+    ).rejects.toThrow("folder escapes the vault");
+    await expect(
+      updateNote(vault, { folder: "Ideas", name: "notes.txt", content: "x" }),
+    ).rejects.toThrow("name escapes the folder");
+  });
+
+  it("rejects a note that is not there instead of creating one", async () => {
+    await expect(
+      updateNote(vault, { folder: "Ideas", name: "missing.md", content: "x" }),
+    ).rejects.toMatchObject({ code: "ENOENT" });
+    expect(await readdir(path.join(vault, "Ideas")).catch(() => [])).toEqual([]);
   });
 });
 

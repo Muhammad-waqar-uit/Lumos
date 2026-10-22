@@ -66,6 +66,25 @@ A single note (`frontmatter` + `content`), plus `problems`: an array of frontmat
 when the note is well formed (see [vault.md](vault.md)). A broken block is reported, never a `500`.
 Returns `400` for an unknown folder or an unsafe filename, and `404` when the note is missing.
 
+### `PUT /note`
+```json
+{ "folder": "Ideas", "name": "2026-10-20-learn-rust.md", "content": "# Learn Rust\n\nship a CLI" }
+```
+Saves a new body into an existing note and answers the note as it now reads:
+`{ "note": { title, folder, frontmatter, content, problems } }`.
+
+Only the body is written. The frontmatter block is left character for character as the file has it,
+so an invalid block, a comment, a key another tool owns and the block's ordering all survive an edit
+— the reader reports a broken block, and the editor does not quietly repair it. `content` is the
+body only: a title still comes from the first `# heading` in it, and clearing the body leaves the
+frontmatter and a note whose title falls back to its filename.
+
+An empty `content` is a real request (the text was deleted) and is told apart from a missing one,
+which is a `400 content is required`. The guards are the same as `GET /note` — `400` for an unknown
+folder or an unsafe filename — and a note that does not exist is a `404`, never a create. The write
+goes to a temporary file in the same folder and is renamed over the note, so a failure part-way
+leaves the old note intact instead of truncated.
+
 ### `GET /link?url=<url>`
 One link, scraped for the desktop: `{ "link": LinkCard }` — how the app shows it inline (`kind`,
 `embedUrl`, `poster`, `frame`) plus the page's `title`, `site`, `description`, `image` and readable
@@ -105,7 +124,9 @@ links) and tag references are edges. A note's `inDegree` counts the notes pointi
 `@lumos/vault-utils`, which reads every note body.
 
 CORS is enabled for local development origins (`localhost`, `127.0.0.1`, `tauri://`) since the
-server binds to `127.0.0.1` only.
+server binds to `127.0.0.1` only, and for the methods the routes actually serve: `GET`, `POST` and
+`PUT`. The plugin's default is `GET,HEAD,POST`, which let `curl` save a note while the app's own
+`PUT` was stopped in the browser's preflight — so the list is written out rather than inherited.
 
 ### When a route fails
 
@@ -181,10 +202,11 @@ write). Keeping this logic in packages lets the desktop app reuse it.
   vault, so your own vault is never touched.
 - `src/app.test.ts` - every route through `app.inject()`: the note listings and their empty case, search
   and its blank query, the folder counts, `/note`'s guards (a missing parameter, an unknown folder, and
-  each traversal shape tried against a decoy file left outside the folders), the graph's nodes, edges
+  each traversal shape tried against a decoy file left outside the folders), `PUT /note` saving a body
+  with the frontmatter untouched and refusing every one of those shapes, the graph's nodes, edges
   and unresolved links, `/link`'s refusals and its status codes with the fetcher injected, the plain
   `500` for a route that throws unexpectedly (built over a vault path that is a file, so the failure
-  is real), and the CORS allow-list.
+  is real), and the CORS allow-list with the preflight a `PUT` needs.
 - `src/fetch-link.test.ts` - the link fetcher with `fetch` and DNS injected, so the suite stays
   offline: which addresses and hostnames are refused (including a redirect into the local network),
   the redirect limit, the byte cap, a missing content type, and the fact that a network error never

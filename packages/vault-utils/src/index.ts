@@ -1,7 +1,7 @@
 /**
  * @lumos/vault-utils - read, list, search, parse, and write the Lumos Markdown vault.
  */
-import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import type { Dirent } from "node:fs";
 import path from "node:path";
 import YAML from "yaml";
@@ -117,6 +117,36 @@ export function parseNote(raw: string): ParsedNote {
     .trim();
   const { data, problems } = readFrontmatter(block);
   return { frontmatter: normalizeFrontmatter(data), content, problems };
+}
+
+/**
+ * Index just past the closing `---` of a frontmatter block, or null when there is no block.
+ *
+ * The same rule `parseNote` reads with, so a file is edited exactly as it is displayed.
+ */
+function frontmatterClose(text: string): number | null {
+  if (!text.startsWith("---")) return null;
+  const close = text.indexOf("\n---", 3);
+  // + 1 for the newline and + 3 for the dashes themselves.
+  return close === -1 ? null : close + 4;
+}
+
+/**
+ * Replace a note file's body, returning the whole file, with the frontmatter block left exactly as
+ * it was written.
+ *
+ * The block is deliberately not re-serialized. A hand-edited note may carry an invalid block, a
+ * comment, an ordering or keys another tool owns, and saving the body must not repair, reorder or
+ * drop any of it - the reader reports those problems rather than hiding the note, and the editor
+ * has no business rewriting them behind the user's back.
+ */
+export function replaceNoteBody(raw: string, content: string): string {
+  const text = raw.replace(/^\uFEFF/, "");
+  const body = content.trim();
+  const close = frontmatterClose(text);
+  if (close === null) return body ? `${body}\n` : "";
+  const block = text.slice(0, close).trimEnd();
+  return body ? `${block}\n\n${body}\n` : `${block}\n`;
 }
 
 /** Serialize frontmatter + body into a complete Markdown document. */
@@ -255,6 +285,44 @@ export async function buildVaultGraph(vaultDir: string): Promise<GraphData> {
     }
   }
   return buildGraphFromNotes(notes);
+}
+
+/**
+ * Save a new body into an existing note.
+ *
+ * The file arrives as folder + filename, both untrusted, so the resolved path is checked against
+ * the vault root twice - once per segment - before anything is read. The write goes to a temporary
+ * file in the same directory and is renamed over the note, so a failure part-way through leaves the
+ * old note intact instead of truncated.
+ */
+export async function updateNote(
+  vaultDir: string,
+  input: { folder: string; name: string; content: string },
+): Promise<Note> {
+  const root = path.resolve(vaultDir);
+  const dir = path.resolve(root, input.folder);
+  const file = path.resolve(dir, input.name);
+  const inside = (base: string, target: string): boolean => target.startsWith(`${base}${path.sep}`);
+
+  if (!inside(root, dir)) throw new Error("folder escapes the vault");
+  // A write is the one place a bad name destroys data, so it is refused here too and not only in
+  // the route that happens to call it.
+  if (!input.name.endsWith(".md") || !inside(dir, file)) throw new Error("name escapes the folder");
+
+  const raw = await readFile(file, "utf8");
+  const next = replaceNoteBody(raw, input.content);
+  // The suffix keeps the temporary file out of every listing: they all filter on `.md`.
+  const temp = `${file}.${process.pid}-${Date.now()}.tmp`;
+  try {
+    await writeFile(temp, next, { encoding: "utf8", flag: "wx" });
+    await rename(temp, file);
+  } catch (err: unknown) {
+    // The failure that brought us here is the one worth reporting; a leftover temporary file cannot
+    // be mistaken for a note, because its name does not end in `.md`.
+    await rm(temp, { force: true }).catch(() => undefined);
+    throw err;
+  }
+  return readNote(file, input.folder);
 }
 
 /** Write a note to the vault, never overwriting an existing file. */
