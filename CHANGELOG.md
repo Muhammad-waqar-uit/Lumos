@@ -304,9 +304,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The extraction is hand-written rather than a library (`link-preview-js`, cheerio): it keeps
   `@lumos/vault-utils` dependency-light and side-effect free, and gives up the edge cases a full HTML
   parser would handle. Recorded in `PLAN.md`.
-- The desktop vault browser renders Markdown notes; tag filtering, code syntax highlighting,
-  resizable panes, routing, and a note editor are still to come. There is no desktop test coverage
-  yet — the suites cover the daemon and the vault packages.
+- The desktop vault browser renders Markdown notes, filters by tag, highlights fenced code, resizes
+  its list pane and carries a `Cmd/Ctrl+K` palette, backlinks and a link graph. Routing
+  (TanStack Router), zustand and a note editor are still to come, tracked under **Plan** in
+  [docs/TODO.md](docs/TODO.md). The desktop suite is 108 tests: 75 over pure logic and SSR renders,
+  and 33 over the sidebar, note list, palette and link pane in jsdom.
 - Writing the tests turned up two small gaps. The read-API routes could not be tested until the Fastify
   app was extracted from `server.ts`, which is now done. `/help` did not list itself in the command
   list it printed; that is fixed, and a test pins every line of the list in order so the next command
