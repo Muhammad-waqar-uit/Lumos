@@ -24,7 +24,7 @@ folder, so progress is always visible.
   `listNotes`, `getNotesByFolder`, `searchNotes`, `saveNote`.
 - The daemon is refactored onto the shared packages, so the desktop can reuse the same logic.
 
-## M3 - Daemon enhanced (Phase 3)
+## M3 - Daemon enhanced (Phase 3) — mostly done
 
 - Link expansion for `/read` and `/interview` (title, description, image). ✅ (`GET /link`, and the desktop reads the page in place)
 - Instagram and Facebook links play in place through their own embeds, with the caption card the daemon reads. ✅
@@ -51,23 +51,27 @@ folder, so progress is always visible.
 
 That finishes the graph, code in a note is highlighted, and a scraped page is now kept for the
 session. The phase itself is not finished: two link-pane items - less site chrome in the reader's
-text, and reading a PDF or plain HTML file - are still open in [`TODO.md`](TODO.md) Phase 5.
+text, and reading a PDF or plain HTML file - are still open under **Plan** in
+[`TODO.md`](TODO.md).
 
-## M6 - Search (Phase 6)
+## M6 - Search (Phase 6) ✅
 
 - Full-text search with `fuse.js`. ✅ (ranked over titles, tags and previews, and usable offline)
 - `Cmd/Ctrl+K` search modal. ✅ (arrows, `Enter`, `Esc`; body matches come from `GET /notes/search`)
 - Recent notes. ✅ (an empty palette lists what was opened this session; a reload starts empty)
 
-## M7 - Editing + polish (Phases 7-8)
+## M7 - Editing + polish (Phases 7-8) — not started
 
 - Markdown editor with preview and save-to-disk.
 - Bulk operations (move, tag, archive).
-- Performance, tests, and complete documentation with screenshots.
+- The desktop component tests, list virtualization and a daemon-side search index.
+- Screenshots in the docs, and a standalone `USAGE.md`.
+
+The work itself is listed under **Plan** in [`TODO.md`](TODO.md).
 
 ## Beyond
 
 Ideas not yet committed: link enrichment summaries, statistics/insights, and optional
 sync/backups. These are recorded in [`FEATURES.md`](FEATURES.md) as `idea`. The graph view left this
-list and shipped in M5; what is left of it - a backlinks panel, tag nodes treated apart from notes -
-lives in [`TODO.md`](TODO.md) Phase 5.
+list and shipped in M5, together with the backlinks panel and the tag nodes; what is left of it
+sits under **Plan** in [`TODO.md`](TODO.md).

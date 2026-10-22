@@ -31,7 +31,7 @@ Each entry says what is given up. Where a limit is deliberate, the alternative i
   no script execution — so a single-page app reads as a shell. Paywalled, login-only and interactive
   pages are in the same place.
 - **Non-HTML content is refused** (PDF, JSON, video, archives), named by its content type. Reading a
-  PDF or a local HTML file the same way is in [TODO.md](TODO.md).
+  PDF or a local HTML file the same way is under **Plan** in [TODO.md](TODO.md).
 - **A page is cached for the session, not refreshed.** The first read of a URL is kept in memory
   (`src/lib/link-cache.ts`), so reopening a note, switching tabs and StrictMode's double mount all
   reuse one request and one scrape; a second caller while the first is still in flight joins it
@@ -91,8 +91,9 @@ play it — neither page can be read or copied.
   player, a post or photo URL to the post card. A URL that is neither falls back to the reader.
 - **Tested in Chromium, not in the Tauri window.** The embeds were verified by hand in both shapes
   (a reel and a video, each playing logged out) and a post embed; the same check inside the packaged
-  app is still manual, like the rest of the Tauri shell. Embedding is the platform's to change — a
-  plugin URL could stop working without notice, and no test can fail to warn you.
+  app is still manual, like the rest of the Tauri shell, and is listed under **Needs your testing**
+  in [TODO.md](TODO.md). Embedding is the platform's to change — a plugin URL could stop working
+  without notice, and no test can fail to warn you.
 
 ## Capture (WhatsApp)
 
@@ -100,7 +101,8 @@ play it — neither page can be read or copied.
   why the README suggests a spare number. This is a risk of the approach, not a bug to fix.
 - **The live WhatsApp session is not tested.** The parser, the filing path, `/find` and the read API
   have tests; the Baileys connection has none — it needs a real linked device and would be flaky in
-  CI. The manual check for it is a QR link followed by a real message.
+  CI. The manual check for it is a QR link followed by a real message, and it is listed under
+  **Needs your testing** in [TODO.md](TODO.md).
 - **Messages during a disconnect are lost.** Reconnection backs off and retries the socket, but there
   is no queue and no replay, so a message sent while the daemon is down is simply not captured.
 - **The allowlist is an exact number match.** There is no per-chat or per-command permission, and an
@@ -112,6 +114,7 @@ play it — neither page can be read or copied.
 
 - **The Tauri shell is untested by CI.** Only the web UI is exercised (in a browser). The Rust side,
   the window configuration and the packaged bundle are manual checks: `pnpm --filter desktop tauri dev`.
+  The check is listed under **Needs your testing** in [TODO.md](TODO.md).
 - **No component tests.** There is no jsdom or Testing Library setup, so the sidebar, list, graph,
   search palette and link pane have no automated coverage - the states were checked by hand. The
   viewer is the exception: it renders to a string in Node, which is how its code highlighting is

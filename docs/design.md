@@ -71,7 +71,7 @@ would never reach the stylesheet.
 
 ## Layout
 
-Three-pane shell (resizing is specified here but not wired up yet — see [TODO.md](TODO.md) Phase 4):
+Three-pane shell, with the list column resizable (see [`desktop.md`](desktop.md) for the splitter):
 
 ```
 ┌───────────┬────────────────────┬────────────────────────────┐
@@ -94,4 +94,4 @@ Three-pane shell (resizing is specified here but not wired up yet — see [TODO.
 
 - Maintain WCAG AA contrast (the tokens above are chosen for this).
 - Never rely on color alone to convey state; pair with text or icons.
-- Full keyboard navigation, including the `Cmd/Ctrl+K` search modal (specified, not wired up yet).
+- Full keyboard navigation, including the `Cmd/Ctrl+K` search modal and `j`/`k` through the note list.

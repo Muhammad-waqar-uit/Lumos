@@ -2,6 +2,38 @@
 
 Chronological record of what has been built. Newest entries first within each date.
 
+## 2026-10-22
+
+### Done — the checklist reads in the order the work happens in
+- [x] `TODO.md` is now ordered by standing rather than by phase: **Needs your testing** first,
+  then **Plan**, then **In progress**, then **Done** last. The phase each item belongs to stays on
+  the item, so the phases in `PLAN.md` still map onto it
+- [x] The four checks that no unit test can close are at the top, each marked `[!]`: the Tauri
+  shell, a live WhatsApp session, the social embeds inside the packaged window, and the graph's
+  **Show notes** button, which needs a pointer hit the automation could not place
+- [x] The open-ended items were split rather than left as one box that could never be ticked.
+  "Richer error messages and logging" was two things: the refusals all name their cause (done),
+  and a route that throws for an unexpected reason still answers with the raw error message, which
+  for a filesystem failure carries the vault path (open). "UI polish" was the empty, loading and
+  error states (done - every panel has them) and the transitions (open - only hover colours
+  transition today). "Performance" was the lazy graph renderer and the once-per-load search index
+  (done) against list virtualization and a daemon-side index (open). "Complete docs" was the docs
+  themselves (done) against the screenshots and a standalone `USAGE.md` (open)
+- [x] The Fastify behaviour behind that first item was measured rather than assumed: a route that
+  throws answers `500` with the error's own message in the body, so the plan item is written
+  against a fact rather than a guess
+- [x] `FEATURES.md` was regrouped the same way - what is planned and only an idea first, then what
+  is in progress, then what is done
+- [x] The two "Next up" lists left open in this log are annotated with what each item became, so
+  the log does not leave a promise open that has been kept
+- [x] Stale claims found and corrected: `desktop.md` still listed every keyboard shortcut and the
+  recent-notes palette under "Planned capabilities" after both shipped, `design.md` said the panes
+  were not resizable and the search modal was not wired up, and the roadmap's "Beyond" paragraph
+  still offered the backlinks panel and the tag nodes as if they were outstanding
+- [x] One formatting defect fixed: two bullets in the 2026-10-20 entry had run together on one
+  line, so the browser check of the backlinks panel was part of the unit-test bullet
+- [x] `pnpm validate` green, and every internal link in `docs/` still resolves
+
 ## 2026-10-21
 
 ### Done — a broken note is reported, not hidden
@@ -134,7 +166,8 @@ Chronological record of what has been built. Newest entries first within each da
 - [x] The viewer reads the graph the app already loaded (the demo graph offline), so the panel costs
   no request and works with the daemon stopped
 - [x] 5 unit tests for the new function: the source list, a note nobody points at, the tag case, the
-  tag node itself, de-duplication of a note that links twice, and an unknown id- [x] Verified in the browser against a temporary vault: three notes, two linking to the third, the
+  tag node itself, de-duplication of a note that links twice, and an unknown id
+- [x] Verified in the browser against a temporary vault: three notes, two linking to the third, the
   panel showing "Linked from 2", and clicking a row opening that note in the Notes view. With the
   daemon stopped, the demo vault's **Learn Rust** listed its two sources, so the panel is not another
   feature that dies offline
@@ -347,11 +380,11 @@ Chronological record of what has been built. Newest entries first within each da
 - [x] `docs/LIMITATIONS.md` added, and the docs that enumerate the doc set (README, PLAN, ARCHITECTURE, CONTRIBUTING, RULES, CLAUDE, AGENTS, both app READMEs) point at it: the known limits in one place, with what each gives up — the reader's JavaScript blind spot and refused local addresses, the cache-less refetch, the untested WhatsApp session and Tauri shell, branch protection still off, and the HTTP routes having no tests
 
 ### Next up
-- [ ] Turn on branch protection on `main` so the green `pnpm validate` check is required to merge
-- [ ] Link pane: keep a scraped page for the session (it refetches when the note is reopened, and twice in dev under StrictMode)
-- [ ] Link pane: strip site chrome harder — the reader still carries code samples and repeated navigation text from some pages
-- [ ] Frontmatter schema validation, and reporting a malformed note instead of skipping it silently
-- [ ] `/help` does not list itself in the command list it prints
+- [x] Turn on branch protection on `main` so the green `pnpm validate` check is required to merge — done 2026-10-19
+- [x] Link pane: keep a scraped page for the session (it refetches when the note is reopened, and twice in dev under StrictMode) — done 2026-10-20
+- [ ] Link pane: strip site chrome harder — the reader still carries code samples and repeated navigation text from some pages — still open, under **Plan** in [`TODO.md`](TODO.md)
+- [x] Frontmatter schema validation, and reporting a malformed note instead of skipping it silently — done 2026-10-21
+- [x] `/help` does not list itself in the command list it prints — done 2026-10-19
 
 ## 2026-10-15
 
@@ -392,12 +425,12 @@ Chronological record of what has been built. Newest entries first within each da
 - [x] Exercised over real HTTP against a temporary vault on a spare port — `/find zeta` returned both matching notes across Ideas and Goals, `/find ZETA` matched case-insensitively, no-match and empty-query replies were correct, then the daemon was stopped and the temp vault deleted
 
 ### Next up
-- [ ] Turn on branch protection on `main` so the green `pnpm validate` check is required to merge (the workflow itself runs on every PR and every push)
-- [ ] Route tests for the read API (needs a Fastify factory extracted from `server.ts`)
-- [ ] Tag filtering + syntax highlighting for fenced code
-- [ ] Graph follow-ups: a backlinks panel in the note viewer, tag nodes styled and clickable apart from notes
-- [ ] Resizable panes, TanStack Router, zustand
-- [ ] Phase 3: link expansion, `/plan` with Ollama, tagging
+- [x] Turn on branch protection on `main` so the green `pnpm validate` check is required to merge (the workflow itself runs on every PR and every push) — done 2026-10-19
+- [x] Route tests for the read API (needs a Fastify factory extracted from `server.ts`) — done 2026-10-16
+- [x] Tag filtering + syntax highlighting for fenced code — done 2026-10-19 and 2026-10-20
+- [x] Graph follow-ups: a backlinks panel in the note viewer, tag nodes styled and clickable apart from notes — done 2026-10-20
+- [x] Resizable panes, TanStack Router, zustand — the panes are done 2026-10-21; TanStack Router and zustand are still open, under **Plan** in [`TODO.md`](TODO.md)
+- [x] Phase 3: link expansion, `/plan` with Ollama, tagging — link expansion and tagging are done; `/plan` with Ollama is still open, under **Plan** in [`TODO.md`](TODO.md)
 
 ## 2026-10-13
 
