@@ -100,6 +100,19 @@ links) and tag references are edges. A note's `inDegree` counts the notes pointi
 CORS is enabled for local development origins (`localhost`, `127.0.0.1`, `tauri://`) since the
 server binds to `127.0.0.1` only.
 
+### When a route fails
+
+Each route answers its own refusal with a sentence that names the cause - `400 text is required`,
+`400 unknown folder`, `400 invalid name`, `404 note not found`, and the link fetcher's reasons - and a
+`4xx` Fastify raises itself (a malformed JSON body, say) keeps its own message, which is about the
+request rather than about the machine.
+
+Anything else disappears into one handler: `500 { "error": "The daemon could not finish that
+request." }`. The error's own message is deliberately absent, because a Node error is written as the
+absolute path it failed on (`ENOENT ... Ideas/x.md`), so sending it would tell the caller where the
+vault is. The log keeps what is useful and harmless - the error's `name` and `code`, tagged with the
+request id - and never the path.
+
 ## Configuration
 
 | Variable | Default | Description |
@@ -134,8 +147,9 @@ write). Keeping this logic in packages lets the desktop app reuse it.
 - `src/app.test.ts` - every route through `app.inject()`: the note listings and their empty case, search
   and its blank query, the folder counts, `/note`'s guards (a missing parameter, an unknown folder, and
   each traversal shape tried against a decoy file left outside the folders), the graph's nodes, edges
-  and unresolved links, `/link`'s refusals and its status codes with the fetcher injected, and the CORS
-  allow-list.
+  and unresolved links, `/link`'s refusals and its status codes with the fetcher injected, the plain
+  `500` for a route that throws unexpectedly (built over a vault path that is a file, so the failure
+  is real), and the CORS allow-list.
 - `src/fetch-link.test.ts` - the link fetcher with `fetch` and DNS injected, so the suite stays
   offline: which addresses and hostnames are refused (including a redirect into the local network),
   the redirect limit, the byte cap, a missing content type, and the fact that a network error never
@@ -147,7 +161,7 @@ against a temporary vault.
 
 ## Planned enhancements
 
-See the **Plan** section of [`TODO.md`](TODO.md): `/plan` with Ollama, a config file and an error
-handler for the daemon - tag extraction landed, and a captured message's `#hashtags` now become its
-frontmatter tags (see [vault.md](vault.md)). The parser, the filing path, `/find`, the link fetcher
-and the HTTP routes are covered by tests (see Tests above).
+See the **Plan** section of [`TODO.md`](TODO.md): `/plan` with Ollama and a config file. Tag
+extraction landed, and a captured message's `#hashtags` now become its frontmatter tags (see
+[vault.md](vault.md)). The parser, the filing path, `/find`, the link fetcher and the HTTP routes are
+covered by tests (see Tests above).

@@ -316,3 +316,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   that check before a pull request can merge, with the branch kept up to date and force pushes and
   deletions blocked. Administrators can still push directly, so it is a guardrail rather than a
   lock — [docs/LIMITATIONS.md](docs/LIMITATIONS.md) says so.
+
+### Fixed (continued)
+- A route that fails for a reason none of them anticipated answers a plain
+  `500 { "error": "The daemon could not finish that request." }` instead of Fastify's default, which
+  put the error's own message in the body. For a filesystem failure that message is the absolute
+  path, so the reply no longer says where the vault is. The detail is not lost: the log records the
+  error's `name` and `code` against the request id, and still never the path. A `4xx` Fastify raises
+  itself keeps its own message, so a malformed JSON body still says what was wrong with it.
+- Two route tests: the app built over a vault path that is a file, so `GET /notes` reaches `readdir`
+  and the failure is real rather than a stub, asserting the plain `500` and that the body carries
+  neither the path nor the error code; and a malformed body asserting the `400` still names its
+  cause. Suite is 298: 136 in `@lumos/vault-utils`, 87 in the daemon, 75 in the desktop.

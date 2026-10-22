@@ -361,6 +361,51 @@ describe("GET /link", () => {
   });
 });
 
+describe("unexpected route failures", () => {
+  /**
+   * A vault that is a file rather than a directory is the honest way to make a route throw
+   * for a reason no route anticipates: `readdir` answers ENOTDIR, and the message of that
+   * error carries the absolute path it failed on.
+   */
+  async function appOverAFile(): Promise<{ notADirectory: string; app: FastifyInstance }> {
+    const dir = await mkdtemp(path.join(tmpdir(), "lumos-routes-"));
+    tempDirs.push(dir);
+    const notADirectory = path.join(dir, "vault.md");
+    await writeFile(notADirectory, "not a vault");
+    const app = await createApp({ vault: notADirectory });
+    apps.push(app);
+    return { notADirectory, app };
+  }
+
+  it("answers a plain 500 without the path the error carries", async () => {
+    const { notADirectory, app } = await appOverAFile();
+    const res = await app.inject({ method: "GET", url: "/notes" });
+
+    expect(res.statusCode).toBe(500);
+    expect(res.json()).toEqual({ error: "The daemon could not finish that request." });
+    // The vault path and the Node error stay out of the reply.
+    expect(res.body).not.toContain("vault.md");
+    expect(res.body).not.toContain(notADirectory);
+    expect(res.body).not.toContain("ENOTDIR");
+  });
+
+  it("still names the cause of a 4xx it raised itself", async () => {
+    const { app } = await makeApp();
+    const res = await app.inject({
+      method: "POST",
+      url: "/message",
+      headers: { "content-type": "application/json" },
+      payload: "{oops",
+    });
+
+    expect(res.statusCode).toBe(400);
+    expect(res.json<{ error: string }>().error).toBeTruthy();
+    expect(res.json<{ error: string }>().error).not.toBe(
+      "The daemon could not finish that request.",
+    );
+  });
+});
+
 describe("CORS", () => {
   it("allows the dev server and the Tauri origin", async () => {
     const { app } = await makeApp();
