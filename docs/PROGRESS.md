@@ -4,6 +4,28 @@ Chronological record of what has been built. Newest entries first within each da
 
 ## 2026-10-22
 
+### Done — an unexpected failure answers a plain 500
+- [x] The daemon has one error handler now (`app.setErrorHandler` in `app.ts`). The routes already
+  answered their own refusals with a sentence naming the cause; what they did not anticipate went
+  to Fastify's default handler, which puts the error's own message in the body. For a filesystem
+  failure that message is the absolute path, so the reply said where the vault is. It now answers
+  `500 { "error": "The daemon could not finish that request." }`
+- [x] The detail is not thrown away, but it is not the message either: the log records the error's
+  name and code (`ENOTDIR`) against the request id, since the message is the thing that carries the
+  path. Neither the reply nor the log names the vault
+- [x] A `4xx` Fastify raised itself keeps its own message - a malformed JSON body still says what was
+  wrong with it - so the handler closes the leak without flattening the refusals that were already
+  specific
+- [x] Two route tests, and the first one provokes a real failure rather than a stub: the app is
+  built over a vault path that is a file, so `GET /notes` reaches `readdir` and gets `ENOTDIR`. The
+  test asserts the plain 500 and that the body carries neither the path nor the error code. The
+  second posts a malformed body and asserts the `400` still names its cause
+- [x] Exercised against a running daemon, not only through `app.inject()`: with `VAULT_PATH` set to a
+  file, `GET /notes` answered `500` with the plain message and the log line carried
+  `{"name":"Error","code":"ENOTDIR"}` and no path; with a real vault the same build answered
+  `200` for `/notes` and `/folders` and `400 unknown folder` for a traversal attempt
+- [x] `pnpm validate` green - 298 tests (87 daemon, +2)
+
 ### Done — the checklist reads in the order the work happens in
 - [x] `TODO.md` is now ordered by standing rather than by phase: **Needs your testing** first,
   then **Plan**, then **In progress**, then **Done** last. The phase each item belongs to stays on

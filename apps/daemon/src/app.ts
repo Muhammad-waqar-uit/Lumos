@@ -7,7 +7,7 @@
  * vault or the network by accident.
  */
 import path from "node:path";
-import Fastify, { type FastifyInstance } from "fastify";
+import Fastify, { type FastifyError, type FastifyInstance } from "fastify";
 import cors from "@fastify/cors";
 import {
   buildVaultGraph,
@@ -39,6 +39,23 @@ export async function createApp({
   // Local-only dev origins (Vite dev server + Tauri). The server binds to 127.0.0.1.
   await app.register(cors, {
     origin: [/^https?:\/\/localhost(:\d+)?$/, /^https?:\/\/127\.0\.0\.1(:\d+)?$/, /^tauri:\/\//],
+  });
+
+  /**
+   * One place decides what a failure says. The routes answer their own refusals with a
+   * sentence that names the cause; this catches the rest - a filesystem error, say - and
+   * answers a plain 500. The raw message is neither sent nor logged, because a Node error
+   * carries the absolute path it failed on and the vault path stays out of both.
+   *
+   * A 4xx Fastify raised itself (malformed JSON, an unhandled method) keeps its own message:
+   * that one is about the request and names nothing on disk.
+   */
+  app.setErrorHandler<FastifyError>((err, req, reply) => {
+    const status = err.statusCode ?? 500;
+    if (status < 500) return reply.code(status).send({ error: err.message });
+
+    req.log.error({ name: err.name, code: err.code }, "route failed unexpectedly");
+    return reply.code(500).send({ error: "The daemon could not finish that request." });
   });
 
   app.get("/health", async () => ({ ok: true }));

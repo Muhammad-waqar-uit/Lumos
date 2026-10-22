@@ -35,11 +35,6 @@ else on this page can close them.
 
 - [ ] `/plan today|tomorrow` with Ollama integration
 - [ ] Config file support (dotenv / JSON)
-- [ ] One error handler on the Fastify app. The refusals are already specific - `400 text is
-  required`, `400 unknown folder`, `400 invalid name`, `404 note not found`, and the link
-  fetcher's own reasons - but a route that throws for an unexpected reason still answers with the
-  raw error message, which for a filesystem failure carries the vault path. It should answer a
-  plain 500 and leave the detail in the log.
 
 ### Phase 4 - Desktop UI foundation (P0) - open items
 
@@ -145,6 +140,13 @@ Nothing in flight. The next item to pick up is the first one under **Plan**.
 - [x] Tag extraction: `#hashtags` in a captured message become the note's frontmatter tags, using
   the graph's own `extractTags()` rules (headings and code excluded, lower-cased, de-duplicated); no
   model, so it stays deterministic and offline
+- [x] One error handler on the Fastify app - the routes answer their own refusals with a sentence
+  that names the cause, and anything they did not anticipate answers a plain
+  `500 { "error": "The daemon could not finish that request." }`. The raw message is neither sent
+  nor logged, because a Node error carries the absolute path it failed on and the vault path stays
+  out of both; the log records the error's name and code against the request id instead. A `4xx`
+  Fastify raised itself keeps its own message, so a malformed body still says what was wrong. Two
+  route tests put a vault that is a file behind the app, so `GET /notes` fails for real
 - [x] Error messages that name their own cause - a missing `text`, an unknown folder, an unsafe
   filename, a missing note, and the link fetcher's refusals (a scheme that is not http(s),
   credentials in the URL, a local or private address, too many redirects, an unreachable page, a
