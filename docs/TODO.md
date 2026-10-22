@@ -91,7 +91,7 @@ Nothing in flight. The next item to pick up is the first one under **Plan**.
   `@lumos/vault-utils` and the daemon, plus 108 over the desktop (filtering, demo data, search
   ranking, recent notes, the link cache, list movement, pane widths, graph layout memory, the
   viewer's code highlighting, and the sidebar, note list, search palette and link pane as
-  components), so 331 in `pnpm validate`
+  components), so 349 in `pnpm validate`
 - [x] Desktop component tests - jsdom + Testing Library (`@testing-library/react`, jsdom) over the
   four components that carry state, each file declaring its own `jsdom` environment so the pure-logic
   suites stay in Node. They assert behaviour rather than markup: the active folder and view, the

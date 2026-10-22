@@ -31,6 +31,7 @@ folder, so progress is always visible.
 - `/find <query>` over the vault. ✅ (title, tags and body; five matches per reply, the rest counted)
 - `/plan today|tomorrow` backed by a local Ollama model.
 - Tag extraction and auto-tagging. ✅ (`#hashtags` in a message become the note's frontmatter tags, using the graph's own rules)
+- Settings from a config file, with the environment overriding it. ✅ (`lumos.config.json`, see [daemon.md](daemon.md))
 
 ## M4 - Dark UI foundation (Phase 4) — mostly done
 
@@ -60,11 +61,14 @@ text, and reading a PDF or plain HTML file - are still open under **Plan** in
 - `Cmd/Ctrl+K` search modal. ✅ (arrows, `Enter`, `Esc`; body matches come from `GET /notes/search`)
 - Recent notes. ✅ (an empty palette lists what was opened this session; a reload starts empty)
 
-## M7 - Editing + polish (Phases 7-8) — not started
+## M7 - Editing + polish (Phases 7-8) — partly done
 
+- Desktop component tests in jsdom with Testing Library: the sidebar, note list, palette and link
+  pane. ✅
 - Markdown editor with preview and save-to-disk.
 - Bulk operations (move, tag, archive).
-- The desktop component tests, list virtualization and a daemon-side search index.
+- List virtualization and a daemon-side search index.
+- Subtle transitions between panes and panels.
 - Screenshots in the docs, and a standalone `USAGE.md`.
 
 The work itself is listed under **Plan** in [`TODO.md`](TODO.md).

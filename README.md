@@ -210,7 +210,7 @@ git checkout -b feat/my-change
 - [x] Full-text search with `/find <query>` (title, tags and body; up to five matches per reply)
 - [x] Tag extraction and auto-tagging — `#hashtags` in a captured message become the note's frontmatter tags
 - [~] Tauri desktop app UI for browsing/searching vault - dark shell, folder sidebar, note list, Markdown-rendering viewer with syntax-highlighted code, link graph, tag filtering and a `Cmd/Ctrl+K` search palette are in place; routing and an editor remain
-- [~] Test coverage - vitest suites for `@lumos/vault-utils` (136 tests), the daemon (85 tests) and the desktop (75 tests) run inside `pnpm validate`; the daemon routes are covered through `app.inject()` and the viewer is rendered in Node, but the rest of the desktop components still have no jsdom coverage
+- [x] Test coverage - 349 vitest tests run inside `pnpm validate`: 142 for `@lumos/vault-utils`, 99 for the daemon (every route through `app.inject()`, with the link fetcher and config injected) and 108 for the desktop (pure logic, SSR renders, and the sidebar, note list, palette and link pane in jsdom). The graph canvas and an end-to-end run in a real browser are the gaps, both tracked in [docs/TODO.md](docs/TODO.md)
 - [ ] Enrichment: extract summaries, key points from links
 - [ ] Sync/backups, exports
 
