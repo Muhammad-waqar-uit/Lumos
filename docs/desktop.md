@@ -134,9 +134,8 @@ theme entries: Tailwind prunes theme values it cannot see used in a class name, 
 referenced only from TypeScript would never reach the stylesheet.
 
 The pure parts are tested: the layout memory (`src/lib/graph-layout.test.ts`, 12 cases) and the
-neighbourhood and backlink rules in `@lumos/vault-utils`. The canvas itself has no component test -
-that needs jsdom + Testing Library, tracked under **Plan** in [`TODO.md`](TODO.md) - so a tab switch
-is checked by hand.
+neighbourhood and backlink rules in `@lumos/vault-utils`. The canvas itself has no test - it draws
+through the graph library and needs a real renderer, not jsdom - so a tab switch is checked by hand.
 
 ### Tag filtering
 
@@ -152,7 +151,8 @@ is checked by hand.
 - Selecting a tag node in the graph offers **Show notes**, which returns to the notes view with that
   tag filtered - the same handler the chips use.
 - The filtering is pure logic in `src/lib/filter.ts`, covered by `src/lib/filter.test.ts`. The desktop
-  workspace has its own `test` script, so `pnpm --filter desktop test` checks it.
+  workspace has its own `test` script, so `pnpm --filter desktop test` checks it, together with the
+  component tests over the sidebar, the note list, the palette and the link pane.
 - The offline demo notes carry the same tags their bodies declare (`src/lib/demo.ts`), so the chips
   and the filter work with the daemon stopped; `demo.test.ts` keeps the listing and the bodies in
   step.

@@ -11,7 +11,6 @@ then what is in progress, then what is done.
 |---|---|---|
 | `/plan` with Ollama | planned | Local AI daily planning |
 | Note editor | planned | Markdown editor with preview, and save-to-disk |
-| Desktop component tests | planned | jsdom + Testing Library for the sidebar, list, palette and link pane states. The viewer is already asserted through SSR renders |
 | Link enrichment | idea | Summaries and key points from links |
 
 ## In progress
@@ -57,7 +56,7 @@ Nothing in progress.
 | Commit message lint | commitlint enforces `<type>(<scope>): <description>` |
 | Pre-push validation | `pnpm validate` — lint + format:check + typecheck + test + build |
 | Test runner | vitest 5; `pnpm test` runs every workspace that has a suite |
-| Desktop tests | 75 tests over the note filter, the demo vault, the search ranking/merge, the recent-notes order, the link cache, list movement, the pane widths, the graph layout memory (`src/lib/*.test.ts`) and the viewer's code highlighting and frontmatter warning (SSR renders in `src/components/NoteViewer.test.tsx`), run by `pnpm test` |
+| Desktop tests | 108 tests, run by `pnpm test`: 75 over pure logic (the note filter, the demo vault, the search ranking/merge, the recent-notes order, the link cache, list movement, the pane widths, the graph layout memory) and the viewer's code highlighting and frontmatter warning through SSR renders, plus 33 component tests in jsdom + Testing Library for the sidebar, the note list, the search palette and the link pane |
 | Parser & vault tests | 221 tests: 136 for `@lumos/vault-utils` (frontmatter rules, link/tag extraction, graph assembly, neighbourhoods, link parsing and page metadata, the Instagram/Facebook URL shapes, and tags written at capture) and 85 for the daemon (including `/find`, the link fetcher's refusals, and every HTTP route driven through `app.inject()`) |
 | Read API route tests | `createApp()` in `apps/daemon/src/app.ts` builds the app over a vault directory; `app.test.ts` covers every route plus CORS through `app.inject()`, with the link fetcher injected |
 | Branch workflow | Short-lived `<type>/<description>` branches; `pre-commit` blocks commits on `main` |
