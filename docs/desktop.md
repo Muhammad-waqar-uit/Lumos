@@ -11,14 +11,15 @@ daemon (falling back to demo data when the daemon is offline):
 - `src/App.tsx` - state, vault loading, folder + search filtering, selection
 - `src/components/Sidebar.tsx` - folders with note counts
 - `src/components/NoteList.tsx` - searchable note list (title, date, preview, tags)
-- `src/components/NoteViewer.tsx` - note header (folder, date, source, url) + backlinks + link pane + Markdown body
+- `src/components/NoteViewer.tsx` - note header (folder, date, source, url) + backlinks + link pane + Markdown body, and the Edit button that turns the body into the editor
+- `src/components/NoteEditor.tsx` - the body as a textarea: Save, Cancel, the unsaved marker and a failure that keeps the draft
 - `src/components/LinkPane.tsx` - the note's link: video player, image, or scraped reader card
 - `src/components/GraphView.tsx` - canvas link graph (routes, controls, click-to-open)
 - `src/components/PaneBoundary.tsx` - error boundary around the lazily loaded graph pane
 - `src/components/SearchModal.tsx` - the `Cmd/Ctrl+K` palette: ranked matches, keyboard selection, body matches from the daemon
-- `src/components/StatusBar.tsx` - connection state, the search shortcut and the note count
+- `src/components/StatusBar.tsx` - connection state, the search shortcut, the note count, and a notice the app needs to say (a save whose refresh failed)
 - `src/lib/list-nav.ts` - the arithmetic behind `j`/`k` in the note list, plus the rule for when a key belongs to a field
-- `src/lib/api.ts` - daemon client (`/notes`, `/notes/search`, `/folders`, `/note`, `/graph`, `/link`)
+- `src/lib/api.ts` - daemon client (`/notes`, `/notes/search`, `/folders`, `/note` for both reading and `PUT`-saving, `/graph`, `/link`)
 - `src/lib/graph-palette.ts` - reads the `--color-graph-*` tokens and maps a folder to its hue, with a fallback token per lookup
 - `src/lib/demo.ts` - demo data used when the daemon is not running
 - `src/lib/search.ts` - fuse.js index over the loaded notes, plus the merge of local and body matches
@@ -46,7 +47,36 @@ The three cases - a registered language, an unregistered one, and an untagged fe
 to a string in Node and asserted in `src/components/NoteViewer.test.tsx`, so the wiring has a test
 without a jsdom setup.
 
-Still to come: routing and a note editor (see the **Plan** section of [`TODO.md`](TODO.md)).
+Still to come: routing, a markdown preview beside the textarea, and creating a note (see the **Plan**
+section of [`TODO.md`](TODO.md)).
+
+### Editing a note
+
+**Edit** in the note header turns the body into a plain textarea. Markdown is edited as text on
+purpose: the vault is the file, and a rendered editor would have to round-trip syntax the user never
+wrote.
+
+- **Save** (`Cmd/Ctrl+S`) writes the body and goes back to the rendered note; **Cancel** (`Esc`)
+  drops the draft. The toolbar says when there is something unsaved.
+- A failed save keeps the draft and shows the daemon's own sentence — `unknown folder`, a missing
+  note, an unreachable daemon — instead of a status code. Losing typing to a failure would be the
+  one unforgivable outcome here, so the editor owns its draft until the daemon accepts it.
+- Only the body is written. The frontmatter block is left exactly as the file has it, so a note with
+  a broken block keeps showing its reasons above the body rather than being repaired behind the
+  user's back. What the app cannot change — tags, `status`, the folder — is not offered as an input
+  that would silently do nothing.
+- After a save the listing, the folder counts and the graph are read again, because a new heading
+  changes the title, a new `#tag` changes the tags and a new `[[link]]` changes the graph. The list
+  row therefore shows the new title without a reload. If that refresh fails, the status bar says so:
+  the save landed, and saying "save failed" would be a lie.
+- With the daemon down the button is disabled and its tooltip says why, because there is nothing to
+  save to; the demo vault is still readable.
+- The draft belongs to the note that was open. Opening another note closes the editor and drops what
+  was typed — [LIMITATIONS.md](LIMITATIONS.md) names that, and the missing undo and conflict
+  handling, rather than implying they exist.
+- Covered by `src/components/NoteEditor.test.tsx` (draft, save, failure, shortcut, one save at a
+time, cancel) and an SSR render in `src/components/NoteViewer.test.tsx` for the button being offered
+only while the daemon answers.
 
 ### Link pane
 

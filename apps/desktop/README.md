@@ -11,10 +11,13 @@ While the daemon handles capture via WhatsApp, the desktop app is designed to he
 - Play a link or read the page it points at without leaving the app — a YouTube or Vimeo link plays in place, an Instagram reel or post and a Facebook video or post render through the host's own embed with their caption beside them, an image link shows the image, any other page is read as text
 - Filter by folder, by text, and by tag — the tags in scope appear as chips with counts, and a note's own tag works the same way
 - Get a bird's-eye view of your captured thoughts, as a link graph
+- Edit a note and save it back to the vault — **Edit** in the note header, Save (`Cmd/Ctrl+S`) or
+  Cancel (`Esc`). Only the body is written; the frontmatter block is left exactly as the file has it
+  so a hand-edited block is never quietly rewritten. Saving needs the daemon
 
-Notes are read-only today, and the vault is served by the daemon: with it stopped the app shows
-`src/lib/demo.ts` instead. Set `VITE_DAEMON_URL` to point the app at a daemon on another port. What is
-known to be missing is listed in [docs/LIMITATIONS.md](../../docs/LIMITATIONS.md).
+The vault is served by the daemon: with it stopped the app shows `src/lib/demo.ts` instead and Edit
+is disabled. Set `VITE_DAEMON_URL` to point the app at a daemon on another port. What is known to be
+missing is listed in [docs/LIMITATIONS.md](../../docs/LIMITATIONS.md).
 
 ## Tech Stack
 

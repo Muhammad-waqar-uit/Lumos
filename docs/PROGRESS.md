@@ -4,6 +4,41 @@ Chronological record of what has been built. Newest entries first within each da
 
 ## 2026-10-22
 
+### Done — a note can be edited and saved from the desktop
+- [x] Until now only WhatsApp could write to the vault, which made a "second brain" a read-only
+  archive. **Edit** in the note header turns the body into a textarea, Save (`Cmd/Ctrl+S`) writes it
+  back, Cancel (`Esc`) drops the draft, and the toolbar says when there is something unsaved
+- [x] Only the body is written and the frontmatter block is left character for character. The
+  obvious alternative was to parse the note and re-serialize it, which would have silently rewritten
+  a hand-edited block: repaired values, reordered keys, dropped comments. The reader already reports
+  a broken block rather than hiding the note, so the editor has no business fixing one quietly
+- [x] `PUT /note` on the daemon, `@lumos/vault-utils` `replaceNoteBody()` and `updateNote()`. The
+  route shares every guard `GET /note` has - an unknown folder or an unsafe name is a `400`, a note
+  that is not there is a `404` and never a create - and the write goes to a temporary file then a
+  rename, so an interrupted save leaves the old note intact rather than truncated
+- [x] An empty body is a real request (the text was deleted) and is told apart from a missing one,
+  which is a `400`. Saving is the one place a mistake destroys data, so the name and folder are
+  checked against the vault root inside `updateNote()` as well as in the route
+- [x] A failed save keeps the draft and shows the daemon's own sentence above it - losing typing to
+  a daemon that went away would be the one unforgivable outcome here
+- [x] After a save the listing, folder counts and graph are re-read, because a new heading changes
+  the title, a new `#tag` changes the tags and a new `[[link]]` changes the graph. When that refresh
+  fails the status bar says so: the save already landed, and calling it a failed save would be a lie
+- [x] The bug only the running app could show: `@fastify/cors` defaults to `GET,HEAD,POST`, so the
+  browser's preflight refused the `PUT` and the editor said "Failed to fetch" while `curl` against
+  the same route succeeded. The daemon now names the methods it serves, and a preflight test covers
+  it - the suite had only ever asked with a `GET`
+- [x] 28 tests: 13 in `@lumos/vault-utils` (the block surviving verbatim, a broken block still broken
+  after a save, an empty body, a horizontal rule not mistaken for the end of the block, traversal
+  refused on the folder and on the name, a missing file never created), 7 in the daemon (the save,
+  the empty body, every refusal, `404`, other notes untouched, the preflight) and 8 in the desktop
+  (draft, save, failure, `Cmd/Ctrl+S`, one save at a time, cancel, Edit offered only when reachable)
+- [x] `pnpm validate` green - 377 tests: 155 vault-utils, 106 daemon, 116 desktop
+- [x] Exercised in the running app, not just the suite: edited the body in the browser, watched the
+  list row take the new title from the re-read listing, and confirmed the file on disk kept its
+  frontmatter, its tags and its filename, with no temporary file left behind. Stopped the daemon and
+  reloaded: demo notes render, Edit is disabled and its tooltip says why
+
 ### Done — the daemon reads a config file
 - [x] Four settings in four environment variables was workable from a shell and awkward for anything
   that has to start the daemon itself. `loadConfig()` in `config.ts` reads `lumos.config.json`

@@ -15,10 +15,23 @@ import {
   listNotes,
   readNote,
   searchNotes,
+  updateNote,
 } from "@lumos/vault-utils";
 import { FOLDERS, type Folder, type LinkCard } from "@lumos/shared";
 import { LinkFetchError, fetchLinkCard } from "./fetch-link.js";
 import { handleMessage } from "./handler.js";
+
+/**
+ * A note filename the routes will touch: a plain `.md` name with no separators and no `..`.
+ *
+ * Reading is guarded against traversal and writing is guarded by the same rule, because a name that
+ * could escape its folder is a file disclosure on one route and a file overwrite on the other.
+ */
+function isNoteName(name: string): boolean {
+  return (
+    name.endsWith(".md") && !name.includes("/") && !name.includes("\\") && !name.includes("..")
+  );
+}
 
 export interface AppOptions {
   /** Vault root that every route reads, and `/message` writes into. */
@@ -37,8 +50,13 @@ export async function createApp({
   const app = Fastify({ logger });
 
   // Local-only dev origins (Vite dev server + Tauri). The server binds to 127.0.0.1.
+  //
+  // The methods are listed because the plugin's default is `GET,HEAD,POST`: a browser asks in a
+  // preflight, is told PUT is not allowed, and the save fails in the app with only "Failed to fetch"
+  // to show for it. Only what the routes actually offer is allowed.
   await app.register(cors, {
     origin: [/^https?:\/\/localhost(:\d+)?$/, /^https?:\/\/127\.0\.0\.1(:\d+)?$/, /^tauri:\/\//],
+    methods: ["GET", "POST", "PUT"],
   });
 
   /**
@@ -116,16 +134,43 @@ export async function createApp({
     if (!folder || !name) return reply.code(400).send({ error: "folder and name are required" });
     if (!FOLDERS.includes(folder as Folder))
       return reply.code(400).send({ error: "unknown folder" });
-    // Guard against path traversal: a plain filename that ends in .md, no separators.
-    if (name.includes("/") || name.includes("\\") || name.includes("..") || !name.endsWith(".md")) {
-      return reply.code(400).send({ error: "invalid name" });
-    }
+    if (!isNoteName(name)) return reply.code(400).send({ error: "invalid name" });
     try {
       return { note: await readNote(path.join(vault, folder, name), folder) };
     } catch {
       return reply.code(404).send({ error: "note not found" });
     }
   });
+
+  /**
+   * Save an edited body back into an existing note.
+   *
+   * Only the body is written: the frontmatter block is left exactly as the file has it, so an
+   * invalid or hand-tuned block cannot be silently rewritten by an edit. The note must already
+   * exist - this route never creates one - and an empty body is allowed, because deleting text is
+   * an edit like any other.
+   */
+  app.put<{ Body: { folder?: string; name?: string; content?: string } }>(
+    "/note",
+    async (req, reply) => {
+      const { folder, name, content } = req.body ?? {};
+      if (!folder || !name) return reply.code(400).send({ error: "folder and name are required" });
+      // A missing body and an empty one are different requests: the second means "delete the text".
+      if (typeof content !== "string")
+        return reply.code(400).send({ error: "content is required" });
+      if (!FOLDERS.includes(folder as Folder))
+        return reply.code(400).send({ error: "unknown folder" });
+      if (!isNoteName(name)) return reply.code(400).send({ error: "invalid name" });
+
+      try {
+        return { note: await updateNote(vault, { folder, name, content }) };
+      } catch (err: unknown) {
+        if ((err as NodeJS.ErrnoException).code === "ENOENT")
+          return reply.code(404).send({ error: "note not found" });
+        throw err;
+      }
+    },
+  );
 
   return app;
 }

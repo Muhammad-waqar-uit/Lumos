@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, readdir, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import type { FastifyInstance } from "fastify";
@@ -253,6 +253,127 @@ describe("GET /note", () => {
   });
 });
 
+describe("PUT /note", () => {
+  /** The single note `makeApp` filed into Ideas, by filename. */
+  async function seededNote(vault: string): Promise<string> {
+    const [name] = await readdir(path.join(vault, "Ideas"));
+    return name;
+  }
+
+  it("saves the body and leaves the frontmatter the file already had", async () => {
+    const { vault, app } = await makeApp([NOTE]);
+    const name = await seededNote(vault);
+
+    const res = await app.inject({
+      method: "PUT",
+      url: "/note",
+      payload: { folder: "Ideas", name, content: "# Edited title\n\nconsidered" },
+    });
+
+    expect(res.statusCode).toBe(200);
+    const { note } = res.json<{ note: { title: string; content: string; problems: string[] } }>();
+    expect(note.title).toBe("Edited title");
+    expect(note.content).toBe("# Edited title\n\nconsidered");
+    expect(note.problems).toEqual([]);
+
+    const raw = await readFile(path.join(vault, "Ideas", name), "utf8");
+    expect(raw).toContain("source: whatsapp");
+    expect(raw).toContain("considered");
+    expect(raw).not.toContain("pairs with");
+  });
+
+  it("accepts an empty body, meaning the text was deleted", async () => {
+    const { vault, app } = await makeApp([NOTE]);
+    const name = await seededNote(vault);
+
+    const res = await app.inject({
+      method: "PUT",
+      url: "/note",
+      payload: { folder: "Ideas", name, content: "" },
+    });
+
+    expect(res.statusCode).toBe(200);
+    expect(res.json<{ note: { content: string } }>().note.content).toBe("");
+    const raw = await readFile(path.join(vault, "Ideas", name), "utf8");
+    // The block survives, so the note is still a note and its tags are still its tags.
+    expect(raw).toContain("source: whatsapp");
+  });
+
+  it("refuses a request that names no note, no body, or a folder it does not know", async () => {
+    const { vault, app } = await makeApp([NOTE]);
+    const name = await seededNote(vault);
+    const cases = [
+      { payload: {}, error: "folder and name are required" },
+      { payload: { folder: "Ideas" }, error: "folder and name are required" },
+      { payload: { folder: "Ideas", name, content: 7 }, error: "content is required" },
+      // A missing body is not the same request as an empty one.
+      { payload: { folder: "Ideas", name }, error: "content is required" },
+      { payload: { folder: "Secrets", name, content: "x" }, error: "unknown folder" },
+    ];
+
+    for (const { payload, error } of cases) {
+      const res = await app.inject({ method: "PUT", url: "/note", payload });
+      expect(res.statusCode, JSON.stringify(payload)).toBe(400);
+      expect(res.json(), JSON.stringify(payload)).toEqual({ error });
+    }
+  });
+
+  it("refuses every traversal shape with a 400 and leaves the file outside alone", async () => {
+    const { vault, app } = await makeApp([NOTE]);
+    await writeFile(path.join(vault, "secret.md"), "# Secret\n\ntop secret\n");
+    const name = await seededNote(vault);
+
+    const names = ["../secret.md", "sub/child.md", "sub\\child.md", "notes.txt", name];
+    for (const bad of names) {
+      // The last case is a valid name with `..` smuggled into it, which the guard must still refuse.
+      const payload = {
+        folder: "Ideas",
+        name: bad === name ? `../${bad}` : bad,
+        content: "# Pwned",
+      };
+      const res = await app.inject({ method: "PUT", url: "/note", payload });
+      expect(res.statusCode, bad).toBe(400);
+      expect(res.json(), bad).toEqual({ error: "invalid name" });
+    }
+
+    expect(await readFile(path.join(vault, "secret.md"), "utf8")).toContain("top secret");
+  });
+
+  it("answers 404 for a note that is not there, and writes nothing", async () => {
+    const { vault, app } = await makeApp([NOTE]);
+    const res = await app.inject({
+      method: "PUT",
+      url: "/note",
+      payload: { folder: "Goals", name: "2026-01-01-missing.md", content: "# New" },
+    });
+
+    expect(res.statusCode).toBe(404);
+    expect(res.json()).toEqual({ error: "note not found" });
+    // A save never becomes a create behind the user's back.
+    expect(await readdir(path.join(vault, "Goals")).catch(() => [])).toEqual([]);
+  });
+
+  it("leaves every other note untouched", async () => {
+    const { vault, app } = await makeApp([{ folder: "Goals", text: "learn rust" }]);
+    await mkdir(path.join(vault, "Ideas"), { recursive: true });
+    const untouched =
+      "---\nsource: desktop\ncreated: 2026-01-01T00:00:00.000Z\ntags: []\n---\n\n# Neighbour\n\nkeep me\n";
+    await writeFile(path.join(vault, "Ideas", "2026-01-01-neighbour.md"), untouched);
+    await writeFile(path.join(vault, "Ideas", "2026-01-02-target.md"), untouched);
+
+    const res = await app.inject({
+      method: "PUT",
+      url: "/note",
+      payload: { folder: "Ideas", name: "2026-01-02-target.md", content: "# Target\n\nrewritten" },
+    });
+
+    expect(res.statusCode).toBe(200);
+    expect(await readFile(path.join(vault, "Ideas", "2026-01-01-neighbour.md"), "utf8")).toBe(
+      untouched,
+    );
+  });
+});
+
 describe("GET /graph", () => {
   it("returns notes and tags as nodes, with unresolved links reported", async () => {
     const { app } = await makeApp([NOTE, { folder: "Goals", text: "learn rust" }]);
@@ -413,6 +534,28 @@ describe("CORS", () => {
       const res = await app.inject({ method: "GET", url: "/health", headers: { origin } });
       expect(res.headers["access-control-allow-origin"], origin).toBe(origin);
     }
+  });
+
+  it("lets the desktop's own origin send a PUT in a preflight", async () => {
+    const { app } = await makeApp();
+    // A JSON PUT is not a simple request, so the browser asks first and only sends the save if the
+    // answer names PUT. Without this the route is unreachable from the app while curl still works.
+    const res = await app.inject({
+      method: "OPTIONS",
+      url: "/note",
+      headers: {
+        origin: "http://localhost:1420",
+        "access-control-request-method": "PUT",
+        "access-control-request-headers": "content-type",
+      },
+    });
+
+    expect(res.statusCode).toBe(204);
+    expect(res.headers["access-control-allow-origin"]).toBe("http://localhost:1420");
+    expect(res.headers["access-control-allow-methods"]).toContain("PUT");
+    expect(String(res.headers["access-control-allow-headers"]).toLowerCase()).toContain(
+      "content-type",
+    );
   });
 
   it("does not echo a foreign origin", async () => {
