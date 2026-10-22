@@ -417,3 +417,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   106 in the daemon, 116 in the desktop. Exercised in the running app: the body was rewritten from
   the UI, the file on disk kept its frontmatter, the list title followed the new heading, and with
   the daemon stopped the button is disabled and says why.
+
+### Added (continued 24)
+- A note can now be created from the desktop, so the app is no longer read-only for anyone starting
+  an empty vault. **New** at the top of the note list opens a composer in the list's own pane - a
+  folder picker and a textarea - and **Create** (`Cmd/Ctrl+Enter`) files the note and opens it.
+  Enter stays a newline, because it is a textarea first.
+- The composer reuses the capture writer rather than growing a second one: the first line becomes
+  the title, `#hashtags` become frontmatter tags, and the filename is the usual
+  `YYYY-MM-DD-slug.md`, so a note typed here and a note captured on a phone are the same shape of
+  file. The allowlist does not apply - that belongs to WhatsApp, not to the machine you sit at.
+- The one difference is `source: desktop`. `saveNote()` takes the source as an option defaulting to
+  `whatsapp`, so the capture path is unchanged. The field is shown to the person reading the note,
+  and a note that claims the wrong origin is worse than one that says nothing.
+- The folder starts where the list is looking (Inbox when it is showing all), because a new note
+  usually belongs where you already are. A failed create keeps the draft and shows the daemon's own
+  sentence, exactly as a failed save does, and with the daemon stopped the button is disabled and
+  says why - the demo vault is not a vault.
+- `POST /notes` on the daemon, beside `PUT /note`: a missing folder, a missing `text` or text that
+  is only spaces is a `400 folder and text are required`; a folder outside the known set is a `400`
+  and nothing is written anywhere; a second note with the same text gets its own file, because the
+  writer has never overwritten.
+- After a create the listing, the folder counts and the graph are re-read and the new note is opened
+  by the key the daemon answers, so "created" is a result rather than a submission.
+- 14 new tests: 1 in `@lumos/vault-utils` (the source, defaulting to WhatsApp), 5 in the daemon
+  (the create and its origin, the listing after it, every bad payload, an unknown folder leaving the
+  vault untouched, and never overwriting) and 8 in the desktop (the folder list, the create, the
+  failure keeping the draft, `Cmd/Ctrl+Enter`, a plain Enter staying a newline, one create at a
+  time, and cancel). Suite is 391: 156 in `@lumos/vault-utils`, 111 in the daemon, 124 in the
+  desktop.

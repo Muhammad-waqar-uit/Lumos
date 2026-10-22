@@ -48,8 +48,8 @@ else on this page can close them.
 ### Phase 7 - Editing & enrichment (P2) - open items
 
 - [ ] Markdown preview beside the editor (today the rendered note is what you see after a save)
-- [ ] Create a note from the desktop - an empty vault can only be filled from WhatsApp so far
 - [ ] Edit a note's frontmatter (tags, status) from the app, rather than only its body
+- [ ] Rename, move or delete a note from the app - creating and editing the body both work
 - [ ] Bulk operations (move, tag, archive)
 
 ### Phase 8 - Polish & docs (P2) - open items
@@ -92,14 +92,15 @@ Nothing in flight. The next item to pick up is the first one under **Plan**.
   `@lumos/vault-utils` and the daemon, plus 108 over the desktop (filtering, demo data, search
   ranking, recent notes, the link cache, list movement, pane widths, graph layout memory, the
   viewer's code highlighting, and the sidebar, note list, search palette and link pane as
-  components), so 377 in `pnpm validate`
+  components and composer), so 391 in `pnpm validate`
 - [x] Desktop component tests - jsdom + Testing Library (`@testing-library/react`, jsdom) over the
-  five components that carry state, each file declaring its own `jsdom` environment so the pure-logic
+  six components that carry state, each file declaring its own `jsdom` environment so the pure-logic
   suites stay in Node. They assert behaviour rather than markup: the active folder and view, the
   loading/empty/tag-empty states, a row opening its note, a broken note's badge and reasons, a tag
   chip switching a filter on and off, the palette's recent notes and Enter/Escape, the link
-  pane's embeds, reader states and a **Retry** that really asks again, and the editor's draft, its
-  failed save keeping the text, `Cmd/Ctrl+S`, and a second click while the first save is in flight
+  pane's embeds, reader states and a **Retry** that really asks again, the editor's draft, its
+  failed save keeping the text, `Cmd/Ctrl+S`, and a second click while the first save is in flight,
+  and the composer's folder list, its failed create keeping the text, and `Cmd/Ctrl+Enter`
 - [x] Schema validation for note frontmatter - `validateFrontmatter()` in `@lumos/vault-utils`
   checks the fields the app relies on and the problems travel with the note (`Note.problems`,
   `VaultEntry.problems`) instead of the file being skipped. It runs when a note is read, and the
@@ -251,6 +252,13 @@ Nothing in flight. The next item to pick up is the first one under **Plan**.
   guard `GET /note` has (unknown folder, unsafe name, `404` rather than a create). After a save the
   listing, folder counts and graph are re-read, and a refresh that fails is said in the status bar
   instead of being reported as a failed save
+- [x] Create a note from the desktop - **New** in the note list opens a composer in the list's own
+  pane (`src/components/NoteComposer.tsx`, `POST /notes`). It uses the capture writer rather than a
+  second one, so the first line is the title, `#hashtags` become tags and the filename is the usual
+  `YYYY-MM-DD-slug.md`; the one difference is `source: desktop`, because the viewer shows that field
+  and a note that claims the wrong origin is worse than one that says nothing. The folder starts
+  where the list is looking, the composer keeps its draft through a failed create, and after the
+  create the listing, folder counts and graph are re-read and the new note is opened
 
 ### Phase 8: Polish & Docs (P2)
 

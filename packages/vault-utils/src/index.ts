@@ -11,6 +11,7 @@ import type {
   GraphSourceNote,
   Note,
   NoteInput,
+  NoteSource,
   VaultEntry,
 } from "@lumos/shared";
 import { buildGraphFromNotes, extractTags } from "./graph";
@@ -325,10 +326,17 @@ export async function updateNote(
   return readNote(file, input.folder);
 }
 
-/** Write a note to the vault, never overwriting an existing file. */
+/**
+ * Write a note to the vault, never overwriting an existing file.
+ *
+ * `source` records where the note came from, because it is shown to the person reading it: WhatsApp
+ * capture writes `whatsapp` (the default, so the capture path is unchanged) and the desktop writes
+ * `desktop`. A note that claims the wrong origin is worse than one that says nothing.
+ */
 export async function saveNote(
   vaultDir: string,
   input: NoteInput,
+  options: { source?: NoteSource } = {},
 ): Promise<{ title: string; file: string }> {
   const title = makeTitle(input);
   const now = new Date();
@@ -337,7 +345,7 @@ export async function saveNote(
   await mkdir(dir, { recursive: true });
 
   const frontmatter: Frontmatter = {
-    ...defaultFrontmatter("whatsapp"),
+    ...defaultFrontmatter(options.source ?? "whatsapp"),
     created: now.toISOString(),
     // Hashtags in the message become the note's tags, read with the same rules the graph uses, so a
     // tag in the frontmatter and a tag node in the graph can never be two different things.

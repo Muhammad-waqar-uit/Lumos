@@ -11,7 +11,6 @@ then what is in progress, then what is done.
 |---|---|---|
 | `/plan` with Ollama | planned | Local AI daily planning |
 | Markdown preview beside the editor | planned | Today the rendered form is the view after a save |
-| Creating a note from the desktop | planned | Editing an existing note works; an empty vault cannot be filled from the app |
 | Link enrichment | idea | Summaries and key points from links |
 
 ## In progress
@@ -47,6 +46,7 @@ Nothing in progress.
 | Tag filtering | The tags in the current folder and query become chips with counts; a chip, or a tag on a note card, narrows the list. A tag node in the graph offers **Show notes** with the same filter (`src/lib/filter.ts`, unit-tested) |
 | Note viewer | Markdown via `react-markdown` + `remark-gfm` (tables, task lists, fenced code) |
 | Note editing | **Edit** turns the body into a textarea; Save (`Cmd/Ctrl+S`) writes it back through `PUT /note`, Cancel (`Esc`) drops it, and a failed save keeps the draft and shows the daemon's sentence. Only the body is written — the frontmatter block survives character for character — and the listing, folder counts and graph are re-read afterwards, with a status-bar notice if that refresh fails (`src/components/NoteEditor.tsx`) |
+| Note creation | **New** opens a composer in the list's own pane: a folder picker and a textarea, filed through `POST /notes` with `Cmd/Ctrl+Enter`. It uses the capture writer, so the first line is the title and `#hashtags` become tags, and the note is stamped `source: desktop`. The folder starts where the list is looking. A failed create keeps the draft (`src/components/NoteComposer.tsx`) |
 | Safe writes | The path is checked against the vault root before anything is read, and the note is written to a temporary name then renamed over itself, so an interrupted save cannot truncate it (`replaceNoteBody()`, `updateNote()` in `@lumos/vault-utils`) |
 | Markdown rendering | Headings, lists, tables, blockquotes, task lists, links; styled with the dark tokens |
 | Code syntax highlighting | `rehype-highlight` over 37 common languages, only for a fence that names one; the token colours are `--color-code-*` tokens in `src/index.css`, not a pasted theme |
@@ -60,8 +60,8 @@ Nothing in progress.
 | Commit message lint | commitlint enforces `<type>(<scope>): <description>` |
 | Pre-push validation | `pnpm validate` — lint + format:check + typecheck + test + build |
 | Test runner | vitest 5; `pnpm test` runs every workspace that has a suite |
-| Desktop tests | 116 tests, run by `pnpm test`: 69 over pure logic (the note filter, the demo vault, the search ranking/merge, the recent-notes order, the link cache, list movement, the pane widths, the graph layout memory), 8 for the viewer through SSR renders (code highlighting, the frontmatter warning and the Edit affordance), and 39 component tests in jsdom + Testing Library for the sidebar, the note list, the search palette, the link pane and the note editor |
-| Parser & vault tests | 261 tests: 155 for `@lumos/vault-utils` (frontmatter rules, link/tag extraction, graph assembly, neighbourhoods, link parsing and page metadata, the Instagram/Facebook URL shapes, tags written at capture, and a body saved back with its frontmatter untouched) and 106 for the daemon (including `/find`, the link fetcher's refusals, `PUT /note` and every HTTP route driven through `app.inject()`) |
+| Desktop tests | 124 tests, run by `pnpm test`: 69 over pure logic (the note filter, the demo vault, the search ranking/merge, the recent-notes order, the link cache, list movement, the pane widths, the graph layout memory), 8 for the viewer through SSR renders (code highlighting, the frontmatter warning and the Edit affordance), and 47 component tests in jsdom + Testing Library for the sidebar, the note list, the search palette, the link pane, the note editor and the note composer |
+| Parser & vault tests | 267 tests: 156 for `@lumos/vault-utils` (frontmatter rules, link/tag extraction, graph assembly, neighbourhoods, link parsing and page metadata, the Instagram/Facebook URL shapes, tags written at capture, the note's source, and a body saved back with its frontmatter untouched) and 111 for the daemon (including `/find`, the link fetcher's refusals, `POST /notes`, `PUT /note` and every HTTP route driven through `app.inject()`) |
 | Read API route tests | `createApp()` in `apps/daemon/src/app.ts` builds the app over a vault directory; `app.test.ts` covers every route plus CORS through `app.inject()`, with the link fetcher injected |
 | Branch workflow | Short-lived `<type>/<description>` branches; `pre-commit` blocks commits on `main` |
 | Agent working agreement | `RULES.md`, `AGENTS.md`, `CLAUDE.md` at the repo root |

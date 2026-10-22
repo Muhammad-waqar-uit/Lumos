@@ -14,6 +14,7 @@ import {
   getNotesByFolder,
   listNotes,
   readNote,
+  saveNote,
   searchNotes,
   updateNote,
 } from "@lumos/vault-utils";
@@ -126,6 +127,33 @@ export async function createApp({
       })),
     );
     return { folders: groups };
+  });
+
+  /**
+   * Create a note in a folder, and answer it as the vault now reads it.
+   *
+   * This is the desktop's capture path: the same writer WhatsApp uses, minus the command parsing
+   * and minus the allowlist, which belongs to WhatsApp and not to the machine you are sitting at.
+   * The note is stamped `source: desktop` so the viewer can tell the two apart - the field is shown
+   * to the person reading the note, and a note that lies about its origin is worse than one that
+   * says nothing.
+   */
+  app.post<{ Body: { folder?: string; text?: string } }>("/notes", async (req, reply) => {
+    const { folder, text } = req.body ?? {};
+    if (!folder || !text?.trim())
+      return reply.code(400).send({ error: "folder and text are required" });
+    if (!FOLDERS.includes(folder as Folder))
+      return reply.code(400).send({ error: "unknown folder" });
+
+    const createdFolder = folder as Folder;
+    const { file } = await saveNote(
+      vault,
+      { folder: createdFolder, text: text.trim() },
+      {
+        source: "desktop",
+      },
+    );
+    return { note: await readNote(file, createdFolder) };
   });
 
   /** Read a single note by folder + filename. */

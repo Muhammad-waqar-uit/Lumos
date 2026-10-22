@@ -88,7 +88,7 @@ possible future path (see [docs/desktop.md](../../docs/desktop.md)); it does not
 
 - [~] Vault browser with folder navigation (dark shell, folder sidebar, note list and viewer built)
 - [x] Full-text search (`Cmd/Ctrl+K` palette: `fuse.js` ranking over titles, tags and previews, plus the daemon's body matches)
-- [~] Note editor (the body is edited as text and saved back to the vault; a live Markdown preview beside the textarea, and creating a note from the app, are still to come)
+- [~] Note editor (the body is edited as text and saved back to the vault, and a new note can be written from the list; a live Markdown preview beside the textarea is still to come)
 - [x] Tag filtering (chips with counts, a note's own tag as a filter, tag nodes offering **Show notes**); bulk tag management is still to come
 - [x] Graph view (link graph from the daemon, canvas force layout, per-folder hues, filters, local depth)
 - [x] Syntax-highlighted code blocks (37 common languages; only a fence that names one is highlighted)

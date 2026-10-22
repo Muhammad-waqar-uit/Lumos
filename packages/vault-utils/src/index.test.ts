@@ -205,6 +205,20 @@ describe("saveNote", () => {
     expect(content).toBe("# Build a habit tracker\n\nBuild a habit tracker");
   });
 
+  it("records where the note came from, defaulting to WhatsApp", async () => {
+    const fromApp = await saveNote(
+      vault,
+      { folder: "Inbox", text: "Written in the app" },
+      { source: "desktop" },
+    );
+    const { frontmatter } = parseNote(await readFile(fromApp.file, "utf8"));
+    expect(frontmatter.source).toBe("desktop");
+
+    // A note with no stated origin is still a WhatsApp capture - the capture path is unchanged.
+    const captured = await saveNote(vault, { folder: "Inbox", text: "Sent over WhatsApp" });
+    expect(parseNote(await readFile(captured.file, "utf8")).frontmatter.source).toBe("whatsapp");
+  });
+
   it("records a link in the frontmatter", async () => {
     const url = "https://example.com/system-design";
     const { file } = await saveNote(vault, {

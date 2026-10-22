@@ -67,6 +67,25 @@ export async function getNote(folder: string, name: string): Promise<Note> {
 }
 
 /**
+ * Create a note in a folder and answer it as the vault now reads it.
+ *
+ * The daemon stamps it `source: desktop`, so a note written here is never mistaken for a WhatsApp
+ * capture. A refusal arrives as an Error carrying the daemon's own sentence.
+ */
+export async function createNote(folder: string, text: string): Promise<Note> {
+  const res = await fetch(`${BASE}/notes`, {
+    method: "POST",
+    headers: { "content-type": "application/json", accept: "application/json" },
+    body: JSON.stringify({ folder, text }),
+  });
+  const body = (await res.json().catch(() => null)) as { note: Note } | { error: string } | null;
+  if (!res.ok)
+    throw new Error(body && "error" in body ? body.error : `POST /notes -> ${res.status}`);
+  if (!body || !("note" in body)) throw new Error("POST /notes returned an unexpected body");
+  return body.note;
+}
+
+/**
  * Save an edited body into an existing note and answer the note as it now reads.
  *
  * The daemon rewrites the body only and never the frontmatter. A refusal arrives as an Error

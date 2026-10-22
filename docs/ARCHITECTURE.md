@@ -27,6 +27,7 @@ WhatsApp ──► Daemon ──► vault/*.md ◄── Desktop (Tauri UI)
 6. The desktop app requests the vault from the daemon read API (`/notes`, `/folders`, `/note`, `/graph`) and renders it (demo data when the daemon is offline).
 7. For a note that carries a link, the desktop asks the daemon to fetch it (`/link`) and renders what comes back: a player for a video, the image itself, or the page's text and metadata. A video or an image is classified locally, so it never needs the request at all.
 8. Editing runs the other way: the view sends a new body to `PUT /note`, the daemon writes it with `updateNote()` and answers the note as it now reads, and the app re-reads the listing, the folder counts and the graph because a new heading, a new tag or a new link changes all three. The frontmatter block is not touched - the body is replaced inside the file, not the note re-serialized.
+9. Creating runs the same way with a different route: the composer posts a folder and text to `POST /notes`, the daemon runs it through the capture writer (`saveNote()`, stamped `source: desktop`) and answers the new note's key, and the app re-reads the same three views and opens what came back. There is no second write path - a note typed here is written exactly as a note captured on a phone would be.
 
 ## Daemon
 
@@ -51,7 +52,7 @@ injected, so no port is bound and no network request is made.
 
 - **Shell**: Tauri 2.x (Rust backend) hosting a Vite/React frontend.
 - **UI**: Tailwind CSS + shadcn/ui, dark minimal theme.
-- **Access to the vault**: the daemon HTTP read API today; Tauri filesystem commands are a possible future path so it can run without the daemon.
+- **Access to the vault**: the daemon HTTP API today - the read routes plus `PUT /note` and `POST /notes` to write; Tauri filesystem commands are a possible future path so it can run without the daemon.
 - **Panes**: the notes list + viewer, or the link graph, sharing the folder sidebar. The list column is resizable through `PaneSplitter`, and the width lives in the shell rather than in the pane. The graph renderer loads lazily with its tab, so the notes path stays light.
 - **Link pane**: a note's link is shown in the viewer - a player, an image, or the scraped page - instead of only linking out. It reads through `src/lib/api.ts` like every other pane and has its own loading, error and retry states.
 

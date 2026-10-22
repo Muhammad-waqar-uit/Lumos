@@ -1,5 +1,7 @@
-import type { VaultEntry } from "@lumos/shared";
-import type { TagCount } from "../lib/filter";
+import { useState } from "react";
+import { type Folder, type Note, type VaultEntry } from "@lumos/shared";
+import type { FolderFilter, TagCount } from "../lib/filter";
+import { NoteComposer } from "./NoteComposer";
 
 interface Props {
   notes: VaultEntry[];
@@ -15,6 +17,12 @@ interface Props {
   loading: boolean;
   /** Width in pixels, owned by the shell so the splitter and the pane cannot disagree. */
   width: number;
+  /** Creates a note and answers it; the shell refreshes and opens it. */
+  onCreate: (folder: Folder, text: string) => Promise<Note>;
+  /** False while the demo vault is shown, because there is nothing behind it to write to. */
+  canCreate: boolean;
+  /** Where the list is looking, so a new note starts in the folder you are already in. */
+  activeFolder: FolderFilter;
 }
 
 export const keyOf = (n: VaultEntry): string => `${n.folder}/${n.name}`;
@@ -36,7 +44,12 @@ export function NoteList({
   tagCounts,
   loading,
   width,
+  onCreate,
+  canCreate,
+  activeFolder,
 }: Props) {
+  // Writing a note is done in the list's own pane, so a new note is where you were looking.
+  const [composing, setComposing] = useState(false);
   // A tag filter can outlive the folder it was set in; keep its chip so it can be switched off.
   const chips: TagCount[] =
     tag !== null && !tagCounts.some((counted) => counted.tag === tag)
@@ -46,17 +59,28 @@ export function NoteList({
   return (
     <section className="flex shrink-0 flex-col" style={{ width }}>
       <div className="border-b border-border p-3">
-        <label htmlFor="note-search" className="sr-only">
-          Search notes
-        </label>
-        <input
-          id="note-search"
-          type="search"
-          value={query}
-          onChange={(e) => onQuery(e.currentTarget.value)}
-          placeholder="Search notes"
-          className="w-full rounded-md border border-input bg-background px-3 py-1.5 text-sm outline-none placeholder:text-muted-foreground focus:border-ring focus:ring-1 focus:ring-ring"
-        />
+        <div className="flex items-center gap-2">
+          <label htmlFor="note-search" className="sr-only">
+            Search notes
+          </label>
+          <input
+            id="note-search"
+            type="search"
+            value={query}
+            onChange={(e) => onQuery(e.currentTarget.value)}
+            placeholder="Search notes"
+            className="min-w-0 flex-1 rounded-md border border-input bg-background px-3 py-1.5 text-sm outline-none placeholder:text-muted-foreground focus:border-ring focus:ring-1 focus:ring-ring"
+          />
+          <button
+            type="button"
+            onClick={() => setComposing((open) => !open)}
+            disabled={!canCreate}
+            title={canCreate ? undefined : "Creating a note needs the daemon"}
+            className="shrink-0 rounded-md border border-border px-2 py-1.5 text-[11px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-50"
+          >
+            {composing ? "Close" : "New"}
+          </button>
+        </div>
         {chips.length > 0 ? (
           <div role="group" aria-label="Filter by tag" className="mt-2 flex flex-wrap gap-1">
             {chips.map(({ tag: name, count }) => {
@@ -82,8 +106,17 @@ export function NoteList({
           </div>
         ) : null}
       </div>
+      {composing ? (
+        <NoteComposer
+          // "All notes" is not a folder anything can be filed into, so a new note starts in Inbox.
+          initialFolder={activeFolder === "All" ? "Inbox" : activeFolder}
+          onCreate={onCreate}
+          onCreated={() => setComposing(false)}
+          onCancel={() => setComposing(false)}
+        />
+      ) : null}
       <div className="flex-1 overflow-y-auto">
-        {loading ? (
+        {composing ? null : loading ? (
           <p className="p-4 text-sm text-muted-foreground">Loading…</p>
         ) : notes.length === 0 ? (
           <p className="p-4 text-sm text-muted-foreground">

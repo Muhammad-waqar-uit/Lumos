@@ -43,7 +43,7 @@ url: https://example.com   # only present when a URL was detected
 
 | Field | Meaning |
 |---|---|
-| `source` | where the note came from (`whatsapp`, later `desktop`, ...) |
+| `source` | where the note came from (`whatsapp` for a capture, `desktop` for a note typed in the app, ...) |
 | `created` | ISO-8601 timestamp |
 | `tags` | the `#hashtags` written in the message, lower-cased, de-duplicated, in the order they appear (`[]` when there were none) |
 | `status` | lifecycle marker (`new` by default) |

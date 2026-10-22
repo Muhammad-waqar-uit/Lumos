@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { Folder, VaultEntry } from "@lumos/shared";
+import type { Folder, Note, VaultEntry } from "@lumos/shared";
 import { NoteList } from "./NoteList";
 
 afterEach(cleanup);
@@ -32,9 +32,30 @@ function renderList(overrides: Partial<Parameters<typeof NoteList>[0]> = {}): vo
       tagCounts={[{ tag: "ideas", count: 1 }]}
       loading={false}
       width={320}
+      onCreate={async () => madeNote()}
+      canCreate={true}
+      activeFolder="All"
       {...overrides}
     />,
   );
+}
+
+/** A note as the daemon would answer a create: whatever the test needs it to say. */
+function madeNote(overrides: Partial<Note> = {}): Note {
+  return {
+    title: "New note",
+    folder: "Inbox",
+    file: "/vault/Inbox/2026-10-20-new-note.md",
+    frontmatter: {
+      source: "desktop",
+      created: "2026-10-20T09:00:00.000Z",
+      tags: [],
+      status: "new",
+    },
+    content: "# New note",
+    problems: [],
+    ...overrides,
+  };
 }
 
 describe("NoteList - states", () => {
