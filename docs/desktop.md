@@ -277,11 +277,15 @@ Wired today:
   than wrapping, and stands down while a field has focus (the list search, the palette) or while the
   palette is open, so `j` stays a letter where a letter is expected. A step through the list is an
   ordinary pick, so it also counts as a recent note.
+- `Cmd/Ctrl+S` - save the note being edited. `Esc` cancels that edit and drops the draft; neither does
+  anything to a note that is not being edited.
 
 ## Planned capabilities
 
 - TanStack Router and zustand - the shell is plain React state in one component.
-- Markdown editor with live preview and save-to-disk.
+- A Markdown preview beside the editor. Editing and saving exist (see **Editing a note** above); the
+  rendered form is what the viewer shows after a save, not a live pane.
+- Creating a note from the app. An empty vault can still only be filled from WhatsApp.
 
 Everything else in the Keyboard section above is wired, and an untyped palette already lists the
 notes opened this session.

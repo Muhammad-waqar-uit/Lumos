@@ -26,7 +26,7 @@ Nothing in progress.
 | WhatsApp capture | Baileys multi-device, allowlist, auto-reconnect |
 | Command parsing | `/idea`, `/interview`, `/goal`, `/read`, `/plan`, `/find`, `/help` |
 | Vault writer | Markdown + YAML frontmatter, slugified filenames |
-| HTTP API | `POST /message`, `GET /health`, plus the six read-API routes in the row below |
+| HTTP API | `POST /message`, `GET /health`, the six read-API routes in the row below, and `PUT /note` for saving an edited body |
 | Link expansion | `GET /link` reads title/description/og:image and the readable text of a page, for `/read` and `/interview` links |
 | In-app playback | A YouTube or Vimeo link plays in the note viewer (no-cookie embed), an image link renders as the image; neither needs the daemon |
 | Social embeds | An Instagram post, reel or IGTV link and a Facebook video, reel or post render in place through the host's own embed, classified from the URL alone. The caption, site and lead image come from the daemon's `/link` when it is running, so the embed plays with the daemon stopped and only loses its caption |
