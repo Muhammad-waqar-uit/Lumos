@@ -147,6 +147,7 @@ against a temporary vault.
 
 ## Planned enhancements
 
-See [`TODO.md`](TODO.md) Phase 3: `/plan` with Ollama and a config file - tag extraction landed, and a
-captured message's `#hashtags` now become its frontmatter tags (see [vault.md](vault.md)). The parser,
-the filing path, `/find`, the link fetcher and the HTTP routes are covered by tests (see Tests above).
+See the **Plan** section of [`TODO.md`](TODO.md): `/plan` with Ollama, a config file and an error
+handler for the daemon - tag extraction landed, and a captured message's `#hashtags` now become its
+frontmatter tags (see [vault.md](vault.md)). The parser, the filing path, `/find`, the link fetcher
+and the HTTP routes are covered by tests (see Tests above).

@@ -46,7 +46,7 @@ The three cases - a registered language, an unregistered one, and an untagged fe
 to a string in Node and asserted in `src/components/NoteViewer.test.tsx`, so the wiring has a test
 without a jsdom setup.
 
-Still to come: routing and a note editor (see [`TODO.md`](TODO.md) Phases 4-7).
+Still to come: routing and a note editor (see the **Plan** section of [`TODO.md`](TODO.md)).
 
 ### Link pane
 
@@ -135,8 +135,8 @@ referenced only from TypeScript would never reach the stylesheet.
 
 The pure parts are tested: the layout memory (`src/lib/graph-layout.test.ts`, 12 cases) and the
 neighbourhood and backlink rules in `@lumos/vault-utils`. The canvas itself has no component test -
-that needs jsdom + Testing Library, tracked in [`TODO.md`](TODO.md) Phase 0.1 - so a tab switch is
-checked by hand.
+that needs jsdom + Testing Library, tracked under **Plan** in [`TODO.md`](TODO.md) - so a tab switch
+is checked by hand.
 
 ### Tag filtering
 
@@ -251,6 +251,7 @@ Wired today:
 ## Planned capabilities
 
 - TanStack Router and zustand - the shell is plain React state in one component.
-- Every entry in the Keyboard section above.
-- Recent notes in the palette, so an untyped palette is useful rather than empty.
 - Markdown editor with live preview and save-to-disk.
+
+Everything else in the Keyboard section above is wired, and an untyped palette already lists the
+notes opened this session.

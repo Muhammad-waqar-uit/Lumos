@@ -85,9 +85,13 @@ Root keeps only what convention demands: `README.md`, `CHANGELOG.md`, `CONTRIBUT
 
 ## Tracking Conventions
 
-- `[ ]` todo, `[~]` in progress, `[x]` done.
+- `[!]` needs a manual check by a person, `[ ]` todo, `[~]` in progress, `[x]` done.
 - Priority tags: `P0` critical, `P1` high, `P2` medium, `P3` low.
-- `PROGRESS.md` is chronological; `FEATURES.md` is a status matrix; `TODO.md` is the actionable checklist; `LIMITATIONS.md` is what is knowingly not possible today.
+- `PROGRESS.md` is chronological; `FEATURES.md` is the status matrix; `TODO.md` is the actionable
+  checklist; `LIMITATIONS.md` is what is knowingly not possible today.
+- `TODO.md` and `FEATURES.md` are ordered by standing, not by phase: what only a person can check
+  first, then what is planned, then what is in progress, then what is done. The phase a piece of
+  work belongs to stays on the item, so the phases below still map onto it.
 
 ## Milestones
 
