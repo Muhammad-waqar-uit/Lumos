@@ -145,13 +145,31 @@ filenames are a `400`, local addresses are refused by `/link`) and CORS limited 
 
 ## Configuration Reference
 
+### Config file (Daemon)
+
+The daemon reads `lumos.config.json` from its working directory, and the environment overrides it:
+
+```json
+{
+  "vaultPath": "../../vault",
+  "port": 3001,
+  "allowedNumbers": ["15550100000"],
+  "whatsapp": true
+}
+```
+
+A missing file is fine - the defaults below apply. A bad one stops the daemon with one sentence
+naming the setting. The file is git-ignored. [docs/daemon.md](docs/daemon.md) has the precedence and
+the details.
+
 ### Environment Variables (Daemon)
 
 | Variable | Default | Description |
 | --- | --- | --- |
+| `LUMOS_CONFIG` | `lumos.config.json` | Where to read the settings from |
 | `ALLOWED_NUMBERS` | `""` | Comma-separated list of allowed sender phone numbers (country code + number) |
 | `VAULT_PATH` | `../../vault` | Path to store Markdown notes (relative to daemon cwd) |
-| `PORT` | `3001` | Port the daemon listens on (bound to `127.0.0.1` only) |
+| `PORT` | `3001` | Port the daemon listens on, 1-65535 (bound to `127.0.0.1` only) |
 | `LUMOS_DISABLE_WHATSAPP` | unset | Set to `1` to run the HTTP API without connecting to WhatsApp |
 
 ## Security & Privacy

@@ -44,6 +44,8 @@ Thumbs.db
 
 # Local config
 .freebuff
+# The daemon's own settings: a vault path and phone numbers belong to one machine, not the repo
+lumos.config.json
 
 # Generated vault
 vault

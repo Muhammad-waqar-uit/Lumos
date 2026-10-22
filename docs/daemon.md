@@ -17,7 +17,7 @@ Markdown notes to the vault. It lives in [`apps/daemon`](../apps/daemon).
 | File | Responsibility |
 |---|---|
 | `src/commands.ts` | `parseMessage()` - turns raw text into a typed `Parsed` result.
-| `src/vault.ts` | Resolves the vault path from `VAULT_PATH`.
+| `src/config.ts` | `loadConfig()` - reads the JSON config file, lets the environment override it, and refuses a setting it cannot use with a sentence naming it.
 | `src/handler.ts` | `handleMessage()` - routes a parsed command to a reply string. The vault directory is an argument, so the caller decides where a note lands.
 | `src/app.ts` | `createApp()` - builds the Fastify app (CORS + every route) over a vault directory, so a test can drive it without binding a port.
 | `src/server.ts` | Entry point: builds the app, listens on loopback, boots the WhatsApp connection.
@@ -122,12 +122,40 @@ request id - and never the path.
 
 ## Configuration
 
+Settings come from a JSON file, and the environment overrides it. Precedence is
+**environment > file > default**, so a one-off `VAULT_PATH=... pnpm dev` still works when a file
+exists, and the file stays the thing a person edits.
+
+The file is `lumos.config.json` in the daemon's working directory, or wherever `LUMOS_CONFIG`
+points. It is git-ignored, because a vault path and phone numbers belong to one machine:
+
+```json
+{
+  "vaultPath": "../../vault",
+  "port": 3001,
+  "allowedNumbers": ["15550100000"],
+  "whatsapp": true
+}
+```
+
+A missing file is not an error - the daemon has always started without one. A file that is
+unreadable, not valid JSON, or names a setting that cannot be used stops the daemon with one
+sentence on stderr and exit code 1, rather than starting on a guess. An unknown key is refused
+rather than ignored, so a typo cannot silently do nothing. A relative `vaultPath` resolves against
+the file that named it, not the working directory, so the same file means the same vault however
+the daemon was launched.
+
 | Variable | Default | Description |
 |---|---|---|
+| `LUMOS_CONFIG` | `lumos.config.json` | Where to read the settings from, relative to the working directory or absolute. |
 | `ALLOWED_NUMBERS` | `""` | Comma-separated sender numbers (country code + number, no `+`). Empty blocks all. |
 | `VAULT_PATH` | `../../vault` | Vault directory, relative to the daemon's working directory. |
-| `PORT` | `3001` | Port to listen on. The host is always `127.0.0.1`. |
+| `PORT` | `3001` | Port to listen on, 1-65535. The host is always `127.0.0.1`. |
 | `LUMOS_DISABLE_WHATSAPP` | unset | Set to `1` to run the HTTP API on its own, with no WhatsApp connection (what the route tests use). |
+
+Numbers are normalised however they were written: `+1 (555) 010-0000`, `1 555 010 0000` and
+`15550100000` are the same sender, and a repeat is not counted twice. `PORT=0` is refused rather
+than listened on: a random port is one the desktop cannot find.
 
 ## WhatsApp authentication
 
