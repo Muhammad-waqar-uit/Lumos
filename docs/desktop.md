@@ -20,7 +20,7 @@ daemon (falling back to demo data when the daemon is offline):
 - `src/components/GraphView.tsx` - canvas link graph (routes, controls, click-to-open)
 - `src/components/PaneBoundary.tsx` - error boundary around the lazily loaded graph pane
 - `src/components/SearchModal.tsx` - the `Cmd/Ctrl+K` palette: ranked matches, keyboard selection, body matches from the daemon
-- `src/components/StatusBar.tsx` - connection state, the search shortcut, the note count, and a notice the app needs to say (a save whose refresh failed)
+- `src/components/StatusBar.tsx` - connection state, the search shortcut, the note count, and a notice the app needs to say (a save whose refresh failed), plus the one action that answers it (**Undo** for a delete)
 - `src/lib/list-nav.ts` - the arithmetic behind `j`/`k` in the note list, plus the rule for when a key belongs to a field
 - `src/lib/api.ts` - daemon client (`/notes`, `/notes/search`, `/folders`, `/note` for reading, saving, renaming and deleting, `/note/move`, `/graph`, `/link`)
 - `src/lib/graph-palette.ts` - reads the `--color-graph-*` tokens and maps a folder to its hue, with a fallback token per lookup
@@ -117,7 +117,13 @@ wrong folder or named badly no longer means leaving the app.
   belongs to the note, and a move is about where a note belongs, not what it is called. After a move
   the list switches to every folder, because the folder filter you were looking through would
   otherwise hide the note you just moved there.
-- **Delete** asks first, naming the note, and says there is no undo. Only the second press sends it.
+- **Delete** asks first, naming the note, and says where the file goes. Only the second press sends it.
+  The daemon moves it into the vault's `.trash`, and the status bar then offers **Undo** until it is
+  dismissed or another delete replaces it: pressing it puts the note back under its old name and opens
+  it again. A restore that would land on a note that took the name in the meantime is refused with the
+  daemon's sentence, and the trashed copy stays where it is.
+- `src/components/StatusBar.test.tsx` covers the notice and its action: the connection label it
+  replaces, the action firing, and a notice without one offering nothing.
 - Any refusal - a name another note already holds (`409`), a note that is gone (`404`), a daemon that
   went away - keeps the panel open with the daemon's own sentence, because those are things to act
   on rather than a status code to decode.

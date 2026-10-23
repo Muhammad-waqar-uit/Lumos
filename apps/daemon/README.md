@@ -92,14 +92,15 @@ touches the vault.
 | `GET /graph` | the vault's link graph: notes, tags, links and unresolved targets |
 | `GET /link?url=<url>` | one remote link, described for the desktop: playable media, or the page's metadata and readable text |
 
-Five write routes serve the desktop: `PUT /note` replaces a note's body, `POST /notes` creates one
+Six write routes serve the desktop: `PUT /note` replaces a note's body, `POST /notes` creates one
 through the capture writer (stamped `source: desktop`), `PATCH /note` renames one to a new title
 (the file, its first heading and the links other notes have to it all follow, and the edited files
 come back as `updated`), `POST /note/move` moves it to another folder under the name it already has,
-and `DELETE /note` removes it. All of them carry the same folder and filename
-guards as the read routes, and a bad payload is a `400` that writes nothing. A name another note
-already holds is a `409` rather than a silent replacement, and a delete has no undo - the app asks
-before it sends one.
+`DELETE /note` moves it into the vault's `.trash` and answers the entry, and `POST /note/restore`
+puts a trashed note back where it came from. All of them carry the same folder and filename guards
+as the read routes, and a bad payload is a `400` that writes nothing. A name another note already
+holds is a `409` rather than a silent replacement, which a restore obeys too: an undo never
+overwrites the note that took the name while it was away.
 
 `GET /link` is the only endpoint that makes an outbound request. It accepts `http` and `https` only,
 refuses local and private addresses on every redirect hop, and caps time (8 s), redirects (3) and body

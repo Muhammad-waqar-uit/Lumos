@@ -9,6 +9,7 @@ import {
   getNotes,
   moveNote,
   renameNote,
+  restoreNote,
   saveNote,
   type Connection,
   type FolderCount,
@@ -68,7 +69,11 @@ export default function App() {
   // reset every time someone looked at the graph would be worse than no splitter at all.
   const [listWidth, setListWidth] = useState(PANE_DEFAULT);
   // Something the daemon did or could not do, said in the status bar. Never a silent failure.
-  const [notice, setNotice] = useState<string | null>(null);
+  // An undo rides with the notice that offers it, so a later notice cannot leave a stale button behind.
+  const [notice, setNotice] = useState<{
+    text: string;
+    undo?: { id: string; title: string };
+  } | null>(null);
 
   // Load the vault from the daemon; fall back to demo data if it is not running.
   useEffect(() => {
@@ -200,7 +205,7 @@ export default function App() {
         setGraph(graphAfter);
         setFolders(foldersAfter);
       } catch (err: unknown) {
-        setNotice(`Saved, but the list could not be refreshed (${reasonOf(err)}).`);
+        setNotice({ text: `Saved, but the list could not be refreshed (${reasonOf(err)}).` });
       }
       return saved;
     },
@@ -247,12 +252,14 @@ export default function App() {
       setNotice(
         updated.length === 0
           ? null
-          : `Renamed; ${updated.length} ${updated.length === 1 ? "note links" : "notes link"} to the new title.`,
+          : {
+              text: `Renamed; ${updated.length} ${updated.length === 1 ? "note links" : "notes link"} to the new title.`,
+            },
       );
       try {
         await refreshVault();
       } catch (err: unknown) {
-        setNotice(`Renamed, but the list could not be refreshed (${reasonOf(err)}).`);
+        setNotice({ text: `Renamed, but the list could not be refreshed (${reasonOf(err)}).` });
       }
       chooseNote(key);
     },
@@ -275,27 +282,52 @@ export default function App() {
       try {
         await refreshVault();
       } catch (err: unknown) {
-        setNotice(`Moved, but the list could not be refreshed (${reasonOf(err)}).`);
+        setNotice({ text: `Moved, but the list could not be refreshed (${reasonOf(err)}).` });
       }
       openNote(key);
     },
     [activeEntry, openNote, refreshVault],
   );
 
-  /** Delete the open note. The selection is dropped, so the next note in the list takes over. */
+  /**
+   * Delete the open note. The selection is dropped, so the next note in the list takes over.
+   *
+   * The daemon moves the file to the vault's trash rather than removing it, so the entry it answers
+   * is kept: the status bar offers an undo until it is dismissed or another delete replaces it.
+   */
   const deleteActiveNote = useCallback(async (): Promise<void> => {
     if (!activeEntry) throw new Error("There is no note open to delete.");
     const deleted = activeEntry.title;
-    await deleteNote(activeEntry.folder, activeEntry.name);
+    const { id } = await deleteNote(activeEntry.folder, activeEntry.name);
+    const undo = { id, title: deleted };
     setSelected(null);
     setFetched(null);
-    setNotice(`Deleted "${deleted}".`);
+    setNotice({ text: `Deleted "${deleted}".`, undo });
     try {
       await refreshVault();
     } catch (err: unknown) {
-      setNotice(`Deleted "${deleted}", but the list could not be refreshed (${reasonOf(err)}).`);
+      setNotice({
+        text: `Deleted "${deleted}", but the list could not be refreshed (${reasonOf(err)}).`,
+        undo,
+      });
     }
   }, [activeEntry, refreshVault]);
+
+  /** Put back what the last delete moved to the trash, and open it again where it was. */
+  const undoDelete = useCallback(
+    async (id: string, title: string): Promise<void> => {
+      setNotice(null);
+      try {
+        const note = await restoreNote(id);
+        await refreshVault();
+        openNote(keyOfNote(note));
+        setNotice({ text: `Restored "${title}".` });
+      } catch (err: unknown) {
+        setNotice({ text: `"${title}" could not be restored (${reasonOf(err)}).` });
+      }
+    },
+    [refreshVault, openNote],
+  );
 
   const resizeList = useCallback((width: number): void => setListWidth(clampPaneWidth(width)), []);
 
@@ -321,7 +353,7 @@ export default function App() {
         setGraph(graphAfter);
         openNote(keyOfNote(created));
       } catch (err: unknown) {
-        setNotice(`Created, but the list could not be refreshed (${reasonOf(err)}).`);
+        setNotice({ text: `Created, but the list could not be refreshed (${reasonOf(err)}).` });
       }
       return created;
     },
@@ -374,6 +406,9 @@ export default function App() {
     setQuery("");
     setView("notes");
   };
+
+  // The undo rides with its notice, so it is offered exactly as long as that notice is showing.
+  const pendingUndo = notice?.undo;
 
   return (
     <div className="flex h-full flex-col">
@@ -441,8 +476,16 @@ export default function App() {
         connection={connection}
         count={visible.length}
         onSearch={() => setSearchOpen(true)}
-        notice={notice}
+        notice={notice?.text ?? null}
         onDismissNotice={() => setNotice(null)}
+        action={
+          pendingUndo
+            ? {
+                label: "Undo",
+                onClick: () => void undoDelete(pendingUndo.id, pendingUndo.title),
+              }
+            : null
+        }
       />
       {searchOpen ? (
         <SearchModal

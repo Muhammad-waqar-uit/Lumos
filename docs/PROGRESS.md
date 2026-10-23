@@ -4,6 +4,28 @@ Chronological record of what has been built. Newest entries first within each da
 
 ## 2026-10-23
 
+### Done — a delete can be taken back
+- [x] The delete was the only irreversible thing the app could do, and it said so in the panel. It no
+  longer removes anything: `deleteNote()` moves the note to `.trash/<id>/<folder>/<name>` and answers
+  the entry - the id, the folder and name it came from, and when it went
+- [x] `.trash` is a dot-folder, so the note listings, the folder counts and the graph skip it without a
+  new rule; the trashed note is still a plain Markdown file a person can open in a file manager. An id
+  is the ISO timestamp of the delete, with a counter if two land in the same millisecond
+- [x] `POST /note/restore` and `restoreNote()` take only the entry id, because the entry already holds
+  where the note lived - an undo cannot be aimed at a different note. The entry is removed once the
+  file is home, so an id works once
+- [x] The status bar carries the undo: **Undo** appears beside the notice, the note comes back under
+  its old name and opens again, and dismissing the notice drops the offer. A restore whose old name is
+  taken again is a `409` and the trashed copy stays put
+- [x] 13 new tests: 6 in `@lumos/vault-utils` (the entry and its bytes, two deletes in one millisecond,
+  the trash staying out of the listing and the graph, a refused delete writing no entry, the restore
+  with its cleanup, a name taken again, a missing entry and an id that could leave the trash), 4 in the
+  daemon (the delete's answer, the restore, the `409`, the `400`/`404` and the refused id) and 3 in the
+  desktop (the status bar's notice, its action, and a notice that offers none)
+- [x] `pnpm validate` green - 461 tests: 191 vault-utils, 129 daemon, 141 desktop. The round trip was
+  also run against a real daemon: delete from the app, the file in `.trash` with the same sha1, the
+  list at 0, Undo, the same sha1 back in `Ideas/`, the note reopened and the graph back to one node
+
 ### Done — a note's file can be renamed, moved and deleted
 - [x] Creating and editing a note were both possible; its file was not. The **...** button in the
   note header opens `src/components/NoteActions.tsx` with **Rename**, **Move** and **Delete**, so a

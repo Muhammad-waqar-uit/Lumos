@@ -666,7 +666,7 @@ describe("POST /note/move", () => {
 });
 
 describe("DELETE /note", () => {
-  it("removes the note and answers with no content", async () => {
+  it("moves the note to the trash and answers the entry an undo needs", async () => {
     const { vault, app } = await makeApp([NOTE]);
     const [name] = await readdir(path.join(vault, "Ideas"));
 
@@ -675,9 +675,13 @@ describe("DELETE /note", () => {
       url: `/note?folder=Ideas&name=${encodeURIComponent(name)}`,
     });
 
-    expect(res.statusCode).toBe(204);
-    expect(res.body).toBe("");
+    expect(res.statusCode).toBe(200);
+    const { trash } = res.json<{ trash: { id: string; folder: string; name: string } }>();
+    expect(trash).toMatchObject({ folder: "Ideas", name });
     expect(await readdir(path.join(vault, "Ideas"))).toEqual([]);
+    expect(await readFile(path.join(vault, ".trash", trash.id, "Ideas", name), "utf8")).toContain(
+      "habit tracker",
+    );
   });
 
   it("refuses a request that names no note, an unknown folder, or a bad name", async () => {
@@ -705,6 +709,72 @@ describe("DELETE /note", () => {
 
     expect(res.statusCode).toBe(404);
     expect(res.json()).toEqual({ error: "note not found" });
+  });
+});
+
+describe("POST /note/restore", () => {
+  /** Delete the seeded note through the route, and answer what an undo would send. */
+  async function deleted(app: FastifyInstance, vault: string) {
+    const [name] = await readdir(path.join(vault, "Ideas"));
+    const res = await app.inject({
+      method: "DELETE",
+      url: `/note?folder=Ideas&name=${encodeURIComponent(name)}`,
+    });
+    return { id: res.json<{ trash: { id: string } }>().trash.id, name };
+  }
+
+  it("puts the note back and answers it as the vault now reads it", async () => {
+    const { vault, app } = await makeApp([NOTE]);
+    const { id, name } = await deleted(app, vault);
+
+    const res = await app.inject({ method: "POST", url: "/note/restore", payload: { id } });
+
+    expect(res.statusCode).toBe(200);
+    expect(res.json<{ note: { folder: string; title: string } }>().note).toMatchObject({
+      folder: "Ideas",
+      title: "build a habit tracker",
+    });
+    expect(await readdir(path.join(vault, "Ideas"))).toEqual([name]);
+  });
+
+  it("refuses a name that has been taken again", async () => {
+    const { vault, app } = await makeApp([NOTE]);
+    const { id, name } = await deleted(app, vault);
+    await writeFile(path.join(vault, "Ideas", name), "# Another\n\nmine now\n", "utf8");
+
+    const res = await app.inject({ method: "POST", url: "/note/restore", payload: { id } });
+
+    expect(res.statusCode).toBe(409);
+    expect(res.json()).toEqual({ error: "a note with that name already exists" });
+    expect(await readFile(path.join(vault, "Ideas", name), "utf8")).toContain("mine now");
+  });
+
+  it("answers 400 with no id, and 404 for an entry that is not there", async () => {
+    const { app } = await makeApp();
+
+    const empty = await app.inject({ method: "POST", url: "/note/restore", payload: {} });
+    expect(empty.statusCode).toBe(400);
+    expect(empty.json()).toEqual({ error: "id is required" });
+
+    const gone = await app.inject({
+      method: "POST",
+      url: "/note/restore",
+      payload: { id: "2026-01-05T10-00-00-000Z" },
+    });
+    expect(gone.statusCode).toBe(404);
+    expect(gone.json()).toEqual({ error: "that deleted note is no longer in the trash" });
+  });
+
+  it("refuses an id that could reach outside the trash", async () => {
+    const { app } = await makeApp([NOTE]);
+    const res = await app.inject({
+      method: "POST",
+      url: "/note/restore",
+      payload: { id: "../Ideas" },
+    });
+
+    expect(res.statusCode).toBe(400);
+    expect(res.json()).toEqual({ error: "that is not a trash entry" });
   });
 });
 

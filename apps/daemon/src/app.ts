@@ -18,6 +18,7 @@ import {
   moveNote,
   readNote,
   renameNote,
+  restoreNote,
   saveNote,
   searchNotes,
   updateNote,
@@ -281,8 +282,10 @@ export async function createApp({
   );
 
   /**
-   * Remove a note from the vault. There is no trash: the file is gone, which is why the app asks
-   * before it sends this. A note that is not there is a `404`, never a quiet success.
+   * Remove a note from the vault by moving it into the vault's trash.
+   *
+   * The answer names the trash entry, which is what an undo sends back to `/note/restore`. A note
+   * that is not there is a `404`, never a quiet success.
    */
   app.delete<{ Querystring: { folder?: string; name?: string } }>("/note", async (req, reply) => {
     const { folder, name } = req.query;
@@ -292,8 +295,27 @@ export async function createApp({
     if (!isNoteName(name)) return reply.code(400).send({ error: "invalid name" });
 
     try {
-      await deleteNote(vault, { folder, name });
-      return reply.code(204).send();
+      return { trash: await deleteNote(vault, { folder, name }) };
+    } catch (err: unknown) {
+      const refusal = noteRefusal(err);
+      if (refusal) return reply.code(refusal.status).send({ error: refusal.message });
+      throw err;
+    }
+  });
+
+  /**
+   * Undo a delete: put the trashed note back where it came from, and answer it as it now reads.
+   *
+   * Only the entry is named, never the destination - the trash folder remembers where the note
+   * lived, so a restore cannot be pointed at another note. A name that has been taken again in the
+   * meantime is a `409`, because replacing whatever holds it now would be a second, silent delete.
+   */
+  app.post<{ Body: { id?: string } }>("/note/restore", async (req, reply) => {
+    const { id } = req.body ?? {};
+    if (!id) return reply.code(400).send({ error: "id is required" });
+
+    try {
+      return { note: await restoreNote(vault, id) };
     } catch (err: unknown) {
       const refusal = noteRefusal(err);
       if (refusal) return reply.code(refusal.status).send({ error: refusal.message });

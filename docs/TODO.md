@@ -49,7 +49,8 @@ else on this page can close them.
 
 - [ ] Markdown preview beside the editor (today the rendered note is what you see after a save)
 - [ ] Edit a note's frontmatter (tags, status) from the app, rather than only its body
-- [ ] Undo, or a trash, for a deleted note - the delete is permanent and the panel says so
+- [ ] Empty the trash, or list what is in it - a delete moves the file to `.trash` and Undo is only
+  for the delete just made ([LIMITATIONS.md](LIMITATIONS.md))
 - [ ] Bulk operations (move, tag, archive)
 
 ### Phase 8 - Polish & docs (P2) - open items
@@ -263,16 +264,22 @@ Nothing in flight. The next item to pick up is the first one under **Plan**.
   `src/components/NoteActions.tsx` with three operations. Rename (`PATCH /note`, `renameNote()`) takes
   a title and renames both the file (keeping its date prefix) and the body's first heading, so the
   list, the viewer and the filename agree; move (`POST /note/move`, `moveNote()`) keeps the filename
-  and only changes the folder; delete (`DELETE /note`, `deleteNote()`) asks first and has no undo.
-  A target name another note holds is a `409` and nothing is replaced, a failure keeps the panel open
-  with the daemon's sentence, and the listing, folder counts and graph are re-read afterwards
+  and only changes the folder; delete (`DELETE /note`, `deleteNote()`) asks first and moves the file
+  into the vault's `.trash`. A target name another note holds is a `409` and nothing is replaced, a
+  failure keeps the panel open with the daemon's sentence, and the listing, folder counts and graph
+  are re-read afterwards
 - [x] A rename carries the links that point at the note, instead of leaving every backlink pointing at
   a title that no longer exists. `linkResolver()` and `rewriteLinks()` in `@lumos/vault-utils/graph`
   ask the graph's own question ("what does this link point at?") and rewrite the target in place,
   keeping the link's shape - a title stays a title, a filename becomes the new filename, a heading, an
   alias and an embed marker survive - while a link that still resolves (a frontmatter alias) or sits
   inside code is left alone. `PATCH /note` answers the edited files as `updated`, and the desktop
-  says how many followed. What is left over is on the open list: an undo for a delete
+  says how many followed
+- [x] Undo a delete, and the trash behind it - `deleteNote()` moves the note to
+  `.trash/<id>/<folder>/<name>` instead of removing it, `restoreNote()` and `POST /note/restore` put
+  it back under its old name, and the status bar offers **Undo** until the notice is dismissed. The
+  trash is a dot-folder, so the listings, the folder counts and the graph skip it without a rule of
+  their own, and a restore refuses to replace a note that took the name again
 
 ### Phase 8: Polish & Docs (P2)
 

@@ -192,8 +192,13 @@ play it — neither page can be read or copied.
   title on the same day land as `…-<slug>.md` and `…-<slug>-<millis>.md`, which is safe but ugly.
   A rename and a move refuse the collision instead (`409`), because someone is there to pick another
   name and a millisecond suffix in a note they named themselves is not what they asked for.
-- **A delete is permanent.** `DELETE /note` removes the file; there is no trash, no `.trash` folder
-  and no undo, and the panel asks once before it sends it. That is the whole safety net.
+- **A delete goes to a trash that is never emptied.** `DELETE /note` moves the file to
+  `.trash/<id>/<folder>/<name>`, and `POST /note/restore` is the undo. Nothing prunes the folder and
+  nothing expires, so it grows until someone deletes it by hand; there is no "empty trash" command,
+  no list of what is in there, and no way to browse or restore an older entry from the app - the undo
+  in the status bar is only for the delete you just made, and it disappears when the notice is
+  dismissed. A restore also needs the old name to be free: a note that took it in the meantime is a
+  `409`, and the trashed copy stays in the folder rather than replacing it.
 - **A rename follows the links, with three exceptions.** A link inside a code fence or inline code
   is left alone, because the graph does not read it as a link either and a rename has no business
   editing a code sample. A link written to a frontmatter alias keeps the author's wording: the alias

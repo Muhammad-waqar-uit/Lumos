@@ -20,11 +20,11 @@ const BUTTON =
 /**
  * The open note's file operations, in a strip under its header.
  *
- * Every one of them is a file being moved or removed on disk, so each is one press away from a
- * panel that names what it will do - and delete asks before it sends, because there is no trash to
- * recover from. A failure keeps the panel open with the daemon's own sentence: a rename that was
- * refused because another note holds the name is something the person can act on, and closing on
- * it would hide the reason.
+ * Every one of them is a file being moved on disk, so each is one press away from a panel that names
+ * what it will do - and delete asks before it sends, because a note that leaves the folder is out of
+ * sight even when it is recoverable. A failure keeps the panel open with the daemon's own sentence: a
+ * rename that was refused because another note holds the name is something the person can act on, and
+ * closing on it would hide the reason.
  */
 export function NoteActions({ note, linkedFrom, onRename, onMove, onDelete, onClose }: Props) {
   const [mode, setMode] = useState<Mode>("menu");
@@ -164,8 +164,8 @@ export function NoteActions({ note, linkedFrom, onRename, onMove, onDelete, onCl
       {mode === "delete" ? (
         <div className="flex flex-wrap items-center gap-2">
           <p className="min-w-0 flex-1 text-[11px] text-foreground">
-            Delete &ldquo;{note.title}&rdquo;? The file is removed from the vault and there is no
-            undo.
+            Delete &ldquo;{note.title}&rdquo;? The file moves to the vault&rsquo;s trash, and the
+            status bar offers an undo.
           </p>
           <button
             type="button"

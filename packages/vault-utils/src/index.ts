@@ -583,14 +583,100 @@ export async function renameNote(
 }
 
 /**
- * Delete a note file.
- *
- * There is no trash and no undo: the file is gone from the vault, which is the point of a delete
- * and the reason the app asks twice before it sends one. The path is checked first, so a request
- * cannot remove a file outside the folder it named.
+ * Where a deleted note waits: a dot-folder inside the vault, so no listing, folder count or graph
+ * reads it. The layout is `.trash/<id>/<folder>/<name>`, which is what makes an undo need no
+ * arguments beyond the id - the entry itself remembers where the note came from.
  */
-export async function deleteNote(vaultDir: string, ref: NoteRef): Promise<void> {
-  await rm(noteFile(vaultDir, ref)).catch(missingNote);
+const TRASH_DIR = ".trash";
+
+/** A delete that can be undone: the trash entry, and the note it holds. */
+export interface TrashedNote {
+  /** Name the entry to restore it. Unique, and safe to put in a URL. */
+  id: string;
+  /** The folder and filename the note had, which a restore puts it back under. */
+  folder: string;
+  name: string;
+  /** When the delete happened, as an ISO timestamp. */
+  deleted: string;
+}
+
+/**
+ * Claim an unused trash entry directory, and answer its id.
+ *
+ * The timestamp reads in the trash and sorts, but two deletes in the same millisecond would collide,
+ * so a taken id gets a counter rather than overwriting the entry before it.
+ */
+async function claimTrashEntry(vaultDir: string, at: Date): Promise<string> {
+  const trash = path.join(vaultDir, TRASH_DIR);
+  await mkdir(trash, { recursive: true });
+  const stamp = at.toISOString().replace(/[:.]/g, "-");
+  for (let n = 1; ; n += 1) {
+    const id = n === 1 ? stamp : `${stamp}-${n}`;
+    try {
+      await mkdir(path.join(trash, id));
+      return id;
+    } catch (err: unknown) {
+      if ((err as NodeJS.ErrnoException).code !== "EEXIST") throw err;
+    }
+  }
+}
+
+/**
+ * Delete a note by moving it into the vault's trash.
+ *
+ * A delete is the only irreversible thing the app can do, so the file is moved rather than removed:
+ * an undo is a rename back, and a person who never presses undo can still recover the note from
+ * `.trash` with a file manager. The path is checked first, so a request cannot touch a file outside
+ * the folder it named, and a note that is not there is refused before an entry is created.
+ *
+ * Nothing prunes the trash. A note stays there until it is restored or deleted by hand.
+ */
+export async function deleteNote(
+  vaultDir: string,
+  ref: NoteRef,
+  options: { now?: Date } = {},
+): Promise<TrashedNote> {
+  const file = noteFile(vaultDir, ref);
+  const raw = await readFile(file, "utf8").catch(missingNote);
+
+  const at = options.now ?? new Date();
+  const id = await claimTrashEntry(vaultDir, at);
+  await relocate(file, path.join(vaultDir, TRASH_DIR, id, ref.folder, ref.name), raw);
+  return { id, folder: ref.folder, name: ref.name, deleted: at.toISOString() };
+}
+
+/**
+ * Put a deleted note back where it was.
+ *
+ * The entry decides the destination, not the caller: it holds the folder and filename the note was
+ * deleted from, so an undo cannot be aimed at a different note. A note that has since come back
+ * under the same name is refused rather than replaced, which is what `relocate` already does, and
+ * the entry is only cleaned up once the file is safely home.
+ */
+export async function restoreNote(vaultDir: string, id: string): Promise<Note> {
+  if (!/^[0-9A-Za-z][0-9A-Za-z._-]*$/.test(id))
+    throw new NoteFileError("unsafe", "that is not a trash entry");
+
+  const entry = path.join(vaultDir, TRASH_DIR, id);
+  const missing = (): never => {
+    throw new NoteFileError("missing", "that deleted note is no longer in the trash");
+  };
+
+  const folders = (await readdir(entry, { withFileTypes: true }).catch(missing)).filter((d) =>
+    d.isDirectory(),
+  );
+  if (folders.length !== 1) missing();
+  const folder = folders[0].name;
+  const names = await listMarkdownFiles(path.join(entry, folder));
+  if (names.length !== 1) missing();
+
+  const source = path.join(entry, folder, names[0]);
+  const target = noteFile(vaultDir, { folder, name: names[0] });
+  const raw = await readFile(source, "utf8").catch(missingNote);
+
+  await relocate(source, target, raw);
+  await rm(entry, { recursive: true, force: true }).catch(() => undefined);
+  return readNote(target, folder);
 }
 
 /**
