@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/lumos-logo-on-dark-bg.svg" alt="Lumos" width="300" />
+</p>
+
 # Lumos - Second Brain via WhatsApp
 
 Lumos is a personal knowledge management system that lets you capture thoughts, ideas, tasks, and links directly from WhatsApp. Send a message to your Lumos number, and it automatically parses commands and saves structured Markdown notes to a local vault - ready to use with Obsidian or any Markdown editor.

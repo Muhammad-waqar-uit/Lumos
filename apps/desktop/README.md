@@ -1,3 +1,5 @@
+<img src="../../assets/lumos-mark.svg" alt="Lumos" width="56" />
+
 # Lumos Desktop
 
 The Lumos Desktop app is a Tauri-based desktop client for browsing, searching, and managing your Lumos second brain. Built with React, TypeScript, and Vite, it provides a polished interface to explore your vault of captured notes.

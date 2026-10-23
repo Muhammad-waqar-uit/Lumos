@@ -11,8 +11,8 @@ const FOLDERS = [
   { folder: "Goals" as Folder, count: 0 },
 ];
 
-function renderSidebar(overrides: Partial<Parameters<typeof Sidebar>[0]> = {}): void {
-  render(
+function renderSidebar(overrides: Partial<Parameters<typeof Sidebar>[0]> = {}) {
+  return render(
     <Sidebar
       folders={FOLDERS}
       total={2}
@@ -26,6 +26,15 @@ function renderSidebar(overrides: Partial<Parameters<typeof Sidebar>[0]> = {}): 
 }
 
 describe("Sidebar", () => {
+  it("shows the Lumos mark beside the wordmark, hidden from assistive tech", () => {
+    const { container } = renderSidebar();
+
+    expect(screen.getByRole("heading", { name: "Lumos" })).toBeDefined();
+    const mark = container.querySelector("svg");
+    // The wordmark names the app, so the drawing must not be announced a second time.
+    expect(mark?.getAttribute("aria-hidden")).toBe("true");
+  });
+
   it("lists every folder after the whole vault, each with its count", () => {
     renderSidebar();
     const folders = screen.getByRole("navigation", { name: "Folders" });

@@ -487,3 +487,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   rename carrying a link while leaving an alias link as written) and 1 in the daemon (the route
   answering the file it edited). The desktop's rename panel test now asserts the links-follow
   sentence. Suite is 447: 185 in `@lumos/vault-utils`, 125 in the daemon, 137 in the desktop.
+
+### Added (continued 27)
+- A brand identity: the Lumos mark is a lamp seen from above - a ring, three spokes and a lit centre -
+  in the warm amber the name suggests. It sits beside the wordmark in the sidebar, in the browser tab,
+  and on the Tauri window, taskbar and installer icons, which are now generated from one 512px source
+  instead of shipping Tauri's default logo.
+- `assets/` holds the source SVGs (`lumos-mark.svg`, `lumos-app-icon.svg`, the light and dark
+  lockups), and the root README opens with the lockup on its own dark tile so it reads in either
+  GitHub theme. The two app READMEs carry the mark.
+- The sidebar does not import a file: `LumosMark` draws the mark inline in `currentColor` and takes
+  its amber from a new `--color-brand` token, so no component hardcodes a hue and the mark follows
+  the theme like everything else. It is the only warm colour in the shell - no button, border or state
+  borrows it.
+- 1 new test: the sidebar shows the mark beside the wordmark and hides it from assistive tech, which
+  the wordmark already names. Suite is 448: 185 in `@lumos/vault-utils`, 125 in the daemon, 138 in
+  the desktop.

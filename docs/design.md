@@ -36,6 +36,7 @@ in `hsl()` for you.
   --color-border: hsl(0 0% 14.9%);
   --color-input: hsl(0 0% 14.9%);
   --color-ring: hsl(0 0% 83.1%);
+  --color-brand: hsl(40 100% 65%);        /* ~#FFC24B, the lamp */
   --radius-lg: 0.5rem;
 }
 ```
@@ -46,6 +47,23 @@ Use the generated utilities (`bg-background`, `text-muted-foreground`, `border-b
 A `--destructive` pair was specified here, but nothing destructive exists yet, so it is not declared
 — an unused token is a lie the stylesheet tells. The first piece of UI that deletes something should
 add it back.
+
+## Brand mark
+
+The mark is a lamp seen from above: a ring, three spokes and a lit centre. It appears in four
+places, each from the source that suits it:
+
+| Where | File |
+| --- | --- |
+| Sidebar header, beside the wordmark | `apps/desktop/src/components/LumosMark.tsx` |
+| Browser tab | `apps/desktop/public/favicon.svg` |
+| Window, taskbar and installer icons | `apps/desktop/src-tauri/icons/` (regenerate with `pnpm --filter desktop tauri icon ../../assets/lumos-app-icon.svg`) |
+| READMEs | [`assets/`](../assets) - `lumos-logo-on-dark-bg.svg`, `lumos-mark.svg`, `lumos-app-icon.svg`, `lumos-logo-on-light.svg` |
+
+The sidebar draws the mark inline and in `currentColor` rather than importing the SVG, so it takes
+its amber from `--color-brand` and no component holds a hex value. `--color-brand` is deliberately
+the only warm colour in the shell: it marks the app, and no button, border or state uses it, so the
+quiet greys stay quiet.
 
 The graph view is the exception: a canvas cannot use a utility class. Its colours are plain custom
 properties on `:root` (`--color-graph-edge`, `--color-graph-tag`, `--color-graph-folder-1` … `-5`),
