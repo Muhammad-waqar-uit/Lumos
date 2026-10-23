@@ -10,10 +10,14 @@ import path from "node:path";
 import Fastify, { type FastifyError, type FastifyInstance } from "fastify";
 import cors from "@fastify/cors";
 import {
+  NoteFileError,
   buildVaultGraph,
+  deleteNote,
   getNotesByFolder,
   listNotes,
+  moveNote,
   readNote,
+  renameNote,
   saveNote,
   searchNotes,
   updateNote,
@@ -32,6 +36,19 @@ function isNoteName(name: string): boolean {
   return (
     name.endsWith(".md") && !name.includes("/") && !name.includes("\\") && !name.includes("..")
   );
+}
+
+/**
+ * Turn a vault refusal into the answer it deserves, or null when it is not one of ours.
+ *
+ * An unsafe path is the request's fault (`400`), a note that is not there is a `404`, and a name
+ * another note already holds is a `409` - the caller has to rename something before it can
+ * succeed, and a `400` would suggest the request was malformed when it was only unlucky.
+ */
+function noteRefusal(err: unknown): { status: number; message: string } | null {
+  if (!(err instanceof NoteFileError)) return null;
+  const status = err.reason === "missing" ? 404 : err.reason === "exists" ? 409 : 400;
+  return { status, message: err.message };
 }
 
 export interface AppOptions {
@@ -57,7 +74,7 @@ export async function createApp({
   // to show for it. Only what the routes actually offer is allowed.
   await app.register(cors, {
     origin: [/^https?:\/\/localhost(:\d+)?$/, /^https?:\/\/127\.0\.0\.1(:\d+)?$/, /^tauri:\/\//],
-    methods: ["GET", "POST", "PUT"],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
   });
 
   /**
@@ -199,6 +216,85 @@ export async function createApp({
       }
     },
   );
+
+  /**
+   * Rename a note to a new title.
+   *
+   * The title is the note's, not the file's: the file is renamed after it and the body's first
+   * heading is rewritten to match, so nothing in the app disagrees about what the note is called.
+   * A note with no heading keeps its body and only the filename changes.
+   */
+  app.patch<{ Body: { folder?: string; name?: string; title?: string } }>(
+    "/note",
+    async (req, reply) => {
+      const { folder, name, title } = req.body ?? {};
+      if (!folder || !name) return reply.code(400).send({ error: "folder and name are required" });
+      if (!title?.trim()) return reply.code(400).send({ error: "title is required" });
+      if (!FOLDERS.includes(folder as Folder))
+        return reply.code(400).send({ error: "unknown folder" });
+      if (!isNoteName(name)) return reply.code(400).send({ error: "invalid name" });
+
+      try {
+        return { note: await renameNote(vault, { folder, name, title }) };
+      } catch (err: unknown) {
+        const refusal = noteRefusal(err);
+        if (refusal) return reply.code(refusal.status).send({ error: refusal.message });
+        throw err;
+      }
+    },
+  );
+
+  /**
+   * Move a note into another folder, under the name it already has.
+   *
+   * The filename is kept on purpose: the date in it is the note's, and a move is about where the
+   * note belongs rather than what it is. Moving to the folder it is already in answers the note.
+   */
+  app.post<{ Body: { folder?: string; name?: string; toFolder?: string } }>(
+    "/note/move",
+    async (req, reply) => {
+      const { folder, name, toFolder } = req.body ?? {};
+      if (!folder || !name || !toFolder)
+        return reply.code(400).send({ error: "folder, name and toFolder are required" });
+      if (!FOLDERS.includes(folder as Folder) || !FOLDERS.includes(toFolder as Folder))
+        return reply.code(400).send({ error: "unknown folder" });
+      if (!isNoteName(name)) return reply.code(400).send({ error: "invalid name" });
+
+      try {
+        return {
+          note: await moveNote(vault, {
+            from: { folder, name },
+            to: { folder: toFolder, name },
+          }),
+        };
+      } catch (err: unknown) {
+        const refusal = noteRefusal(err);
+        if (refusal) return reply.code(refusal.status).send({ error: refusal.message });
+        throw err;
+      }
+    },
+  );
+
+  /**
+   * Remove a note from the vault. There is no trash: the file is gone, which is why the app asks
+   * before it sends this. A note that is not there is a `404`, never a quiet success.
+   */
+  app.delete<{ Querystring: { folder?: string; name?: string } }>("/note", async (req, reply) => {
+    const { folder, name } = req.query;
+    if (!folder || !name) return reply.code(400).send({ error: "folder and name are required" });
+    if (!FOLDERS.includes(folder as Folder))
+      return reply.code(400).send({ error: "unknown folder" });
+    if (!isNoteName(name)) return reply.code(400).send({ error: "invalid name" });
+
+    try {
+      await deleteNote(vault, { folder, name });
+      return reply.code(204).send();
+    } catch (err: unknown) {
+      const refusal = noteRefusal(err);
+      if (refusal) return reply.code(refusal.status).send({ error: refusal.message });
+      throw err;
+    }
+  });
 
   return app;
 }

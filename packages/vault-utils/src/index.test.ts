@@ -5,11 +5,14 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
   buildVaultGraph,
   defaultFrontmatter,
+  deleteNote,
   getNotesByFolder,
   listNotes,
   makeTitle,
+  moveNote,
   parseNote,
   readNote,
+  renameNote,
   replaceNoteBody,
   saveNote,
   searchNotes,
@@ -402,6 +405,211 @@ describe("updateNote", () => {
       updateNote(vault, { folder: "Ideas", name: "missing.md", content: "x" }),
     ).rejects.toMatchObject({ code: "ENOENT" });
     expect(await readdir(path.join(vault, "Ideas")).catch(() => [])).toEqual([]);
+  });
+});
+
+const RAW =
+  "---\nsource: desktop\ncreated: 2026-01-02T00:00:00.000Z\ntags:\n  - rust\n---\n\n# Learn Rust\n\nship a CLI\n";
+
+describe("moveNote", () => {
+  const NAME = "2026-01-02-learn-rust.md";
+
+  it("moves the note into the other folder, bytes and all", async () => {
+    await put("Ideas", NAME, RAW);
+    const note = await moveNote(vault, {
+      from: { folder: "Ideas", name: NAME },
+      to: { folder: "Goals", name: NAME },
+    });
+
+    expect(note.folder).toBe("Goals");
+    expect(note.title).toBe("Learn Rust");
+    expect(await readFile(path.join(vault, "Goals", NAME), "utf8")).toBe(RAW);
+    expect(await readdir(path.join(vault, "Ideas"))).toEqual([]);
+  });
+
+  it("creates a folder the vault does not have yet", async () => {
+    await put("Ideas", NAME, RAW);
+    await moveNote(vault, {
+      from: { folder: "Ideas", name: NAME },
+      to: { folder: "Reading", name: NAME },
+    });
+
+    expect(await readdir(path.join(vault, "Reading"))).toEqual([NAME]);
+  });
+
+  it("refuses to replace a note that is already in the folder", async () => {
+    await put("Ideas", NAME, RAW);
+    const other = "---\ncreated: 2026-01-02T00:00:00.000Z\n---\n\n# Other\n\nnot mine\n";
+    await put("Goals", NAME, other);
+
+    await expect(
+      moveNote(vault, {
+        from: { folder: "Ideas", name: NAME },
+        to: { folder: "Goals", name: NAME },
+      }),
+    ).rejects.toMatchObject({ reason: "exists" });
+
+    // Neither note is lost to the collision.
+    expect(await readFile(path.join(vault, "Ideas", NAME), "utf8")).toBe(RAW);
+    expect(await readFile(path.join(vault, "Goals", NAME), "utf8")).toBe(other);
+  });
+
+  it("answers the note when it is already in that folder", async () => {
+    await put("Ideas", NAME, RAW);
+    const note = await moveNote(vault, {
+      from: { folder: "Ideas", name: NAME },
+      to: { folder: "Ideas", name: NAME },
+    });
+
+    expect(note.title).toBe("Learn Rust");
+    expect(await readdir(path.join(vault, "Ideas"))).toEqual([NAME]);
+  });
+
+  it("refuses a folder or a name that escapes the vault, and moves nothing", async () => {
+    await put("Ideas", NAME, RAW);
+    await expect(
+      moveNote(vault, {
+        from: { folder: "Ideas", name: NAME },
+        to: { folder: "..", name: NAME },
+      }),
+    ).rejects.toMatchObject({ reason: "unsafe" });
+    await expect(
+      moveNote(vault, {
+        from: { folder: "Ideas", name: `../${NAME}` },
+        to: { folder: "Goals", name: NAME },
+      }),
+    ).rejects.toMatchObject({ reason: "unsafe" });
+
+    expect(await readdir(path.join(vault, "Ideas"))).toEqual([NAME]);
+    expect(await readdir(path.join(vault, "Goals")).catch(() => [])).toEqual([]);
+  });
+
+  it("reports a note that is not there, and creates no folder for it", async () => {
+    await expect(
+      moveNote(vault, {
+        from: { folder: "Ideas", name: "missing.md" },
+        to: { folder: "Goals", name: "missing.md" },
+      }),
+    ).rejects.toMatchObject({ reason: "missing" });
+
+    expect(await readdir(path.join(vault, "Goals")).catch(() => [])).toEqual([]);
+  });
+});
+
+describe("renameNote", () => {
+  const NAME = "2026-01-02-learn-rust.md";
+
+  it("names the file after the new title and keeps the date prefix", async () => {
+    await put("Goals", NAME, RAW);
+    const note = await renameNote(vault, {
+      folder: "Goals",
+      name: NAME,
+      title: "Learn Rust properly",
+    });
+
+    expect(note.title).toBe("Learn Rust properly");
+    expect(note.file).toBe(path.join(vault, "Goals", "2026-01-02-learn-rust-properly.md"));
+    expect(await readdir(path.join(vault, "Goals"))).toEqual(["2026-01-02-learn-rust-properly.md"]);
+  });
+
+  it("rewrites the first heading and leaves the frontmatter as it was written", async () => {
+    await put("Goals", NAME, RAW);
+    await renameNote(vault, { folder: "Goals", name: NAME, title: "Ship a CLI" });
+
+    const raw = await readFile(path.join(vault, "Goals", "2026-01-02-ship-a-cli.md"), "utf8");
+    expect(raw).toBe(RAW.replace("# Learn Rust", "# Ship a CLI"));
+  });
+
+  it("does not mistake a '#' line in the frontmatter for the title", async () => {
+    const raw = "---\n# a note to self\ncreated: 2026-01-02T00:00:00.000Z\n---\n\nbody only\n";
+    await put("Ideas", "2026-01-02-commented.md", raw);
+
+    await renameNote(vault, {
+      folder: "Ideas",
+      name: "2026-01-02-commented.md",
+      title: "Body only",
+    });
+
+    const written = await readFile(path.join(vault, "Ideas", "2026-01-02-body-only.md"), "utf8");
+    expect(written).toContain("# a note to self");
+    expect(written).toContain("body only");
+  });
+
+  it("keeps the filename when the title slugs to the name it already has", async () => {
+    await put("Goals", NAME, RAW);
+    const note = await renameNote(vault, {
+      folder: "Goals",
+      name: NAME,
+      title: "learn rust",
+    });
+
+    expect(path.basename(note.file)).toBe(NAME);
+    // The heading is still rewritten, because it is the title the app shows.
+    expect(note.title).toBe("learn rust");
+    expect(await readdir(path.join(vault, "Goals"))).toEqual([NAME]);
+  });
+
+  it("gives a name that had no date one that has none either", async () => {
+    await put("Ideas", "scratch.md", RAW);
+    const note = await renameNote(vault, {
+      folder: "Ideas",
+      name: "scratch.md",
+      title: "Scratch pad",
+    });
+
+    expect(path.basename(note.file)).toBe("scratch-pad.md");
+  });
+
+  it("refuses an empty title, and renames nothing", async () => {
+    await put("Goals", NAME, RAW);
+    await expect(
+      renameNote(vault, { folder: "Goals", name: NAME, title: "   " }),
+    ).rejects.toMatchObject({ reason: "unsafe" });
+
+    expect(await readdir(path.join(vault, "Goals"))).toEqual([NAME]);
+  });
+
+  it("refuses to take a name another note already holds", async () => {
+    await put("Goals", NAME, RAW);
+    await put("Goals", "2026-01-02-learn-rust-properly.md", RAW);
+
+    await expect(
+      renameNote(vault, { folder: "Goals", name: NAME, title: "Learn Rust properly" }),
+    ).rejects.toMatchObject({ reason: "exists" });
+
+    expect(await readdir(path.join(vault, "Goals"))).toHaveLength(2);
+  });
+
+  it("reports a note that is not there", async () => {
+    await expect(
+      renameNote(vault, { folder: "Ideas", name: "missing.md", title: "Anything" }),
+    ).rejects.toMatchObject({ reason: "missing" });
+  });
+});
+
+describe("deleteNote", () => {
+  it("removes the note and leaves the folder's other notes alone", async () => {
+    await put("Ideas", "2026-01-02-a.md", RAW);
+    await put("Ideas", "2026-01-03-b.md", RAW);
+
+    await deleteNote(vault, { folder: "Ideas", name: "2026-01-02-a.md" });
+
+    expect(await readdir(path.join(vault, "Ideas"))).toEqual(["2026-01-03-b.md"]);
+  });
+
+  it("reports a note that is not there", async () => {
+    await expect(deleteNote(vault, { folder: "Ideas", name: "missing.md" })).rejects.toMatchObject({
+      reason: "missing",
+    });
+  });
+
+  it("refuses a name that escapes the folder, and deletes nothing", async () => {
+    const outside = await put("", "secret.md", "# Secret\n\ntop secret\n");
+    await expect(
+      deleteNote(vault, { folder: "Ideas", name: "../secret.md" }),
+    ).rejects.toMatchObject({ reason: "unsafe" });
+
+    expect(await readFile(outside, "utf8")).toContain("top secret");
   });
 });
 

@@ -12,15 +12,16 @@ daemon (falling back to demo data when the daemon is offline):
 - `src/components/Sidebar.tsx` - folders with note counts
 - `src/components/NoteList.tsx` - searchable note list (title, date, preview, tags) and the **New** button that opens the composer
 - `src/components/NoteComposer.tsx` - a new note: a folder picker, a textarea, Create, Cancel, and a failure that keeps the draft
-- `src/components/NoteViewer.tsx` - note header (folder, date, source, url) + backlinks + link pane + Markdown body, and the Edit button that turns the body into the editor
+- `src/components/NoteViewer.tsx` - note header (folder, date, source, url) + backlinks + link pane + Markdown body, the Edit button that turns the body into the editor, and the **...** button that opens the file operations
 - `src/components/NoteEditor.tsx` - the body as a textarea: Save, Cancel, the unsaved marker and a failure that keeps the draft
+- `src/components/NoteActions.tsx` - rename, move and delete for the open note: a menu, a rename field, a folder picker, a delete that asks first, and a failure that keeps the panel open
 - `src/components/LinkPane.tsx` - the note's link: video player, image, or scraped reader card
 - `src/components/GraphView.tsx` - canvas link graph (routes, controls, click-to-open)
 - `src/components/PaneBoundary.tsx` - error boundary around the lazily loaded graph pane
 - `src/components/SearchModal.tsx` - the `Cmd/Ctrl+K` palette: ranked matches, keyboard selection, body matches from the daemon
 - `src/components/StatusBar.tsx` - connection state, the search shortcut, the note count, and a notice the app needs to say (a save whose refresh failed)
 - `src/lib/list-nav.ts` - the arithmetic behind `j`/`k` in the note list, plus the rule for when a key belongs to a field
-- `src/lib/api.ts` - daemon client (`/notes`, `/notes/search`, `/folders`, `/note` for both reading and `PUT`-saving, `/graph`, `/link`)
+- `src/lib/api.ts` - daemon client (`/notes`, `/notes/search`, `/folders`, `/note` for reading, saving, renaming and deleting, `/note/move`, `/graph`, `/link`)
 - `src/lib/graph-palette.ts` - reads the `--color-graph-*` tokens and maps a folder to its hue, with a fallback token per lookup
 - `src/lib/demo.ts` - demo data used when the daemon is not running
 - `src/lib/search.ts` - fuse.js index over the loaded notes, plus the merge of local and body matches
@@ -97,6 +98,34 @@ wrote.
 - Covered by `src/components/NoteEditor.test.tsx` (draft, save, failure, shortcut, one save at a
 time, cancel) and an SSR render in `src/components/NoteViewer.test.tsx` for the button being offered
 only while the daemon answers.
+
+### Renaming, moving and deleting
+
+The **...** button in the note header opens a strip under it with **Rename**, **Move** and **Delete**.
+Editing the body was the first half of owning a file; this is the rest of it, so a note filed in the
+wrong folder or named badly no longer means leaving the app.
+
+- **Rename** starts from the title the note has. The daemon renames the file after the new title -
+  `<date>-<slug>.md`, keeping the date prefix - and rewrites the body's first heading, so the header,
+  the list row and the filename all say the same thing afterwards. A note with no heading has no
+  title of its own (it falls back to the filename), so only the filename changes. The panel says when
+  other notes link to the old title, because those links are not rewritten.
+- **Move** offers only the folders the note is not already in, and keeps the filename: the date in it
+  belongs to the note, and a move is about where a note belongs, not what it is called. After a move
+  the list switches to every folder, because the folder filter you were looking through would
+  otherwise hide the note you just moved there.
+- **Delete** asks first, naming the note, and says there is no undo. Only the second press sends it.
+- Any refusal - a name another note already holds (`409`), a note that is gone (`404`), a daemon that
+  went away - keeps the panel open with the daemon's own sentence, because those are things to act
+  on rather than a status code to decode.
+- After a rename, a move or a delete the listing, the folder counts and the graph are read again: a
+  new filename is a new key, and a new heading changes the title the graph draws. If that refresh
+  fails the status bar says so - the operation itself landed, and saying it failed would be a lie.
+- With the daemon down the button is disabled and its tooltip says why: a demo note has no file
+  behind it.
+- Covered by `src/components/NoteActions.test.tsx` (the menu, the rename and its refusal, the link
+  warning, one rename at a time, the folder list, and the delete that asks) and by the SSR renders in
+  `src/components/NoteViewer.test.tsx` for the button being offered only while the daemon answers.
 
 ### Link pane
 
@@ -304,10 +333,11 @@ Wired today:
 ## Planned capabilities
 
 - TanStack Router and zustand - the shell is plain React state in one component.
-- A Markdown preview beside the editor. Editing, creating and saving exist (see **Creating a note**
-  and **Editing a note** above); the rendered form is what the viewer shows after a save, not a live
-  pane.
-- Renaming, moving or deleting a note from the app.
+- A Markdown preview beside the editor. Editing, creating, saving and the file operations all exist
+  (see **Creating a note**, **Editing a note** and **Renaming, moving and deleting** above); the
+  rendered form is what the viewer shows after a save, not a live pane.
+- Editing a note's frontmatter - its tags and status - from the app. A rename rewrites the heading and
+  the filename, but the block above the body is still the file's own business.
 
 Everything else in the Keyboard section above is wired, and an untyped palette already lists the
 notes opened this session.

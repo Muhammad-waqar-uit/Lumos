@@ -103,6 +103,39 @@ folder or an unsafe filename — and a note that does not exist is a `404`, neve
 goes to a temporary file in the same folder and is renamed over the note, so a failure part-way
 leaves the old note intact instead of truncated.
 
+### `PATCH /note`
+```json
+{ "folder": "Goals", "name": "2026-10-20-learn-rust.md", "title": "Ship a CLI in Rust" }
+```
+Renames a note to a new title. The title is the note's, not the file's: the file becomes
+`<date>-<slug>.md`, keeping the `YYYY-MM-DD-` prefix it already had (a name that had none gets
+none), and the body's first `# heading` is rewritten to the same title, so the listing, the viewer
+and the file name agree afterwards. A note with no heading keeps its body and only its filename
+changes, because a note's title falls back to the filename. The frontmatter block is left as it was
+written. Answers the note as it now reads: `{ "note": { title, folder, frontmatter, content,
+problems } }`.
+
+`400` for a missing title, an unknown folder or an unsafe name; `404` for a note that is not there;
+`409 a note with that name already exists` when another note in the folder holds the filename, because
+a rename never replaces one note with another. A title that slugs to the name the file already has
+changes the heading and nothing else.
+
+### `POST /note/move`
+```json
+{ "folder": "Ideas", "name": "2026-10-20-learn-rust.md", "toFolder": "Goals" }
+```
+Moves a note into another folder under the name it already has, and answers it as it now reads. The
+filename is kept on purpose: the date in it belongs to the note, and a move is about where a note
+belongs rather than what it is called. Moving a note to the folder it is already in changes nothing
+and answers the note. `400` for a missing field, an unknown folder on either side or an unsafe name;
+`404` for a note that is not there; `409` when the destination folder already holds that filename.
+
+### `DELETE /note?folder=<Folder>&name=<file.md>`
+Removes the note from the vault: `204 No Content`, no body. There is no trash and no undo, which is
+why the desktop asks before it sends this. `400` for a missing parameter, an unknown folder or an
+unsafe name, and `404` for a note that is not there - a delete never reports success for a file it
+did not remove.
+
 ### `GET /link?url=<url>`
 One link, scraped for the desktop: `{ "link": LinkCard }` — how the app shows it inline (`kind`,
 `embedUrl`, `poster`, `frame`) plus the page's `title`, `site`, `description`, `image` and readable
@@ -142,14 +175,16 @@ links) and tag references are edges. A note's `inDegree` counts the notes pointi
 `@lumos/vault-utils`, which reads every note body.
 
 CORS is enabled for local development origins (`localhost`, `127.0.0.1`, `tauri://`) since the
-server binds to `127.0.0.1` only, and for the methods the routes actually serve: `GET`, `POST` and
-`PUT`. The plugin's default is `GET,HEAD,POST`, which let `curl` save a note while the app's own
-`PUT` was stopped in the browser's preflight — so the list is written out rather than inherited.
+server binds to `127.0.0.1` only, and for the methods the routes actually serve: `GET`, `POST`,
+`PUT`, `PATCH` and `DELETE`. The plugin's default is `GET,HEAD,POST`, which let `curl` save a note
+while the app's own `PUT` was stopped in the browser's preflight — so the list is written out rather
+than inherited, and every method a route adds has to be added here too.
 
 ### When a route fails
 
 Each route answers its own refusal with a sentence that names the cause - `400 text is required`,
-`400 unknown folder`, `400 invalid name`, `404 note not found`, and the link fetcher's reasons - and a
+`400 unknown folder`, `400 invalid name`, `404 note not found`, `409 a note with that name already
+exists`, and the link fetcher's reasons - and a
 `4xx` Fastify raises itself (a malformed JSON body, say) keeps its own message, which is about the
 request rather than about the machine.
 
@@ -222,10 +257,12 @@ write). Keeping this logic in packages lets the desktop app reuse it.
   and its blank query, `POST /notes` creating a note with the right source and refusing every bad
   payload, the folder counts, `/note`'s guards (a missing parameter, an unknown folder, and
   each traversal shape tried against a decoy file left outside the folders), `PUT /note` saving a body
-  with the frontmatter untouched and refusing every one of those shapes, the graph's nodes, edges
-  and unresolved links, `/link`'s refusals and its status codes with the fetcher injected, the plain
-  `500` for a route that throws unexpectedly (built over a vault path that is a file, so the failure
-  is real), and the CORS allow-list with the preflight a `PUT` needs.
+  with the frontmatter untouched and refusing every one of those shapes, `PATCH /note` renaming a note
+  and answering its new name, `POST /note/move` moving one and refusing to replace what is already
+  there, `DELETE /note` removing one and reading `404` for a file it cannot find, the graph's nodes,
+  edges and unresolved links, `/link`'s refusals and its status codes with the fetcher injected, the
+  plain `500` for a route that throws unexpectedly (built over a vault path that is a file, so the
+  failure is real), and the CORS allow-list with the preflights a `PUT`, `PATCH` and `DELETE` need.
 - `src/fetch-link.test.ts` - the link fetcher with `fetch` and DNS injected, so the suite stays
   offline: which addresses and hostnames are refused (including a redirect into the local network),
   the redirect limit, the byte cap, a missing content type, and the fact that a network error never

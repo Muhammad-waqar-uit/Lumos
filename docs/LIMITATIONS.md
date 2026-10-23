@@ -138,9 +138,10 @@ play it — neither page can be read or copied.
   toolbar; the rendered form is what the viewer shows after a save. Anything the textarea does not do
   — tabs, a stored cursor position, the spell-check language — is the browser's behaviour, not the
   app's.
-- **With the daemon down the app reads demo data, not your vault**, and Edit is disabled because
-  there is nothing to save to. `src/lib/demo.ts` is the fallback, so a stopped daemon shows demo
-  notes rather than a blank screen.
+- **With the daemon down the app reads demo data, not your vault**, and Edit, Rename, Move and
+  Delete are disabled because there is nothing to save to or remove: a demo note has no file behind
+  it. `src/lib/demo.ts` is the fallback, so a stopped daemon shows demo notes rather than a blank
+  screen.
 - **Graph layout is remembered per session, not per vault.** Node positions and a view the user
   placed survive a tab switch while the app runs, in module scope rather than in storage, so a reload
   starts from a fresh layout. Only a coordinate is remembered, not why the layout looked that way: a
@@ -168,6 +169,9 @@ play it — neither page can be read or copied.
   width lives in the running app only: a reload starts at 320px, and nothing is written to storage.
   The sidebar's own width is fixed, so the folder list cannot be narrowed or widened, and the Graph
   tab has no panes to size.
+- **The file operations are one note at a time.** Rename, move and delete act on the open note, so
+  there is no selection, no multi-select and no way to move ten notes at once - bulk operations are on
+  the open list in [TODO.md](TODO.md).
 - **Keyboard movement covers the list, not the panes.** `j`/`k` walk the note list, but the viewer,
   the link pane and the tag chips are reached with `Tab`; there is no `j`/`k` inside a note body, and
   no shortcut for the folder list or the tabs.
@@ -186,6 +190,20 @@ play it — neither page can be read or copied.
   would close it.
 - **Same-title collisions get a timestamp.** `saveNote` never overwrites, so two notes with the same
   title on the same day land as `…-<slug>.md` and `…-<slug>-<millis>.md`, which is safe but ugly.
+  A rename and a move refuse the collision instead (`409`), because someone is there to pick another
+  name and a millisecond suffix in a note they named themselves is not what they asked for.
+- **A delete is permanent.** `DELETE /note` removes the file; there is no trash, no `.trash` folder
+  and no undo, and the panel asks once before it sends it. That is the whole safety net.
+- **A rename does not rewrite the links that point at the note.** Links resolve by title, so a note
+  with `[[Learn Rust]]` pointing at it keeps that text after a rename: the link becomes unresolved
+  and the graph reports it as such until it is edited by hand. The panel says how many notes link to
+  the old title before the rename goes through, which is a warning rather than a fix. Same for the
+  filename: an Obsidian link written as `2026-10-20-learn-rust.md` points at the old name.
+- **A move keeps the filename.** A note moved from Ideas to Goals is still
+  `2026-10-20-learn-rust.md`, because the date belongs to the note; only a rename changes the name.
+- **A rename rewrites the first heading.** It is the title the app shows, so leaving it behind would
+  make the header and the list disagree; a note whose `# heading` was hand-written differently loses
+  that wording. The frontmatter is not touched, and a note with no heading keeps its body untouched.
 - **Frontmatter validation is a report, not a repair.** The four fields the app reads are checked when
   a note is loaded, and the reasons travel to the viewer and the API, but the file on disk is never
   rewritten: a bad `created` keeps its written value, so the note sorts by it as a string until you

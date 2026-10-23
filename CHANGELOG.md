@@ -446,3 +446,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   failure keeping the draft, `Cmd/Ctrl+Enter`, a plain Enter staying a newline, one create at a
   time, and cancel). Suite is 391: 156 in `@lumos/vault-utils`, 111 in the daemon, 124 in the
   desktop.
+
+### Added (continued 25)
+- A note's file can now be changed from the app: the **...** button in the note header opens
+  **Rename**, **Move** and **Delete**, so a note filed in the wrong folder is no longer something you
+  have to fix in an editor. Rename takes a title, and the daemon renames the file after it and
+  rewrites the body's first heading, so the list, the viewer and the filename agree afterwards. Move
+  offers only the folders the note is not already in and keeps the filename, because the date in it
+  is the note's. Delete asks first, then removes the file.
+- `PATCH /note`, `POST /note/move` and `DELETE /note` on the daemon, with `@lumos/vault-utils`
+  `renameNote()`, `moveNote()` and `deleteNote()`. A refusal is `400` for an unsafe path, `404` for a
+  note that is not there and `409` when the target name is already taken - a rename or a move never
+  replaces one note with another, and the CORS allow-list names `PATCH` and `DELETE` so the browser
+  can send them.
+- An operation's failure keeps the panel open and shows the daemon's own sentence, and the listing,
+  folder counts and graph are re-read after one; a move switches the list to every folder, so the note
+  you just moved does not vanish behind the folder filter. With the daemon down the button is
+  disabled and says why.
+- 43 new tests: 17 in `@lumos/vault-utils` (the move, the rename with its heading, the date prefix,
+  a collision on either operation, an empty title, a missing note, and a path that escapes the vault),
+  13 in the daemon (both routes and the delete, each refusal, the `409`s and the preflight) and 13 in
+  the desktop (the panel's menu, rename, move, the confirming delete, a failure keeping it open, and
+  the header offering the operations only while the daemon answers). Suite is 434: 173 in
+  `@lumos/vault-utils`, 124 in the daemon, 137 in the desktop.
