@@ -23,6 +23,11 @@
   --color-border: hsl(0 0% 14.9%);
   --color-input: hsl(0 0% 14.9%);
   --color-ring: hsl(0 0% 83.1%);
+  /*
+   * The lamp's amber, and the only brand colour in the shell. It marks the app, not the interface:
+   * no button or border uses it, so it stays as rare as the name.
+   */
+  --color-brand: hsl(40 100% 65%);
   --radius-lg: 0.5rem;
 }
 

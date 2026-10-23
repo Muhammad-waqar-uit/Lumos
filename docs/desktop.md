@@ -9,7 +9,8 @@ The dark shell is built. The app renders a three-pane layout and loads the vault
 daemon (falling back to demo data when the daemon is offline):
 
 - `src/App.tsx` - state, vault loading, folder + search filtering, selection
-- `src/components/Sidebar.tsx` - folders with note counts
+- `src/components/Sidebar.tsx` - the brand row (mark + wordmark) and folders with note counts
+- `src/components/LumosMark.tsx` - the mark itself, drawn inline in `currentColor` so it takes `--color-brand` from the theme
 - `src/components/NoteList.tsx` - searchable note list (title, date, preview, tags) and the **New** button that opens the composer
 - `src/components/NoteComposer.tsx` - a new note: a folder picker, a textarea, Create, Cancel, and a failure that keeps the draft
 - `src/components/NoteViewer.tsx` - note header (folder, date, source, url) + backlinks + link pane + Markdown body, the Edit button that turns the body into the editor, and the **...** button that opens the file operations

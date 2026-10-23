@@ -1,3 +1,5 @@
+<img src="../../assets/lumos-mark.svg" alt="Lumos" width="56" />
+
 # Lumos Daemon
 
 The Lumos Daemon is the capture engine for Lumos - a Node.js service that connects to WhatsApp via Baileys, receives messages, parses commands, and saves structured Markdown notes to your local vault.

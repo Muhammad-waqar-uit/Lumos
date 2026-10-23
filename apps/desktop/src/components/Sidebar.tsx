@@ -1,5 +1,6 @@
 import type { FolderCount } from "../lib/api";
 import type { FolderFilter } from "../lib/filter";
+import { LumosMark } from "./LumosMark";
 
 export type { FolderFilter } from "../lib/filter";
 export type ShellView = "notes" | "graph";
@@ -26,9 +27,12 @@ export function Sidebar({ folders, total, active, onSelect, view, onView }: Prop
 
   return (
     <aside className="flex w-56 shrink-0 flex-col border-r border-border bg-card/40">
-      <div className="px-4 py-3.5">
-        <h1 className="text-sm font-semibold tracking-wide">Lumos</h1>
-        <p className="mt-0.5 text-xs text-muted-foreground">Second brain</p>
+      <div className="flex items-center gap-2.5 px-4 py-3.5">
+        <LumosMark className="size-6 shrink-0 text-brand" />
+        <div>
+          <h1 className="text-sm font-semibold tracking-wide">Lumos</h1>
+          <p className="mt-0.5 text-xs text-muted-foreground">Second brain</p>
+        </div>
       </div>
       <div className="px-3 pb-3">
         <div
