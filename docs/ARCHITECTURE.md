@@ -6,7 +6,7 @@ Lumos is a pnpm monorepo. Two applications share a common Markdown vault:
 
 - **`apps/daemon`** - capture service. Connects to WhatsApp, parses messages, writes Markdown notes.
 - **`apps/desktop`** - Tauri desktop UI. Browses, searches, and (later) edits the vault.
-- **`packages/*`** - shared TypeScript: `@lumos/shared` (types) and `@lumos/vault-utils` (vault read/list/search/write, link/tag extraction, graph building, and link classification plus page metadata on browser-safe subpaths).
+- **`packages/*`** - shared TypeScript: `@lumos/shared` (types) and `@lumos/vault-utils` (vault read/list/search/write, rename/move/delete, link/tag extraction, graph building, and link classification plus page metadata on browser-safe subpaths).
 - **`vault/`** - the user's notes as plain Markdown files (created at runtime, git-ignored).
 
 ## Component Diagram
@@ -28,6 +28,7 @@ WhatsApp ──► Daemon ──► vault/*.md ◄── Desktop (Tauri UI)
 7. For a note that carries a link, the desktop asks the daemon to fetch it (`/link`) and renders what comes back: a player for a video, the image itself, or the page's text and metadata. A video or an image is classified locally, so it never needs the request at all.
 8. Editing runs the other way: the view sends a new body to `PUT /note`, the daemon writes it with `updateNote()` and answers the note as it now reads, and the app re-reads the listing, the folder counts and the graph because a new heading, a new tag or a new link changes all three. The frontmatter block is not touched - the body is replaced inside the file, not the note re-serialized.
 9. Creating runs the same way with a different route: the composer posts a folder and text to `POST /notes`, the daemon runs it through the capture writer (`saveNote()`, stamped `source: desktop`) and answers the new note's key, and the app re-reads the same three views and opens what came back. There is no second write path - a note typed here is written exactly as a note captured on a phone would be.
+10. The file itself can change too: `PATCH /note` renames a note to a new title (the file and the body's first heading both follow, through `renameNote()`), `POST /note/move` moves it to another folder under the name it has (`moveNote()`), and `DELETE /note` removes it (`deleteNote()`). Each answers the note as it now reads, or `204` for a delete; a name another note holds is a `409` rather than a replacement, and every path is checked against the vault root before a file is read, moved or removed. The app re-reads the listing, the counts and the graph afterwards, because a rename is a new key and a new heading.
 
 ## Daemon
 
@@ -52,7 +53,7 @@ injected, so no port is bound and no network request is made.
 
 - **Shell**: Tauri 2.x (Rust backend) hosting a Vite/React frontend.
 - **UI**: Tailwind CSS + shadcn/ui, dark minimal theme.
-- **Access to the vault**: the daemon HTTP API today - the read routes plus `PUT /note` and `POST /notes` to write; Tauri filesystem commands are a possible future path so it can run without the daemon.
+- **Access to the vault**: the daemon HTTP API today - the read routes plus `PUT /note`, `POST /notes`, `PATCH /note`, `POST /note/move` and `DELETE /note` to write; Tauri filesystem commands are a possible future path so it can run without the daemon.
 - **Panes**: the notes list + viewer, or the link graph, sharing the folder sidebar. The list column is resizable through `PaneSplitter`, and the width lives in the shell rather than in the pane. The graph renderer loads lazily with its tab, so the notes path stays light.
 - **Link pane**: a note's link is shown in the viewer - a player, an image, or the scraped page - instead of only linking out. It reads through `src/lib/api.ts` like every other pane and has its own loading, error and retry states.
 
@@ -80,7 +81,7 @@ injected, so no port is bound and no network request is made.
 
 - **Runner**: vitest, run by `pnpm test` from the root (every workspace that has a suite).
 - **Location**: `*.test.ts` next to the module it covers - no separate `tests/` tree.
-- **Coverage today**: `@lumos/vault-utils` (slugify, frontmatter parsing, save/read/list/search, link and tag extraction, graph assembly and neighbourhoods, the link classifier's URL shapes and page metadata) and the daemon (the parser, the filing path, the link fetcher's guards and caps, and every HTTP route driven through `app.inject()` without binding a port). The desktop's pure logic is covered too: `src/lib/filter.ts` (the note-list filtering and tag counts) has its own suite behind the desktop workspace's vitest script, and the note viewer's rendering is asserted through SSR renders in `src/components/NoteViewer.test.tsx`. The desktop's components are covered too: `Sidebar`, `NoteList`, `SearchModal` and `LinkPane` run in jsdom with Testing Library (`src/components/*.test.tsx`, each file declaring its own environment), so the pure-logic suites stay in Node. The graph canvas is the one component without a test; it needs a real renderer.
+- **Coverage today**: `@lumos/vault-utils` (slugify, frontmatter parsing, save/read/list/search, rename/move/delete, link and tag extraction, graph assembly and neighbourhoods, the link classifier's URL shapes and page metadata) and the daemon (the parser, the filing path, the link fetcher's guards and caps, and every HTTP route driven through `app.inject()` without binding a port). The desktop's pure logic is covered too: `src/lib/filter.ts` (the note-list filtering and tag counts) has its own suite behind the desktop workspace's vitest script, and the note viewer's rendering is asserted through SSR renders in `src/components/NoteViewer.test.tsx`. The desktop's components are covered too: `Sidebar`, `NoteList`, `SearchModal`, `LinkPane`, `NoteEditor`, `NoteComposer` and `NoteActions` run in jsdom with Testing Library (`src/components/*.test.tsx`, each file declaring its own environment), so the pure-logic suites stay in Node. The graph canvas is the one component without a test; it needs a real renderer.
 - The suites run inside `pnpm validate`, so a failing test blocks a push exactly like a failing build.
 
 ## Repository Layout

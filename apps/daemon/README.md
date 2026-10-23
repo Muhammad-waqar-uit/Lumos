@@ -90,9 +90,13 @@ touches the vault.
 | `GET /graph` | the vault's link graph: notes, tags, links and unresolved targets |
 | `GET /link?url=<url>` | one remote link, described for the desktop: playable media, or the page's metadata and readable text |
 
-Two write routes serve the desktop: `PUT /note` replaces a note's body and `POST /notes` creates
-one through the capture writer (stamped `source: desktop`). Both carry the same folder and filename
-guards as the read routes, and a bad payload is a `400` that writes nothing.
+Five write routes serve the desktop: `PUT /note` replaces a note's body, `POST /notes` creates one
+through the capture writer (stamped `source: desktop`), `PATCH /note` renames one to a new title
+(the file and its first heading both follow), `POST /note/move` moves it to another folder under the
+name it already has, and `DELETE /note` removes it. All of them carry the same folder and filename
+guards as the read routes, and a bad payload is a `400` that writes nothing. A name another note
+already holds is a `409` rather than a silent replacement, and a delete has no undo - the app asks
+before it sends one.
 
 `GET /link` is the only endpoint that makes an outbound request. It accepts `http` and `https` only,
 refuses local and private addresses on every redirect hop, and caps time (8 s), redirects (3) and body

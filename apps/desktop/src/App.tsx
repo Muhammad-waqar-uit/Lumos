@@ -2,10 +2,13 @@ import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react
 import type { Folder, GraphData, Note, VaultEntry } from "@lumos/shared";
 import {
   createNote,
+  deleteNote,
   getFolders,
   getGraph,
   getNote,
   getNotes,
+  moveNote,
+  renameNote,
   saveNote,
   type Connection,
   type FolderCount,
@@ -28,6 +31,21 @@ import { StatusBar } from "./components/StatusBar";
 const GraphView = lazy(() =>
   import("./components/GraphView").then((module) => ({ default: module.GraphView })),
 );
+
+/** The filename at the end of a note's absolute path, which is the key the list knows it by. */
+function nameOf(file: string): string {
+  return file.split(/[\\/]/).pop() ?? "";
+}
+
+/** The key a note is addressed by, as the daemon answered it. */
+function keyOfNote(note: Note): string {
+  return `${note.folder}/${nameOf(note.file)}`;
+}
+
+/** Why something failed, in the words the status bar has room for. */
+function reasonOf(err: unknown): string {
+  return err instanceof Error ? err.message : "unknown error";
+}
 
 export default function App() {
   const [connection, setConnection] = useState<Connection>("connecting");
@@ -182,13 +200,93 @@ export default function App() {
         setGraph(graphAfter);
         setFolders(foldersAfter);
       } catch (err: unknown) {
-        const reason = err instanceof Error ? err.message : "unknown error";
-        setNotice(`Saved, but the list could not be refreshed (${reason}).`);
+        setNotice(`Saved, but the list could not be refreshed (${reasonOf(err)}).`);
       }
       return saved;
     },
     [activeEntry, activeKey],
   );
+
+  /**
+   * Re-read what a file operation may have changed.
+   *
+   * A rename or a move changes a note's key, its folder, the folder counts and every link and tag
+   * edge the graph drew from it, so the three reads happen again rather than being patched. The
+   * operation itself has already landed by then: a refresh that fails is a notice, not a failed
+   * change.
+   */
+  const refreshVault = useCallback(async (): Promise<void> => {
+    const [notesAfter, foldersAfter, graphAfter] = await Promise.all([
+      getNotes(),
+      getFolders(),
+      getGraph(),
+    ]);
+    setNotes(notesAfter);
+    setFolders(foldersAfter);
+    setGraph(graphAfter);
+  }, []);
+
+  /**
+   * Rename the open note, then open it under its new name.
+   *
+   * The answer is shown straight away rather than after the re-read, so the title in the header
+   * follows the rename instead of lagging behind it. The filters stay as they were: a rename is
+   * not a change of subject.
+   */
+  const renameActiveNote = useCallback(
+    async (title: string): Promise<void> => {
+      if (!activeEntry) throw new Error("There is no note open to rename.");
+      const renamed = await renameNote(activeEntry.folder, activeEntry.name, title);
+      const key = keyOfNote(renamed);
+      setFetched({ key, note: renamed });
+      setNotice(null);
+      try {
+        await refreshVault();
+      } catch (err: unknown) {
+        setNotice(`Renamed, but the list could not be refreshed (${reasonOf(err)}).`);
+      }
+      chooseNote(key);
+    },
+    [activeEntry, chooseNote, refreshVault],
+  );
+
+  /**
+   * Move the open note into another folder and keep it open.
+   *
+   * The list switches to every folder, because the folder filter the user was looking through
+   * would otherwise hide the note they just moved there.
+   */
+  const moveActiveNote = useCallback(
+    async (toFolder: string): Promise<void> => {
+      if (!activeEntry) throw new Error("There is no note open to move.");
+      const moved = await moveNote(activeEntry.folder, activeEntry.name, toFolder);
+      const key = keyOfNote(moved);
+      setFetched({ key, note: moved });
+      setNotice(null);
+      try {
+        await refreshVault();
+      } catch (err: unknown) {
+        setNotice(`Moved, but the list could not be refreshed (${reasonOf(err)}).`);
+      }
+      openNote(key);
+    },
+    [activeEntry, openNote, refreshVault],
+  );
+
+  /** Delete the open note. The selection is dropped, so the next note in the list takes over. */
+  const deleteActiveNote = useCallback(async (): Promise<void> => {
+    if (!activeEntry) throw new Error("There is no note open to delete.");
+    const deleted = activeEntry.title;
+    await deleteNote(activeEntry.folder, activeEntry.name);
+    setSelected(null);
+    setFetched(null);
+    setNotice(`Deleted "${deleted}".`);
+    try {
+      await refreshVault();
+    } catch (err: unknown) {
+      setNotice(`Deleted "${deleted}", but the list could not be refreshed (${reasonOf(err)}).`);
+    }
+  }, [activeEntry, refreshVault]);
 
   const resizeList = useCallback((width: number): void => setListWidth(clampPaneWidth(width)), []);
 
@@ -212,12 +310,9 @@ export default function App() {
         setNotes(notesAfter);
         setFolders(foldersAfter);
         setGraph(graphAfter);
-        // `file` is absolute and `name` is its last segment, which is the key the list uses.
-        const name = created.file.split(/[\\/]/).pop() ?? "";
-        openNote(`${created.folder}/${name}`);
+        openNote(keyOfNote(created));
       } catch (err: unknown) {
-        const reason = err instanceof Error ? err.message : "unknown error";
-        setNotice(`Created, but the list could not be refreshed (${reason}).`);
+        setNotice(`Created, but the list could not be refreshed (${reasonOf(err)}).`);
       }
       return created;
     },
@@ -326,6 +421,9 @@ export default function App() {
               backlinks={linkedFrom}
               onOpenNote={openNote}
               onSave={saveActiveNote}
+              onRename={renameActiveNote}
+              onMove={moveActiveNote}
+              onDelete={deleteActiveNote}
             />
           </>
         )}

@@ -2,6 +2,46 @@
 
 Chronological record of what has been built. Newest entries first within each date.
 
+## 2026-10-23
+
+### Done — a note's file can be renamed, moved and deleted
+- [x] Creating and editing a note were both possible; its file was not. The **...** button in the
+  note header opens `src/components/NoteActions.tsx` with **Rename**, **Move** and **Delete**, so a
+  note filed in the wrong folder or named badly no longer means opening a file manager
+- [x] Rename takes a title, not a filename, because the title is what the app shows. The daemon
+  renames the file to `<date>-<slug>.md` - keeping the `YYYY-MM-DD-` prefix it already had - and
+  rewrites the body's first `# heading`, so header, list row and filename agree afterwards. A note
+  with no heading has no title of its own, so only its filename changes
+- [x] Move keeps the filename: the date in it belongs to the note, and a move is about where a note
+  belongs rather than what it is called. The list switches to every folder afterwards, because the
+  filter you were looking through would otherwise hide the note you just moved. Delete asks first
+  and says there is no undo
+- [x] Nothing is ever overwritten. A target name another note holds is a `409` and both files survive,
+  which is why a rename refuses instead of appending a timestamp the way capture does: the person
+  asking is right there and can pick another title. Every path is resolved against the vault root
+  before a file is read, moved or removed
+- [x] `PATCH /note`, `POST /note/move` and `DELETE /note`, plus `renameNote()`, `moveNote()` and
+  `deleteNote()` in `@lumos/vault-utils`. A refusal is `400` for an unsafe path, `404` for a note
+  that is not there, `409` for a collision - carried by `NoteFileError` and its `reason`, so a route
+  maps it to a status instead of guessing from an error message. The CORS allow-list gained `PATCH`
+  and `DELETE`, which the preflight test asks for by name
+- [x] A failure keeps the panel open with the daemon's own sentence, and the listing, folder counts
+  and graph are re-read after an operation - a new filename is a new key, and a new heading changes
+  the title the graph draws. A refresh that fails is a status-bar notice, not a failed rename
+- [x] The panel warns when other notes link to the old title, because their `[[links]]` are not
+  rewritten. That gap and the missing undo are now on the open list in [TODO.md](TODO.md)
+- [x] 43 tests: 17 in `@lumos/vault-utils` (the move and its bytes, the created folder, the
+  collision, the same-folder no-op, the rename with its heading and date prefix, a `#` line in the
+  frontmatter not being the title, an empty title, a missing note and a path that escapes the vault),
+  13 in the daemon (both routes and the delete, every refusal, both `409`s, the no-op rename and the
+  preflight) and 13 in the desktop (the menu, the rename and its refusal, the link warning, one
+  rename at a time, the folder list, the delete that asks, and the header offering the operations
+  only while the daemon answers)
+- [x] `pnpm validate` green - 434 tests: 173 vault-utils, 124 daemon, 137 desktop
+- [x] Exercised against a temporary vault through the running app, not only in the suite: a note was
+  renamed, moved and deleted from the panel while the files on disk followed, and a rename that
+  collided was refused with the daemon's sentence and left both notes alone. Nothing touched `vault/`
+
 ## 2026-10-22
 
 ### Done — a note can be created from the desktop

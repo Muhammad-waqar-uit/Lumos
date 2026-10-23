@@ -6,6 +6,7 @@ import type { GraphNode, Note } from "@lumos/shared";
 import { firstExternalLink } from "@lumos/vault-utils/link";
 import { type Connection } from "../lib/api";
 import { LinkPane } from "./LinkPane";
+import { NoteActions } from "./NoteActions";
 import { NoteEditor } from "./NoteEditor";
 
 /** Note links open outside the app window instead of navigating the UI away. */
@@ -37,12 +38,26 @@ interface Props {
   onOpenNote: (id: string) => void;
   /** Writes a new body to the open note; only reachable while the daemon answers. */
   onSave: (content: string) => Promise<Note>;
+  /** Each rejects with the daemon's sentence, which the actions panel shows. */
+  onRename: (title: string) => Promise<void>;
+  onMove: (toFolder: string) => Promise<void>;
+  onDelete: () => Promise<void>;
 }
 
-export function NoteViewer({ note, connection, backlinks, onOpenNote, onSave }: Props) {
+export function NoteViewer({
+  note,
+  connection,
+  backlinks,
+  onOpenNote,
+  onSave,
+  onRename,
+  onMove,
+  onDelete,
+}: Props) {
   // The file being edited rather than a boolean: opening another note closes the editor instead of
   // presenting its body inside a draft that belongs to the note before it.
   const [editing, setEditing] = useState<string | null>(null);
+  const [actionsOpen, setActionsOpen] = useState(false);
 
   // A note captured from WhatsApp carries its link in the frontmatter and in the body;
   // either one is enough to play or read it here.
@@ -84,17 +99,45 @@ export function NoteViewer({ note, connection, backlinks, onOpenNote, onSave }: 
           </p>
         </div>
         {isEditing ? null : (
-          <button
-            type="button"
-            onClick={() => setEditing(note.file)}
-            disabled={connection !== "daemon"}
-            title={connection === "daemon" ? undefined : "Editing needs the daemon"}
-            className="shrink-0 rounded-md border border-border px-2 py-1 text-[11px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-50"
-          >
-            Edit
-          </button>
+          <span className="flex shrink-0 items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setActionsOpen((open) => !open)}
+              aria-expanded={actionsOpen}
+              aria-label="Note actions"
+              disabled={connection !== "daemon"}
+              title={connection === "daemon" ? undefined : "File changes need the daemon"}
+              className="rounded-md border border-border px-2 py-1 text-[11px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-50"
+            >
+              &middot;&middot;&middot;
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setActionsOpen(false);
+                setEditing(note.file);
+              }}
+              disabled={connection !== "daemon"}
+              title={connection === "daemon" ? undefined : "Editing needs the daemon"}
+              className="rounded-md border border-border px-2 py-1 text-[11px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-50"
+            >
+              Edit
+            </button>
+          </span>
         )}
       </header>
+      {!isEditing && actionsOpen ? (
+        <NoteActions
+          // A fresh panel per file, so a rename draft never lands on the note opened after it.
+          key={note.file}
+          note={note}
+          linkedFrom={backlinks.length}
+          onRename={onRename}
+          onMove={onMove}
+          onDelete={onDelete}
+          onClose={() => setActionsOpen(false)}
+        />
+      ) : null}
       {note.problems.length > 0 ? (
         <section
           aria-label="Frontmatter problems"

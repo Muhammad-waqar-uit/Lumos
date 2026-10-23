@@ -463,6 +463,223 @@ describe("PUT /note", () => {
   });
 });
 
+describe("PATCH /note", () => {
+  /** The single note `makeApp` filed into Ideas, by filename. */
+  async function seededNote(vault: string): Promise<string> {
+    const [name] = await readdir(path.join(vault, "Ideas"));
+    return name;
+  }
+
+  it("renames the file after the title and answers the note as it now reads", async () => {
+    const { vault, app } = await makeApp([NOTE]);
+    const name = await seededNote(vault);
+
+    const res = await app.inject({
+      method: "PATCH",
+      url: "/note",
+      payload: { folder: "Ideas", name, title: "Habit tracker, eventually" },
+    });
+
+    expect(res.statusCode).toBe(200);
+    const { note } = res.json<{ note: { title: string; file: string; content: string } }>();
+    expect(note.title).toBe("Habit tracker, eventually");
+    expect(path.basename(note.file)).toMatch(/^\d{4}-\d{2}-\d{2}-habit-tracker-eventually\.md$/);
+    // The heading the title comes from says the same thing as the filename.
+    expect(note.content.split("\n")[0]).toBe("# Habit tracker, eventually");
+    expect(await readdir(path.join(vault, "Ideas"))).toEqual([path.basename(note.file)]);
+  });
+
+  it("refuses a request with no title, no name, or a folder it does not know", async () => {
+    const { vault, app } = await makeApp([NOTE]);
+    const name = await seededNote(vault);
+    const cases = [
+      { payload: {}, error: "folder and name are required" },
+      { payload: { folder: "Ideas", name }, error: "title is required" },
+      { payload: { folder: "Ideas", name, title: "  " }, error: "title is required" },
+      { payload: { folder: "Secrets", name, title: "x" }, error: "unknown folder" },
+      { payload: { folder: "Ideas", name: "../secret.md", title: "x" }, error: "invalid name" },
+    ];
+
+    for (const { payload, error } of cases) {
+      const res = await app.inject({ method: "PATCH", url: "/note", payload });
+      expect(res.statusCode, JSON.stringify(payload)).toBe(400);
+      expect(res.json(), JSON.stringify(payload)).toEqual({ error });
+    }
+
+    // Nothing was renamed by a refused request.
+    expect(await readdir(path.join(vault, "Ideas"))).toEqual([name]);
+  });
+
+  it("answers 404 for a note that is not there, and creates nothing", async () => {
+    const { vault, app } = await makeApp([NOTE]);
+    const res = await app.inject({
+      method: "PATCH",
+      url: "/note",
+      payload: { folder: "Goals", name: "2026-01-01-missing.md", title: "Anything" },
+    });
+
+    expect(res.statusCode).toBe(404);
+    expect(res.json()).toEqual({ error: "note not found" });
+    expect(await readdir(path.join(vault, "Goals")).catch(() => [])).toEqual([]);
+  });
+
+  it("answers 409 when another note already has the name, and keeps both", async () => {
+    const { vault, app } = await makeApp([NOTE]);
+    // A capture is filed under today's date, which is the prefix a rename keeps - so a note with
+    // this title would land on this filename.
+    const stamp = new Date().toISOString().slice(0, 10);
+    const taken =
+      "---\nsource: desktop\ncreated: 2026-01-01T00:00:00.000Z\n---\n\n# Taken\n\nthe other one\n";
+    await writeFile(path.join(vault, "Ideas", `${stamp}-taken.md`), taken);
+
+    const [name] = (await readdir(path.join(vault, "Ideas"))).filter(
+      (entry) => entry !== `${stamp}-taken.md`,
+    );
+    const res = await app.inject({
+      method: "PATCH",
+      url: "/note",
+      payload: { folder: "Ideas", name, title: "Taken" },
+    });
+
+    expect(res.statusCode).toBe(409);
+    expect(res.json()).toEqual({ error: "a note with that name already exists" });
+    // The note that held the name is untouched, and the one being renamed is still there.
+    expect(await readFile(path.join(vault, "Ideas", `${stamp}-taken.md`), "utf8")).toBe(taken);
+    expect(await readdir(path.join(vault, "Ideas"))).toHaveLength(2);
+  });
+
+  it("treats a rename to the title it already has as no change at all", async () => {
+    const { vault, app } = await makeApp([NOTE]);
+    const [name] = await readdir(path.join(vault, "Ideas"));
+
+    const res = await app.inject({
+      method: "PATCH",
+      url: "/note",
+      payload: { folder: "Ideas", name, title: "build a habit tracker" },
+    });
+
+    expect(res.statusCode).toBe(200);
+    expect(res.json<{ note: { file: string } }>().note.file.endsWith(name)).toBe(true);
+    expect(await readdir(path.join(vault, "Ideas"))).toEqual([name]);
+  });
+});
+
+describe("POST /note/move", () => {
+  it("moves the note into the other folder and answers it there", async () => {
+    const { vault, app } = await makeApp([NOTE]);
+    const [name] = await readdir(path.join(vault, "Ideas"));
+
+    const res = await app.inject({
+      method: "POST",
+      url: "/note/move",
+      payload: { folder: "Ideas", name, toFolder: "Goals" },
+    });
+
+    expect(res.statusCode).toBe(200);
+    const { note } = res.json<{ note: { folder: string; title: string; file: string } }>();
+    expect(note.folder).toBe("Goals");
+    expect(note.title).toBe("build a habit tracker");
+    expect(await readdir(path.join(vault, "Goals"))).toEqual([name]);
+    expect(await readdir(path.join(vault, "Ideas"))).toEqual([]);
+  });
+
+  it("refuses a request that names no folder, or a folder it does not know", async () => {
+    const { vault, app } = await makeApp([NOTE]);
+    const [name] = await readdir(path.join(vault, "Ideas"));
+    const cases = [
+      { payload: {}, error: "folder, name and toFolder are required" },
+      { payload: { folder: "Ideas", name }, error: "folder, name and toFolder are required" },
+      { payload: { folder: "Ideas", name, toFolder: "Secrets" }, error: "unknown folder" },
+      {
+        payload: { folder: "Ideas", name: "../secret.md", toFolder: "Goals" },
+        error: "invalid name",
+      },
+    ];
+
+    for (const { payload, error } of cases) {
+      const res = await app.inject({ method: "POST", url: "/note/move", payload });
+      expect(res.statusCode, JSON.stringify(payload)).toBe(400);
+      expect(res.json(), JSON.stringify(payload)).toEqual({ error });
+    }
+
+    expect(await readdir(path.join(vault, "Ideas"))).toEqual([name]);
+  });
+
+  it("answers 409 instead of replacing a note that is already in the folder", async () => {
+    const { vault, app } = await makeApp([NOTE]);
+    const [name] = await readdir(path.join(vault, "Ideas"));
+    await mkdir(path.join(vault, "Goals"), { recursive: true });
+    const existing =
+      "---\nsource: desktop\ncreated: 2026-01-01T00:00:00.000Z\n---\n\n# Already here\n";
+    await writeFile(path.join(vault, "Goals", name), existing);
+
+    const res = await app.inject({
+      method: "POST",
+      url: "/note/move",
+      payload: { folder: "Ideas", name, toFolder: "Goals" },
+    });
+
+    expect(res.statusCode).toBe(409);
+    expect(res.json()).toEqual({ error: "a note with that name already exists" });
+    expect(await readFile(path.join(vault, "Goals", name), "utf8")).toBe(existing);
+  });
+
+  it("answers 404 for a note that is not there", async () => {
+    const { app } = await makeApp();
+    const res = await app.inject({
+      method: "POST",
+      url: "/note/move",
+      payload: { folder: "Ideas", name: "2026-01-01-missing.md", toFolder: "Goals" },
+    });
+
+    expect(res.statusCode).toBe(404);
+    expect(res.json()).toEqual({ error: "note not found" });
+  });
+});
+
+describe("DELETE /note", () => {
+  it("removes the note and answers with no content", async () => {
+    const { vault, app } = await makeApp([NOTE]);
+    const [name] = await readdir(path.join(vault, "Ideas"));
+
+    const res = await app.inject({
+      method: "DELETE",
+      url: `/note?folder=Ideas&name=${encodeURIComponent(name)}`,
+    });
+
+    expect(res.statusCode).toBe(204);
+    expect(res.body).toBe("");
+    expect(await readdir(path.join(vault, "Ideas"))).toEqual([]);
+  });
+
+  it("refuses a request that names no note, an unknown folder, or a bad name", async () => {
+    const { app } = await makeApp([NOTE]);
+    const cases = [
+      { url: "/note", error: "folder and name are required" },
+      { url: "/note?folder=Ideas", error: "folder and name are required" },
+      { url: "/note?folder=Secrets&name=a.md", error: "unknown folder" },
+      { url: "/note?folder=Ideas&name=../secret.md", error: "invalid name" },
+    ];
+
+    for (const { url, error } of cases) {
+      const res = await app.inject({ method: "DELETE", url });
+      expect(res.statusCode, url).toBe(400);
+      expect(res.json(), url).toEqual({ error });
+    }
+  });
+
+  it("answers 404 for a note that is not there", async () => {
+    const { app } = await makeApp();
+    const res = await app.inject({
+      method: "DELETE",
+      url: "/note?folder=Ideas&name=2026-01-01-missing.md",
+    });
+
+    expect(res.statusCode).toBe(404);
+    expect(res.json()).toEqual({ error: "note not found" });
+  });
+});
+
 describe("GET /graph", () => {
   it("returns notes and tags as nodes, with unresolved links reported", async () => {
     const { app } = await makeApp([NOTE, { folder: "Goals", text: "learn rust" }]);
@@ -645,6 +862,26 @@ describe("CORS", () => {
     expect(String(res.headers["access-control-allow-headers"]).toLowerCase()).toContain(
       "content-type",
     );
+  });
+
+  it("lets the desktop send the file operations in a preflight", async () => {
+    const { app } = await makeApp();
+    // A PATCH and a DELETE are not simple requests either: a method the allow-list omits is a
+    // rename the browser refuses while curl succeeds.
+    for (const method of ["PATCH", "DELETE"]) {
+      const res = await app.inject({
+        method: "OPTIONS",
+        url: "/note",
+        headers: {
+          origin: "http://localhost:1420",
+          "access-control-request-method": method,
+          "access-control-request-headers": "content-type",
+        },
+      });
+
+      expect(res.statusCode, method).toBe(204);
+      expect(res.headers["access-control-allow-methods"], method).toContain(method);
+    }
   });
 
   it("does not echo a foreign origin", async () => {

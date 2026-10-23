@@ -49,7 +49,9 @@ else on this page can close them.
 
 - [ ] Markdown preview beside the editor (today the rendered note is what you see after a save)
 - [ ] Edit a note's frontmatter (tags, status) from the app, rather than only its body
-- [ ] Rename, move or delete a note from the app - creating and editing the body both work
+- [ ] Rewrite the `[[links]]` that point at a note when it is renamed (today they keep the old title
+  and a rename warns about it rather than editing other notes)
+- [ ] Undo, or a trash, for a deleted note - the delete is permanent and the panel says so
 - [ ] Bulk operations (move, tag, archive)
 
 ### Phase 8 - Polish & docs (P2) - open items
@@ -259,6 +261,14 @@ Nothing in flight. The next item to pick up is the first one under **Plan**.
   and a note that claims the wrong origin is worse than one that says nothing. The folder starts
   where the list is looking, the composer keeps its draft through a failed create, and after the
   create the listing, folder counts and graph are re-read and the new note is opened
+- [x] Rename, move or delete a note from the app - the **...** button in the note header opens
+  `src/components/NoteActions.tsx` with three operations. Rename (`PATCH /note`, `renameNote()`) takes
+  a title and renames both the file (keeping its date prefix) and the body's first heading, so the
+  list, the viewer and the filename agree; move (`POST /note/move`, `moveNote()`) keeps the filename
+  and only changes the folder; delete (`DELETE /note`, `deleteNote()`) asks first and has no undo.
+  A target name another note holds is a `409` and nothing is replaced, a failure keeps the panel open
+  with the daemon's sentence, and the listing, folder counts and graph are re-read afterwards. What
+  is left over from it is on the open list above: inbound links, and an undo
 
 ### Phase 8: Polish & Docs (P2)
 

@@ -29,6 +29,9 @@ function render(
       backlinks={[]}
       onOpenNote={() => {}}
       onSave={async () => note}
+      onRename={async () => {}}
+      onMove={async () => {}}
+      onDelete={async () => {}}
     />,
   );
 }
@@ -65,6 +68,23 @@ describe("NoteViewer editing", () => {
     const html = render("body", [], "demo");
     expect(html).toContain("disabled");
     expect(html).toContain('title="Editing needs the daemon"');
+  });
+});
+
+describe("NoteViewer file operations", () => {
+  it("offers the file operations beside Edit", () => {
+    const html = render("body");
+    expect(html).toContain('aria-label="Note actions"');
+    expect(html).not.toContain('title="File changes need the daemon"');
+  });
+
+  it("offers none of them offline, because there is no file behind a demo note", () => {
+    const html = render("body", [], "demo");
+    expect(html).toContain('title="File changes need the daemon"');
+  });
+
+  it("keeps the panel closed until it is asked for", () => {
+    expect(render("body")).not.toContain("Rename");
   });
 });
 

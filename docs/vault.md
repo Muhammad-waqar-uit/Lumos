@@ -108,6 +108,28 @@ is why a hand-written edit and an edit from the app cannot disagree about what a
 Editing `tags`, `status` or any other field from the app is not supported; those are still the file's
 own business. [LIMITATIONS.md](LIMITATIONS.md) lists what that gives up.
 
+## Renaming, moving and deleting
+
+The file itself can be changed too (`PATCH /note`, `POST /note/move` and `DELETE /note` on the
+daemon; `renameNote()`, `moveNote()` and `deleteNote()` in `@lumos/vault-utils`).
+
+| Operation | What happens |
+|---|---|
+| Rename | The file becomes `<date>-<new slug>.md`, keeping the `YYYY-MM-DD-` prefix it had, and the body's first `# heading` is rewritten to the new title. A note with no heading keeps its body and only the filename changes |
+| Move | The file keeps its name and its bytes and lands in another folder. The folder is created if the vault does not have it yet |
+| Delete | The file is removed. There is no trash and no undo |
+
+Two rules hold both operations together. **Nothing is ever overwritten**: a target name another note
+already holds is a `409`, not a second timestamp suffix and not a replacement, because the person
+asking is there to choose another title. And **the path is checked first**: the folder and filename
+are resolved against the vault root before any file is read, moved or removed, so a request cannot
+reach outside the vault.
+
+The frontmatter is untouched by all three - a rename changes the heading and the filename, never the
+block above them. What is *not* rewritten is every `[[link]]` that pointed at the old title:
+the graph resolves links by title, so a rename can leave a link unresolved until it is edited by
+hand. [LIMITATIONS.md](LIMITATIONS.md) names that, and the missing undo.
+
 ## Compatibility
 
 Everything is standard Markdown + YAML frontmatter, so any tool that understands those - Obsidian,

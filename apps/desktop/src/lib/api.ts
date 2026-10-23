@@ -67,39 +67,68 @@ export async function getNote(folder: string, name: string): Promise<Note> {
 }
 
 /**
- * Create a note in a folder and answer it as the vault now reads it.
+ * A write that answers the note as it now reads.
  *
- * The daemon stamps it `source: desktop`, so a note written here is never mistaken for a WhatsApp
- * capture. A refusal arrives as an Error carrying the daemon's own sentence.
+ * Every refusal is reported in the daemon's own words (a bad name, an unknown folder, a name
+ * another note holds), so a panel can show the reason instead of a status code. Only a response
+ * with no body at all falls back to the method and the status.
  */
-export async function createNote(folder: string, text: string): Promise<Note> {
-  const res = await fetch(`${BASE}/notes`, {
-    method: "POST",
+async function send(method: string, path: string, payload: unknown): Promise<Note> {
+  const res = await fetch(`${BASE}${path}`, {
+    method,
     headers: { "content-type": "application/json", accept: "application/json" },
-    body: JSON.stringify({ folder, text }),
+    body: JSON.stringify(payload),
   });
   const body = (await res.json().catch(() => null)) as { note: Note } | { error: string } | null;
   if (!res.ok)
-    throw new Error(body && "error" in body ? body.error : `POST /notes -> ${res.status}`);
-  if (!body || !("note" in body)) throw new Error("POST /notes returned an unexpected body");
+    throw new Error(body && "error" in body ? body.error : `${method} ${path} -> ${res.status}`);
+  if (!body || !("note" in body)) throw new Error(`${method} ${path} returned an unexpected body`);
   return body.note;
+}
+
+/**
+ * Create a note in a folder and answer it as the vault now reads it.
+ *
+ * The daemon stamps it `source: desktop`, so a note written here is never mistaken for a WhatsApp
+ * capture.
+ */
+export function createNote(folder: string, text: string): Promise<Note> {
+  return send("POST", "/notes", { folder, text });
 }
 
 /**
  * Save an edited body into an existing note and answer the note as it now reads.
  *
- * The daemon rewrites the body only and never the frontmatter. A refusal arrives as an Error
- * carrying the daemon's own sentence (a bad name, a folder it does not know), so the editor can
- * show it above the draft instead of replacing the text with a status code.
+ * The daemon rewrites the body only and never the frontmatter, so a failure keeps the draft the
+ * editor is holding.
  */
-export async function saveNote(folder: string, name: string, content: string): Promise<Note> {
-  const res = await fetch(`${BASE}/note`, {
-    method: "PUT",
-    headers: { "content-type": "application/json", accept: "application/json" },
-    body: JSON.stringify({ folder, name, content }),
+export function saveNote(folder: string, name: string, content: string): Promise<Note> {
+  return send("PUT", "/note", { folder, name, content });
+}
+
+/**
+ * Rename a note to a new title and answer it as the vault now reads it.
+ *
+ * The daemon renames the file after the title and rewrites the body's first heading, so the note
+ * the app shows is the note the file says it is.
+ */
+export function renameNote(folder: string, name: string, title: string): Promise<Note> {
+  return send("PATCH", "/note", { folder, name, title });
+}
+
+/** Move a note into another folder, keeping its filename, and answer it as it now reads. */
+export function moveNote(folder: string, name: string, toFolder: string): Promise<Note> {
+  return send("POST", "/note/move", { folder, name, toFolder });
+}
+
+/** Remove a note file. A refusal arrives as an Error with the daemon's sentence. */
+export async function deleteNote(folder: string, name: string): Promise<void> {
+  const query = `folder=${encodeURIComponent(folder)}&name=${encodeURIComponent(name)}`;
+  const res = await fetch(`${BASE}/note?${query}`, {
+    method: "DELETE",
+    headers: { accept: "application/json" },
   });
-  const body = (await res.json().catch(() => null)) as { note: Note } | { error: string } | null;
-  if (!res.ok) throw new Error(body && "error" in body ? body.error : `PUT /note -> ${res.status}`);
-  if (!body || !("note" in body)) throw new Error("PUT /note returned an unexpected body");
-  return body.note;
+  if (res.ok) return;
+  const body = (await res.json().catch(() => null)) as { error: string } | null;
+  throw new Error(body?.error ?? `DELETE /note -> ${res.status}`);
 }

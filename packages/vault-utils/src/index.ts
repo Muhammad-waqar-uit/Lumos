@@ -288,34 +288,62 @@ export async function buildVaultGraph(vaultDir: string): Promise<GraphData> {
   return buildGraphFromNotes(notes);
 }
 
+/** A note as the operations address it: the folder it is filed in and its filename. */
+export interface NoteRef {
+  folder: string;
+  name: string;
+}
+
+/** Why a path was refused, so a route can answer `400`, `404` or `409` instead of a `500`. */
+export type NoteFileProblem = "unsafe" | "missing" | "exists";
+
+/** A vault operation refusing a request. The message is written for the person who asked. */
+export class NoteFileError extends Error {
+  readonly reason: NoteFileProblem;
+
+  constructor(reason: NoteFileProblem, message: string) {
+    super(message);
+    this.name = "NoteFileError";
+    this.reason = reason;
+  }
+}
+
 /**
- * Save a new body into an existing note.
+ * Resolve a folder + filename inside the vault, refusing anything that escapes it.
  *
- * The file arrives as folder + filename, both untrusted, so the resolved path is checked against
- * the vault root twice - once per segment - before anything is read. The write goes to a temporary
- * file in the same directory and is renamed over the note, so a failure part-way through leaves the
- * old note intact instead of truncated.
+ * Both halves arrive untrusted, so the resolved path is checked against the vault root twice - once
+ * per segment. A write is the one place a bad name destroys data, so the check lives here rather
+ * than only in the route that happens to call it.
  */
-export async function updateNote(
-  vaultDir: string,
-  input: { folder: string; name: string; content: string },
-): Promise<Note> {
+function noteFile(vaultDir: string, { folder, name }: NoteRef): string {
   const root = path.resolve(vaultDir);
-  const dir = path.resolve(root, input.folder);
-  const file = path.resolve(dir, input.name);
+  const dir = path.resolve(root, folder);
+  const file = path.resolve(dir, name);
   const inside = (base: string, target: string): boolean => target.startsWith(`${base}${path.sep}`);
 
-  if (!inside(root, dir)) throw new Error("folder escapes the vault");
-  // A write is the one place a bad name destroys data, so it is refused here too and not only in
-  // the route that happens to call it.
-  if (!input.name.endsWith(".md") || !inside(dir, file)) throw new Error("name escapes the folder");
+  if (!inside(root, dir)) throw new NoteFileError("unsafe", "folder escapes the vault");
+  if (!name.endsWith(".md") || !inside(dir, file))
+    throw new NoteFileError("unsafe", "name escapes the folder");
+  return file;
+}
 
-  const raw = await readFile(file, "utf8");
-  const next = replaceNoteBody(raw, input.content);
-  // The suffix keeps the temporary file out of every listing: they all filter on `.md`.
+/** Re-throw a missing file as the answer a caller can act on, and anything else as it came. */
+function missingNote(err: unknown): never {
+  if ((err as NodeJS.ErrnoException).code === "ENOENT")
+    throw new NoteFileError("missing", "note not found");
+  throw err;
+}
+
+/**
+ * Write a note in one step: a temporary file in the same folder, renamed over the target.
+ *
+ * The suffix keeps the temporary name out of every listing, because they all filter on `.md`. A
+ * failure part-way leaves the old note intact instead of truncated.
+ */
+async function writeNoteFile(file: string, content: string): Promise<void> {
   const temp = `${file}.${process.pid}-${Date.now()}.tmp`;
   try {
-    await writeFile(temp, next, { encoding: "utf8", flag: "wx" });
+    await writeFile(temp, content, { encoding: "utf8", flag: "wx" });
     await rename(temp, file);
   } catch (err: unknown) {
     // The failure that brought us here is the one worth reporting; a leftover temporary file cannot
@@ -323,7 +351,122 @@ export async function updateNote(
     await rm(temp, { force: true }).catch(() => undefined);
     throw err;
   }
+}
+
+/**
+ * Move a note file to a new path without ever overwriting what is already there.
+ *
+ * `rename()` would replace the target silently, and a note replaced by another note is data loss
+ * with nothing to show for it - so the new file is created exclusively and the old one removed
+ * afterwards. If the removal fails the copy is taken back out again, leaving the vault as it was.
+ */
+async function relocate(from: string, to: string, content: string): Promise<void> {
+  await mkdir(path.dirname(to), { recursive: true });
+  try {
+    await writeFile(to, content, { encoding: "utf8", flag: "wx" });
+  } catch (err: unknown) {
+    if ((err as NodeJS.ErrnoException).code === "EEXIST")
+      throw new NoteFileError("exists", "a note with that name already exists");
+    throw err;
+  }
+  try {
+    await rm(from);
+  } catch (err: unknown) {
+    await rm(to, { force: true }).catch(() => undefined);
+    throw err;
+  }
+}
+
+/**
+ * Save a new body into an existing note.
+ *
+ * Only the body is replaced; the frontmatter block is left exactly as the file has it.
+ */
+export async function updateNote(
+  vaultDir: string,
+  input: { folder: string; name: string; content: string },
+): Promise<Note> {
+  const file = noteFile(vaultDir, input);
+  const raw = await readFile(file, "utf8");
+  await writeNoteFile(file, replaceNoteBody(raw, input.content));
   return readNote(file, input.folder);
+}
+
+/**
+ * Move a note into another folder, keeping its filename and its bytes.
+ *
+ * Moving a note to the folder it already sits in changes nothing and answers the note; the caller
+ * does not have to know which folder it was in.
+ */
+export async function moveNote(
+  vaultDir: string,
+  input: { from: NoteRef; to: NoteRef },
+): Promise<Note> {
+  const from = noteFile(vaultDir, input.from);
+  const to = noteFile(vaultDir, input.to);
+  if (from === to) return readNote(from, input.to.folder);
+
+  const raw = await readFile(from, "utf8").catch(missingNote);
+  await relocate(from, to, raw);
+  return readNote(to, input.to.folder);
+}
+
+/** The `YYYY-MM-DD-` prefix a vault filename carries, so a renamed note keeps its date. */
+function datePrefixOf(name: string): string {
+  return /^\d{4}-\d{2}-\d{2}-/.test(name) ? name.slice(0, 11) : "";
+}
+
+/**
+ * Replace the heading that gives a note its title.
+ *
+ * Only the body is searched, so a `#` line in the frontmatter block is a YAML comment and stays one.
+ */
+function retitleBody(content: string, title: string): string {
+  return content.replace(/^#\s+.+$/m, `# ${title}`);
+}
+
+/**
+ * Rename a note to a new title.
+ *
+ * The title is the note's, not its filename's: the file is renamed to `<date>-<new slug>.md` and
+ * the body's first heading is rewritten to match, so the list, the viewer and the file's name all
+ * say the same thing afterwards. A note with no heading has no title of its own - it falls back to
+ * the filename - so only the filename changes.
+ *
+ * Two notes can legitimately want one filename (the same title, the same day). That collision is
+ * refused rather than resolved by a timestamp suffix: the person renaming is right there, and a
+ * silent `-1758…` in their note's name is not what they asked for.
+ */
+export async function renameNote(
+  vaultDir: string,
+  input: { folder: string; name: string; title: string },
+): Promise<Note> {
+  const title = input.title.trim();
+  if (!title) throw new NoteFileError("unsafe", "a title is required");
+
+  const from = noteFile(vaultDir, input);
+  const to = noteFile(vaultDir, {
+    folder: input.folder,
+    name: `${datePrefixOf(input.name)}${slugify(title)}.md`,
+  });
+
+  const raw = await readFile(from, "utf8").catch(missingNote);
+  const next = replaceNoteBody(raw, retitleBody(parseNote(raw).content, title));
+
+  if (to === from) await writeNoteFile(from, next);
+  else await relocate(from, to, next);
+  return readNote(to, input.folder);
+}
+
+/**
+ * Delete a note file.
+ *
+ * There is no trash and no undo: the file is gone from the vault, which is the point of a delete
+ * and the reason the app asks twice before it sends one. The path is checked first, so a request
+ * cannot remove a file outside the folder it named.
+ */
+export async function deleteNote(vaultDir: string, ref: NoteRef): Promise<void> {
+  await rm(noteFile(vaultDir, ref)).catch(missingNote);
 }
 
 /**

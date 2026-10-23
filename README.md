@@ -138,9 +138,11 @@ curl -X POST http://127.0.0.1:3001/message \
 curl http://127.0.0.1:3001/health
 ```
 
-The daemon also serves the read API the desktop uses — `GET /notes`, `/notes/search?q=`, `/folders`,
-`/note?folder=&name=`, `/graph` and `/link?url=` — with its own guards (unknown folders and unsafe
-filenames are a `400`, local addresses are refused by `/link`) and CORS limited to local origins.
+The daemon also serves the API the desktop uses — the read routes `GET /notes`, `/notes/search?q=`,
+`/folders`, `/note?folder=&name=`, `/graph` and `/link?url=`, and the writes `PUT /note`, `POST
+/notes`, `PATCH /note` (rename), `POST /note/move` and `DELETE /note` — with its own guards (unknown
+folders and unsafe filenames are a `400`, a name another note already holds is a `409`, local
+addresses are refused by `/link`) and CORS limited to local origins and the methods it serves.
 [docs/daemon.md](docs/daemon.md) documents each one.
 
 ## Configuration Reference
@@ -209,8 +211,8 @@ git checkout -b feat/my-change
 - [ ] Daily planner with `/plan today|tomorrow` (AI-assisted via Ollama)
 - [x] Full-text search with `/find <query>` (title, tags and body; up to five matches per reply)
 - [x] Tag extraction and auto-tagging — `#hashtags` in a captured message become the note's frontmatter tags
-- [~] Tauri desktop app UI for browsing/searching/editing vault - dark shell, folder sidebar, note list, Markdown-rendering viewer with syntax-highlighted code, link graph, tag filtering, a `Cmd/Ctrl+K` search palette, and an editor and a composer that write notes back to the vault are in place; routing remains
-- [x] Test coverage - 391 vitest tests run inside `pnpm validate`: 156 for `@lumos/vault-utils`, 111 for the daemon (every route through `app.inject()`, with the link fetcher and config injected) and 124 for the desktop (pure logic, SSR renders, and the sidebar, note list, palette, link pane, note editor and note composer in jsdom). The graph canvas and an end-to-end run in a real browser are the gaps, both tracked in [docs/TODO.md](docs/TODO.md)
+- [~] Tauri desktop app UI for browsing/searching/editing vault - dark shell, folder sidebar, note list, Markdown-rendering viewer with syntax-highlighted code, link graph, tag filtering, a `Cmd/Ctrl+K` search palette, and a composer, an editor and a set of file operations that write notes back to the vault (or rename, move and delete them) are in place; routing remains
+- [x] Test coverage - 434 vitest tests run inside `pnpm validate`: 173 for `@lumos/vault-utils`, 124 for the daemon (every route through `app.inject()`, with the link fetcher and config injected) and 137 for the desktop (pure logic, SSR renders, and the sidebar, note list, palette, link pane, note editor, note composer and file-operations panel in jsdom). The graph canvas and an end-to-end run in a real browser are the gaps, both tracked in [docs/TODO.md](docs/TODO.md)
 - [ ] Enrichment: extract summaries, key points from links
 - [ ] Sync/backups, exports
 
