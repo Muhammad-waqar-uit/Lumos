@@ -47,7 +47,6 @@ else on this page can close them.
 
 ### Phase 7 - Editing & enrichment (P2) - open items
 
-- [ ] Markdown preview beside the editor (today the rendered note is what you see after a save)
 - [ ] Empty the trash, or list what is in it - a delete moves the file to `.trash` and Undo is only
   for the delete just made ([LIMITATIONS.md](LIMITATIONS.md))
 - [ ] Bulk operations (move, tag, archive)
@@ -286,6 +285,12 @@ Nothing in flight. The next item to pick up is the first one under **Plan**.
   de-duplicated), writes only the frontmatter block and leaves the body byte-identical, keeps a key
   another tool wrote, and refuses a block that does not parse instead of replacing it. The list,
   folder counts and graph are re-read after a change, because a tag is a chip and an edge
+- [x] Preview the draft beside the editor - `src/components/Markdown.tsx` is now the one Markdown
+  renderer, and `NoteEditor` draws the draft through it in a second pane that follows every
+  keystroke. A **Hide preview** / **Preview** toggle (with `aria-pressed`) gives the textarea the
+  whole width back, the two panes scroll on their own, an empty draft says "Nothing to preview yet.",
+  and below the `md` breakpoint the panes stack. The saved note is read with that same component, so
+  the preview cannot disagree with the reader
 
 ### Phase 8: Polish & Docs (P2)
 

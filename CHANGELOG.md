@@ -538,3 +538,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   key order inside it is not kept - a trade now written into `docs/LIMITATIONS.md`.
 - 17 new tests: 7 in `@lumos/vault-utils`, 4 in the daemon, 5 in the desktop. Suite is 477: 198 in
   `@lumos/vault-utils`, 133 in the daemon, 146 in the desktop.
+
+### Added (continued 30)
+- The note editor now shows a live preview beside the textarea. Until now a saved note was the first
+  chance to see whether a table parsed or a fence swallowed the rest of the body; the draft is
+  rendered as it is typed instead. It is the same renderer the reader uses (`Markdown` in
+  `src/components/Markdown.tsx`), so one pipeline decides headings, GFM, highlighting and the
+  external-link override for both - a second renderer would be a second set of rules, and a preview
+  that disagrees with the saved note is worse than none.
+- **Hide preview** / **Preview** gives the textarea the whole pane and brings the rendering back; the
+  button carries `aria-pressed`. The panes scroll on their own - they are read for different things,
+  so there is no scroll sync - an empty draft says "Nothing to preview yet." rather than showing a
+  blank pane, and below the `md` breakpoint the two stack instead of squeezing prose into half a
+  column.
+- The preview is a rendering of the draft, never a source of truth: nothing is saved from it, and it
+  leaves with the draft. The cost is a redraw per keystroke, which is written into
+  `docs/LIMITATIONS.md` along with the fact that a very large note will feel it.
+- 3 new tests in `src/components/NoteEditor.test.tsx` (the rendering follows the typing, the toggle
+  hides and restores the pane with its state, and the empty draft says so). Suite is 480: 198 in
+  `@lumos/vault-utils`, 133 in the daemon, 149 in the desktop.

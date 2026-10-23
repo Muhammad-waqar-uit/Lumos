@@ -125,19 +125,25 @@ play it — neither page can be read or copied.
   caught. The graph canvas is the one component with no test at all, because it draws through the
   graph library and jsdom cannot render it. An E2E runner is tracked under **Plan** in
   [TODO.md](TODO.md).
-- **Notes can be written, but not renamed, moved or deleted from the app.** Creating and editing a
-  body both work; the filename, the folder and the frontmatter do not. `tags`, `status`, `url` and
-  every other field are the file's own business, so the app does not offer an input that would
-  silently do nothing. There is no delete, so nothing in the app can lose a note.
+- **Only the fields a control owns can be edited.** A body, tags, status, the filename and the folder
+  each have something in the app that writes them. `created`, `url`, `source` and any key another
+  tool put in the block do not: there is no form for the frontmatter as a whole, and nothing here
+  offers an input that would silently do nothing.
 - **A draft belongs to the note that was open.** Opening another note while editing closes the editor
   and drops what was typed, because there is no draft store and no "unsaved changes" prompt on
   navigation. The draft does survive a failed save. There is also no undo, no edit history and no
   conflict detection: if the same file is changed in Obsidian while it is open here, the save wins
   over those changes rather than merging or asking.
-- **The editor is a textarea.** Body text is edited as Markdown, with no preview beside it and no
-  toolbar; the rendered form is what the viewer shows after a save. Anything the textarea does not do
-  — tabs, a stored cursor position, the spell-check language — is the browser's behaviour, not the
-  app's.
+- **The editor is a textarea with a preview, not a WYSIWYG.** Body text is edited as Markdown and the
+  preview beside it is a separate rendering, not a document you type into; there is no toolbar. The
+  preview is redrawn on every keystroke, which is fine for a note and visibly slow for a very large
+  one (thousands of lines, or a fence in a language the highlighter knows). It also does not scroll
+  in step with the textarea: the two panes keep their own positions. Anything the textarea does not
+  do — tabs, a stored cursor position, the spell-check language — is the browser's behaviour, not
+  the app's.
+- **The preview stacks below the textarea on a narrow window.** It sits beside the editor only at the
+  `md` breakpoint and wider; below that, half a column of prose would be unreadable, so the panes
+  become one above the other.
 - **With the daemon down the app reads demo data, not your vault**, and Edit, Rename, Move and
   Delete are disabled because there is nothing to save to or remove: a demo note has no file behind
   it. `src/lib/demo.ts` is the fallback, so a stopped daemon shows demo notes rather than a blank

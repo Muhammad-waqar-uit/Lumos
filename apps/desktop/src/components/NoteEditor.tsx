@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import type { Note } from "@lumos/shared";
+import { Markdown } from "./Markdown";
 
 interface Props {
   note: Note;
@@ -10,15 +11,18 @@ interface Props {
 }
 
 /**
- * The body as a plain textarea.
+ * The body as a plain textarea, with a live preview of the draft beside it.
  *
  * Markdown is edited as text on purpose: the vault is the file, and a rendered editor would have to
- * round-trip syntax the user did not write. A failed save keeps the draft and says why - losing
- * typing to a daemon that is down would be the one unforgivable outcome here.
+ * round-trip syntax the user did not write. The preview is the same renderer the saved note is read
+ * with, so what it shows is what the reader will show; it can be hidden when the full width is
+ * wanted for writing. A failed save keeps the draft and says why - losing typing to a daemon that is
+ * down would be the one unforgivable outcome here.
  */
 export function NoteEditor({ note, onSave, onSaved, onCancel }: Props) {
   const [draft, setDraft] = useState(note.content);
   const [saving, setSaving] = useState(false);
+  const [previewing, setPreviewing] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const dirty = draft !== note.content;
   // What the textarea holds now, readable from a save that is still in flight: that closure belongs
@@ -57,6 +61,14 @@ export function NoteEditor({ note, onSave, onSaved, onCancel }: Props) {
         <span className="flex shrink-0 items-center gap-2">
           <button
             type="button"
+            onClick={() => setPreviewing((on) => !on)}
+            aria-pressed={previewing}
+            className="rounded-md border border-border px-2 py-1 text-[11px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          >
+            {previewing ? "Hide preview" : "Preview"}
+          </button>
+          <button
+            type="button"
             onClick={onCancel}
             disabled={saving}
             className="rounded-md border border-border px-2 py-1 text-[11px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-50"
@@ -73,30 +85,44 @@ export function NoteEditor({ note, onSave, onSaved, onCancel }: Props) {
           </button>
         </span>
       </div>
-      <textarea
-        aria-label="Note body"
-        value={draft}
-        onChange={(event) => {
-          latest.current = event.target.value;
-          setDraft(event.target.value);
-        }}
-        onKeyDown={(event) => {
-          const saveChord = (event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "s";
-          if (saveChord) {
-            event.preventDefault();
-            void save();
-            return;
-          }
-          // Escape cannot close the editor while a save is out: the answer is still coming, and a
-          // request whose editor disappeared has nowhere to report a failure.
-          if (event.key === "Escape" && !saving) {
-            event.preventDefault();
-            onCancel();
-          }
-        }}
-        spellCheck
-        className="flex-1 resize-none bg-transparent px-6 py-5 font-mono text-[13px] leading-relaxed text-foreground focus:outline-none"
-      />
+      <div className="flex min-h-0 flex-1 flex-col md:flex-row">
+        <textarea
+          aria-label="Note body"
+          value={draft}
+          onChange={(event) => {
+            latest.current = event.target.value;
+            setDraft(event.target.value);
+          }}
+          onKeyDown={(event) => {
+            const saveChord = (event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "s";
+            if (saveChord) {
+              event.preventDefault();
+              void save();
+              return;
+            }
+            // Escape cannot close the editor while a save is out: the answer is still coming, and a
+            // request whose editor disappeared has nowhere to report a failure.
+            if (event.key === "Escape" && !saving) {
+              event.preventDefault();
+              onCancel();
+            }
+          }}
+          spellCheck
+          className="min-h-0 flex-1 resize-none bg-transparent px-6 py-5 font-mono text-[13px] leading-relaxed text-foreground focus:outline-none"
+        />
+        {previewing ? (
+          <section
+            aria-label="Preview"
+            className="min-h-0 flex-1 overflow-y-auto border-t border-border px-6 py-5 md:border-l md:border-t-0"
+          >
+            {draft.trim() ? (
+              <Markdown source={draft} />
+            ) : (
+              <p className="text-sm text-muted-foreground">Nothing to preview yet.</p>
+            )}
+          </section>
+        ) : null}
+      </div>
     </div>
   );
 }

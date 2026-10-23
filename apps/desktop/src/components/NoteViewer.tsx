@@ -1,23 +1,12 @@
 import { useMemo, useState } from "react";
-import ReactMarkdown, { type Components } from "react-markdown";
-import rehypeHighlight from "rehype-highlight";
-import remarkGfm from "remark-gfm";
 import type { GraphNode, Note } from "@lumos/shared";
 import { firstExternalLink } from "@lumos/vault-utils/link";
 import { type Connection } from "../lib/api";
 import { LinkPane } from "./LinkPane";
+import { Markdown } from "./Markdown";
 import { NoteActions } from "./NoteActions";
 import { NoteEditor } from "./NoteEditor";
 import { NoteMeta } from "./NoteMeta";
-
-/** Note links open outside the app window instead of navigating the UI away. */
-const markdownComponents: Components = {
-  a: ({ href, title, children }) => (
-    <a href={href} title={title} target="_blank" rel="noreferrer">
-      {children}
-    </a>
-  ),
-};
 
 function formatDate(iso: string): string {
   const d = new Date(iso);
@@ -208,17 +197,7 @@ export function NoteViewer({
       {isEditing ? null : (
         <div className="flex-1 overflow-y-auto px-6 py-5">
           {note.content.trim() ? (
-            <article className="markdown">
-              <ReactMarkdown
-                remarkPlugins={[remarkGfm]}
-                // Only a block the author tagged gets highlighted: guessing the language of an
-                // untagged block colours prose and JSON alike as something they are not.
-                rehypePlugins={[[rehypeHighlight, { detect: false }]]}
-                components={markdownComponents}
-              >
-                {note.content}
-              </ReactMarkdown>
-            </article>
+            <Markdown source={note.content} />
           ) : (
             <p className="text-sm text-muted-foreground">This note is empty.</p>
           )}
