@@ -15,8 +15,9 @@ While the daemon handles capture via WhatsApp, the desktop app is designed to he
   Cancel (`Esc`). Only the body is written; the frontmatter block is left exactly as the file has it
   so a hand-edited block is never quietly rewritten. Saving needs the daemon
 - Change the file itself — the **...** button opens **Rename**, **Move** and **Delete**. A rename
-  takes a title and renames both the file (keeping its date prefix) and the body's first heading; a
-  move changes the folder and keeps the filename; a delete asks first and has no undo
+  takes a title, renames both the file (keeping its date prefix) and the body's first heading, and
+  rewrites the links in other notes that pointed at the old title so the backlinks survive; a move
+  changes the folder and keeps the filename; a delete asks first and has no undo
 
 The vault is served by the daemon: with it stopped the app shows `src/lib/demo.ts` instead and
 editing, renaming, moving and deleting are disabled. Set `VITE_DAEMON_URL` to point the app at a daemon on another port. What is known to be

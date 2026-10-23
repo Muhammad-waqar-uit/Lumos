@@ -106,14 +106,35 @@ export function saveNote(folder: string, name: string, content: string): Promise
   return send("PUT", "/note", { folder, name, content });
 }
 
+/** What a rename did: the note as it now reads, and whose links followed it. */
+export interface RenameResult {
+  note: Note;
+  /** Vault ids (`Folder/name.md`) of the other notes whose links were rewritten. */
+  updated: string[];
+}
+
 /**
  * Rename a note to a new title and answer it as the vault now reads it.
  *
- * The daemon renames the file after the title and rewrites the body's first heading, so the note
- * the app shows is the note the file says it is.
+ * The daemon renames the file after the title, rewrites the body's first heading, and edits the
+ * notes that linked to the old title, so the rename does not break its own backlinks.
  */
-export function renameNote(folder: string, name: string, title: string): Promise<Note> {
-  return send("PATCH", "/note", { folder, name, title });
+export async function renameNote(
+  folder: string,
+  name: string,
+  title: string,
+): Promise<RenameResult> {
+  const res = await fetch(`${BASE}/note`, {
+    method: "PATCH",
+    headers: { "content-type": "application/json", accept: "application/json" },
+    body: JSON.stringify({ folder, name, title }),
+  });
+  const body = (await res.json().catch(() => null)) as
+    { note: Note; updated: string[] } | { error: string } | null;
+  if (!res.ok)
+    throw new Error(body && "error" in body ? body.error : `PATCH /note -> ${res.status}`);
+  if (!body || !("note" in body)) throw new Error("PATCH /note returned an unexpected body");
+  return { note: body.note, updated: body.updated };
 }
 
 /** Move a note into another folder, keeping its filename, and answer it as it now reads. */

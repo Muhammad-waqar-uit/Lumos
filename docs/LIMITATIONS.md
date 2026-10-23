@@ -194,11 +194,12 @@ play it — neither page can be read or copied.
   name and a millisecond suffix in a note they named themselves is not what they asked for.
 - **A delete is permanent.** `DELETE /note` removes the file; there is no trash, no `.trash` folder
   and no undo, and the panel asks once before it sends it. That is the whole safety net.
-- **A rename does not rewrite the links that point at the note.** Links resolve by title, so a note
-  with `[[Learn Rust]]` pointing at it keeps that text after a rename: the link becomes unresolved
-  and the graph reports it as such until it is edited by hand. The panel says how many notes link to
-  the old title before the rename goes through, which is a warning rather than a fix. Same for the
-  filename: an Obsidian link written as `2026-10-20-learn-rust.md` points at the old name.
+- **A rename follows the links, with three exceptions.** A link inside a code fence or inline code
+  is left alone, because the graph does not read it as a link either and a rename has no business
+  editing a code sample. A link written to a frontmatter alias keeps the author's wording: the alias
+  survives, so it still resolves. And a note that links to its own old title keeps that text - the
+  note's own body is retitled, not scanned for its own links. Every other link that pointed at the
+  old title is rewritten in the same operation.
 - **A move keeps the filename.** A note moved from Ideas to Goals is still
   `2026-10-20-learn-rust.md`, because the date belongs to the note; only a rename changes the name.
 - **A rename rewrites the first heading.** It is the title the app shows, so leaving it behind would
@@ -225,7 +226,9 @@ play it — neither page can be read or copied.
 These are design observations, not measurements — no vault large enough to show them has been built.
 
 - **Nothing is indexed.** `/graph` reads every note body on each request, and `searchNotes` reads
-  whole files whenever the excerpt does not match, so both grow with the size of the vault.
+  whole files whenever the excerpt does not match, so both grow with the size of the vault. A rename
+  reads the whole vault too, because it has to know who links to the note before it can rewrite them
+  - so renaming is proportional to the vault, not to the note.
 - **The link cache is memory only.** A URL costs one fetch and a scrape of up to 1 MiB per session,
   reused for every later visit to it; the map is unbounded, which is fine for a session's worth of
   links and is not a store.

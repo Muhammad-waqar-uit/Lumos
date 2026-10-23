@@ -115,7 +115,7 @@ daemon; `renameNote()`, `moveNote()` and `deleteNote()` in `@lumos/vault-utils`)
 
 | Operation | What happens |
 |---|---|
-| Rename | The file becomes `<date>-<new slug>.md`, keeping the `YYYY-MM-DD-` prefix it had, and the body's first `# heading` is rewritten to the new title. A note with no heading keeps its body and only the filename changes |
+| Rename | The file becomes `<date>-<new slug>.md`, keeping the `YYYY-MM-DD-` prefix it had, and the body's first `# heading` is rewritten to the new title. A note with no heading keeps its body and only the filename changes. The links in other notes that pointed at the old title are rewritten to the new one |
 | Move | The file keeps its name and its bytes and lands in another folder. The folder is created if the vault does not have it yet |
 | Delete | The file is removed. There is no trash and no undo |
 
@@ -126,9 +126,16 @@ are resolved against the vault root before any file is read, moved or removed, s
 reach outside the vault.
 
 The frontmatter is untouched by all three - a rename changes the heading and the filename, never the
-block above them. What is *not* rewritten is every `[[link]]` that pointed at the old title:
-the graph resolves links by title, so a rename can leave a link unresolved until it is edited by
-hand. [LIMITATIONS.md](LIMITATIONS.md) names that, and the missing undo.
+block above them.
+
+A link resolves by title, so a rename carries the links that point at the note: every other note whose
+body links to the old title is rewritten, in the same operation, and the API answers those files as
+`updated`. The link keeps the shape it was written in - `[[Learn Rust]]` becomes the new title,
+`[[2026-10-20-learn-rust.md]]` becomes the new filename - and a `#heading`, a `|alias` or an `!`
+embed marker survives it. A link that still reaches the note afterwards is left alone (an alias in the
+frontmatter still resolves), and so is anything inside a code fence or inline code, because the graph
+does not read those as links either. [LIMITATIONS.md](LIMITATIONS.md) names what that leaves out, and
+the missing undo.
 
 ## Compatibility
 

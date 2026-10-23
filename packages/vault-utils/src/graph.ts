@@ -30,6 +30,12 @@ const LINK = /(!?)\[\[([^\]\n]+?)\]\]|\[([^\]\n]*)\]\(([^)\s]+)\)/g;
 const TAG = /(^|[^\w#])#([A-Za-z0-9_][A-Za-z0-9_/-]*)/g;
 const DATE_PREFIX = /^\d{4}-\d{2}-\d{2}-/;
 
+// The two link shapes again, separately, for rewriting one target in place.
+const WIKI = /(!?)\[\[([^\]\n]+?)\]\]/g;
+const MARKDOWN = /\[([^\]\n]*)\]\(([^)\s]+)\)/g;
+const FENCE = /^ {0,3}(```|~~~)/;
+const CODE_SPAN = /(`+[^`\n]*`+)/;
+
 /** Strip the decoration a target may carry. */
 function normalizeTarget(raw: string): string {
   return raw.trim().replace(/^\.\//, "").replace(/\.md$/i, "").trim();
@@ -80,6 +86,97 @@ function markdownLink(url: string): LinkRef | null {
   return { target, alias: null, heading: heading || null, embed: false };
 }
 
+/**
+ * The target of a `[[wikilink]]` and whatever follows it: a `#heading`, a `|alias`, or both.
+ * Null for `[[#Heading]]`, which only points inside the note it is written in.
+ */
+function wikiTarget(inner: string): { target: string; suffix: string } | null {
+  const pipe = inner.indexOf("|");
+  const head = pipe === -1 ? inner : inner.slice(0, pipe);
+  const alias = pipe === -1 ? "" : inner.slice(pipe);
+  const hash = head.indexOf("#");
+  if (hash === 0) return null;
+  const target = hash === -1 ? head : head.slice(0, hash);
+  const heading = hash === -1 ? "" : head.slice(hash);
+  if (!target.trim()) return null;
+  return { target, suffix: `${heading}${alias}` };
+}
+
+/**
+ * A `[text](url)` target rewritten in place, keeping its anchor, or null when it is not a note.
+ * The path is decoded before the question is asked and encoded again on the way out, so a title with
+ * a space stays a working link.
+ */
+function markdownTarget(url: string, replace: (target: string) => string | null): string | null {
+  if (/^[a-z][a-z0-9+.-]*:/i.test(url)) return null; // http:, mailto:, data:
+  if (url.startsWith("#")) return null; // a heading in the same note
+
+  const hash = url.indexOf("#");
+  const path = hash === -1 ? url : url.slice(0, hash);
+  const anchor = hash === -1 ? "" : url.slice(hash);
+  let decoded = path;
+  try {
+    decoded = decodeURIComponent(path);
+  } catch (err: unknown) {
+    // A malformed escape is not fatal: ask about the literal text instead.
+    if (!(err instanceof URIError)) throw err;
+  }
+  if (!/\.md$/i.test(decoded)) return null;
+
+  const next = replace(decoded);
+  return next === null ? null : `${encodeURI(next)}${anchor}`;
+}
+
+/**
+ * Rewrite the target of every vault link in a body, and say how many were changed.
+ *
+ * `replace` answers the new text for a target it recognises, or null to leave that link as written.
+ * Code fences and inline code are skipped, because the graph does not read links there either: a
+ * shell example is not a note, and a rename has no business editing one.
+ */
+export function rewriteLinks(
+  content: string,
+  replace: (target: string) => string | null,
+): { text: string; count: number } {
+  let count = 0;
+
+  const segment = (part: string): string =>
+    part
+      .replace(WIKI, (whole: string, bang: string, inner: string) => {
+        const parsed = wikiTarget(inner);
+        if (!parsed) return whole;
+        const next = replace(parsed.target);
+        if (next === null) return whole;
+        count += 1;
+        return `${bang}[[${next}${parsed.suffix}]]`;
+      })
+      .replace(MARKDOWN, (whole: string, label: string, url: string) => {
+        const next = markdownTarget(url, replace);
+        if (next === null) return whole;
+        count += 1;
+        return `[${label}](${next})`;
+      });
+
+  let fenced = false;
+  const text = content
+    .split("\n")
+    .map((line) => {
+      if (FENCE.test(line)) {
+        fenced = !fenced;
+        return line;
+      }
+      if (fenced) return line;
+      // `split` with one capture group keeps the code spans at the odd indices.
+      return line
+        .split(CODE_SPAN)
+        .map((part, index) => (index % 2 === 1 ? part : segment(part)))
+        .join("");
+    })
+    .join("\n");
+
+  return { text, count };
+}
+
 /** Every link written in a note body, in the order it appears. */
 export function extractLinks(content: string): LinkRef[] {
   const refs: LinkRef[] = [];
@@ -113,8 +210,11 @@ export function extractTags(content: string, frontmatterTags: readonly string[] 
 /**
  * Build a lookup from every name a link may use to the note it belongs to:
  * title, slug, filename, filename without its date prefix, the id, and aliases.
+ *
+ * Exported so a rename can ask the same question the graph asks - "what does this link point at?" -
+ * instead of growing a second set of rules that drifts from these.
  */
-function makeResolver(notes: readonly GraphSourceNote[]): (target: string) => string | null {
+export function linkResolver(notes: readonly GraphSourceNote[]): (target: string) => string | null {
   const keys = new Map<string, string>();
   const remember = (raw: string, id: string): void => {
     const key = normalizeKey(raw);
@@ -151,7 +251,7 @@ function makeResolver(notes: readonly GraphSourceNote[]): (target: string) => st
 /** Assemble the graph from note contents. Deterministic: ordering never depends on input order. */
 export function buildGraphFromNotes(notes: readonly GraphSourceNote[]): GraphData {
   const sorted = [...notes].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
-  const resolve = makeResolver(sorted);
+  const resolve = linkResolver(sorted);
 
   const edges: GraphEdge[] = [];
   const unresolved: UnresolvedLink[] = [];

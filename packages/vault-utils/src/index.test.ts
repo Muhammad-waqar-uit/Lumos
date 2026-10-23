@@ -501,12 +501,14 @@ describe("renameNote", () => {
 
   it("names the file after the new title and keeps the date prefix", async () => {
     await put("Goals", NAME, RAW);
-    const note = await renameNote(vault, {
+    const { note, updated } = await renameNote(vault, {
       folder: "Goals",
       name: NAME,
       title: "Learn Rust properly",
     });
 
+    // Nothing else in this vault links here, so nothing else was edited.
+    expect(updated).toEqual([]);
     expect(note.title).toBe("Learn Rust properly");
     expect(note.file).toBe(path.join(vault, "Goals", "2026-01-02-learn-rust-properly.md"));
     expect(await readdir(path.join(vault, "Goals"))).toEqual(["2026-01-02-learn-rust-properly.md"]);
@@ -537,7 +539,7 @@ describe("renameNote", () => {
 
   it("keeps the filename when the title slugs to the name it already has", async () => {
     await put("Goals", NAME, RAW);
-    const note = await renameNote(vault, {
+    const { note } = await renameNote(vault, {
       folder: "Goals",
       name: NAME,
       title: "learn rust",
@@ -551,13 +553,111 @@ describe("renameNote", () => {
 
   it("gives a name that had no date one that has none either", async () => {
     await put("Ideas", "scratch.md", RAW);
-    const note = await renameNote(vault, {
+    const { note } = await renameNote(vault, {
       folder: "Ideas",
       name: "scratch.md",
       title: "Scratch pad",
     });
 
     expect(path.basename(note.file)).toBe("scratch-pad.md");
+  });
+
+  it("rewrites the links other notes have to the old title, and names them", async () => {
+    await put("Goals", NAME, RAW);
+    await put(
+      "Ideas",
+      "2026-01-01-reference.md",
+      "---\nsource: whatsapp\ncreated: 2026-01-01T00:00:00.000Z\ntags: []\n---\n\n# Reference\n\nsee [[Learn Rust]] and [[Learn Rust#Ship a CLI|the plan]] for detail\n",
+    );
+
+    const { updated } = await renameNote(vault, {
+      folder: "Goals",
+      name: NAME,
+      title: "Learn Rust properly",
+    });
+
+    expect(updated).toEqual(["Ideas/2026-01-01-reference.md"]);
+    const raw = await readFile(path.join(vault, "Ideas", "2026-01-01-reference.md"), "utf8");
+    // The heading and the alias are the author's, and survive the rewrite untouched.
+    expect(raw).toContain(
+      "see [[Learn Rust properly]] and [[Learn Rust properly#Ship a CLI|the plan]]",
+    );
+    expect(raw).toContain("source: whatsapp");
+  });
+
+  it("keeps the shape a link was written in: a filename link gets the new filename", async () => {
+    await put("Goals", NAME, RAW);
+    await put(
+      "Ideas",
+      "2026-01-01-links.md",
+      "---\ncreated: 2026-01-01T00:00:00.000Z\n---\n\n# Links\n\n[[Goals/2026-01-02-learn-rust.md]] and [the plan](2026-01-02-learn-rust.md#ship-a-cli)\n",
+    );
+
+    await renameNote(vault, { folder: "Goals", name: NAME, title: "Learn Rust properly" });
+
+    const raw = await readFile(path.join(vault, "Ideas", "2026-01-01-links.md"), "utf8");
+    expect(raw).toContain("[[Goals/2026-01-02-learn-rust-properly.md]]");
+    // A markdown link keeps its text and its anchor.
+    expect(raw).toContain("[the plan](2026-01-02-learn-rust-properly.md#ship-a-cli)");
+  });
+
+  it("leaves a link that points elsewhere, and links inside code, alone", async () => {
+    await put("Goals", NAME, RAW);
+    await put(
+      "Ideas",
+      "2026-01-01-unrelated.md",
+      "---\ncreated: 2026-01-01T00:00:00.000Z\n---\n\n# Unrelated\n\n[[Some other note]]\n\n```md\n[[Learn Rust]]\n```\n\nand `[[Learn Rust]]` inline\n",
+    );
+
+    const { updated } = await renameNote(vault, {
+      folder: "Goals",
+      name: NAME,
+      title: "Learn Rust properly",
+    });
+
+    expect(updated).toEqual([]);
+    const raw = await readFile(path.join(vault, "Ideas", "2026-01-01-unrelated.md"), "utf8");
+    expect(raw).toContain("[[Some other note]]");
+    // A code sample is not a link: the rename has no business editing one.
+    expect(raw).toContain("[[Learn Rust]]\n```");
+    expect(raw).toContain("`[[Learn Rust]]` inline");
+  });
+
+  it("leaves an alias link as written, because an alias survives the rename", async () => {
+    const withAlias = `---\nsource: desktop\ncreated: 2026-01-02T00:00:00.000Z\naliases:\n  - rust plan\ntags: []\n---\n\n# Learn Rust\n\nship a CLI\n`;
+    await put("Goals", NAME, withAlias);
+    await put(
+      "Ideas",
+      "2026-01-01-reference.md",
+      "---\ncreated: 2026-01-01T00:00:00.000Z\n---\n\n# Reference\n\nsee [[rust plan]]\n",
+    );
+
+    const { updated } = await renameNote(vault, {
+      folder: "Goals",
+      name: NAME,
+      title: "Learn Rust properly",
+    });
+
+    expect(updated).toEqual([]);
+    const raw = await readFile(path.join(vault, "Ideas", "2026-01-01-reference.md"), "utf8");
+    expect(raw).toContain("see [[rust plan]]");
+  });
+
+  it("leaves every linking note alone when the title is not changing", async () => {
+    await put("Goals", NAME, RAW);
+    await put(
+      "Ideas",
+      "2026-01-01-reference.md",
+      "---\ncreated: 2026-01-01T00:00:00.000Z\n---\n\n# Reference\n\n[[Learn Rust]]\n",
+    );
+
+    const { updated } = await renameNote(vault, {
+      folder: "Goals",
+      name: NAME,
+      title: "Learn Rust",
+    });
+
+    expect(updated).toEqual([]);
   });
 
   it("refuses an empty title, and renames nothing", async () => {

@@ -231,15 +231,24 @@ export default function App() {
    *
    * The answer is shown straight away rather than after the re-read, so the title in the header
    * follows the rename instead of lagging behind it. The filters stay as they were: a rename is
-   * not a change of subject.
+   * not a change of subject. Other notes' links are rewritten by the daemon, so the status bar says
+   * how many followed - a cascade the user did not see happen would be the one surprising part.
    */
   const renameActiveNote = useCallback(
     async (title: string): Promise<void> => {
       if (!activeEntry) throw new Error("There is no note open to rename.");
-      const renamed = await renameNote(activeEntry.folder, activeEntry.name, title);
+      const { note: renamed, updated } = await renameNote(
+        activeEntry.folder,
+        activeEntry.name,
+        title,
+      );
       const key = keyOfNote(renamed);
       setFetched({ key, note: renamed });
-      setNotice(null);
+      setNotice(
+        updated.length === 0
+          ? null
+          : `Renamed; ${updated.length} ${updated.length === 1 ? "note links" : "notes link"} to the new title.`,
+      );
       try {
         await refreshVault();
       } catch (err: unknown) {

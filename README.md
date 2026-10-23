@@ -211,8 +211,8 @@ git checkout -b feat/my-change
 - [ ] Daily planner with `/plan today|tomorrow` (AI-assisted via Ollama)
 - [x] Full-text search with `/find <query>` (title, tags and body; up to five matches per reply)
 - [x] Tag extraction and auto-tagging — `#hashtags` in a captured message become the note's frontmatter tags
-- [~] Tauri desktop app UI for browsing/searching/editing vault - dark shell, folder sidebar, note list, Markdown-rendering viewer with syntax-highlighted code, link graph, tag filtering, a `Cmd/Ctrl+K` search palette, and a composer, an editor and a set of file operations that write notes back to the vault (or rename, move and delete them) are in place; routing remains
-- [x] Test coverage - 434 vitest tests run inside `pnpm validate`: 173 for `@lumos/vault-utils`, 124 for the daemon (every route through `app.inject()`, with the link fetcher and config injected) and 137 for the desktop (pure logic, SSR renders, and the sidebar, note list, palette, link pane, note editor, note composer and file-operations panel in jsdom). The graph canvas and an end-to-end run in a real browser are the gaps, both tracked in [docs/TODO.md](docs/TODO.md)
+- [~] Tauri desktop app UI for browsing/searching/editing vault - dark shell, folder sidebar, note list, Markdown-rendering viewer with syntax-highlighted code, link graph, tag filtering, a `Cmd/Ctrl+K` search palette, and a composer, an editor and a set of file operations that write notes back to the vault (rename, which carries the links pointing at the note, move and delete) are in place; routing remains
+- [x] Test coverage - 447 vitest tests run inside `pnpm validate`: 185 for `@lumos/vault-utils`, 125 for the daemon (every route through `app.inject()`, with the link fetcher and config injected) and 137 for the desktop (pure logic, SSR renders, and the sidebar, note list, palette, link pane, note editor, note composer and file-operations panel in jsdom). The graph canvas and an end-to-end run in a real browser are the gaps, both tracked in [docs/TODO.md](docs/TODO.md)
 - [ ] Enrichment: extract summaries, key points from links
 - [ ] Sync/backups, exports
 

@@ -104,12 +104,12 @@ describe("NoteActions - rename", () => {
     expect(onRename).toHaveBeenCalledTimes(1);
   });
 
-  it("says when other notes point at the title being replaced", () => {
+  it("says when other notes point here, and that their links follow", () => {
     setup({ linkedFrom: 2 });
 
     fireEvent.click(screen.getByRole("button", { name: "Rename" }));
 
-    expect(screen.getByText(/2 notes link to the old title/)).toBeDefined();
+    expect(screen.getByText(/2 notes link here; their links are rewritten too/)).toBeDefined();
   });
 
   it("says nothing about links when no note points here", () => {
@@ -117,7 +117,7 @@ describe("NoteActions - rename", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Rename" }));
 
-    expect(screen.queryByText(/link to the old title/)).toBeNull();
+    expect(screen.queryByText(/links are rewritten too/)).toBeNull();
   });
 
   it("cannot send twice while the first rename is in flight", async () => {

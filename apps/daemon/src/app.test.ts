@@ -481,7 +481,12 @@ describe("PATCH /note", () => {
     });
 
     expect(res.statusCode).toBe(200);
-    const { note } = res.json<{ note: { title: string; file: string; content: string } }>();
+    const { note, updated } = res.json<{
+      note: { title: string; file: string; content: string };
+      updated: string[];
+    }>();
+    // Nothing else in this vault links here, so nothing else was edited.
+    expect(updated).toEqual([]);
     expect(note.title).toBe("Habit tracker, eventually");
     expect(path.basename(note.file)).toMatch(/^\d{4}-\d{2}-\d{2}-habit-tracker-eventually\.md$/);
     // The heading the title comes from says the same thing as the filename.
@@ -546,6 +551,29 @@ describe("PATCH /note", () => {
     // The note that held the name is untouched, and the one being renamed is still there.
     expect(await readFile(path.join(vault, "Ideas", `${stamp}-taken.md`), "utf8")).toBe(taken);
     expect(await readdir(path.join(vault, "Ideas"))).toHaveLength(2);
+  });
+
+  it("rewrites the links other notes have to the old title", async () => {
+    const { vault, app } = await makeApp([
+      NOTE,
+      { folder: "Goals", text: "follow [[build a habit tracker]] closely" },
+    ]);
+    const [name] = await readdir(path.join(vault, "Ideas"));
+
+    const res = await app.inject({
+      method: "PATCH",
+      url: "/note",
+      payload: { folder: "Ideas", name, title: "Habit tracker, eventually" },
+    });
+
+    expect(res.statusCode).toBe(200);
+    const { updated } = res.json<{ updated: string[] }>();
+    expect(updated).toHaveLength(1);
+    expect(updated[0]).toMatch(/^Goals\/.+\.md$/);
+
+    const linking = await readFile(path.join(vault, ...updated[0].split("/")), "utf8");
+    expect(linking).toContain("[[Habit tracker, eventually]]");
+    expect(linking).not.toContain("[[build a habit tracker]]");
   });
 
   it("treats a rename to the title it already has as no change at all", async () => {

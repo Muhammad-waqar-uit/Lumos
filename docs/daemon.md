@@ -112,13 +112,23 @@ Renames a note to a new title. The title is the note's, not the file's: the file
 none), and the body's first `# heading` is rewritten to the same title, so the listing, the viewer
 and the file name agree afterwards. A note with no heading keeps its body and only its filename
 changes, because a note's title falls back to the filename. The frontmatter block is left as it was
-written. Answers the note as it now reads: `{ "note": { title, folder, frontmatter, content,
-problems } }`.
+written.
+
+A link resolves by title, so the rename also rewrites the links in other notes that pointed at the
+old one, and keeps the shape each was written in (`[[title]]` becomes the new title, `[[name.md]]`
+the new filename; a `#heading`, a `|alias` and an `!` embed marker survive). Only a target the rename
+actually strands is edited: a link that still resolves afterwards - one written to an alias - and
+anything inside a code fence or inline code is left as written.
+
+Answers the note as it now reads, plus the files whose links followed it:
+`{ "note": { title, folder, frontmatter, content, problems }, "updated": ["Goals/2026-10-20-learn-rust-properly.md"] }`.
+`updated` is empty when nothing else linked here.
 
 `400` for a missing title, an unknown folder or an unsafe name; `404` for a note that is not there;
 `409 a note with that name already exists` when another note in the folder holds the filename, because
 a rename never replaces one note with another. A title that slugs to the name the file already has
-changes the heading and nothing else.
+changes the heading and nothing else, and a rename to the title the note already has touches no file
+at all.
 
 ### `POST /note/move`
 ```json

@@ -223,6 +223,10 @@ export async function createApp({
    * The title is the note's, not the file's: the file is renamed after it and the body's first
    * heading is rewritten to match, so nothing in the app disagrees about what the note is called.
    * A note with no heading keeps its body and only the filename changes.
+   *
+   * The links that pointed at the old title are rewritten in the notes that carried them, and the
+   * files touched come back as `updated` - a link resolves by title, so leaving them would break
+   * every backlink in the vault without saying so.
    */
   app.patch<{ Body: { folder?: string; name?: string; title?: string } }>(
     "/note",
@@ -235,7 +239,8 @@ export async function createApp({
       if (!isNoteName(name)) return reply.code(400).send({ error: "invalid name" });
 
       try {
-        return { note: await renameNote(vault, { folder, name, title }) };
+        const { note, updated } = await renameNote(vault, { folder, name, title });
+        return { note, updated };
       } catch (err: unknown) {
         const refusal = noteRefusal(err);
         if (refusal) return reply.code(refusal.status).send({ error: refusal.message });
