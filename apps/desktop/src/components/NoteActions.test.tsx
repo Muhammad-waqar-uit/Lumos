@@ -167,9 +167,9 @@ describe("NoteActions - delete", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Delete" }));
 
-    // The first press is a question, not the delete: the file has no undo behind it.
+    // The first press is a question, not the delete.
     expect(onDelete).not.toHaveBeenCalled();
-    expect(screen.getByText(/no undo/)).toBeDefined();
+    expect(screen.getByText(/moves to the vault’s trash/)).toBeDefined();
 
     fireEvent.click(screen.getByRole("button", { name: "Delete" }));
 

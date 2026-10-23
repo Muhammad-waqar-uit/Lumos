@@ -110,14 +110,21 @@ own business. [LIMITATIONS.md](LIMITATIONS.md) lists what that gives up.
 
 ## Renaming, moving and deleting
 
-The file itself can be changed too (`PATCH /note`, `POST /note/move` and `DELETE /note` on the
-daemon; `renameNote()`, `moveNote()` and `deleteNote()` in `@lumos/vault-utils`).
+The file itself can be changed too (`PATCH /note`, `POST /note/move`, `DELETE /note` and
+`POST /note/restore` on the daemon; `renameNote()`, `moveNote()`, `deleteNote()` and `restoreNote()`
+in `@lumos/vault-utils`).
 
 | Operation | What happens |
 |---|---|
 | Rename | The file becomes `<date>-<new slug>.md`, keeping the `YYYY-MM-DD-` prefix it had, and the body's first `# heading` is rewritten to the new title. A note with no heading keeps its body and only the filename changes. The links in other notes that pointed at the old title are rewritten to the new one |
 | Move | The file keeps its name and its bytes and lands in another folder. The folder is created if the vault does not have it yet |
-| Delete | The file is removed. There is no trash and no undo |
+| Delete | The file moves to `.trash/<id>/<folder>/<name>`, out of every listing; `restoreNote()` moves it back under the name it had |
+
+`.trash` is a dot-folder inside the vault, so the note listings, the folder counts and the graph skip
+it without needing a rule of their own, and the file is still a plain Markdown note a person can open
+with a file manager. An entry is one delete: restoring it removes the entry, and a restore refuses to
+replace a note that has taken the name again. Nothing prunes the folder - a note waits there until it
+is restored or deleted by hand ([LIMITATIONS.md](LIMITATIONS.md)).
 
 Two rules hold both operations together. **Nothing is ever overwritten**: a target name another note
 already holds is a `409`, not a second timestamp suffix and not a replacement, because the person

@@ -503,3 +503,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 1 new test: the sidebar shows the mark beside the wordmark and hides it from assistive tech, which
   the wordmark already names. Suite is 448: 185 in `@lumos/vault-utils`, 125 in the daemon, 138 in
   the desktop.
+
+### Added (continued 28)
+- A delete can be taken back. `DELETE /note` no longer removes the file: it moves the note to
+  `.trash/<id>/<folder>/<name>` inside the vault and answers the entry (`id`, `folder`, `name`,
+  `deleted`). The status bar then offers **Undo** beside the notice; pressing it calls the new
+  `POST /note/restore`, which puts the note back under its old name and opens it again.
+- `restoreNote()` takes only the entry id, because the entry already remembers where the note lived -
+  an undo cannot be aimed at another note. A name that has been taken again while the note was away
+  is a `409`, the trashed copy stays put, and the entry is removed only once the file is home, so an
+  id works once.
+- The trash is a dot-folder, so the listings, the folder counts and the graph skip it without a rule
+  of their own, and a trashed note is still a plain Markdown file a person can open in a file
+  manager. Nothing prunes it: that, and the missing "empty trash", are the new entries in
+  `docs/LIMITATIONS.md`.
+- 13 new tests: 6 in `@lumos/vault-utils` (the entry and its bytes, two deletes in one millisecond,
+  the trash staying out of the listing and the graph, a refused delete writing no entry, the restore
+  with its cleanup, a name taken again, a missing entry and an id that could leave the trash), 4 in
+  the daemon (the delete's answer, the restore, the `409`, and the `400`/`404`) and 3 in the desktop
+  (the status bar's notice, its action, and a notice that offers none). Suite is 461: 191 in
+  `@lumos/vault-utils`, 129 in the daemon, 141 in the desktop.

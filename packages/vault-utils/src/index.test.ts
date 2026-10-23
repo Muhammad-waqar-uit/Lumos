@@ -14,6 +14,7 @@ import {
   readNote,
   renameNote,
   replaceNoteBody,
+  restoreNote,
   saveNote,
   searchNotes,
   serializeNote,
@@ -687,20 +688,77 @@ describe("renameNote", () => {
   });
 });
 
+const DELETED_AT = new Date("2026-01-05T10:00:00.000Z");
+
+/** A note in `Ideas`, deleted at a fixed moment so the trash entry is predictable. */
+async function deleted(name = "2026-01-02-a.md"): Promise<{ id: string; file: string }> {
+  const file = await put("Ideas", name, RAW);
+  const entry = await deleteNote(vault, { folder: "Ideas", name }, { now: DELETED_AT });
+  return { id: entry.id, file };
+}
+
 describe("deleteNote", () => {
-  it("removes the note and leaves the folder's other notes alone", async () => {
+  it("moves the note into the vault's trash and answers the entry", async () => {
     await put("Ideas", "2026-01-02-a.md", RAW);
     await put("Ideas", "2026-01-03-b.md", RAW);
 
-    await deleteNote(vault, { folder: "Ideas", name: "2026-01-02-a.md" });
+    const entry = await deleteNote(
+      vault,
+      { folder: "Ideas", name: "2026-01-02-a.md" },
+      { now: DELETED_AT },
+    );
 
     expect(await readdir(path.join(vault, "Ideas"))).toEqual(["2026-01-03-b.md"]);
+    expect(entry).toEqual({
+      id: "2026-01-05T10-00-00-000Z",
+      folder: "Ideas",
+      name: "2026-01-02-a.md",
+      deleted: "2026-01-05T10:00:00.000Z",
+    });
+    const kept = path.join(vault, ".trash", entry.id, "Ideas", "2026-01-02-a.md");
+    expect(await readFile(kept, "utf8")).toBe(RAW);
   });
 
-  it("reports a note that is not there", async () => {
+  it("gives two deletes in the same millisecond their own entry", async () => {
+    await put("Ideas", "2026-01-02-a.md", RAW);
+    await put("Ideas", "2026-01-02-b.md", RAW);
+
+    const first = await deleteNote(
+      vault,
+      { folder: "Ideas", name: "2026-01-02-a.md" },
+      { now: DELETED_AT },
+    );
+    const second = await deleteNote(
+      vault,
+      { folder: "Ideas", name: "2026-01-02-b.md" },
+      { now: DELETED_AT },
+    );
+
+    expect(first.id).toBe("2026-01-05T10-00-00-000Z");
+    expect(second.id).toBe("2026-01-05T10-00-00-000Z-2");
+    expect(await readdir(path.join(vault, ".trash", second.id, "Ideas"))).toEqual([
+      "2026-01-02-b.md",
+    ]);
+  });
+
+  it("keeps the trash out of the listing and the graph", async () => {
+    await put("Ideas", "2026-01-02-a.md", RAW);
+    await put("Ideas", "2026-01-03-b.md", RAW);
+    await deleteNote(vault, { folder: "Ideas", name: "2026-01-02-a.md" });
+
+    const listed = await listNotes(vault);
+    expect(listed.map((entry) => entry.name)).toEqual(["2026-01-03-b.md"]);
+    expect(listed.every((entry) => entry.folder === "Ideas")).toBe(true);
+
+    const { nodes } = await buildVaultGraph(vault);
+    expect(nodes.filter((node) => node.kind === "note")).toHaveLength(1);
+  });
+
+  it("reports a note that is not there, and writes no entry", async () => {
     await expect(deleteNote(vault, { folder: "Ideas", name: "missing.md" })).rejects.toMatchObject({
       reason: "missing",
     });
+    expect(await readdir(vault).catch(() => [])).not.toContain(".trash");
   });
 
   it("refuses a name that escapes the folder, and deletes nothing", async () => {
@@ -710,6 +768,45 @@ describe("deleteNote", () => {
     ).rejects.toMatchObject({ reason: "unsafe" });
 
     expect(await readFile(outside, "utf8")).toContain("top secret");
+  });
+});
+
+describe("restoreNote", () => {
+  it("puts the note back where it was, byte for byte, and empties its trash entry", async () => {
+    const { id, file } = await deleted();
+
+    const note = await restoreNote(vault, id);
+
+    expect(note.folder).toBe("Ideas");
+    expect(note.file).toBe(file);
+    expect(await readFile(file, "utf8")).toBe(RAW);
+    expect(await readdir(path.join(vault, ".trash"))).toEqual([]);
+    expect((await listNotes(vault)).map((entry) => entry.name)).toEqual(["2026-01-02-a.md"]);
+  });
+
+  it("refuses to overwrite a note that has taken the name again", async () => {
+    const { id } = await deleted();
+    await put("Ideas", "2026-01-02-a.md", "# Another note\n\nmine now\n");
+
+    await expect(restoreNote(vault, id)).rejects.toMatchObject({ reason: "exists" });
+
+    expect(await readFile(path.join(vault, "Ideas", "2026-01-02-a.md"), "utf8")).toContain(
+      "mine now",
+    );
+    // The trashed copy is untouched, so the undo can be retried once the name is free again.
+    expect(await readdir(path.join(vault, ".trash", id, "Ideas"))).toEqual(["2026-01-02-a.md"]);
+  });
+
+  it("reports an entry that is not in the trash", async () => {
+    await expect(restoreNote(vault, "2026-01-05T10-00-00-000Z")).rejects.toMatchObject({
+      reason: "missing",
+    });
+  });
+
+  it("refuses an id that could reach outside the trash", async () => {
+    await expect(restoreNote(vault, "../Ideas")).rejects.toMatchObject({ reason: "unsafe" });
+    await expect(restoreNote(vault, "..")).rejects.toMatchObject({ reason: "unsafe" });
+    await expect(restoreNote(vault, "/tmp")).rejects.toMatchObject({ reason: "unsafe" });
   });
 });
 

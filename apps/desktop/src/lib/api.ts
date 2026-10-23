@@ -142,14 +142,34 @@ export function moveNote(folder: string, name: string, toFolder: string): Promis
   return send("POST", "/note/move", { folder, name, toFolder });
 }
 
-/** Remove a note file. A refusal arrives as an Error with the daemon's sentence. */
-export async function deleteNote(folder: string, name: string): Promise<void> {
+/** What a delete left behind: the trash entry an undo names, and the note it holds. */
+export interface TrashedNote {
+  id: string;
+  folder: string;
+  name: string;
+  deleted: string;
+}
+
+/**
+ * Delete a note by moving it to the daemon's trash, and answer the entry an undo needs.
+ *
+ * A refusal arrives as an Error with the daemon's sentence.
+ */
+export async function deleteNote(folder: string, name: string): Promise<TrashedNote> {
   const query = `folder=${encodeURIComponent(folder)}&name=${encodeURIComponent(name)}`;
   const res = await fetch(`${BASE}/note?${query}`, {
     method: "DELETE",
     headers: { accept: "application/json" },
   });
-  if (res.ok) return;
-  const body = (await res.json().catch(() => null)) as { error: string } | null;
-  throw new Error(body?.error ?? `DELETE /note -> ${res.status}`);
+  const body = (await res.json().catch(() => null)) as
+    { trash: TrashedNote } | { error: string } | null;
+  if (!res.ok)
+    throw new Error(body && "error" in body ? body.error : `DELETE /note -> ${res.status}`);
+  if (!body || !("trash" in body)) throw new Error("DELETE /note returned an unexpected body");
+  return body.trash;
+}
+
+/** Undo a delete: put the trashed note back and answer it as the vault now reads it. */
+export function restoreNote(id: string): Promise<Note> {
+  return send("POST", "/note/restore", { id });
 }

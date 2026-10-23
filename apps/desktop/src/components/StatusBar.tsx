@@ -13,33 +13,53 @@ const DOT: Record<Connection, string> = {
   demo: "bg-zinc-500",
 };
 
+/** Something the bar can offer beside the notice it is showing, such as an undo. */
+export interface StatusAction {
+  label: string;
+  onClick: () => void;
+}
+
 export function StatusBar({
   connection,
   count,
   onSearch,
   notice,
   onDismissNotice,
+  action,
 }: {
   connection: Connection;
   count: number;
   onSearch: () => void;
-  /** Something the app could not do, said out loud until it is dismissed. */
+  /** Something the app did or could not do, said out loud until it is dismissed. */
   notice?: string | null;
   onDismissNotice?: () => void;
+  /** The one way back from what the notice describes, offered next to it. */
+  action?: StatusAction | null;
 }) {
   return (
     <footer className="flex shrink-0 items-center justify-between border-t border-border px-4 py-1 text-[11px] text-muted-foreground">
       <span className="flex min-w-0 items-center gap-2">
         <span aria-hidden className={`inline-block h-1.5 w-1.5 rounded-full ${DOT[connection]}`} />
         {notice ? (
-          <button
-            type="button"
-            onClick={onDismissNotice}
-            title="Dismiss"
-            className="truncate text-amber-400 hover:underline"
-          >
-            {notice}
-          </button>
+          <>
+            <button
+              type="button"
+              onClick={onDismissNotice}
+              title="Dismiss"
+              className="truncate text-amber-400 hover:underline"
+            >
+              {notice}
+            </button>
+            {action ? (
+              <button
+                type="button"
+                onClick={action.onClick}
+                className="shrink-0 rounded border border-border px-1.5 py-0.5 text-foreground transition-colors hover:bg-accent"
+              >
+                {action.label}
+              </button>
+            ) : null}
+          </>
         ) : (
           LABEL[connection]
         )}

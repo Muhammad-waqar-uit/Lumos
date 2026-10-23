@@ -141,10 +141,25 @@ and answers the note. `400` for a missing field, an unknown folder on either sid
 `404` for a note that is not there; `409` when the destination folder already holds that filename.
 
 ### `DELETE /note?folder=<Folder>&name=<file.md>`
-Removes the note from the vault: `204 No Content`, no body. There is no trash and no undo, which is
-why the desktop asks before it sends this. `400` for a missing parameter, an unknown folder or an
-unsafe name, and `404` for a note that is not there - a delete never reports success for a file it
-did not remove.
+Moves the note out of its folder and into the vault's trash: `{ "trash": { "id", "folder", "name", "deleted" } }`.
+Nothing is removed from the disk - the file lands in `.trash/<id>/<folder>/<name>`, which is what
+`POST /note/restore` reads. `400` for a missing parameter, an unknown folder or an unsafe name, and
+`404` for a note that is not there - a delete never reports success for a file it did not move, and
+a refused delete creates no entry.
+
+### `POST /note/restore`
+```json
+{ "id": "2026-10-23T15-42-07-123Z" }
+```
+Puts a trashed note back where it came from and answers it as the vault now reads it:
+`{ "note": { title, folder, frontmatter, content, problems } }`. Only the entry is named, never the
+destination: the trash entry holds the folder and filename the note was deleted from, so an undo
+cannot be aimed at another note. The entry is removed once the file is home, which is why an id
+works once.
+
+`400` for a missing or malformed id, `404` when that entry is no longer in the trash, and
+`409 a note with that name already exists` when a note has taken the name again while the deleted
+one was away - replacing it would be a second, silent delete.
 
 ### `GET /link?url=<url>`
 One link, scraped for the desktop: `{ "link": LinkCard }` — how the app shows it inline (`kind`,
