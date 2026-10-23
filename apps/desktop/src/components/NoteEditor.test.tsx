@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { Note } from "@lumos/shared";
 import { NoteEditor } from "./NoteEditor";
@@ -108,6 +108,43 @@ describe("NoteEditor", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Save" }));
     expect(onSave).toHaveBeenLastCalledWith("# Second");
+  });
+
+  it("shows the draft rendered beside the textarea, and follows the typing", () => {
+    const { body } = setup();
+    const preview = screen.getByLabelText("Preview");
+
+    // The same renderer the saved note is read with, so a heading here is a heading there.
+    expect(within(preview).getByRole("heading", { level: 1 }).textContent).toBe("Learn Rust");
+
+    fireEvent.change(body, { target: { value: "## Rewritten\n\n- one\n- two" } });
+
+    expect(within(preview).getByRole("heading", { level: 2 }).textContent).toBe("Rewritten");
+    expect(within(preview).getAllByRole("listitem")).toHaveLength(2);
+  });
+
+  it("hides the preview when asked, and says which way the toggle is set", () => {
+    const { body } = setup();
+
+    fireEvent.click(screen.getByRole("button", { name: "Hide preview" }));
+
+    expect(screen.queryByLabelText("Preview")).toBeNull();
+    expect(screen.getByRole("button", { name: "Preview" }).getAttribute("aria-pressed")).toBe(
+      "false",
+    );
+    // The draft is not the preview's: hiding the pane leaves the text exactly as it was.
+    expect((body as HTMLTextAreaElement).value).toBe(BODY);
+
+    fireEvent.click(screen.getByRole("button", { name: "Preview" }));
+    expect(screen.getByLabelText("Preview")).toBeDefined();
+  });
+
+  it("says an empty draft has nothing to preview instead of showing a blank pane", () => {
+    const { body } = setup();
+
+    fireEvent.change(body, { target: { value: "   " } });
+
+    expect(screen.getByLabelText("Preview").textContent).toBe("Nothing to preview yet.");
   });
 
   it("throws the draft away with Escape or with Cancel, and saves nothing", () => {

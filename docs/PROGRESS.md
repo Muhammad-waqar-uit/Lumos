@@ -4,6 +4,30 @@ Chronological record of what has been built. Newest entries first within each da
 
 ## 2026-10-23
 
+### Done — the editor shows what the draft renders as
+- [x] The last thing a person could not see before saving was the rendering itself: a table that did
+  not parse or a fence that swallowed the rest of the body only showed up after the write. The
+  editor's right half now renders the draft on every keystroke (`src/components/NoteEditor.tsx`)
+- [x] The pipeline is now one component, `src/components/Markdown.tsx`, which the reader and the
+  preview both render with. A second renderer would have been a second set of rules, and a preview
+  that disagreed with the saved note is worse than no preview at all
+- [x] **Hide preview** / **Preview** hands the textarea the whole pane and brings the rendering back;
+  the button carries `aria-pressed`, so the state is on the control rather than in its label alone.
+  The panes scroll independently - there is no scroll sync, because the two are read for different
+  things - and an empty draft says "Nothing to preview yet." instead of leaving a blank pane
+- [x] Below the `md` breakpoint the panes stack, preview under textarea, rather than squeezing prose
+  into half a column; the cost of a redraw per keystroke on a very large note is written down in
+  [LIMITATIONS.md](LIMITATIONS.md) along with the stacking rule
+- [x] 3 new tests in `src/components/NoteEditor.test.tsx`: the rendered heading and list follow the
+  typing, the toggle hides and restores the pane with its `aria-pressed`, and an empty draft says so
+- [x] `pnpm validate` green - 480 tests: 198 vault-utils, 133 daemon, 149 desktop
+- [x] Checked in the running app against the daemon: typing a heading and a table in the editor
+  re-rendered the preview as it went, **Hide preview** gave the textarea the full width, and the
+  saved note read back identically
+- [x] Two stale claims in [LIMITATIONS.md](LIMITATIONS.md) and [desktop.md](desktop.md) were corrected
+  on the way: "notes cannot be renamed, moved or deleted from the app" and the note that tags and
+  status are not editable were both written before those features landed
+
 ### Done — tags and status are editable in the app
 - [x] Tags were write-once and WhatsApp-only: a hashtag in a message became a tag, and nothing in the
   app could add, remove or rename one - even though the filters, the graph and the palette all read

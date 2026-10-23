@@ -14,8 +14,9 @@ daemon (falling back to demo data when the daemon is offline):
 - `src/components/NoteList.tsx` - searchable note list (title, date, preview, tags) and the **New** button that opens the composer
 - `src/components/NoteComposer.tsx` - a new note: a folder picker, a textarea, Create, Cancel, and a failure that keeps the draft
 - `src/components/NoteViewer.tsx` - note header (folder, date, source, url) + backlinks + link pane + Markdown body, the Edit button that turns the body into the editor, and the **...** button that opens the file operations
-- `src/components/NoteEditor.tsx` - the body as a textarea: Save, Cancel, the unsaved marker and a failure that keeps the draft
+- `src/components/NoteEditor.tsx` - the body as a textarea with a live preview of the draft beside it: Save, Cancel, the preview toggle, the unsaved marker and a failure that keeps the draft
 - `src/components/NoteMeta.tsx` - the strip under the note header: tag chips with a remove button, a field that adds one, and a status picker; a failure stays on screen and keeps the draft
+- `src/components/Markdown.tsx` - the one Markdown renderer, used by the reader and by the editor's preview
 - `src/components/NoteActions.tsx` - rename, move and delete for the open note: a menu, a rename field, a folder picker, a delete that asks first, and a failure that keeps the panel open
 - `src/components/LinkPane.tsx` - the note's link: video player, image, or scraped reader card
 - `src/components/GraphView.tsx` - canvas link graph (routes, controls, click-to-open)
@@ -51,8 +52,7 @@ The three cases - a registered language, an unregistered one, and an untagged fe
 to a string in Node and asserted in `src/components/NoteViewer.test.tsx`, so the wiring has a test
 without a jsdom setup.
 
-Still to come: routing and a markdown preview beside the textarea (see the **Plan**
-section of [`TODO.md`](TODO.md)).
+Still to come: routing (see the **Plan** section of [`TODO.md`](TODO.md)).
 
 ### Creating a note
 
@@ -86,7 +86,8 @@ wrote.
   one unforgivable outcome here, so the editor owns its draft until the daemon accepts it.
 - Only the body is written. The frontmatter block is left exactly as the file has it, so a note with
   a broken block keeps showing its reasons above the body rather than being repaired behind the
-  user's back. What the app cannot change — tags, `status`, the folder — is not offered as an input
+  user's back. A tag or a status is edited in the strip above the body (see **Tags and status**),
+  and the fields no control here owns — `created`, `url`, the folder — are not offered as inputs
   that would silently do nothing.
 - After a save the listing, the folder counts and the graph are read again, because a new heading
   changes the title, a new `#tag` changes the tags and a new `[[link]]` changes the graph. The list
@@ -100,6 +101,28 @@ wrote.
 - Covered by `src/components/NoteEditor.test.tsx` (draft, save, failure, shortcut, one save at a
 time, cancel) and an SSR render in `src/components/NoteViewer.test.tsx` for the button being offered
 only while the daemon answers.
+
+### Preview beside the editor
+
+The editor's right half shows the draft rendered as it is typed, so a table that does not parse or a
+fence that swallows the rest of the note is visible before the save rather than after it.
+
+- The preview is `Markdown` (`src/components/Markdown.tsx`), which is the same component the reader
+  renders with: one pipeline, one set of plugins, one link override. A second renderer would be a
+  second set of rules, and a preview that disagrees with the saved note is worse than none.
+- It follows the textarea on every keystroke and scrolls on its own, so the draft and the rendering
+  keep their own places. No scroll sync: the two panes are read for different things, and the
+  preview's height has nothing to do with the textarea's line count.
+- **Hide preview** gives the textarea the whole pane, and **Preview** brings it back; the button
+  carries `aria-pressed`, so the state is on the control. The pane starts open: writing Markdown
+  blind was the thing the preview was added to fix.
+- Below the `md` breakpoint the two panes stack, preview under textarea, because a half-width column
+  of prose at that size is unreadable. The app window is normally wider than that.
+- An empty or whitespace-only draft says "Nothing to preview yet." rather than showing an empty pane.
+- The preview is a rendering of the draft, not a second source of truth: it is never saved, and
+  leaving the editor without saving loses it with the rest of the draft.
+- Covered by `src/components/NoteEditor.test.tsx`: the rendered heading follows the typing, the
+  toggle hides and restores the pane with its `aria-pressed`, and the empty draft says so.
 
 ### Tags and status
 
@@ -363,11 +386,6 @@ Wired today:
 ## Planned capabilities
 
 - TanStack Router and zustand - the shell is plain React state in one component.
-- A Markdown preview beside the editor. Editing, creating, saving and the file operations all exist
-  (see **Creating a note**, **Editing a note** and **Renaming, moving and deleting** above); the
-  rendered form is what the viewer shows after a save, not a live pane.
-- Editing a note's frontmatter - its tags and status - from the app. A rename rewrites the heading and
-  the filename, but the block above the body is still the file's own business.
 
 Everything else in the Keyboard section above is wired, and an untyped palette already lists the
 notes opened this session.
