@@ -11,6 +11,7 @@ While the daemon handles capture via WhatsApp, the desktop app is designed to he
 - Search the vault from the keyboard: `Cmd/Ctrl+K` opens a palette that ranks titles, tags and previews with `fuse.js`, and adds the daemon's body matches when it is running (those rows are marked "in the body"); with nothing typed it lists the notes you opened this session
 - View notes with their Markdown rendered, including syntax-highlighted code in a fence that names its language
 - Play a link or read the page it points at without leaving the app — a YouTube or Vimeo link plays in place, an Instagram reel or post and a Facebook video or post render through the host's own embed with their caption beside them, an image link shows the image, any other page is read as text
+- Edit the open note's tags and status in the strip under its header — remove a chip, type a tag, pick a status; a tag is written the way the graph reads it, and the list, folder counts and graph are re-read after a change
 - Filter by folder, by text, and by tag — the tags in scope appear as chips with counts, and a note's own tag works the same way
 - Get a bird's-eye view of your captured thoughts, as a link graph
 - Edit a note and save it back to the vault — **Edit** in the note header, Save (`Cmd/Ctrl+S`) or

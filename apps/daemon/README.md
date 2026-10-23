@@ -92,10 +92,11 @@ touches the vault.
 | `GET /graph` | the vault's link graph: notes, tags, links and unresolved targets |
 | `GET /link?url=<url>` | one remote link, described for the desktop: playable media, or the page's metadata and readable text |
 
-Six write routes serve the desktop: `PUT /note` replaces a note's body, `POST /notes` creates one
+Seven write routes serve the desktop: `PUT /note` replaces a note's body, `POST /notes` creates one
 through the capture writer (stamped `source: desktop`), `PATCH /note` renames one to a new title
 (the file, its first heading and the links other notes have to it all follow, and the edited files
-come back as `updated`), `POST /note/move` moves it to another folder under the name it already has,
+come back as `updated`), `PATCH /note/meta` changes its tags or status in place, `POST /note/move`
+moves it to another folder under the name it already has,
 `DELETE /note` moves it into the vault's `.trash` and answers the entry, and `POST /note/restore`
 puts a trashed note back where it came from. All of them carry the same folder and filename guards
 as the read routes, and a bad payload is a `400` that writes nothing. A name another note already

@@ -48,7 +48,6 @@ else on this page can close them.
 ### Phase 7 - Editing & enrichment (P2) - open items
 
 - [ ] Markdown preview beside the editor (today the rendered note is what you see after a save)
-- [ ] Edit a note's frontmatter (tags, status) from the app, rather than only its body
 - [ ] Empty the trash, or list what is in it - a delete moves the file to `.trash` and Undo is only
   for the delete just made ([LIMITATIONS.md](LIMITATIONS.md))
 - [ ] Bulk operations (move, tag, archive)
@@ -280,6 +279,13 @@ Nothing in flight. The next item to pick up is the first one under **Plan**.
   it back under its old name, and the status bar offers **Undo** until the notice is dismissed. The
   trash is a dot-folder, so the listings, the folder counts and the graph skip it without a rule of
   their own, and a restore refuses to replace a note that took the name again
+
+- [x] Edit a note's tags and status from the app - the strip under the note header
+  (`src/components/NoteMeta.tsx`) removes a tag, adds one and picks a status, through `PATCH /note/meta`
+  and `updateNoteMeta()`. The daemon cleans a tag the way the graph reads it (no `#`, lower-case,
+  de-duplicated), writes only the frontmatter block and leaves the body byte-identical, keeps a key
+  another tool wrote, and refuses a block that does not parse instead of replacing it. The list,
+  folder counts and graph are re-read after a change, because a tag is a chip and an edge
 
 ### Phase 8: Polish & Docs (P2)
 

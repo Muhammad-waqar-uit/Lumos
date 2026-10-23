@@ -199,6 +199,11 @@ play it — neither page can be read or copied.
   in the status bar is only for the delete you just made, and it disappears when the notice is
   dismissed. A restore also needs the old name to be free: a note that took it in the meantime is a
   `409`, and the trashed copy stays in the folder rather than replacing it.
+- **Editing tags or status re-serialises the block.** Only the frontmatter block is rewritten, and
+  the body is byte-identical afterwards, but the block is parsed and written back out: a comment
+  inside it, a hand-chosen key order, or YAML style someone preferred is not preserved. Only `tags`
+  and `status` can be changed from the app; every other field is still the file's own business, and a
+  block that does not parse is refused rather than repaired (`400`).
 - **A rename follows the links, with three exceptions.** A link inside a code fence or inline code
   is left alone, because the graph does not read it as a link either and a rename has no business
   editing a code sample. A link written to a frontmatter alias keeps the author's wording: the alias

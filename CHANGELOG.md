@@ -523,3 +523,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the daemon (the delete's answer, the restore, the `409`, and the `400`/`404`) and 3 in the desktop
   (the status bar's notice, its action, and a notice that offers none). Suite is 461: 191 in
   `@lumos/vault-utils`, 129 in the daemon, 141 in the desktop.
+
+### Added (continued 29)
+- A note's tags and status can be changed from the app. The strip under the note header
+  (`src/components/NoteMeta.tsx`) shows each tag as a chip with an **×**, adds a tag from a field, and
+  picks a status (`new`, `active`, `done`, `archived`). Until now a tag could only arrive from a
+  WhatsApp hashtag, even though the filters, the graph and the palette all read them.
+- `PATCH /note/meta` and `updateNoteMeta()` write only the frontmatter block, so the body is
+  byte-identical afterwards. The block is parsed as the file has it rather than through `parseNote`,
+  so a key another tool wrote survives an edit; the tags are cleaned the way the graph reads them (no
+  `#`, lower-case, de-duplicated), so a tag typed here and a node on the canvas cannot disagree.
+- A block that does not parse is refused (`400`) rather than replaced, because rewriting broken YAML
+  would throw away what the person wrote. The block *is* re-serialised, so a comment or a hand-chosen
+  key order inside it is not kept - a trade now written into `docs/LIMITATIONS.md`.
+- 17 new tests: 7 in `@lumos/vault-utils`, 4 in the daemon, 5 in the desktop. Suite is 477: 198 in
+  `@lumos/vault-utils`, 133 in the daemon, 146 in the desktop.

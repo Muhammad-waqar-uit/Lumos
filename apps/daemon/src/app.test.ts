@@ -592,6 +592,90 @@ describe("PATCH /note", () => {
   });
 });
 
+describe("PATCH /note/meta", () => {
+  /** The seeded note's filename, which the route needs. */
+  async function seeded(vault: string): Promise<string> {
+    const [name] = await readdir(path.join(vault, "Ideas"));
+    return name;
+  }
+
+  it("writes the tags and answers the note as it now reads", async () => {
+    const { vault, app } = await makeApp([NOTE]);
+    const name = await seeded(vault);
+
+    const res = await app.inject({
+      method: "PATCH",
+      url: "/note/meta",
+      payload: { folder: "Ideas", name, tags: ["Rust", "#cli"] },
+    });
+
+    expect(res.statusCode).toBe(200);
+    expect(res.json<{ note: { frontmatter: { tags: string[] } } }>().note.frontmatter.tags).toEqual(
+      ["rust", "cli"],
+    );
+  });
+
+  it("changes the status without losing the tags, and leaves the body as written", async () => {
+    const { vault, app } = await makeApp([NOTE]);
+    const name = await seeded(vault);
+    const before = await readFile(path.join(vault, "Ideas", name), "utf8");
+
+    const res = await app.inject({
+      method: "PATCH",
+      url: "/note/meta",
+      payload: { folder: "Ideas", name, status: "done" },
+    });
+
+    expect(res.statusCode).toBe(200);
+    const after = await readFile(path.join(vault, "Ideas", name), "utf8");
+    expect(after).toContain("status: done");
+    expect(after).toContain("tags:\n  - ideas");
+    // The body is everything after the block, and it is untouched.
+    expect(after.slice(after.indexOf("\n---", 3))).toBe(before.slice(before.indexOf("\n---", 3)));
+  });
+
+  it("refuses a request with nothing to change, a bad tag list, or a bad status", async () => {
+    const { vault, app } = await makeApp([NOTE]);
+    const name = await seeded(vault);
+    const cases = [
+      { payload: { folder: "Ideas", name }, error: "tags or status is required" },
+      { payload: { folder: "Ideas", name, tags: "rust" }, error: "tags must be a list of strings" },
+      { payload: { folder: "Ideas", name, tags: [1] }, error: "tags must be a list of strings" },
+      { payload: { folder: "Ideas", name, status: 4 }, error: "status must be a string" },
+      { payload: { folder: "Secrets", name, tags: [] }, error: "unknown folder" },
+      { payload: { folder: "Ideas", name: "../a.md", tags: [] }, error: "invalid name" },
+    ];
+
+    for (const { payload, error } of cases) {
+      const res = await app.inject({ method: "PATCH", url: "/note/meta", payload });
+      expect(res.statusCode, error).toBe(400);
+      expect(res.json(), error).toEqual({ error });
+    }
+  });
+
+  it("answers 400 for a block it cannot read, and 404 for a note that is not there", async () => {
+    const { vault, app } = await makeApp([NOTE]);
+    const name = await seeded(vault);
+    await writeFile(path.join(vault, "Ideas", name), "---\ntags: [unclosed\n---\n\n# Broken\n");
+
+    const broken = await app.inject({
+      method: "PATCH",
+      url: "/note/meta",
+      payload: { folder: "Ideas", name, tags: ["x"] },
+    });
+    expect(broken.statusCode).toBe(400);
+    expect(broken.json()).toEqual({ error: "this note's frontmatter is not valid YAML" });
+
+    const gone = await app.inject({
+      method: "PATCH",
+      url: "/note/meta",
+      payload: { folder: "Ideas", name: "2026-01-01-missing.md", tags: [] },
+    });
+    expect(gone.statusCode).toBe(404);
+    expect(gone.json()).toEqual({ error: "note not found" });
+  });
+});
+
 describe("POST /note/move", () => {
   it("moves the note into the other folder and answers it there", async () => {
     const { vault, app } = await makeApp([NOTE]);

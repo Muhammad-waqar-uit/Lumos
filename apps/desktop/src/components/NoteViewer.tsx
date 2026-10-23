@@ -8,6 +8,7 @@ import { type Connection } from "../lib/api";
 import { LinkPane } from "./LinkPane";
 import { NoteActions } from "./NoteActions";
 import { NoteEditor } from "./NoteEditor";
+import { NoteMeta } from "./NoteMeta";
 
 /** Note links open outside the app window instead of navigating the UI away. */
 const markdownComponents: Components = {
@@ -42,6 +43,9 @@ interface Props {
   onRename: (title: string) => Promise<void>;
   onMove: (toFolder: string) => Promise<void>;
   onDelete: () => Promise<void>;
+  /** The header's own edits: the tag list as a whole, and the status. */
+  onTags: (tags: string[]) => Promise<void>;
+  onStatus: (status: string) => Promise<void>;
 }
 
 export function NoteViewer({
@@ -53,6 +57,8 @@ export function NoteViewer({
   onRename,
   onMove,
   onDelete,
+  onTags,
+  onStatus,
 }: Props) {
   // The file being edited rather than a boolean: opening another note closes the editor instead of
   // presenting its body inside a draft that belongs to the note before it.
@@ -126,6 +132,14 @@ export function NoteViewer({
           </span>
         )}
       </header>
+      <NoteMeta
+        // A fresh field per file, so a half-typed tag never lands on the note opened next.
+        key={note.file}
+        note={note}
+        canEdit={connection === "daemon"}
+        onTags={onTags}
+        onStatus={onStatus}
+      />
       {!isEditing && actionsOpen ? (
         <NoteActions
           // A fresh panel per file, so a rename draft never lands on the note opened after it.
