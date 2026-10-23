@@ -22,6 +22,7 @@ import {
   saveNote,
   searchNotes,
   updateNote,
+  updateNoteMeta,
 } from "@lumos/vault-utils";
 import { FOLDERS, type Folder, type LinkCard } from "@lumos/shared";
 import { LinkFetchError, fetchLinkCard } from "./fetch-link.js";
@@ -242,6 +243,39 @@ export async function createApp({
       try {
         const { note, updated } = await renameNote(vault, { folder, name, title });
         return { note, updated };
+      } catch (err: unknown) {
+        const refusal = noteRefusal(err);
+        if (refusal) return reply.code(refusal.status).send({ error: refusal.message });
+        throw err;
+      }
+    },
+  );
+
+  /**
+   * Change a note's tags or status in place, and answer it as the vault now reads it.
+   *
+   * This is the one edit a body write cannot make: tags and status live in the frontmatter, and the
+   * body is left exactly as it was. Only the fields that were sent change, so removing a tag never
+   * touches the status, and an unknown key another tool wrote in the block survives.
+   */
+  app.patch<{ Body: { folder?: string; name?: string; tags?: string[]; status?: string } }>(
+    "/note/meta",
+    async (req, reply) => {
+      const { folder, name, tags, status } = req.body ?? {};
+      if (!folder || !name) return reply.code(400).send({ error: "folder and name are required" });
+      if (!FOLDERS.includes(folder as Folder))
+        return reply.code(400).send({ error: "unknown folder" });
+      if (!isNoteName(name)) return reply.code(400).send({ error: "invalid name" });
+
+      if (tags !== undefined && (!Array.isArray(tags) || tags.some((t) => typeof t !== "string")))
+        return reply.code(400).send({ error: "tags must be a list of strings" });
+      if (status !== undefined && typeof status !== "string")
+        return reply.code(400).send({ error: "status must be a string" });
+      if (tags === undefined && status === undefined)
+        return reply.code(400).send({ error: "tags or status is required" });
+
+      try {
+        return { note: await updateNoteMeta(vault, { folder, name }, { tags, status }) };
       } catch (err: unknown) {
         const refusal = noteRefusal(err);
         if (refusal) return reply.code(refusal.status).send({ error: refusal.message });

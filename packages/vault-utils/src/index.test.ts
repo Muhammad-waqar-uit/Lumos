@@ -20,6 +20,7 @@ import {
   serializeNote,
   slugify,
   updateNote,
+  updateNoteMeta,
 } from "./index";
 
 let vault = "";
@@ -807,6 +808,88 @@ describe("restoreNote", () => {
     await expect(restoreNote(vault, "../Ideas")).rejects.toMatchObject({ reason: "unsafe" });
     await expect(restoreNote(vault, "..")).rejects.toMatchObject({ reason: "unsafe" });
     await expect(restoreNote(vault, "/tmp")).rejects.toMatchObject({ reason: "unsafe" });
+  });
+});
+
+describe("updateNoteMeta", () => {
+  const NAME = "2026-01-02-learn-rust.md";
+  /** The body as written, which every meta edit has to leave exactly alone. */
+  const bodyOf = (raw: string): string => raw.slice(raw.indexOf("\n---", 3) + 4);
+
+  it("writes the tags it was given, normalised, and leaves the body alone", async () => {
+    await put("Ideas", NAME, RAW);
+
+    const note = await updateNoteMeta(
+      vault,
+      { folder: "Ideas", name: NAME },
+      { tags: ["Rust", "#CLI", "rust", "  "] },
+    );
+
+    expect(note.frontmatter.tags).toEqual(["rust", "cli"]);
+    expect(bodyOf(await readFile(path.join(vault, "Ideas", NAME), "utf8"))).toBe(bodyOf(RAW));
+  });
+
+  it("keeps a key another tool wrote, and the tags when only the status changes", async () => {
+    await put(
+      "Ideas",
+      NAME,
+      RAW.replace("tags:\n  - rust\n", "tags:\n  - rust\nkanban: backlog\n"),
+    );
+
+    const note = await updateNoteMeta(vault, { folder: "Ideas", name: NAME }, { status: "active" });
+
+    expect(note.frontmatter.status).toBe("active");
+    expect(note.frontmatter.tags).toEqual(["rust"]);
+    expect(note.frontmatter.kanban).toBe("backlog");
+  });
+
+  it("keeps the creation stamp the file has", async () => {
+    await put("Ideas", NAME, RAW);
+
+    const note = await updateNoteMeta(vault, { folder: "Ideas", name: NAME }, { status: "done" });
+
+    expect(note.frontmatter.created).toBe("2026-01-02T00:00:00.000Z");
+  });
+
+  it("gives a file with no frontmatter a block, and keeps its text", async () => {
+    await put("Ideas", "scratch.md", "# Scratch\n\nraw text\n");
+
+    const note = await updateNoteMeta(
+      vault,
+      { folder: "Ideas", name: "scratch.md" },
+      { tags: ["#inbox"] },
+    );
+
+    expect(note.frontmatter.tags).toEqual(["inbox"]);
+    expect(note.content).toContain("raw text");
+  });
+
+  it("refuses a block that does not parse, and writes nothing", async () => {
+    const broken = "---\ntags: [unclosed\n---\n\n# Broken\n";
+    await put("Ideas", NAME, broken);
+
+    await expect(
+      updateNoteMeta(vault, { folder: "Ideas", name: NAME }, { tags: ["x"] }),
+    ).rejects.toMatchObject({ reason: "invalid" });
+
+    expect(await readFile(path.join(vault, "Ideas", NAME), "utf8")).toBe(broken);
+  });
+
+  it("refuses an empty status and a patch with nothing in it", async () => {
+    await put("Ideas", NAME, RAW);
+
+    await expect(
+      updateNoteMeta(vault, { folder: "Ideas", name: NAME }, { status: "   " }),
+    ).rejects.toMatchObject({ reason: "invalid" });
+    await expect(updateNoteMeta(vault, { folder: "Ideas", name: NAME }, {})).rejects.toMatchObject({
+      reason: "invalid",
+    });
+  });
+
+  it("reports a note that is not there", async () => {
+    await expect(
+      updateNoteMeta(vault, { folder: "Ideas", name: "missing.md" }, { tags: [] }),
+    ).rejects.toMatchObject({ reason: "missing" });
   });
 });
 

@@ -142,6 +142,19 @@ export function moveNote(folder: string, name: string, toFolder: string): Promis
   return send("POST", "/note/move", { folder, name, toFolder });
 }
 
+/**
+ * Change a note's tags or status, leaving its body alone, and answer it as it now reads.
+ *
+ * Only the fields in `patch` change, so removing a tag never sends the status.
+ */
+export function updateNoteMeta(
+  folder: string,
+  name: string,
+  patch: { tags?: string[]; status?: string },
+): Promise<Note> {
+  return send("PATCH", "/note/meta", { folder, name, ...patch });
+}
+
 /** What a delete left behind: the trash entry an undo names, and the note it holds. */
 export interface TrashedNote {
   id: string;

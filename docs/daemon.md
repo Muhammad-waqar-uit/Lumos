@@ -130,6 +130,24 @@ a rename never replaces one note with another. A title that slugs to the name th
 changes the heading and nothing else, and a rename to the title the note already has touches no file
 at all.
 
+### `PATCH /note/meta`
+```json
+{ "folder": "Ideas", "name": "2026-10-20-learn-rust.md", "tags": ["rust", "cli"] }
+```
+Changes a note's `tags` and/or `status` in place and answers it as it now reads:
+`{ "note": { title, folder, frontmatter, content, problems } }`. Only the fields that are sent
+change, so removing a tag never touches the status, and the body is byte-identical afterwards.
+
+Tags are cleaned the way the graph reads one (no `#`, lower-case, trimmed, de-duplicated) because a
+tag in the frontmatter and a tag node on the canvas have to be the same thing. The block is parsed as
+the file has it, so a key another tool wrote survives; it is re-serialised, so a comment inside the
+block is not kept.
+
+`400` for a missing folder or name, an unknown folder, an unsafe name, a `tags` that is not a list of
+strings, a `status` that is not a string, or a request carrying neither field; `404` for a note that
+is not there; `400 this note's frontmatter is not valid YAML` when the block cannot be read, because
+rewriting it would throw away whatever the person wrote.
+
 ### `POST /note/move`
 ```json
 { "folder": "Ideas", "name": "2026-10-20-learn-rust.md", "toFolder": "Goals" }

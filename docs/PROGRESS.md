@@ -4,6 +4,28 @@ Chronological record of what has been built. Newest entries first within each da
 
 ## 2026-10-23
 
+### Done — tags and status are editable in the app
+- [x] Tags were write-once and WhatsApp-only: a hashtag in a message became a tag, and nothing in the
+  app could add, remove or rename one - even though the filters, the graph and the palette all read
+  them. The strip under the note header (`src/components/NoteMeta.tsx`) shows each tag as a chip with
+  an **×**, adds one from a field, and picks a status
+- [x] `PATCH /note/meta` and `updateNoteMeta()` write only the frontmatter block, so the body is
+  byte-identical afterwards. The block is parsed as the file has it rather than through `parseNote`,
+  so a key another tool wrote survives; tags are cleaned the way the graph reads them (no `#`,
+  lower-case, de-duplicated), so a tag typed here and a graph node are one thing
+- [x] A block that does not parse is refused (`400`) instead of replaced, because rewriting broken
+  YAML would throw away what the person wrote. The block is re-serialised, so a comment or a
+  hand-chosen key order in it is not kept - that trade is written down in [LIMITATIONS.md](LIMITATIONS.md)
+- [x] The strip sends the whole tag list, not a delta, so two quick edits cannot disagree about what
+  the list is; a refusal stays on screen with the daemon's sentence and the typed tag still in the
+  field. With the daemon down the strip is read-only and says why
+- [x] 17 new tests: 7 in `@lumos/vault-utils` (the cleaning and de-duplication, the body untouched, a
+  foreign key surviving, the creation stamp kept, a file with no block, a block that does not parse,
+  an empty status and a missing note), 4 in the daemon (the tag write, a status-only write, every
+  `400`, the `404` and the unreadable block) and 5 in the desktop (a chip removed, a tag added and
+  normalised, the status picker, a refusal kept, and the read-only strip)
+- [x] `pnpm validate` green - 477 tests: 198 vault-utils, 133 daemon, 146 desktop
+
 ### Done — a delete can be taken back
 - [x] The delete was the only irreversible thing the app could do, and it said so in the panel. It no
   longer removes anything: `deleteNote()` moves the note to `.trash/<id>/<folder>/<name>` and answers

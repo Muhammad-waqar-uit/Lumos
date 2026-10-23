@@ -105,8 +105,22 @@ falling back to the filename. The write never creates a file — a name that is 
 `404` — and the folder and filename are checked against the vault root before anything is read, which
 is why a hand-written edit and an edit from the app cannot disagree about what a note is.
 
-Editing `tags`, `status` or any other field from the app is not supported; those are still the file's
-own business. [LIMITATIONS.md](LIMITATIONS.md) lists what that gives up.
+## Tags and status
+
+`tags` and `status` can be changed without touching the body (`PATCH /note/meta`,
+`updateNoteMeta()`), which is the other half of editing a note: the body is what it says, the tags
+are what it is filed under.
+
+| Field | What the write does |
+|---|---|
+| `tags` | Takes the whole new list, cleaned the way the graph reads a tag: no `#`, lower-case, trimmed, de-duplicated, so `#Rust` and `rust` cannot become two chips. An empty list is allowed |
+| `status` | Takes a non-empty string; the app's picker offers `new`, `active`, `done` and `archived`, and a hand-written value is kept rather than rewritten |
+
+Only the block is rewritten; the body is byte-identical afterwards. The block is parsed as the file
+has it - not through `parseNote`, which supplies defaults - so a key another tool wrote survives an
+edit. It *is* re-serialised, so a comment or a hand-chosen key order inside the block is not kept,
+and a block that does not parse is refused instead of replaced. Editing any other field is still the
+file's own business; [LIMITATIONS.md](LIMITATIONS.md) lists what that gives up.
 
 ## Renaming, moving and deleting
 

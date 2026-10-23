@@ -32,6 +32,8 @@ function render(
       onRename={async () => {}}
       onMove={async () => {}}
       onDelete={async () => {}}
+      onTags={async () => {}}
+      onStatus={async () => {}}
     />,
   );
 }

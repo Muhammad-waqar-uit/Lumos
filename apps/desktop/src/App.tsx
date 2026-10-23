@@ -11,6 +11,7 @@ import {
   renameNote,
   restoreNote,
   saveNote,
+  updateNoteMeta,
   type Connection,
   type FolderCount,
 } from "./lib/api";
@@ -290,6 +291,27 @@ export default function App() {
   );
 
   /**
+   * Change the open note's tags or status, then re-read what that changed.
+   *
+   * A tag is a chip in the list and a node in the graph, so the listing, the folder counts and the
+   * graph are all read again rather than patched. The edit has already landed by then: a refresh
+   * that fails is a status-bar notice, not a failed change.
+   */
+  const editActiveMeta = useCallback(
+    async (patch: { tags?: string[]; status?: string }): Promise<void> => {
+      if (!activeEntry) throw new Error("There is no note open.");
+      const updated = await updateNoteMeta(activeEntry.folder, activeEntry.name, patch);
+      setFetched({ key: keyOfNote(updated), note: updated });
+      try {
+        await refreshVault();
+      } catch (err: unknown) {
+        setNotice({ text: `Changed, but the list could not be refreshed (${reasonOf(err)}).` });
+      }
+    },
+    [activeEntry, refreshVault],
+  );
+
+  /**
    * Delete the open note. The selection is dropped, so the next note in the list takes over.
    *
    * The daemon moves the file to the vault's trash rather than removing it, so the entry it answers
@@ -468,6 +490,8 @@ export default function App() {
               onRename={renameActiveNote}
               onMove={moveActiveNote}
               onDelete={deleteActiveNote}
+              onTags={(tags) => editActiveMeta({ tags })}
+              onStatus={(status) => editActiveMeta({ status })}
             />
           </>
         )}

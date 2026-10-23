@@ -330,8 +330,13 @@ export interface NoteRef {
   name: string;
 }
 
-/** Why a path was refused, so a route can answer `400`, `404` or `409` instead of a `500`. */
-export type NoteFileProblem = "unsafe" | "missing" | "exists";
+/**
+ * Why a note was refused, so a route can answer `400`, `404` or `409` instead of a `500`.
+ *
+ * `invalid` is a request about a note whose own frontmatter cannot be read: the file is there, so it
+ * is not `missing`, but rewriting it would throw away whatever the person wrote.
+ */
+export type NoteFileProblem = "unsafe" | "missing" | "exists" | "invalid";
 
 /** A vault operation refusing a request. The message is written for the person who asked. */
 export class NoteFileError extends Error {
@@ -426,6 +431,76 @@ export async function updateNote(
   const raw = await readFile(file, "utf8");
   await writeNoteFile(file, replaceNoteBody(raw, input.content));
   return readNote(file, input.folder);
+}
+
+/** What the note header can change without touching the body. */
+export interface NoteMetaPatch {
+  /** The whole new tag list, already as the note should carry it. */
+  tags?: string[];
+  status?: string;
+}
+
+/** A tag as the vault writes it: no `#`, lower-case, trimmed, and short enough to be a chip. */
+function cleanTag(tag: string): string {
+  return tag.trim().replace(/^#/, "").toLowerCase().slice(0, 40).trim();
+}
+
+/**
+ * Change a note's tags or status, leaving its body exactly as it was.
+ *
+ * Only the frontmatter block is rewritten. The block is parsed as the file has it - not through
+ * `parseNote`, which supplies defaults and would add fields nobody asked for - so keys another tool
+ * owns survive the edit. Tags are normalised the way the graph reads them (no `#`, lower-case,
+ * de-duplicated), because a tag written here and a tag node on the canvas must be one thing.
+ *
+ * The block is re-serialised, so a comment or a hand-chosen key order inside it is not kept. A block
+ * that does not parse is refused rather than replaced: the note is readable, and throwing away hand
+ * written YAML to change a tag would be the app deciding it knows better than its owner.
+ */
+export async function updateNoteMeta(
+  vaultDir: string,
+  ref: NoteRef,
+  patch: NoteMetaPatch,
+): Promise<Note> {
+  if (patch.tags === undefined && patch.status === undefined)
+    throw new NoteFileError("invalid", "nothing to change");
+
+  const status = patch.status?.trim().slice(0, 40);
+  if (patch.status !== undefined && !status)
+    throw new NoteFileError("invalid", "a status cannot be empty");
+
+  const file = noteFile(vaultDir, ref);
+  const raw = await readFile(file, "utf8").catch(missingNote);
+  const text = raw.replace(/^\uFEFF/, "");
+  const close = frontmatterClose(text);
+
+  let data: Record<string, unknown> = {};
+  if (close !== null) {
+    let parsed: unknown;
+    try {
+      parsed = YAML.parse(text.slice(3, close - 4).trim());
+    } catch {
+      throw new NoteFileError("invalid", "this note's frontmatter is not valid YAML");
+    }
+    if (parsed !== null && parsed !== undefined) {
+      if (!isMapping(parsed))
+        throw new NoteFileError("invalid", "this note's frontmatter is not a mapping");
+      data = parsed;
+    }
+  }
+
+  if (patch.tags !== undefined) data.tags = [...new Set(patch.tags.map(cleanTag).filter(Boolean))];
+  if (status !== undefined) data.status = status;
+
+  const block = YAML.stringify(data).trimEnd();
+  const body = close === null ? text : text.slice(close);
+  const next =
+    close === null
+      ? `---\n${block}\n---\n\n${text.trim()}\n`
+      : `---\n${block}\n---${body.startsWith("\n") ? "" : "\n"}${body}`;
+
+  await writeNoteFile(file, next);
+  return readNote(file, ref.folder);
 }
 
 /**

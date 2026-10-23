@@ -15,6 +15,7 @@ daemon (falling back to demo data when the daemon is offline):
 - `src/components/NoteComposer.tsx` - a new note: a folder picker, a textarea, Create, Cancel, and a failure that keeps the draft
 - `src/components/NoteViewer.tsx` - note header (folder, date, source, url) + backlinks + link pane + Markdown body, the Edit button that turns the body into the editor, and the **...** button that opens the file operations
 - `src/components/NoteEditor.tsx` - the body as a textarea: Save, Cancel, the unsaved marker and a failure that keeps the draft
+- `src/components/NoteMeta.tsx` - the strip under the note header: tag chips with a remove button, a field that adds one, and a status picker; a failure stays on screen and keeps the draft
 - `src/components/NoteActions.tsx` - rename, move and delete for the open note: a menu, a rename field, a folder picker, a delete that asks first, and a failure that keeps the panel open
 - `src/components/LinkPane.tsx` - the note's link: video player, image, or scraped reader card
 - `src/components/GraphView.tsx` - canvas link graph (routes, controls, click-to-open)
@@ -99,6 +100,26 @@ wrote.
 - Covered by `src/components/NoteEditor.test.tsx` (draft, save, failure, shortcut, one save at a
 time, cancel) and an SSR render in `src/components/NoteViewer.test.tsx` for the button being offered
 only while the daemon answers.
+
+### Tags and status
+
+The strip under the note header is the one edit the body write cannot make: tags and status live in
+the frontmatter, and they are what the filters, the graph and the palette read.
+
+- Each tag is a chip with an **×**; a tag is typed into **Add a tag** and sent on `Enter`. Both send
+  the whole new list rather than a delta, so two quick edits cannot disagree about what the list is.
+- The daemon cleans a tag the way the graph reads one (no `#`, lower-case, trimmed, de-duplicated),
+  so `#Rust` typed here and `rust` on a graph node are one tag. Adding one that is already there is a
+  no-op, not an error.
+- A **Status** picker offers `new`, `active`, `done` and `archived`; a note carrying a status the
+  picker does not know keeps it at the top of the list rather than having it rewritten.
+- The list, the folder counts and the graph are re-read after a change, because a tag is a chip in
+  the list and an edge in the graph. A refresh that fails is a status-bar notice - the edit landed.
+- A refusal (a block that does not parse, a daemon that went away) stays in the strip with the
+  daemon's sentence and the typed tag still in the field.
+- With the daemon down the strip is read-only: the chips are there, the controls are disabled and say
+  why.
+- Covered by `src/components/NoteMeta.test.tsx`.
 
 ### Renaming, moving and deleting
 
