@@ -469,3 +469,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the desktop (the panel's menu, rename, move, the confirming delete, a failure keeping it open, and
   the header offering the operations only while the daemon answers). Suite is 434: 173 in
   `@lumos/vault-utils`, 124 in the daemon, 137 in the desktop.
+
+### Added (continued 26)
+- A rename now carries the links that point at the note, so it cannot quietly break every backlink in
+  the vault. Every other note whose body links to the old title is rewritten to the new one, keeping
+  the shape it was written in - `[[Learn Rust]]` becomes the new title, `[[2026-10-20-learn-rust.md]]`
+  becomes the new filename, and a `#heading`, a `|alias` or an `!` embed marker survives - and
+  `PATCH /note` answers the files it touched as `updated`. The desktop says how many followed in the
+  status bar, and the rename panel says so before it happens.
+- Only a link the rename actually strands is edited: a target that still reaches the note afterwards -
+  an alias in its frontmatter, say - is the author's wording and is left alone, and so are links
+  inside a code fence or inline code, which the graph does not read as links either. The link
+  resolver and the rewrite are `linkResolver()` and `rewriteLinks()` in `@lumos/vault-utils/graph`, so
+  the rename asks the graph's own question instead of growing a second set of rules.
+- 13 new tests: 12 in `@lumos/vault-utils` (the resolver's names, the rewrite of a title, a
+  filename, a markdown link and an embed, headings and aliases surviving, code left alone, and the
+  rename carrying a link while leaving an alias link as written) and 1 in the daemon (the route
+  answering the file it edited). The desktop's rename panel test now asserts the links-follow
+  sentence. Suite is 447: 185 in `@lumos/vault-utils`, 125 in the daemon, 137 in the desktop.

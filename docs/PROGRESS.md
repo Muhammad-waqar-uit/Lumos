@@ -42,6 +42,29 @@ Chronological record of what has been built. Newest entries first within each da
   renamed, moved and deleted from the panel while the files on disk followed, and a rename that
   collided was refused with the daemon's sentence and left both notes alone. Nothing touched `vault/`
 
+### Done — a rename carries the links that point at it
+- [x] The rename shipped, and left the obvious hole open: links resolve by title, so renaming a note
+  broke every `[[old title]]` pointing at it and the graph started reporting them as unresolved.
+  Now `renameNote()` rewrites them in the same operation and answers the files it edited as `updated`
+- [x] The rules are the graph's own, not a second copy: `linkResolver()` is the resolver
+  `buildGraphFromNotes()` already used, exported so a rename can ask "what does this link point at?"
+  with the aliases, slugs and filename forms that answer already had, and `rewriteLinks()` swaps one
+  target in place. Both are pure and live in `@lumos/vault-utils/graph`, so the desktop could use them
+- [x] A rename is compared against the vault as it *will* be: a target is rewritten only when it
+  reaches the note now and would not afterwards. So a link written to a frontmatter alias keeps the
+  author's wording, because the alias survives; a link inside a code fence or inline code is not
+  touched, because the graph does not read it as a link; and a note's link to its own old title is
+  left to its own body, which is only retitled. The three exceptions are in [LIMITATIONS.md](LIMITATIONS.md)
+- [x] The link keeps its shape: `[[Learn Rust]]` becomes the new title while
+  `[[2026-10-20-learn-rust.md]]` becomes the new filename, a `#heading` and a `|alias` stay, an embed
+  keeps its `!`, and a markdown `[text](file.md#anchor)` keeps its text and anchor
+- [x] The desktop says it happened rather than doing it silently: the rename panel states that links
+  here are rewritten too, and the status bar reports "Renamed; 2 notes link to the new title."
+- [x] 13 tests: 12 in `@lumos/vault-utils` (the resolver, the four link shapes, headings and aliases
+  surviving, code left alone, the alias link left as written, and nothing touched when the title is
+  unchanged) and 1 in the daemon (the route answering the file it edited). Suite is 447: 185
+  vault-utils, 125 daemon, 137 desktop
+
 ## 2026-10-22
 
 ### Done — a note can be created from the desktop

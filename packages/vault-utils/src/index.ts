@@ -14,7 +14,7 @@ import type {
   NoteSource,
   VaultEntry,
 } from "@lumos/shared";
-import { buildGraphFromNotes, extractTags } from "./graph";
+import { buildGraphFromNotes, extractTags, linkResolver, rewriteLinks } from "./graph";
 import { isMapping, validateFrontmatter } from "./frontmatter";
 import { slugify } from "./slug";
 
@@ -167,19 +167,22 @@ function excerptFromContent(content: string, max = 200): string {
   return body.length > max ? body.slice(0, max).trimEnd() + "..." : body;
 }
 
-/** Read a single note file. */
-export async function readNote(file: string, folder: string): Promise<Note> {
-  const raw = await readFile(file, "utf8");
+/** Build a Note from a file's text and where it lives. */
+function noteFromRaw(raw: string, file: string, folder: string): Note {
   const { frontmatter, content, problems } = parseNote(raw);
-  const fallback = path.basename(file, ".md");
   return {
-    title: titleFromContent(content, fallback),
+    title: titleFromContent(content, path.basename(file, ".md")),
     folder,
     file,
     frontmatter,
     content,
     problems,
   };
+}
+
+/** Read a single note file. */
+export async function readNote(file: string, folder: string): Promise<Note> {
+  return noteFromRaw(await readFile(file, "utf8"), file, folder);
 }
 
 async function listMarkdownFiles(dir: string): Promise<string[]> {
@@ -262,30 +265,63 @@ function readAliases(raw: unknown): string[] {
   return [];
 }
 
+/** A note as the vault holds it: where it lives, its parsed form, and its text as written. */
+interface VaultNote {
+  folder: string;
+  name: string;
+  file: string;
+  note: Note;
+  raw: string;
+}
+
+/**
+ * Every readable note in the vault, with its raw text.
+ *
+ * The graph and a rename both need more than a listing - titles, aliases, bodies - and both skip a
+ * file they cannot read rather than failing the whole answer.
+ */
+async function readVaultNotes(vaultDir: string): Promise<VaultNote[]> {
+  let dirents: Dirent[];
+  try {
+    dirents = await readdir(vaultDir, { withFileTypes: true });
+  } catch (err: unknown) {
+    if ((err as NodeJS.ErrnoException).code === "ENOENT") return [];
+    throw err;
+  }
+
+  const notes: VaultNote[] = [];
+  for (const dirent of dirents.filter((d) => d.isDirectory())) {
+    const folder = dirent.name;
+    const dir = path.join(vaultDir, folder);
+    for (const name of await listMarkdownFiles(dir)) {
+      const file = path.join(dir, name);
+      try {
+        const raw = await readFile(file, "utf8");
+        notes.push({ folder, name, file, note: noteFromRaw(raw, file, folder), raw });
+      } catch {
+        /* skip unreadable files */
+      }
+    }
+  }
+  return notes;
+}
+
 /**
  * Assemble the vault's link graph: notes, internal links, tags, and the links
  * whose target does not exist yet. Unreadable files are skipped, as the listings do.
  */
 export async function buildVaultGraph(vaultDir: string): Promise<GraphData> {
-  const entries = await listNotes(vaultDir);
-  const notes: GraphSourceNote[] = [];
-  for (const entry of entries) {
-    try {
-      const note = await readNote(entry.file, entry.folder);
-      notes.push({
-        id: `${entry.folder}/${entry.name}`,
-        title: note.title,
-        folder: entry.folder,
-        created: note.frontmatter.created,
-        tags: note.frontmatter.tags,
-        aliases: readAliases(note.frontmatter.aliases),
-        content: note.content,
-      });
-    } catch {
-      /* skip unreadable files */
-    }
-  }
-  return buildGraphFromNotes(notes);
+  const notes = await readVaultNotes(vaultDir);
+  const sources: GraphSourceNote[] = notes.map(({ folder, name, note }) => ({
+    id: `${folder}/${name}`,
+    title: note.title,
+    folder,
+    created: note.frontmatter.created,
+    tags: note.frontmatter.tags,
+    aliases: readAliases(note.frontmatter.aliases),
+    content: note.content,
+  }));
+  return buildGraphFromNotes(sources);
 }
 
 /** A note as the operations address it: the folder it is filed in and its filename. */
@@ -425,13 +461,92 @@ function retitleBody(content: string, title: string): string {
   return content.replace(/^#\s+.+$/m, `# ${title}`);
 }
 
+/** A note file whose text changed, ready to be written. */
+interface LinkEdit {
+  /** Vault id: `Folder/name.md`. */
+  id: string;
+  file: string;
+  text: string;
+}
+
 /**
- * Rename a note to a new title.
+ * The edits a rename needs so the links that point at the note still do.
+ *
+ * The resolver is built over the vault as it is *before* the rename, which is the only state in which
+ * "this link points at that note" is still true - afterwards the old title resolves to nothing. A
+ * link that resolves elsewhere, or not at all, is left alone, so a note that merely shares the old
+ * title is not edited by someone else's rename.
+ *
+ * A link keeps the shape it was written in: `[[Learn Rust]]` becomes a new title, while
+ * `[[2026-10-20-learn-rust.md]]` becomes the new filename, because that is what the author chose.
+ */
+async function linkEdits(
+  vaultDir: string,
+  renamedId: string,
+  next: { name: string; title: string },
+): Promise<LinkEdit[]> {
+  const notes = await readVaultNotes(vaultDir);
+  const sources = notes.map(({ folder, name, note }) => ({
+    id: `${folder}/${name}`,
+    title: note.title,
+    folder,
+    created: note.frontmatter.created,
+    tags: note.frontmatter.tags,
+    aliases: readAliases(note.frontmatter.aliases),
+    content: note.content,
+  }));
+  const before = linkResolver(sources);
+  // The vault as it will be: this note under its new name and title, everything else unchanged.
+  const newId = `${renamedId.slice(0, renamedId.lastIndexOf("/") + 1)}${next.name}`;
+  const after = linkResolver(
+    sources.map((source) =>
+      source.id === renamedId ? { ...source, id: newId, title: next.title } : source,
+    ),
+  );
+
+  const replacement = (raw: string): string | null => {
+    // A link that still reaches the note afterwards - an alias, say - is the author's wording, not
+    // a stale title, so only a target this rename actually strands is rewritten.
+    if (before(raw) !== renamedId || after(raw) === newId) return null;
+    const target = raw.trim();
+    const slash = Math.max(target.lastIndexOf("/"), target.lastIndexOf("\\"));
+    const prefix = slash === -1 ? "" : target.slice(0, slash + 1);
+    const base = slash === -1 ? target : target.slice(slash + 1);
+    return `${prefix}${/\.md$/i.test(base) ? next.name : next.title}`;
+  };
+
+  const edits: LinkEdit[] = [];
+  for (const { folder, name, file, raw } of notes) {
+    const id = `${folder}/${name}`;
+    // A note is not its own neighbour, and its own text is being replaced anyway.
+    if (id === renamedId) continue;
+    const close = frontmatterClose(raw);
+    const head = close === null ? "" : raw.slice(0, close);
+    const { text, count } = rewriteLinks(close === null ? raw : raw.slice(close), replacement);
+    // Only the body is rewritten, and only when something in it actually pointed here.
+    if (count > 0) edits.push({ id, file, text: head + text });
+  }
+  return edits;
+}
+
+/** What a rename changed: the note as it now reads, and whose links followed it. */
+export interface NoteRename {
+  note: Note;
+  /** Vault ids (`Folder/name.md`) of the notes whose links were rewritten to the new title. */
+  updated: string[];
+}
+
+/**
+ * Rename a note to a new title, and carry the links that point at it.
  *
  * The title is the note's, not its filename's: the file is renamed to `<date>-<new slug>.md` and
  * the body's first heading is rewritten to match, so the list, the viewer and the file's name all
  * say the same thing afterwards. A note with no heading has no title of its own - it falls back to
  * the filename - so only the filename changes.
+ *
+ * Every other note whose body links to this one is edited too, because a link resolves by title: a
+ * rename that left them behind would quietly break every backlink in the vault. The files changed
+ * are answered as `updated`, so the caller can say what happened rather than guess.
  *
  * Two notes can legitimately want one filename (the same title, the same day). That collision is
  * refused rather than resolved by a timestamp suffix: the person renaming is right there, and a
@@ -440,22 +555,31 @@ function retitleBody(content: string, title: string): string {
 export async function renameNote(
   vaultDir: string,
   input: { folder: string; name: string; title: string },
-): Promise<Note> {
+): Promise<NoteRename> {
   const title = input.title.trim();
   if (!title) throw new NoteFileError("unsafe", "a title is required");
 
   const from = noteFile(vaultDir, input);
-  const to = noteFile(vaultDir, {
-    folder: input.folder,
-    name: `${datePrefixOf(input.name)}${slugify(title)}.md`,
-  });
+  const name = `${datePrefixOf(input.name)}${slugify(title)}.md`;
+  const to = noteFile(vaultDir, { folder: input.folder, name });
 
   const raw = await readFile(from, "utf8").catch(missingNote);
-  const next = replaceNoteBody(raw, retitleBody(parseNote(raw).content, title));
+  const parsed = parseNote(raw);
+  const next = replaceNoteBody(raw, retitleBody(parsed.content, title));
+  const oldTitle = titleFromContent(parsed.content, path.basename(input.name, ".md"));
+
+  // Read before the rename: a link points at the old title only while that title is the note's.
+  // A title that did not change leaves every link resolving exactly as it did.
+  const edits =
+    oldTitle === title
+      ? []
+      : await linkEdits(vaultDir, `${input.folder}/${input.name}`, { name, title });
 
   if (to === from) await writeNoteFile(from, next);
   else await relocate(from, to, next);
-  return readNote(to, input.folder);
+  for (const edit of edits) await writeNoteFile(edit.file, edit.text);
+
+  return { note: await readNote(to, input.folder), updated: edits.map((edit) => edit.id) };
 }
 
 /**

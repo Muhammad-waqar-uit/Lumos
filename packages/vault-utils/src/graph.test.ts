@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 import type { GraphSourceNote } from "@lumos/shared";
-import { backlinks, buildGraphFromNotes, extractLinks, extractTags, neighborhood } from "./graph";
+import {
+  backlinks,
+  buildGraphFromNotes,
+  extractLinks,
+  extractTags,
+  linkResolver,
+  neighborhood,
+  rewriteLinks,
+} from "./graph";
 
 /** A note fixture with sensible defaults, so each test only states what it cares about. */
 function note(
@@ -337,5 +345,95 @@ describe("neighborhood", () => {
     expect(neighborhood(graph, IDEAS, 1).unresolved).toEqual([
       { source: IDEAS, target: "ghost-note" },
     ]);
+  });
+});
+
+describe("linkResolver", () => {
+  it("finds a note by title, filename, slug or alias, and nothing else", () => {
+    const resolve = linkResolver([
+      note(GOALS, "Learn Rust", "", { aliases: ["rust plan"] }),
+      note(INBOX, "Random thought", ""),
+    ]);
+
+    expect(resolve("Learn Rust")).toBe(GOALS);
+    expect(resolve("learn rust")).toBe(GOALS);
+    expect(resolve("2026-10-10-learn-rust")).toBe(GOALS);
+    expect(resolve("Goals/2026-10-10-learn-rust.md")).toBe(GOALS);
+    expect(resolve("rust plan")).toBe(GOALS);
+    expect(resolve("ghost-note")).toBeNull();
+  });
+});
+
+describe("rewriteLinks", () => {
+  /** Rename `Learn Rust` to `Learn Rust properly`, the way a rename asks for it. */
+  const rename = (target: string): string | null =>
+    target.toLowerCase() === "learn rust" ? "Learn Rust properly" : null;
+
+  it("rewrites the target and says how many links changed", () => {
+    const { text, count } = rewriteLinks("see [[Learn Rust]] and [[Learn Rust]]", rename);
+
+    expect(count).toBe(2);
+    expect(text).toBe("see [[Learn Rust properly]] and [[Learn Rust properly]]");
+  });
+
+  it("keeps a heading, an alias and an embed marker", () => {
+    const { text } = rewriteLinks("[[Learn Rust#Ship a CLI|the plan]] and ![[Learn Rust]]", rename);
+
+    expect(text).toBe("[[Learn Rust properly#Ship a CLI|the plan]] and ![[Learn Rust properly]]");
+  });
+
+  it("leaves a link the callback does not recognise exactly as written", () => {
+    const { text, count } = rewriteLinks("[[Other note]] and [[Learn Rust]]", rename);
+
+    expect(count).toBe(1);
+    expect(text).toBe("[[Other note]] and [[Learn Rust properly]]");
+  });
+
+  it("skips fenced code and inline code, which the graph does not read as links", () => {
+    const body = [
+      "a [[Learn Rust]]",
+      "",
+      "```md",
+      "[[Learn Rust]]",
+      "```",
+      "",
+      "`[[Learn Rust]]`",
+    ].join("\n");
+    const { text, count } = rewriteLinks(body, rename);
+
+    expect(count).toBe(1);
+    expect(text).toBe(
+      [
+        "a [[Learn Rust properly]]",
+        "",
+        "```md",
+        "[[Learn Rust]]",
+        "```",
+        "",
+        "`[[Learn Rust]]`",
+      ].join("\n"),
+    );
+  });
+
+  it("rewrites a markdown link to a note, keeping its text and its anchor", () => {
+    // The callback sees the decoded path, which is what a note's filename looks like on disk.
+    const asFilename = (target: string): string | null =>
+      target === "Learn Rust.md" ? "Learn-Rust-properly.md" : null;
+    const { text, count } = rewriteLinks(
+      "[the plan](Learn%20Rust.md#ship-a-cli) and [a page](https://example.com/x.md)",
+      asFilename,
+    );
+
+    expect(count).toBe(1);
+    expect(text).toBe(
+      "[the plan](Learn-Rust-properly.md#ship-a-cli) and [a page](https://example.com/x.md)",
+    );
+  });
+
+  it("says nothing changed when the body carries no matching link", () => {
+    const { text, count } = rewriteLinks("# A note\n\nplain prose, [[Somewhere else]]", rename);
+
+    expect(count).toBe(0);
+    expect(text).toBe("# A note\n\nplain prose, [[Somewhere else]]");
   });
 });

@@ -108,8 +108,10 @@ wrong folder or named badly no longer means leaving the app.
 - **Rename** starts from the title the note has. The daemon renames the file after the new title -
   `<date>-<slug>.md`, keeping the date prefix - and rewrites the body's first heading, so the header,
   the list row and the filename all say the same thing afterwards. A note with no heading has no
-  title of its own (it falls back to the filename), so only the filename changes. The panel says when
-  other notes link to the old title, because those links are not rewritten.
+  title of its own (it falls back to the filename), so only the filename changes. Notes that link
+  here are rewritten too, so the backlinks survive the rename; the panel says how many there are
+  before it happens and the status bar says how many followed ("Renamed; 2 notes link to the new
+  title.").
 - **Move** offers only the folders the note is not already in, and keeps the filename: the date in it
   belongs to the note, and a move is about where a note belongs, not what it is called. After a move
   the list switches to every folder, because the folder filter you were looking through would

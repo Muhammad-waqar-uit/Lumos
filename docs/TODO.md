@@ -49,8 +49,6 @@ else on this page can close them.
 
 - [ ] Markdown preview beside the editor (today the rendered note is what you see after a save)
 - [ ] Edit a note's frontmatter (tags, status) from the app, rather than only its body
-- [ ] Rewrite the `[[links]]` that point at a note when it is renamed (today they keep the old title
-  and a rename warns about it rather than editing other notes)
 - [ ] Undo, or a trash, for a deleted note - the delete is permanent and the panel says so
 - [ ] Bulk operations (move, tag, archive)
 
@@ -267,8 +265,14 @@ Nothing in flight. The next item to pick up is the first one under **Plan**.
   list, the viewer and the filename agree; move (`POST /note/move`, `moveNote()`) keeps the filename
   and only changes the folder; delete (`DELETE /note`, `deleteNote()`) asks first and has no undo.
   A target name another note holds is a `409` and nothing is replaced, a failure keeps the panel open
-  with the daemon's sentence, and the listing, folder counts and graph are re-read afterwards. What
-  is left over from it is on the open list above: inbound links, and an undo
+  with the daemon's sentence, and the listing, folder counts and graph are re-read afterwards
+- [x] A rename carries the links that point at the note, instead of leaving every backlink pointing at
+  a title that no longer exists. `linkResolver()` and `rewriteLinks()` in `@lumos/vault-utils/graph`
+  ask the graph's own question ("what does this link point at?") and rewrite the target in place,
+  keeping the link's shape - a title stays a title, a filename becomes the new filename, a heading, an
+  alias and an embed marker survive - while a link that still resolves (a frontmatter alias) or sits
+  inside code is left alone. `PATCH /note` answers the edited files as `updated`, and the desktop
+  says how many followed. What is left over is on the open list: an undo for a delete
 
 ### Phase 8: Polish & Docs (P2)
 

@@ -92,8 +92,9 @@ touches the vault.
 
 Five write routes serve the desktop: `PUT /note` replaces a note's body, `POST /notes` creates one
 through the capture writer (stamped `source: desktop`), `PATCH /note` renames one to a new title
-(the file and its first heading both follow), `POST /note/move` moves it to another folder under the
-name it already has, and `DELETE /note` removes it. All of them carry the same folder and filename
+(the file, its first heading and the links other notes have to it all follow, and the edited files
+come back as `updated`), `POST /note/move` moves it to another folder under the name it already has,
+and `DELETE /note` removes it. All of them carry the same folder and filename
 guards as the read routes, and a bad payload is a `400` that writes nothing. A name another note
 already holds is a `409` rather than a silent replacement, and a delete has no undo - the app asks
 before it sends one.

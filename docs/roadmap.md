@@ -69,9 +69,9 @@ text, and reading a PDF or plain HTML file - are still open under **Plan** in
   there is no preview beside the textarea)
 - Creating a note from the app. ✅ (a composer in the list's own pane: a folder picker and a
   textarea, filed with the same writer WhatsApp uses, stamped `source: desktop`)
-- Renaming, moving and deleting a note from the app. ✅ (a title-based rename that keeps the filename
-  and the first heading in step, a move that keeps the filename, and a delete that asks first;
-  rewriting inbound links and an undo are still open)
+- Renaming, moving and deleting a note from the app. ✅ (a title-based rename that keeps the filename,
+  the first heading and the links pointing here in step, a move that keeps the filename, and a delete
+  that asks first; an undo is still open)
 - A preflight the browser actually sends. ✅ (found while exercising the editor: the CORS default
   omitted `PUT`, so `curl` could save while the app could not)
 - Bulk operations (move, tag, archive).

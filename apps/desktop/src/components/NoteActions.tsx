@@ -5,7 +5,7 @@ type Mode = "menu" | "rename" | "move" | "delete";
 
 interface Props {
   note: Note;
-  /** Notes that link here. A rename changes the title they point at, and their links are not edited. */
+  /** Notes that link here. A rename rewrites their links, which the panel says before it happens. */
   linkedFrom: number;
   /** Each rejects with the daemon's sentence, which the panel shows instead of closing. */
   onRename: (title: string) => Promise<void>;
@@ -119,7 +119,7 @@ export function NoteActions({ note, linkedFrom, onRename, onMove, onDelete, onCl
             {linkedFrom > 0
               ? ` ${linkedFrom} ${
                   linkedFrom === 1 ? "note links" : "notes link"
-                } to the old title; their links are not updated.`
+                } here; ${linkedFrom === 1 ? "its link is" : "their links are"} rewritten too.`
               : ""}
           </p>
         </form>
