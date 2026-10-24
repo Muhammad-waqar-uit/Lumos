@@ -54,6 +54,7 @@ pnpm format           # prettier --write .
 pnpm format:check     # prettier --check . (what validate runs)
 pnpm typecheck        # tsc --noEmit in every workspace
 pnpm test             # vitest run in every workspace that has a suite
+pnpm test:e2e         # Playwright smoke suite against the built app (needs Chromium)
 pnpm build            # build every workspace that has a build step
 pnpm validate         # lint + format:check + typecheck + test + build — run before every push
 
@@ -63,6 +64,10 @@ pnpm --filter desktop tauri dev # full Tauri app window
 ```
 
 The daemon runs headless with `LUMOS_DISABLE_WHATSAPP=1` — use that when you only need the HTTP API.
+
+`pnpm validate` is the local gate and does not run the e2e suite: it needs a browser binary and a
+build of the desktop, so it runs as its own CI job instead. Run `pnpm test:e2e` yourself when you
+touch the built app's runtime behaviour.
 
 ## Architecture rules
 

@@ -566,3 +566,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   own (`meta-`, `actions-`, `editor-`). 3 tests in `src/components/NoteViewer.keys.test.tsx` render
   the note as it is read, with the editor open and with the actions panel open, and assert React
   says nothing; suite is 483: 198 in `@lumos/vault-utils`, 133 in the daemon, 152 in the desktop.
+
+### Added (continued 31)
+- An E2E smoke test, closing the Phase 0.1 enforcement gap: the components were covered in jsdom,
+  but nothing proved the *built* bundle reached the daemon or that the Markdown, highlighting and
+  keyboard wiring survived bundling. A new `e2e/` workspace runs Playwright against a real Chromium,
+  starting the daemon on port 3101 over a committed fixture vault (`e2e/fixtures/`) and the desktop
+  built with `VITE_DAEMON_URL` pointing at it, served by `vite preview` on 4173. Neither server is
+  reused if already running, so a daemon left over from another session cannot be silently tested
+  instead of this one.
+- 5 tests in `e2e/smoke.spec.ts`: the vault loads through the daemon (not the demo fallback), a
+  second note opens with its Markdown and a highlighted `language-js` fence, a backlink is listed
+  and followed, a tag chip narrows the list and puts it back, and `Ctrl+K` then `Enter` finds a note
+  by body text. Every test fails on any uncaught page error, so a crash cannot read as a pass.
+- `pnpm test:e2e` runs it from the root; CI runs it as a second job in
+  `.github/workflows/validate.yml`, because it needs a browser binary and its own build. It is not
+  part of `pre-push`, so a contributor is never blocked on a browser download. `oxlint` now lints
+  `e2e` too, and `e2e` is a workspace package so `pnpm typecheck` covers it.

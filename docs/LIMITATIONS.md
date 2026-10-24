@@ -234,6 +234,13 @@ play it — neither page can be read or copied.
   push stays possible on a personal repository. The gate is a guardrail, not a lock.
 - **CI is Linux-only.** Windows and macOS are not exercised by the workflow, so CRLF handling, path
   separators and the Tauri build are local observations.
+- **The E2E smoke suite is a smoke suite, not a full pass.** Its 5 tests cover one happy path through
+  the built bundle - load, open a note, follow a backlink, filter by a tag, search from the palette.
+  They run on Chromium only (no Firefox or WebKit), against a 3-note fixture vault, and they drive
+  the browser-served app rather than the packaged Tauri window, so the Tauri shell is still a manual
+  check. Editing, creating, renaming and deleting are covered by the jsdom suites, not here.
+- **The E2E suite does not run on `pre-push`.** It is a separate CI job, so the gate a contributor
+  feels locally (`pnpm validate`) is not the whole gate; a red e2e can still be found after a push.
 - **Nothing is packaged or versioned.** There is no installer, no release, no tag and no published
   artifact; `CHANGELOG.md` tracks changes under `Unreleased`.
 

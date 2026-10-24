@@ -61,6 +61,7 @@ browses it. Shared code lives in `packages/shared` and `packages/vault-utils`. p
 ```bash
 pnpm install                       # bootstrap
 pnpm validate                      # the gate: lint + format:check + typecheck + test + build
+pnpm test:e2e                      # Playwright smoke suite against the built app (needs Chromium)
 pnpm --filter daemon dev           # daemon (LUMOS_DISABLE_WHATSAPP=1 for headless)
 pnpm --filter desktop dev          # Vite UI on :1420
 pnpm --filter desktop tauri dev    # full desktop window

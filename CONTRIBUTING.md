@@ -55,11 +55,16 @@ pnpm lint          # oxlint across apps + packages
 pnpm format        # prettier --write .
 pnpm typecheck     # tsc --noEmit in every workspace
 pnpm test          # vitest run in every workspace that has a suite
+pnpm test:e2e      # Playwright smoke suite against the built app (needs Chromium)
 pnpm validate      # lint + format:check + typecheck + test + build
 ```
 
 Tests live next to the code they cover (`*.test.ts`) and run through vitest; anything touching the
 vault does it in a temporary directory built by the test, never in your real `vault/`.
+
+The e2e smoke suite in `e2e/` is separate: it drives the *built* app in a real browser, so it needs
+a Chromium download and is not part of the `pre-push` gate. CI runs it as its own job on every PR;
+run `pnpm test:e2e` yourself when your change touches the built app's runtime behaviour.
 
 A red gate blocks the commit or push. **Fix the cause — never silence the check.** No `any`, no
 `@ts-ignore`/disable comments without a written reason, no skipped or weakened tests.

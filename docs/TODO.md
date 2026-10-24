@@ -25,12 +25,6 @@ else on this page can close them.
 
 ## Plan
 
-### Phase 0.1 - Enforcement (P1) - open items
-
-- [ ] An E2E smoke test - the components are covered by jsdom tests now, but nothing drives the
-  built app in a real browser. That needs a runner that is not installed (Playwright or similar),
-  so it is a decision before it is a task.
-
 ### Phase 3 - Daemon enhancements (P1) - open items
 
 - [ ] `/plan today|tomorrow` with Ollama integration
@@ -100,6 +94,14 @@ Nothing in flight. The next item to pick up is the first one under **Plan**.
   pane's embeds, reader states and a **Retry** that really asks again, the editor's draft, its
   failed save keeping the text, `Cmd/Ctrl+S`, and a second click while the first save is in flight,
   and the composer's folder list, its failed create keeping the text, and `Cmd/Ctrl+Enter`
+- [x] An E2E smoke test - the Phase 0.1 gap closed. A new `e2e/` workspace runs Playwright against a
+  real Chromium: the daemon on port 3101 over a committed fixture vault, the desktop built with
+  `VITE_DAEMON_URL` pointing at it and served by `vite preview`. 5 tests in `e2e/smoke.spec.ts`
+  drive the **built** bundle - vault loads through the daemon, a note opens with its Markdown and a
+  highlighted fence, a backlink is followed, a tag chip filters, `Ctrl+K`/`Enter` finds a body
+  match - and every test fails on an uncaught page error. `pnpm test:e2e` runs it; CI runs it as a
+  second job in `.github/workflows/validate.yml`. It is not in `pre-push`, so a contributor is never
+  blocked on a browser download
 - [x] Schema validation for note frontmatter - `validateFrontmatter()` in `@lumos/vault-utils`
   checks the fields the app relies on and the problems travel with the note (`Note.problems`,
   `VaultEntry.problems`) instead of the file being skipped. It runs when a note is read, and the

@@ -6,6 +6,9 @@ node_modules
 # Testing
 coverage
 .nyc_output
+# Playwright artifacts (the e2e suite's traces land here on a failure)
+e2e/test-results
+e2e/playwright-report
 
 # Production
 build
