@@ -5,12 +5,14 @@ const LABEL: Record<Connection, string> = {
   connecting: "Connecting to daemon…",
   daemon: "Connected to daemon",
   demo: "Daemon offline — showing demo notes",
+  qrcode: "QR connect",
 };
 
 const DOT: Record<Connection, string> = {
   connecting: "bg-amber-400",
   daemon: "bg-emerald-400",
   demo: "bg-zinc-500",
+  qrcode: "bg-indigo-500",
 };
 
 /** Something the bar can offer beside the notice it is showing, such as an undo. */
@@ -36,6 +38,21 @@ export function StatusBar({
   /** The one way back from what the notice describes, offered next to it. */
   action?: StatusAction | null;
 }) {
+  // Render the QR connect button when connected to daemon
+  const qrcodeButton =
+    connection !== "daemon" ? (
+      <>
+        <button
+          type="button"
+          onClick={() => window.open("http://127.0.0.1:3001/qrcode", "_blank")}
+          title="Connect WhatsApp"
+          className="shrink-0 rounded border border-border px-1.5 py-0.5 text-foreground transition-colors hover:bg-accent"
+        >
+          QR
+        </button>
+      </>
+    ) : null;
+
   return (
     <footer className="flex shrink-0 items-center justify-between border-t border-border px-4 py-1 text-[11px] text-muted-foreground">
       <span className="flex min-w-0 items-center gap-2">
@@ -78,6 +95,7 @@ export function StatusBar({
           {count} {count === 1 ? "note" : "notes"}
         </span>
       </span>
+      {qrcodeButton}
     </footer>
   );
 }
