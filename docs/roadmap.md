@@ -38,7 +38,7 @@ folder, so progress is always visible.
 - Dark tokens from [`design.md`](design.md) applied via Tailwind v4. ✅
 - App shell with sidebar and panes. ✅ (the list column is resizable by drag, double-click or arrow keys)
 - TanStack Router wired up. ✅ (the pane and the open note are address parameters, 2026-10-24)
-- zustand wired up. ⏳ (currently plain React state)
+- zustand wired up. ✅ (the vault index and the list's filters; the pane and the note stay in the address)
 
 ## M5 - Vault browser MVP (Phase 5) — in progress
 

@@ -1,9 +1,10 @@
 // @vitest-environment jsdom
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { RouterProvider, createMemoryHistory } from "@tanstack/react-router";
 import type { GraphData, Note, VaultEntry } from "@lumos/shared";
 import { createAppRouter } from "./router";
+import { useVaultStore } from "./lib/store";
 
 // The shell talks to one module, so the whole daemon is stood in for here - routing is what is
 // under test, and the listing only has to be real enough to click a row of.
@@ -64,6 +65,21 @@ vi.mock("./lib/api", () => ({
 }));
 
 afterEach(cleanup);
+
+// The store is a module-level singleton, so it starts fresh for every case - a note opened in
+// one test must not still be in the vault of the next.
+beforeEach(() => {
+  useVaultStore.setState({
+    connection: "connecting",
+    loading: true,
+    folders: [],
+    notes: [],
+    graph: null,
+    activeFolder: "All",
+    query: "",
+    tag: null,
+  });
+});
 
 /** Render the whole shell at one address, and hand back the router that put it there. */
 function renderAt(path: string) {

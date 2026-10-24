@@ -1,13 +1,10 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearch } from "@tanstack/react-router";
-import type { Folder, GraphData, Note, VaultEntry } from "@lumos/shared";
+import type { Folder, Note } from "@lumos/shared";
 import {
   createNote,
   deleteNote,
-  getFolders,
-  getGraph,
   getNote,
-  getNotes,
   getTrash,
   moveNote,
   renameNote,
@@ -15,11 +12,10 @@ import {
   emptyTrash,
   saveNote,
   updateNoteMeta,
-  type Connection,
-  type FolderCount,
 } from "./lib/api";
+import { useVaultStore } from "./lib/store";
 import { backlinks } from "@lumos/vault-utils/graph";
-import { DEMO_FOLDERS, DEMO_GRAPH, DEMO_NOTES, demoNote } from "./lib/demo";
+import { DEMO_GRAPH, demoNote } from "./lib/demo";
 import { countTags, filterEntries, nodeTag } from "./lib/filter";
 import { isTypingTarget, stepForKey, stepIndex } from "./lib/list-nav";
 import { PANE_DEFAULT, clampPaneWidth } from "./lib/pane-size";
@@ -29,7 +25,7 @@ import { NoteViewer } from "./components/NoteViewer";
 import { PaneBoundary } from "./components/PaneBoundary";
 import { PaneSplitter } from "./components/PaneSplitter";
 import { SearchModal } from "./components/SearchModal";
-import { Sidebar, type FolderFilter, type ShellView } from "./components/Sidebar";
+import { Sidebar, type ShellView } from "./components/Sidebar";
 import { StatusBar } from "./components/StatusBar";
 import { TrashPanel } from "./components/TrashPanel";
 
@@ -54,22 +50,30 @@ function reasonOf(err: unknown): string {
 }
 
 export default function App() {
-  const [connection, setConnection] = useState<Connection>("connecting");
-  const [folders, setFolders] = useState<FolderCount[]>([]);
-  const [notes, setNotes] = useState<VaultEntry[]>([]);
-  const [activeFolder, setActiveFolder] = useState<FolderFilter>("All");
-  const [query, setQuery] = useState("");
+  // The vault and the list's filters live in the store: they outlive any one component, and every
+  // mutation re-reads them through the same action. What is *open* - the pane and the note - is
+  // the address (src/router.tsx); session-only UI state stays plain React state.
+  const connection = useVaultStore((s) => s.connection);
+  const folders = useVaultStore((s) => s.folders);
+  const notes = useVaultStore((s) => s.notes);
+  const loading = useVaultStore((s) => s.loading);
+  // Null means the daemon could not serve a graph, so the demo vault is drawn instead.
+  const graph = useVaultStore((s) => s.graph);
+  const activeFolder = useVaultStore((s) => s.activeFolder);
+  const query = useVaultStore((s) => s.query);
   // A tag filter outlives a folder change on purpose; it is switched off explicitly.
-  const [tag, setTag] = useState<string | null>(null);
+  const tag = useVaultStore((s) => s.tag);
+  const setActiveFolder = useVaultStore((s) => s.setActiveFolder);
+  const setQuery = useVaultStore((s) => s.setQuery);
+  const setTag = useVaultStore((s) => s.setTag);
+  const loadVault = useVaultStore((s) => s.loadVault);
+  const refreshVault = useVaultStore((s) => s.refreshVault);
   // Where you are - the pane and the open note - is the address, so a reload, the back button and
   // a pasted link all land on the same place. A note key is `Folder/name.md`, exactly as the list
   // addresses it, so the two cannot drift apart.
   const { view = "notes", note: selected } = useSearch({ from: "/" });
   const navigate = useNavigate({ from: "/" });
   const [fetched, setFetched] = useState<{ key: string; note: Note } | null>(null);
-  const [loading, setLoading] = useState(true);
-  // Null means the daemon could not serve a graph, so the demo vault is drawn instead.
-  const [graph, setGraph] = useState<GraphData | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
   // Keys of the notes opened this session, for the palette's empty state. A reload starts empty.
   const [recent, setRecent] = useState<string[]>([]);
@@ -83,36 +87,10 @@ export default function App() {
     undo?: { id: string; title: string };
   } | null>(null);
 
-  // Load the vault from the daemon; fall back to demo data if it is not running.
+  // Load the vault from the daemon; the store falls back to demo data if it is not running.
   useEffect(() => {
-    let alive = true;
-    (async () => {
-      try {
-        const [f, n] = await Promise.all([getFolders(), getNotes()]);
-        if (!alive) return;
-        setFolders(f);
-        setNotes(n);
-        setConnection("daemon");
-      } catch {
-        if (!alive) return;
-        setFolders(DEMO_FOLDERS);
-        setNotes(DEMO_NOTES);
-        setConnection("demo");
-      } finally {
-        if (alive) setLoading(false);
-      }
-      // The graph is a separate read: notes still work if it fails.
-      try {
-        const g = await getGraph();
-        if (alive) setGraph(g);
-      } catch {
-        if (alive) setGraph(null);
-      }
-    })();
-    return () => {
-      alive = false;
-    };
-  }, []);
+    void loadVault();
+  }, [loadVault]);
 
   // Folder and query decide which tags are on offer; the tag then narrows that same set, so a
   // count is always a count of what is actually listed.
@@ -198,7 +176,7 @@ export default function App() {
       void navigate({ search: (prev) => ({ ...prev, note: id, view: undefined }) });
       setRecent((keys) => rememberRecent(keys, id));
     },
-    [navigate],
+    [navigate, setActiveFolder, setQuery, setTag],
   );
 
   const closeSearch = useCallback(() => setSearchOpen(false), []);
@@ -217,40 +195,14 @@ export default function App() {
       setFetched({ key: activeKey, note: saved });
       setNotice(null);
       try {
-        const [notesAfter, graphAfter, foldersAfter] = await Promise.all([
-          getNotes(),
-          getGraph(),
-          getFolders(),
-        ]);
-        setNotes(notesAfter);
-        setGraph(graphAfter);
-        setFolders(foldersAfter);
+        await refreshVault();
       } catch (err: unknown) {
         setNotice({ text: `Saved, but the list could not be refreshed (${reasonOf(err)}).` });
       }
       return saved;
     },
-    [activeEntry, activeKey],
+    [activeEntry, activeKey, refreshVault],
   );
-
-  /**
-   * Re-read what a file operation may have changed.
-   *
-   * A rename or a move changes a note's key, its folder, the folder counts and every link and tag
-   * edge the graph drew from it, so the three reads happen again rather than being patched. The
-   * operation itself has already landed by then: a refresh that fails is a notice, not a failed
-   * change.
-   */
-  const refreshVault = useCallback(async (): Promise<void> => {
-    const [notesAfter, foldersAfter, graphAfter] = await Promise.all([
-      getNotes(),
-      getFolders(),
-      getGraph(),
-    ]);
-    setNotes(notesAfter);
-    setFolders(foldersAfter);
-    setGraph(graphAfter);
-  }, []);
 
   /**
    * Rename the open note, then open it under its new name.
@@ -387,21 +339,14 @@ export default function App() {
       const created = await createNote(folder, text);
       setNotice(null);
       try {
-        const [notesAfter, foldersAfter, graphAfter] = await Promise.all([
-          getNotes(),
-          getFolders(),
-          getGraph(),
-        ]);
-        setNotes(notesAfter);
-        setFolders(foldersAfter);
-        setGraph(graphAfter);
+        await refreshVault();
         openNote(keyOfNote(created));
       } catch (err: unknown) {
         setNotice({ text: `Created, but the list could not be refreshed (${reasonOf(err)}).` });
       }
       return created;
     },
-    [openNote],
+    [openNote, refreshVault],
   );
 
   // `j`/`k` walk the visible list, but never while a field has focus (where they are letters) or
