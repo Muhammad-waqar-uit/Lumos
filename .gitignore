@@ -50,6 +50,9 @@ Thumbs.db
 # The daemon's own settings: a vault path and phone numbers belong to one machine, not the repo
 lumos.config.json
 
+# WhatsApp session data - never commit
+apps/daemon/auth_info/
+
 # Generated vault
 vault
 idea/
