@@ -51,7 +51,10 @@ else on this page can close them.
   keeps a body's lowercased text against the file's mtime and size and re-reads it only when
   either moves; a repeated query was 350-446 ms → 184-185 ms over 600 notes
 - [ ] Screenshots in the docs
-- [ ] `USAGE.md` - a standalone guide; the README's usage section covers the commands today
+- [x] `USAGE.md` - a standalone guide: the two halves and how to start each, capture from WhatsApp and
+  what happens to a message, the vault layout and frontmatter, the desktop app end to end (finding,
+  reading, writing, bulk, graph, panes, keys), the HTTP API, settings, and a troubleshooting table
+  of the messages the app and the daemon actually print
 
 ## In progress
 

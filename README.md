@@ -227,6 +227,10 @@ git checkout -b feat/my-change
 
 All project docs live in [`docs/`](docs). They are the source of truth for what is built vs being built.
 
+Using it:
+
+- [USAGE.md](USAGE.md) - the standalone guide: capture from WhatsApp, the desktop app, settings, troubleshooting
+
 Tracking:
 
 - [docs/PLAN.md](docs/PLAN.md) - goals, non-goals, tech stack, phases, decisions log

@@ -692,3 +692,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and re-read only when a file's mtime or size moves, and a note that leaves the vault loses its
   entry. Measured over 600 notes (1.9 MB): 350-446 ms per query before, 184-185 ms warm. The
   listing is still read fresh, so a note the phone just wrote is found immediately.
+
+### Added (continued 18)
+
+- `USAGE.md`, the fourth Phase 8 item: a standalone guide to using Lumos rather than building it.
+  The two halves and how to start each, what a WhatsApp message becomes (title, filename, tags,
+  frontmatter), the vault's layout, and the desktop app end to end - finding, reading, writing, bulk
+  actions, the graph, the panes and the keys - plus the HTTP API with runnable requests, every
+  setting, and a troubleshooting table of the messages the app and the daemon actually print. The
+  README links it, and the README keeps the tour rather than the reference.

@@ -4,6 +4,20 @@ Chronological record of what has been built. Newest entries first within each da
 
 ## 2026-10-25
 
+### Done — a guide that stands on its own (USAGE.md, Phase 8)
+- [x] `USAGE.md` at the root: what the daemon and the desktop each are and how to start them, the
+  WhatsApp commands and what a message becomes (title, filename, tags, frontmatter), the vault's
+  shape and one real note, and the desktop app end to end - finding a note, reading, writing, bulk
+  actions, the graph, the panes, the keys.
+- [x] It covers what the README only tours: the HTTP API with three runnable `curl`s, the settings
+  file and every environment variable, and a troubleshooting table built from the sentences the
+  app and the daemon actually print (`! frontmatter`, `409` on a taken name, `400 unknown folder`,
+  the status bar's demo fallback, Ollama not answering).
+- [x] Every claim was checked against the code rather than the other docs - which is how the Esc
+  row lost "dismisses a notice": a notice is dismissed by clicking it, and Esc only closes the
+  palette and cancels an edit.
+- [x] README's Documentation list links it; `pnpm validate` green.
+
 ### Done — search stops reading the vault twice (daemon-side index, Phase 8)
 - [x] **The change.** `createNoteSearch` (`packages/vault-utils`) keeps each note body it has read,
   lowercased once, beside the file's mtime and size. A body is re-read only when either figure
