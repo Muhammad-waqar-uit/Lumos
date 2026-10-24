@@ -2,6 +2,32 @@
 
 Chronological record of what has been built. Newest entries first within each date.
 
+## 2026-10-24
+
+### Done — an E2E smoke test drives the built app in a real browser
+- [x] The Phase 0.1 gap: the components were covered in jsdom, but nothing proved the *built* bundle
+  reached the daemon, or that the Markdown, highlighting and keyboard wiring survived bundling. A
+  new `e2e/` workspace runs Playwright against a real Chromium
+- [x] `e2e/playwright.config.ts` starts two servers and tears them down with the run: the daemon on
+  port **3101** over a committed fixture vault (`e2e/fixtures/`, Inbox + Reading), and the desktop
+  built with `VITE_DAEMON_URL` pointing at that daemon then served by `vite preview` on **4173**.
+  `reuseExistingServer: false` on both, so a daemon a person left running cannot be silently tested
+  instead of this one
+- [x] 5 tests in `e2e/smoke.spec.ts`: the vault loads through the daemon (not the demo fallback), a
+  second note opens with its Markdown and a highlighted `language-js` fence, a backlink is listed
+  and followed, a tag chip narrows the list and puts it back, and `Ctrl+K` + `Enter` finds a note by
+  body text. Every test also fails on any uncaught page error, so a crash cannot read as a pass
+- [x] Two strict-mode collisions were found by the first run and fixed in the *spec*, not papered
+  over: the status-bar phrase also sits inside a fixture note's excerpt, and a note row's excerpt
+  quotes the `[[...]]` link to another row's title. Both locators are now scoped or anchored
+- [x] `pnpm test:e2e` runs it from the root; CI runs it as a **second job** in
+  `.github/workflows/validate.yml` (`pnpm test:e2e`), because it needs a browser binary and its own
+  build. `pre-push` stays `pnpm validate` - the e2e suite is CI-enforced, not pushed-locally, so a
+  contributor is never blocked on a browser download
+- [x] `oxlint` now lints `e2e` too, and `e2e` is a workspace package so `pnpm typecheck` covers it
+- [x] Verified locally: `pnpm --filter e2e run test:e2e` - 5 passed in 12.6s against the running
+  daemon and built bundle
+
 ## 2026-10-23
 
 ### Done — the editor shows what the draft renders as

@@ -40,7 +40,7 @@ Lumos consists of two main applications:
 - **Monorepo**: [pnpm workspaces](https://pnpm.io/workspaces)
 - **Desktop**: [Tauri](https://tauri.app/) + [React](https://react.dev/) + [Vite](https://vitejs.dev/)
 - **Logging**: [Pino](https://getpino.io/)
-- **Tests**: [vitest](https://vitest.dev/) - suites live beside the code as `*.test.ts` and run inside `pnpm validate`
+- **Tests**: [vitest](https://vitest.dev/) - suites live beside the code as `*.test.ts` and run inside `pnpm validate`; [Playwright](https://playwright.dev/) drives the built app in a real browser (`e2e/`, `pnpm test:e2e`)
 
 ## Commands
 
@@ -205,6 +205,9 @@ pnpm validate
 # Run the test suites (vitest) on their own
 pnpm test
 
+# Run the E2E smoke suite against the built app (needs Chromium once)
+pnpm test:e2e
+
 # Start a branch before writing any code
 git checkout -b feat/my-change
 ```
@@ -216,7 +219,7 @@ git checkout -b feat/my-change
 - [x] Full-text search with `/find <query>` (title, tags and body; up to five matches per reply)
 - [x] Tag extraction and auto-tagging — `#hashtags` in a captured message become the note's frontmatter tags
 - [~] Tauri desktop app UI for browsing/searching/editing vault - dark shell, folder sidebar, note list, Markdown-rendering viewer with syntax-highlighted code, link graph, tag filtering, a `Cmd/Ctrl+K` search palette, and a composer, an editor and a set of file operations that write notes back to the vault (rename, which carries the links pointing at the note, move and delete) are in place; routing remains
-- [x] Test coverage - 447 vitest tests run inside `pnpm validate`: 185 for `@lumos/vault-utils`, 125 for the daemon (every route through `app.inject()`, with the link fetcher and config injected) and 137 for the desktop (pure logic, SSR renders, and the sidebar, note list, palette, link pane, note editor, note composer and file-operations panel in jsdom). The graph canvas and an end-to-end run in a real browser are the gaps, both tracked in [docs/TODO.md](docs/TODO.md)
+- [x] Test coverage - 447 vitest tests run inside `pnpm validate`: 185 for `@lumos/vault-utils`, 125 for the daemon (every route through `app.inject()`, with the link fetcher and config injected) and 137 for the desktop (pure logic, SSR renders, and the sidebar, note list, palette, link pane, note editor, note composer and file-operations panel in jsdom). A 5-test Playwright smoke suite (`pnpm test:e2e`) drives the built app in a real browser. The graph canvas is the remaining gap, tracked in [docs/TODO.md](docs/TODO.md)
 - [ ] Enrichment: extract summaries, key points from links
 - [ ] Sync/backups, exports
 

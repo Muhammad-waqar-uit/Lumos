@@ -39,3 +39,32 @@ jobs:
       # The gate is defined once in package.json, so this stays correct as it grows.
       - name: Validate
         run: pnpm run validate
+
+  # A separate job: the e2e suite needs a browser binary and builds the desktop, so it runs on its
+  # own machine rather than inside the validate job's checkout.
+  e2e:
+    name: pnpm test:e2e
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # The suite drives a real Chromium, which the runner does not ship.
+      - name: Install Chromium
+        run: pnpm --filter e2e exec playwright install --with-deps chromium
+
+      - name: E2E smoke test
+        run: pnpm run test:e2e

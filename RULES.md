@@ -21,6 +21,7 @@ pnpm format        # prettier --write .
 pnpm format:check  # prettier --check .  (no writing)
 pnpm typecheck     # tsc --noEmit in every workspace
 pnpm test          # vitest run in every workspace that has a suite
+pnpm test:e2e      # Playwright smoke suite against the built app (needs Chromium)
 pnpm build         # build every workspace that has a build step
 pnpm validate      # lint && format:check && typecheck && test && build — the gate that matters
 ```
@@ -30,6 +31,10 @@ If any check fails, the commit or push is blocked.
 Tests belong beside the code they cover (`*.test.ts`, run by vitest). They run inside `pnpm validate`,
 so a red suite blocks a push exactly like a red build. Anything that touches the vault does it in a
 temporary directory created by the test — **tests never read or write the real `vault/`**.
+
+The e2e smoke suite (`e2e/`, Playwright) is the one exception: it drives the *built* app in a real
+browser, so it needs a browser binary and its own build. It is **not** in `pre-push` — CI runs it as
+a separate job on every PR and push, and `pnpm validate` stays the local gate.
 
 ## 2. Linting & formatting
 
