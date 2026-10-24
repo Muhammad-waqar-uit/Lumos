@@ -76,9 +76,12 @@ text, and reading a PDF or plain HTML file - are still open under **Plan** in
 - A preflight the browser actually sends. ✅ (found while exercising the editor: the CORS default
   omitted `PUT`, so `curl` could save while the app could not)
 - Bulk operations (move, tag, archive). ✅ (checkboxes in the list, a bulk bar, refusals never abandon the rest)
-- List virtualization and a daemon-side search index.
-- Subtle transitions between panes and panels.
-- Screenshots in the docs, and a standalone `USAGE.md`.
+- List virtualization and a daemon-side search index. ✅ (above 50 notes the list windows itself;
+  the daemon answers `/notes/search` from a body index instead of re-reading the vault)
+- Subtle transitions between panes and panels. ✅ (one fade or slide per entrance, none of it for
+  `prefers-reduced-motion`)
+- Screenshots in the docs, and a standalone `USAGE.md`. ✅ (`docs/images/`, and a root `USAGE.md`
+  that covers capture, the desktop app, the API, settings and troubleshooting)
 
 The work itself is listed under **Plan** in [`TODO.md`](TODO.md).
 
