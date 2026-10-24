@@ -75,7 +75,7 @@ text, and reading a PDF or plain HTML file - are still open under **Plan** in
   that asks first; an undo is still open)
 - A preflight the browser actually sends. ✅ (found while exercising the editor: the CORS default
   omitted `PUT`, so `curl` could save while the app could not)
-- Bulk operations (move, tag, archive).
+- Bulk operations (move, tag, archive). ✅ (checkboxes in the list, a bulk bar, refusals never abandon the rest)
 - List virtualization and a daemon-side search index.
 - Subtle transitions between panes and panels.
 - Screenshots in the docs, and a standalone `USAGE.md`.

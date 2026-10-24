@@ -654,3 +654,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   store tests were written red first, covering the demo fallback, a graph failing on its own and
   a re-read that throws; the routing test resets the store per case so a singleton cannot leak a
   vault between tests.
+
+### Added (continued 15)
+
+- Bulk operations, the Phase 7 item. A checkbox per row in the note list chooses several notes;
+  with the first selection a bar appears - the count, a folder picker to move them, a tag field to
+  add one, Archive, and Clear. Archive sets the note's existing `status: archived`, so the vault
+  gained no new concept. Each note's write is settled on its own (`lib/bulk.ts`): a refusal on one
+  note never abandons the rest, and the status bar says what landed plus the first refusal in the
+  daemon's own words - the same sentences a single-note operation speaks. Leaving the notes pane
+  drops the selection, so a bulk action can never fire at notes the person is no longer looking
+  at. Six helper tests and three end-to-end through the real shell, written red first.
