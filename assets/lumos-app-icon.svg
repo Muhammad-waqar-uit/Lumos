@@ -1,16 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Lumos app icon">
   <title>Lumos app icon</title>
-  <rect width="512" height="512" rx="116" fill="#FFC24B" />
-  <g transform="translate(96,96) scale(2.8667)">
-    <g fill="none" stroke="#0F1217" stroke-width="7" stroke-linecap="round">
-      <circle cx="60" cy="60" r="46" />
-      <path d="M60 60L60 14M60 60L99.8 83M60 60L20.2 83" stroke-width="5" />
+  <rect width="512" height="512" rx="116" fill="#0F1217" />
+  <g transform="scale(2.56)">
+    <defs>
+      <radialGradient id="glow" cx="112" cy="88" r="70" gradientUnits="userSpaceOnUse">
+        <stop offset="0" stop-color="#FFC24B" stop-opacity="0.55"/>
+        <stop offset="0.5" stop-color="#FFC24B" stop-opacity="0.15"/>
+        <stop offset="1" stop-color="#FFC24B" stop-opacity="0"/>
+      </radialGradient>
+      <linearGradient id="star" x1="112" y1="50" x2="112" y2="126" gradientUnits="userSpaceOnUse">
+        <stop offset="0" stop-color="#FFE29A"/>
+        <stop offset="1" stop-color="#FFB02E"/>
+      </linearGradient>
+    </defs>
+    <circle cx="112" cy="88" r="70" fill="url(#glow)"/>
+    <!-- wand -->
+    <g stroke-linecap="round" fill="none">
+      <path d="M30 170L96 104" stroke="#F4F1EA" stroke-opacity="0.9" stroke-width="8"/>
+      <path d="M30 170L50 150" stroke="#FFC24B" stroke-width="8"/>
     </g>
-    <g fill="#0F1217">
-      <circle cx="60" cy="60" r="13" />
-      <circle cx="60" cy="14" r="8" />
-      <circle cx="99.8" cy="83" r="8" />
-      <circle cx="20.2" cy="83" r="8" />
+    <!-- rays that end in nodes -->
+    <g stroke="#FFC24B" stroke-width="4" stroke-linecap="round">
+      <path d="M133 67L146 54"/>
+      <path d="M133 109L146 122"/>
+      <path d="M91 67L78 54"/>
     </g>
+    <g fill="#FFC24B">
+      <circle cx="150" cy="50" r="6"/>
+      <circle cx="150" cy="126" r="6"/>
+      <circle cx="74" cy="50" r="6"/>
+    </g>
+    <!-- the spark -->
+    <path d="M112 48Q112 88 152 88Q112 88 112 128Q112 88 72 88Q112 88 112 48Z" fill="url(#star)"/>
+    <circle cx="112" cy="88" r="9" fill="#FFF6DC"/>
   </g>
 </svg>
