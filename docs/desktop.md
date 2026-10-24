@@ -26,7 +26,7 @@ daemon (falling back to demo data when the daemon is offline):
 - `src/components/GraphView.tsx` - canvas link graph (routes, controls, click-to-open)
 - `src/components/PaneBoundary.tsx` - error boundary around the lazily loaded graph pane
 - `src/components/SearchModal.tsx` - the `Cmd/Ctrl+K` palette: ranked matches, keyboard selection, body matches from the daemon
-- `src/components/StatusBar.tsx` - connection state, the search shortcut, the note count, and a notice the app needs to say (a save whose refresh failed), plus the one action that answers it (**Undo** for a delete)
+- `src/components/StatusBar.tsx` - connection state, the search shortcut, the note count, and a notice the app needs to say (a save whose refresh failed), plus the QR connect button that appears when the daemon is not connected, allowing users to scan the QR code at `http://127.0.0.1:3001/qrcode` to pair WhatsApp
 - `src/lib/list-nav.ts` - the arithmetic behind `j`/`k` in the note list, plus the rule for when a key belongs to a field
 - `src/lib/api.ts` - daemon client (`/notes`, `/notes/search`, `/folders`, `/note` for reading, saving, renaming and deleting, `/note/move`, `/trash` for listing, emptying and restoring, `/graph`, `/link`)
 - `src/lib/graph-palette.ts` - reads the `--color-graph-*` tokens and maps a folder to its hue, with a fallback token per lookup

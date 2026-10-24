@@ -1,7 +1,7 @@
 import type { Folder, GraphData, LinkCard, Note, VaultEntry } from "@lumos/shared";
 
 /** Where the desktop is getting its data from. */
-export type Connection = "connecting" | "daemon" | "demo";
+export type Connection = "connecting" | "daemon" | "demo" | "qrcode";
 
 export interface FolderCount {
   folder: Folder;
