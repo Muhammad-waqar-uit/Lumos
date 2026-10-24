@@ -36,8 +36,8 @@ Chronological record of what has been built. Newest entries first within each da
   FEATURES (out of planned, into done), roadmap (✅), PLAN (no client library, the model question
   answered, open question closed), LIMITATIONS (what a small local model can and cannot promise),
   TODO (the Phase 3 open item is closed).
-- [x] **`pnpm validate`.** lint, format:check, typecheck, 228 tests, build - one run over the final
-  tree, 228 + 14 from the previous entry.
+- [x] **`pnpm validate`.** lint, format:check, typecheck, 522 tests (204 vault-utils, 156 daemon,
+  162 desktop), build - one run over the final tree, 13 more than the previous entry.
 
 ### Done — the link pane reads a PDF, and files that arrive without a useful type
 - [x] Phase 5's last open item: `GET /link` refused every non-HTML content type with its type
