@@ -4,6 +4,31 @@ Chronological record of what has been built. Newest entries first within each da
 
 ## 2026-10-24
 
+### Done — the pane and the open note are the address (TanStack Router)
+- [x] **One route, two parameters.** `src/router.tsx` creates a TanStack Router over a single `/`
+  route whose `validateSearch` carries `view` (notes/graph/trash) and `note` (`Folder/name.md`).
+  `main.tsx` renders the `RouterProvider`; App reads both with `useSearch({ from: "/" })` and every
+  pick navigates with `useNavigate`, so a reload, the back button and a pasted link all land on
+  the same pane and note. `view=notes` is dropped from the address (a plain URL means the
+  default), an unknown view value falls back to the notes pane, and a delete drops the deleted
+  note's parameter so a stale link cannot reopen an empty pane. Filters, notices, pane widths and
+  the rest stay plain React state - the address carries only "where you are".
+- [x] **Tests, red first.** `App.routing.test.tsx` renders the whole shell through the router with
+  a memory history: the plain root with an empty search, both deep links, the bogus-view
+  fallback, a view change written into the address with the back button taking it back, and a
+  picked note named in the address and unselected again. Six cases, written before `router.tsx`
+  existed. The existing 162 desktop tests were untouched and stay green, and the five e2e smoke
+  tests pass against the built bundle.
+- [x] **The two bugs the loop caught, pinned.** An empty child list left the router with nothing
+  to match `/`, so it rendered its own inline-styled "no match" stub instead of the app; and this
+  version of `useSearch`/`useNavigate` reads `options.from` at runtime, so calling them with no
+  argument crashes into the default error boundary. Both now fail loudly in the routing tests if
+  they ever come back.
+- [x] **Docs.** desktop.md (file list, planned structure, planned capabilities), roadmap (Router
+  done, zustand still open), FEATURES (typed routing row), TODO (Phase 4 item checked), CHANGELOG.
+- [x] **`pnpm validate`.** lint, format:check, typecheck, 528 tests, build; `pnpm test:e2e` 5/5
+  against the built bundle. One new dependency: `@tanstack/react-router`, lockfile committed.
+
 ### Done — `/plan` asks the local model, instead of saying it isn't built
 - [x] **The plan module.** `apps/daemon/src/plan.ts` grew `buildPlan()`, the one function between
   the command and Ollama. It loads the vault's 20 newest notes (one shallow listing pass, a

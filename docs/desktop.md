@@ -8,7 +8,8 @@ the Markdown vault. It lives in [`apps/desktop`](../apps/desktop).
 The dark shell is built. The app renders a three-pane layout and loads the vault from the running
 daemon (falling back to demo data when the daemon is offline):
 
-- `src/App.tsx` - state, vault loading, folder + search filtering, selection
+- `src/App.tsx` - vault loading, folder + search filtering, selection; *where you are* (the pane and the open note) comes from the address, not from local state
+- `src/router.tsx` - the TanStack Router factory: one route at `/` whose typed search parameters carry `view` and `note`, validated so a hand-edited address cannot smuggle a pane in
 - `src/components/Sidebar.tsx` - the brand row (mark + wordmark), the Notes/Graph/Trash view switch, and folders with note counts
 - `src/components/LumosMark.tsx` - the mark itself, drawn inline in `currentColor` so it takes `--color-brand` from the theme
 - `src/components/NoteList.tsx` - searchable note list (title, date, preview, tags) and the **New** button that opens the composer
@@ -319,8 +320,8 @@ through the graph library and needs a real renderer, not jsdom - so a tab switch
 
 - **Shell**: Tauri 2.x (Rust backend) hosting a Vite + React frontend.
 - **UI**: Tailwind CSS + shadcn/ui, dark minimal theme (see [`design.md`](design.md)).
-- **Routing**: TanStack Router.
-- **State**: zustand stores for the vault index, current folder, current note, and filters.
+- **Routing**: TanStack Router ✅ - one route at `/`; the panes ride on search parameters (`src/router.tsx`).
+- **State**: zustand stores for the vault index, current folder, current note, and filters (still planned; the pane and the open note moved to the address with the router).
 - **Rendering**: `react-markdown` + `remark-gfm` for notes, `force-graph` for the link graph and
   `fuse.js` for search (all in use); `lucide-react` for icons (planned).
 
@@ -411,7 +412,7 @@ Wired today:
 
 ## Planned capabilities
 
-- TanStack Router and zustand - the shell is plain React state in one component.
+- zustand - the vault index, folder, note and filters are still plain React state in one component; the pane and the open note moved to the address with TanStack Router ✅ (2026-10-24).
 
 Everything else in the Keyboard section above is wired, and an untyped palette already lists the
 notes opened this session.

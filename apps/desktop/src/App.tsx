@@ -1,4 +1,5 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { useNavigate, useSearch } from "@tanstack/react-router";
 import type { Folder, GraphData, Note, VaultEntry } from "@lumos/shared";
 import {
   createNote,
@@ -60,10 +61,13 @@ export default function App() {
   const [query, setQuery] = useState("");
   // A tag filter outlives a folder change on purpose; it is switched off explicitly.
   const [tag, setTag] = useState<string | null>(null);
-  const [selected, setSelected] = useState<string | null>(null);
+  // Where you are - the pane and the open note - is the address, so a reload, the back button and
+  // a pasted link all land on the same place. A note key is `Folder/name.md`, exactly as the list
+  // addresses it, so the two cannot drift apart.
+  const { view = "notes", note: selected } = useSearch({ from: "/" });
+  const navigate = useNavigate({ from: "/" });
   const [fetched, setFetched] = useState<{ key: string; note: Note } | null>(null);
   const [loading, setLoading] = useState(true);
-  const [view, setView] = useState<ShellView>("notes");
   // Null means the daemon could not serve a graph, so the demo vault is drawn instead.
   const [graph, setGraph] = useState<GraphData | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -165,12 +169,24 @@ export default function App() {
     return fetched && fetched.key === activeKey ? fetched.note : demoNote(activeEntry);
   }, [activeEntry, connection, fetched, activeKey]);
 
-  // Every way of picking a note runs through here, so "recent" means what was opened, from the
-  // list, a graph node or the palette alike - and every route updates the history the same way.
-  const chooseNote = useCallback((key: string): void => {
-    setSelected(key);
-    setRecent((keys) => rememberRecent(keys, key));
-  }, []);
+  /** Every view change goes through here, so the address always says which pane is open. */
+  const setView = useCallback(
+    (next: ShellView): void => {
+      // "notes" is the pane a plain address already means, so it is dropped rather than written.
+      void navigate({ search: (prev) => ({ ...prev, view: next === "notes" ? undefined : next }) });
+    },
+    [navigate],
+  );
+
+  /** Every way of picking a note runs through here, so "recent" means what was opened, from the
+   * list, a graph node or the palette alike - and every route updates the address the same way. */
+  const chooseNote = useCallback(
+    (key: string): void => {
+      void navigate({ search: (prev) => ({ ...prev, note: key }) });
+      setRecent((keys) => rememberRecent(keys, key));
+    },
+    [navigate],
+  );
 
   // Opening a node clears the list filters, so the note really becomes the active one.
   const openNote = useCallback(
@@ -178,10 +194,11 @@ export default function App() {
       setActiveFolder("All");
       setQuery("");
       setTag(null);
-      chooseNote(id);
-      setView("notes");
+      // One navigation, not two: the pane and the note change together or not at all.
+      void navigate({ search: (prev) => ({ ...prev, note: id, view: undefined }) });
+      setRecent((keys) => rememberRecent(keys, id));
     },
-    [chooseNote],
+    [navigate],
   );
 
   const closeSearch = useCallback(() => setSearchOpen(false), []);
@@ -325,7 +342,9 @@ export default function App() {
     const deleted = activeEntry.title;
     const { id } = await deleteNote(activeEntry.folder, activeEntry.name);
     const undo = { id, title: deleted };
-    setSelected(null);
+    // The note is out of the vault, so its address is dropped and the next one in the list
+    // takes over - a link to a deleted note would only reopen an empty pane.
+    void navigate({ search: (prev) => ({ ...prev, note: undefined }) });
     setFetched(null);
     setNotice({ text: `Deleted "${deleted}".`, undo });
     try {
@@ -336,7 +355,7 @@ export default function App() {
         undo,
       });
     }
-  }, [activeEntry, refreshVault]);
+  }, [activeEntry, navigate, refreshVault]);
 
   /** Put back what the last delete moved to the trash, and open it again where it was. */
   const undoDelete = useCallback(
@@ -403,7 +422,7 @@ export default function App() {
   }, [searchOpen, view, loading, visible, activeKey, chooseNote]);
 
   // The trash panel is a route like the graph, not a note. Leaving it puts the list back as it was.
-  const showNotes = useCallback(() => setView("notes"), []);
+  const showNotes = useCallback(() => setView("notes"), [setView]);
 
   // The palette opens from anywhere, including while a note is scrolled or a field has focus.
   useEffect(() => {

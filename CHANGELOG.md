@@ -627,3 +627,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   environment), defaulting to `127.0.0.1:11434` and `llama3.2:3b` - the model question this plan had
   left open. No client library: one `POST /api/generate` over `fetch` did not justify one, the same
   call the link scraper was made on.
+
+### Added (continued 13)
+
+- TanStack Router, the Phase 4 item the plan had kept open. The desktop has one route at `/` whose
+  typed, validated search parameters carry which pane is open (`?view=notes|graph|trash`) and which
+  note (`?note=Folder/name.md`), so a reload, the back button and a pasted link all land on the
+  same place. The notes pane is the plain address, an unknown view value falls back to it, and a
+  delete drops the deleted note's parameter. The path itself never changes, which is what keeps the
+  whole thing safe inside a Tauri window, where there is no server to fall back on. Everything
+  else - filters, notices, the pane widths - stays ordinary React state: the address carries only
+  "where you are". Six routing tests render the real shell through the router (`App.routing.test.tsx`),
+  the 162 existing desktop tests were untouched and stay green, and the five e2e smoke tests pass
+  against the built bundle.
