@@ -230,8 +230,9 @@ play it — neither page can be read or copied.
 ## Delivery and process
 
 - **An administrator can still push to `main` directly.** Branch protection requires a pull request,
-  the `pnpm validate` check and an up-to-date branch, but `enforce_admins` is off, so a break-glass
-  push stays possible on a personal repository. The gate is a guardrail, not a lock.
+  the `pnpm validate` and `pnpm test:e2e` checks and an up-to-date branch, but `enforce_admins` is
+  off, so a break-glass push stays possible on a personal repository. The gate is a guardrail, not a
+  lock.
 - **CI is Linux-only.** Windows and macOS are not exercised by the workflow, so CRLF handling, path
   separators and the Tauri build are local observations.
 - **The E2E smoke suite is a smoke suite, not a full pass.** Its 5 tests cover one happy path through

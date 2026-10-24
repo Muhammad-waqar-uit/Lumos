@@ -20,10 +20,13 @@ Chronological record of what has been built. Newest entries first within each da
 - [x] Two strict-mode collisions were found by the first run and fixed in the *spec*, not papered
   over: the status-bar phrase also sits inside a fixture note's excerpt, and a note row's excerpt
   quotes the `[[...]]` link to another row's title. Both locators are now scoped or anchored
-- [x] `pnpm test:e2e` runs it from the root; CI runs it as a **second job** in
+- [x]  `pnpm test:e2e` runs it from the root; CI runs it as a **second job** in
   `.github/workflows/validate.yml` (`pnpm test:e2e`), because it needs a browser binary and its own
   build. `pre-push` stays `pnpm validate` - the e2e suite is CI-enforced, not pushed-locally, so a
   contributor is never blocked on a browser download
+- [x] Branch protection on `main` updated to require **both** checks (`pnpm validate` and
+  `pnpm test:e2e`), so the new suite is enforced rather than only reported. `strict` stays on;
+  `enforce_admins` remains off, which [LIMITATIONS.md](LIMITATIONS.md) already names
 - [x] `oxlint` now lints `e2e` too, and `e2e` is a workspace package so `pnpm typecheck` covers it
 - [x] Verified locally: `pnpm --filter e2e run test:e2e` - 5 passed in 12.6s against the running
   daemon and built bundle
@@ -552,7 +555,7 @@ Chronological record of what has been built. Newest entries first within each da
   not the 16 embed files — the stacked order the branches were split in did what it was meant to
 - [x] Merged as `53aab37` (PR #16). `main` carries both features; both branches deleted locally and on
   the remote
-- [x] Branch protection turned on for `main`: `pnpm validate` is required, `strict` is on so a stale
+- [x] Branch protection turned on for `main`: the CI checks are required, `strict` is on so a stale
   branch cannot merge, force pushes and deletions are blocked. Administrators are deliberately not
   enforced — one developer cannot approve their own review, and a break-glass push should stay
   possible on a personal repository. The cost is that it is a guardrail, not a lock, which is now

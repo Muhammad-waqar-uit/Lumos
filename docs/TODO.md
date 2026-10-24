@@ -78,9 +78,10 @@ Nothing in flight. The next item to pick up is the first one under **Plan**.
 
 - [x] GitHub Actions workflow (`.github/workflows/validate.yml`) running `pnpm validate` on every PR
   into `main` and every push to `main`
-- [x] Branch protection on `main`: requires a pull request and the `pnpm validate` check, with
-  `strict` on so a stale branch cannot merge; force pushes and deletions blocked (on since
-  2026-10-19; the workflow's first run on `main` was green in `38790615355`)
+- [x] Branch protection on `main`: requires a pull request and both CI checks (`pnpm validate` and
+  `pnpm test:e2e`), with `strict` on so a stale branch cannot merge; force pushes and deletions
+  blocked (validate on since 2026-10-19, first run on `main` green in `38790615355`; e2e added with
+  the Playwright suite)
 - [x] Test runner (vitest) wired up and added to the validation gate - 223 tests over
   `@lumos/vault-utils` and the daemon, plus 108 over the desktop (filtering, demo data, search
   ranking, recent notes, the link cache, list movement, pane widths, graph layout memory, the

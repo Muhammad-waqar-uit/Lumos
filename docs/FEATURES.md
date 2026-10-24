@@ -68,5 +68,5 @@ Nothing in progress.
 | Read API route tests | `createApp()` in `apps/daemon/src/app.ts` builds the app over a vault directory; `app.test.ts` covers every route plus CORS through `app.inject()`, with the link fetcher injected |
 | Branch workflow | Short-lived `<type>/<description>` branches; `pre-commit` blocks commits on `main` |
 | Agent working agreement | `RULES.md`, `AGENTS.md`, `CLAUDE.md` at the repo root |
-| CI validation | GitHub Actions runs `pnpm validate` on every PR into `main` and every push to `main` |
-| Branch protection | `pnpm validate` is required on `main` together with a pull request and an up-to-date branch; force pushes and deletions are blocked |
+| CI validation | GitHub Actions runs `pnpm validate` and `pnpm test:e2e` as two jobs on every PR into `main` and every push to `main` |
+| Branch protection | `pnpm validate` and `pnpm test:e2e` are both required on `main` together with a pull request and an up-to-date branch; force pushes and deletions are blocked |
