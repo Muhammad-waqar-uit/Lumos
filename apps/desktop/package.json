@@ -15,6 +15,7 @@
     "@lumos/shared": "workspace:*",
     "@lumos/vault-utils": "workspace:*",
     "@tanstack/react-router": "^1.170.46",
+    "@tanstack/react-virtual": "^3.14.22",
     "@tauri-apps/api": "^2",
     "@tauri-apps/plugin-opener": "^2",
     "force-graph": "^1.52.0",
