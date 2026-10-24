@@ -122,7 +122,9 @@ Settings come from `lumos.config.json` in this folder, and the environment overr
   "vaultPath": "../../vault",
   "port": 3001,
   "allowedNumbers": ["15550100000"],
-  "whatsapp": true
+  "whatsapp": true,
+  "ollamaUrl": "http://127.0.0.1:11434",
+  "ollamaModel": "llama3.2:3b"
 }
 ```
 
@@ -137,6 +139,8 @@ precedence and every setting.
 | `ALLOWED_NUMBERS` | `""` (empty - blocks all) | Comma-separated list of allowed sender numbers in E.164 format without + sign. Example: `1234567890,0987654321`. Overrides the file. |
 | `VAULT_PATH` | `../../vault` | Absolute or relative path to vault directory. Relative paths are resolved from cwd. Overrides the file. |
 | `PORT` | `3001` | Port to listen on, 1-65535. Overrides the file. |
+| `OLLAMA_URL` | `http://127.0.0.1:11434` | Where the local Ollama listens; `/plan` names this address in its reply when nothing answers there. Overrides the file. |
+| `OLLAMA_MODEL` | `llama3.2:3b` | The model `/plan` asks, named as `ollama pull` would name it. Overrides the file. |
 | `LUMOS_CONFIG` | `lumos.config.json` | Where to read the settings from. |
 | `LUMOS_DISABLE_WHATSAPP` | unset | Set to `1` to run the HTTP API without connecting to WhatsApp. |
 

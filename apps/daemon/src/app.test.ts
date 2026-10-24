@@ -2,10 +2,11 @@ import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promis
 import { tmpdir } from "node:os";
 import path from "node:path";
 import type { FastifyInstance } from "fastify";
-import { afterAll, describe, expect, it } from "vitest";
+import { afterAll, describe, expect, it, vi } from "vitest";
 import { saveNote } from "@lumos/vault-utils";
 import type { LinkCard, NoteInput } from "@lumos/shared";
 import { LinkFetchError } from "./fetch-link";
+import type { PlanOptions } from "./plan";
 import { createApp } from "./app";
 
 // Every app in this file is built over a temporary vault and torn down again, so no test
@@ -26,7 +27,7 @@ afterAll(async () => {
  */
 async function makeApp(
   seed: NoteInput[] = [],
-  options: { fetchLink?: (url: string) => Promise<LinkCard> } = {},
+  options: { fetchLink?: (url: string) => Promise<LinkCard>; plan?: PlanOptions } = {},
 ): Promise<{ vault: string; app: FastifyInstance }> {
   const vault = await mkdtemp(path.join(tmpdir(), "lumos-routes-"));
   tempDirs.push(vault);
@@ -93,6 +94,29 @@ describe("POST /message", () => {
     const written = await readdir(path.join(vault, "Ideas"));
     expect(written).toHaveLength(1);
     expect(written[0]).toMatch(/^\d{4}-\d{2}-\d{2}-build-a-habit-tracker\.md$/);
+  });
+
+  it("answers /plan through the Ollama the app was given, without reaching the network", async () => {
+    const fetchImpl = vi.fn(
+      async () =>
+        new Response(JSON.stringify({ response: "1. Do the thing" }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        }),
+    );
+    const { app } = await makeApp([NOTE], {
+      plan: { fetchImpl, url: "http://ollama.test:11434", model: "test-model" },
+    });
+
+    const res = await app.inject({
+      method: "POST",
+      url: "/message",
+      payload: { text: "/plan today" },
+    });
+
+    expect(res.statusCode).toBe(200);
+    expect(res.json<{ reply: string }>().reply).toBe("1. Do the thing");
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
   });
 });
 

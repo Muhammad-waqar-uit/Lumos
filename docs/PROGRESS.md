@@ -4,6 +4,41 @@ Chronological record of what has been built. Newest entries first within each da
 
 ## 2026-10-24
 
+### Done — `/plan` asks the local model, instead of saying it isn't built
+- [x] **The plan module.** `apps/daemon/src/plan.ts` grew `buildPlan()`, the one function between
+  the command and Ollama. It loads the vault's 20 newest notes (one shallow listing pass, a
+  1,600-character budget per note and across the prompt), builds a prompt naming the day, and
+  posts one `POST /api/generate` - streamed, non-streaming answered - with a six-second timeout.
+  An empty vault answers "there is nothing to plan from yet" *without a single request*, the same
+  call `GET /link`'s title-only path makes for the same reason. Every failure is caught and turned
+  into a sentence: nothing listening (name the address, say `ollama serve`), timeout, a model that
+  is not pulled (say `ollama pull <model>`), a bad status, an unreadable answer. None of those
+  sentences carry the socket's own words, and the prompt - built from note contents, the private
+  data itself - is never logged.
+- [x] **The config chain.** `ollamaUrl`/`ollamaModel` join the file settings with the existing
+  validation vocabulary, `OLLAMA_URL`/`OLLAMA_MODEL` the environment, and both are refused when
+  blank - the model name must be pulled as written. `server.ts` threads them into the handler, and
+  `POST /plan` is only ever created from that one context, like `POST /link`.
+- [x] **The tests, red first.** 13 cases in `plan.test.ts` (prompt contents, ordering, caps, the
+  empty vault, and each failure sentence against a mocked fetch), plus the `/plan` route and the
+  injected-handler dispatch. The clock in those tests is built from local date components, so the
+  day asserted in the prompt is the same in every timezone the suite runs in.
+- [x] **Live, against a real daemon.** Ollama is not installed on this machine, so the model's
+  answer itself is only proven by the injected-fetch tests - honestly reported rather than implied.
+  What was exercised live is the path every machine without Ollama takes, end to end: a daemon on
+  a temporary vault with `OLLAMA_URL` pointed at a port nothing answers on, and `POST /plan
+  tomorrow` over HTTP. The reply was "I couldn't reach the Ollama model at
+  http://127.0.0.1:19999/ - start it with `ollama serve`." - the exact address the environment
+  named, proving config → server → app → handler → plan without a mock in the chain. The second
+  live check was the empty vault: "There is nothing to plan from yet - capture a few notes
+  first...", and the daemon log shows no Ollama request at all.
+- [x] **Docs.** daemon.md (modules, commands, config, env, tests, planned paragraph), README,
+  FEATURES (out of planned, into done), roadmap (✅), PLAN (no client library, the model question
+  answered, open question closed), LIMITATIONS (what a small local model can and cannot promise),
+  TODO (the Phase 3 open item is closed).
+- [x] **`pnpm validate`.** lint, format:check, typecheck, 522 tests (204 vault-utils, 156 daemon,
+  162 desktop), build - one run over the final tree, 13 more than the previous entry.
+
 ### Done — the link pane reads a PDF, and files that arrive without a useful type
 - [x] Phase 5's last open item: `GET /link` refused every non-HTML content type with its type
   named, so a PDF link - a paper, a report, a spec - was a dead end. The fetcher now classifies

@@ -26,6 +26,8 @@ describe("loadConfig - where the defaults come from", () => {
       port: 3001,
       allowedNumbers: [],
       whatsapp: true,
+      ollamaUrl: "http://127.0.0.1:11434",
+      ollamaModel: "llama3.2:3b",
     });
   });
 
@@ -35,6 +37,8 @@ describe("loadConfig - where the defaults come from", () => {
       port: 4100,
       allowedNumbers: ["15550100000"],
       whatsapp: false,
+      ollamaUrl: "http://10.0.0.4:11434",
+      ollamaModel: "gemma2:2b",
     });
 
     const config = await loadConfig({ env: {}, cwd: CWD, readText: withFile(file) });
@@ -44,6 +48,8 @@ describe("loadConfig - where the defaults come from", () => {
       port: 4100,
       allowedNumbers: ["15550100000"],
       whatsapp: false,
+      ollamaUrl: "http://10.0.0.4:11434",
+      ollamaModel: "gemma2:2b",
     });
   });
 
@@ -82,13 +88,15 @@ describe("loadConfig - the environment wins", () => {
     whatsapp: true,
   });
 
-  it("overrides the file's vault, port, allowlist and bridge", async () => {
+  it("overrides the file's vault, port, allowlist, bridge and Ollama", async () => {
     const config = await loadConfig({
       env: {
         VAULT_PATH: "from-env",
         PORT: "4200",
         ALLOWED_NUMBERS: "15550000001, 15550000002",
         LUMOS_DISABLE_WHATSAPP: "1",
+        OLLAMA_URL: "http://192.168.1.9:11434",
+        OLLAMA_MODEL: "llama3.2:3b",
       },
       cwd: CWD,
       readText: withFile(file),
@@ -99,7 +107,15 @@ describe("loadConfig - the environment wins", () => {
       port: 4200,
       allowedNumbers: ["15550000001", "15550000002"],
       whatsapp: false,
+      ollamaUrl: "http://192.168.1.9:11434",
+      ollamaModel: "llama3.2:3b",
     });
+  });
+
+  it("keeps the file's Ollama settings when only the port is set", async () => {
+    const config = await loadConfig({ env: { PORT: "4200" }, cwd: CWD, readText: withFile(file) });
+    expect(config.ollamaUrl).toBe("http://127.0.0.1:11434");
+    expect(config.ollamaModel).toBe("llama3.2:3b");
   });
 
   it("keeps the file's allowlist when only the port is set, since they are separate settings", async () => {
@@ -161,6 +177,9 @@ describe("loadConfig - a setting that cannot be used", () => {
       '{"allowedNumbers": "15550100000"}',
       '{"allowedNumbers": [15550100000]}',
       '{"whatsapp": "yes"}',
+      '{"ollamaUrl": ""}',
+      '{"ollamaUrl": 3}',
+      '{"ollamaModel": ""}',
     ]) {
       await expect(loadConfig({ env: {}, cwd: CWD, readText: withFile(text) })).rejects.toThrow(
         ConfigError,

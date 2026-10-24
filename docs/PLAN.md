@@ -26,7 +26,7 @@ Lumos is a local-first second brain that captures thoughts via WhatsApp and stor
 - Baileys `@whiskeysockets/baileys` (WhatsApp Web multi-device)
 - pino (logging), qrcode-terminal (QR display)
 - link expansion: none - `@lumos/vault-utils/link` reads the metadata and text itself
-- ollama-js (planned) for local AI planning/enrichment
+- Ollama over its HTTP API for local AI planning/enrichment - one `POST /api/generate` from `plan.ts`, no client library
 
 ### Desktop (UI)
 
@@ -116,6 +116,7 @@ Root keeps only what convention demands: `README.md`, `CHANGELOG.md`, `CONTRIBUT
 | Icons | lucide-react | Consistent, minimal |
 | WhatsApp | Baileys | Node-native, no Docker needed |
 | Local AI | Ollama (small model) | Local-first planning/enrichment |
+| Default `/plan` model | `llama3.2:3b` - small enough for a laptop, close in spirit to the two candidates this plan named; `gemma2:2b` stays the alternative, one setting away |
 | Tests | vitest | One runner for the Node and React code, and it runs inside `pnpm validate` so a red suite blocks a push |
 | Linter | oxlint | Fast, and compatible with the TypeScript version in use |
 | Formatter | prettier | One formatter, no style debates; runs on staged files |
@@ -126,7 +127,7 @@ Root keeps only what convention demands: `README.md`, `CHANGELOG.md`, `CONTRIBUT
 
 ## Open Questions
 
-- Default Ollama model for `/plan` (candidates: `llama3.2:3b`, `gemma2:2b`).
+
 - ~~Search scope (filename + content + frontmatter?)~~ - resolved: title, tags and body, in `searchNotes`, shared by `/find` and `GET /notes/search`.
 - Editor approach (plain textarea + preview first; richer editor later).
 - Vault location (keep default `../../vault`; make configurable in UI later).

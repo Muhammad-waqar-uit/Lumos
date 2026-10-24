@@ -1,7 +1,7 @@
 import { mkdtemp, readdir, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { parseNote } from "@lumos/vault-utils";
 import { handleMessage } from "./handler";
 
@@ -85,10 +85,40 @@ describe("handleMessage - filing notes", () => {
 });
 
 describe("handleMessage - replies", () => {
-  it("says /plan is not built yet", async () => {
-    expect(await handleMessage("/plan tomorrow", vault)).toBe(
-      "Lumos Maxima (tomorrow) isn't built yet.",
+  it("answers /plan with the model's plan, over an injected Ollama", async () => {
+    // The handler owns no Ollama: the caller injects it, so this stays offline like every suite.
+    await handleMessage("/idea ship the release", vault);
+    const fetchImpl = vi.fn<(url: string, init: RequestInit) => Promise<Response>>(
+      async () =>
+        new Response(JSON.stringify({ response: "1. Ship the release" }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        }),
     );
+
+    const reply = await handleMessage("/plan tomorrow", vault, {
+      plan: { fetchImpl, url: "http://ollama.test:11434", model: "test-model" },
+    });
+
+    expect(reply).toBe("1. Ship the release");
+    const body = JSON.parse(String(fetchImpl.mock.calls[0]?.[1].body));
+    expect(body.prompt).toContain("ship the release");
+    expect(body.prompt).toContain("tomorrow");
+    expect(fetchImpl.mock.calls[0]?.[0]).toBe("http://ollama.test:11434/api/generate");
+  });
+
+  it("says there is nothing to plan from without waking Ollama", async () => {
+    const empty = await mkdtemp(path.join(tmpdir(), "lumos-plan-empty-"));
+    const fetchImpl = vi.fn();
+    try {
+      const reply = await handleMessage("/plan today", empty, {
+        plan: { fetchImpl, url: "http://ollama.test:11434" },
+      });
+      expect(reply).toBe("There are no notes to plan from yet.");
+      expect(fetchImpl).not.toHaveBeenCalled();
+    } finally {
+      await rm(empty, { recursive: true, force: true });
+    }
   });
 
   it("answers /help with the command list", async () => {

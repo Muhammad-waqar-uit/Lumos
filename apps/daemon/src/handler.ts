@@ -1,6 +1,7 @@
 ﻿import type { VaultEntry } from "@lumos/shared";
 import { saveNote, searchNotes } from "@lumos/vault-utils";
 import { parseMessage } from "./commands.js";
+import { buildPlan, type PlanOptions } from "./plan.js";
 
 const HELP = [
   "Commands:",
@@ -31,12 +32,21 @@ function formatFind(query: string, hits: VaultEntry[]): string {
   ].join("\n");
 }
 
+/** What the caller hands the handler for `/plan`; absent, the plan module's own defaults apply. */
+export interface HandleOptions {
+  plan?: PlanOptions;
+}
+
 /**
  * Answer one inbound message. The vault arrives as an argument rather than from module
  * state, so a caller decides where the note lands - the daemon passes its own vault, and
- * a test passes a temporary one.
+ * a test passes a temporary one. The same goes for the Ollama `/plan` talks to.
  */
-export async function handleMessage(text: string, vaultDir: string): Promise<string> {
+export async function handleMessage(
+  text: string,
+  vaultDir: string,
+  options: HandleOptions = {},
+): Promise<string> {
   const parsed = parseMessage(text);
   switch (parsed.kind) {
     case "note": {
@@ -45,7 +55,7 @@ export async function handleMessage(text: string, vaultDir: string): Promise<str
       return `Filed in ${parsed.folder}: ${title}`;
     }
     case "plan":
-      return `Lumos Maxima (${parsed.when}) isn't built yet.`;
+      return buildPlan(vaultDir, parsed.when, options.plan);
     case "find": {
       const query = parsed.query.trim();
       if (!query) return "Usage: /find <query>";

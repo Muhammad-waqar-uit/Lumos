@@ -25,10 +25,6 @@ else on this page can close them.
 
 ## Plan
 
-### Phase 3 - Daemon enhancements (P1) - open items
-
-- [ ] `/plan today|tomorrow` with Ollama integration
-
 ### Phase 4 - Desktop UI foundation (P0) - open items
 
 - [ ] TanStack Router setup

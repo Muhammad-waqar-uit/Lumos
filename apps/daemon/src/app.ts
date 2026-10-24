@@ -29,6 +29,7 @@ import {
 import { FOLDERS, type Folder, type LinkCard } from "@lumos/shared";
 import { LinkFetchError, fetchLinkCard } from "./fetch-link.js";
 import { handleMessage } from "./handler.js";
+import type { PlanOptions } from "./plan.js";
 
 /**
  * A note filename the routes will touch: a plain `.md` name with no separators and no `..`.
@@ -62,12 +63,15 @@ export interface AppOptions {
   logger?: boolean;
   /** Injected by tests so the suite never reaches the network. */
   fetchLink?: (url: string) => Promise<LinkCard>;
+  /** The Ollama `/plan` answers from, handed down rather than read here. */
+  plan?: PlanOptions;
 }
 
 export async function createApp({
   vault,
   logger = false,
   fetchLink = fetchLinkCard,
+  plan,
 }: AppOptions): Promise<FastifyInstance> {
   const app = Fastify({ logger });
 
@@ -103,7 +107,7 @@ export async function createApp({
   app.post<{ Body: { text?: string } }>("/message", async (req, reply) => {
     const text = req.body?.text;
     if (!text) return reply.code(400).send({ error: "text is required" });
-    return { reply: await handleMessage(text, vault) };
+    return { reply: await handleMessage(text, vault, { plan }) };
   });
 
   /** List every note in the vault, newest first. */

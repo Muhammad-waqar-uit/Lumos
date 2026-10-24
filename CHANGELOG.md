@@ -613,3 +613,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   PDF's is 10 MiB. What that still cannot read - a scan with no text layer, an encrypted file,
   text drawn outside the page box - is written down in
   [LIMITATIONS.md](docs/LIMITATIONS.md).
+
+### Added (continued 12)
+
+- `/plan today | tomorrow`, the last open daemon item. The command has been parsed since Phase 3
+  and answered "isn't built yet"; it now reads the vault's 20 newest notes into a prompt and asks
+  the local Ollama model for at most five short points, dated with the machine's own day. An empty
+  vault is answered without a request at all, and every way the model can be missing says one
+  actionable thing: which address is not answering and the command to start it, which model is not
+  pulled and the command to pull it, a timeout, a status, or an unreadable answer. The socket's own
+  words (addresses, errnos) never reach the reply, and the prompt - built from note contents - is
+  never logged. `ollamaUrl`/`ollamaModel` join the config file (`OLLAMA_URL`/`OLLAMA_MODEL` in the
+  environment), defaulting to `127.0.0.1:11434` and `llama3.2:3b` - the model question this plan had
+  left open. No client library: one `POST /api/generate` over `fetch` did not justify one, the same
+  call the link scraper was made on.
