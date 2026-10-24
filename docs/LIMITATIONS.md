@@ -34,8 +34,12 @@ Each entry says what is given up. Where a limit is deliberate, the alternative i
 - **JavaScript-rendered pages come back nearly empty.** Only the initial HTML is fetched — no browser,
   no script execution — so a single-page app reads as a shell. Paywalled, login-only and interactive
   pages are in the same place.
-- **Non-HTML content is refused** (PDF, JSON, video, archives), named by its content type. Reading a
-  PDF or a local HTML file the same way is under **Plan** in [TODO.md](TODO.md).
+- **A PDF is read as text, with the limits that follow from that.** The reader takes the text a
+  PDF contains (up to 10 MiB, then capped like any page at 6,000 characters), so a scan with no
+  text layer reads as "no readable text", an encrypted document is refused with its reason, and
+  text the document draws outside its own page box - content some producers hide off-canvas - is
+  not returned at all. A PDF's card title is its file name, not the document's metadata. Everything
+  else that is not a page - JSON, video, archives - is still refused and named by its content type.
 - **A page is cached for the session, not refreshed.** The first read of a URL is kept in memory
   (`src/lib/link-cache.ts`), so reopening a note, switching tabs and StrictMode's double mount all
   reuse one request and one scrape; a second caller while the first is still in flight joins it

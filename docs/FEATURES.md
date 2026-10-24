@@ -25,7 +25,7 @@ Nothing in progress.
 | Command parsing | `/idea`, `/interview`, `/goal`, `/read`, `/plan`, `/find`, `/help` |
 | Vault writer | Markdown + YAML frontmatter, slugified filenames |
 | HTTP API | `POST /message`, `GET /health`, the six read-API routes in the row below, `PUT /note` for saving an edited body, `POST /notes` for creating one, and `PATCH /note`, `POST /note/move` and `DELETE /note` for renaming, moving and deleting |
-| Link expansion | `GET /link` reads title/description/og:image and the readable text of a page, for `/read` and `/interview` links |
+| Link expansion | `GET /link` reads title/description/og:image and the readable text of a page, for `/read` and `/interview` links. A PDF link is read the same way - its text through the same card, titled by its file name - and a file served without a useful content type is judged by its bytes rather than refused (`fetch-link.ts` + `read-pdf.ts` in the daemon, `unpdf` for the parsing) |
 | In-app playback | A YouTube or Vimeo link plays in the note viewer (no-cookie embed), an image link renders as the image; neither needs the daemon |
 | Social embeds | An Instagram post, reel or IGTV link and a Facebook video, reel or post render in place through the host's own embed, classified from the URL alone. The caption, site and lead image come from the daemon's `/link` when it is running, so the embed plays with the daemon stopped and only loses its caption |
 | Embed frames | `LinkMedia.frame` picks the box: 16:9 for a video, portrait for an Instagram permalink, a taller card for a Facebook post that keeps its caption and reaction counts |

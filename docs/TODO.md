@@ -34,11 +34,6 @@ else on this page can close them.
 - [ ] TanStack Router setup
 - [ ] zustand state management (currently plain React state)
 
-### Phase 5 - Vault browser (P0) - open items
-
-- [ ] Link pane: read a PDF or a plain HTML file the same way (today a non-HTML content type is
-  refused with its type named)
-
 ### Phase 7 - Editing & enrichment (P2) - open items
 
 - [ ] Bulk operations (move, tag, archive)

@@ -600,3 +600,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   named in [LIMITATIONS.md](docs/LIMITATIONS.md): a local-first vault has no second copy to fall
   back on, and the links those notes carried go with them - the graph drops the edge rather than
   resurrecting a note to keep a link tidy.
+
+### Added (continued 11)
+- The link pane reads a PDF. `GET /link` refused anything that was not HTML, XHTML or plain text,
+  with its content type named, so a paper or a report was a dead end in the reader. The daemon now
+  parses `application/pdf` and answers the same card as a page - the document's text, capped like
+  any page at 6,000 characters, with the file name as the title - and a file served as
+  `application/octet-stream` is judged by its first bytes instead of the header that said nothing:
+  a PDF by its `%PDF-` magic, a page by its doctype. Everything else (video, JSON, archives) is
+  still refused and named before its body is downloaded. This adds the first parser dependency to
+  the daemon (`unpdf`, wrapping pdf.js for serverless use); a page's fetch cap stays 1 MiB and a
+  PDF's is 10 MiB. What that still cannot read - a scan with no text layer, an encrypted file,
+  text drawn outside the page box - is written down in
+  [LIMITATIONS.md](docs/LIMITATIONS.md).

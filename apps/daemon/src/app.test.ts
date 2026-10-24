@@ -1003,7 +1003,7 @@ describe("GET /link", () => {
   it("maps a fetcher failure to a 502 with the fetcher's own message", async () => {
     const failures = [
       new LinkFetchError("unreachable", "That page could not be reached."),
-      new LinkFetchError("not-a-page", "That link is not a web page (application/pdf)."),
+      new LinkFetchError("not-a-page", "That link is not a web page (video/mp4)."),
       new LinkFetchError("too-many-redirects", "That link redirected more than 3 times."),
     ];
 
