@@ -557,3 +557,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 3 new tests in `src/components/NoteEditor.test.tsx` (the rendering follows the typing, the toggle
   hides and restores the pane with its state, and the empty draft says so). Suite is 480: 198 in
   `@lumos/vault-utils`, 133 in the daemon, 149 in the desktop.
+
+### Fixed
+- The note viewer no longer makes React warn about duplicate keys. Its three per-file children -
+  the tag strip, the actions panel and the editor - were all keyed on the note's own path, so
+  opening the editor (or the actions panel) put two siblings on one key. Each keeps the per-file
+  reset that stops one note's half-typed state landing in another, but now under a prefix of its
+  own (`meta-`, `actions-`, `editor-`). 3 tests in `src/components/NoteViewer.keys.test.tsx` render
+  the note as it is read, with the editor open and with the actions panel open, and assert React
+  says nothing; suite is 483: 198 in `@lumos/vault-utils`, 133 in the daemon, 152 in the desktop.
