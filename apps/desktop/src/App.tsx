@@ -7,9 +7,11 @@ import {
   getGraph,
   getNote,
   getNotes,
+  getTrash,
   moveNote,
   renameNote,
   restoreNote,
+  emptyTrash,
   saveNote,
   updateNoteMeta,
   type Connection,
@@ -28,6 +30,7 @@ import { PaneSplitter } from "./components/PaneSplitter";
 import { SearchModal } from "./components/SearchModal";
 import { Sidebar, type FolderFilter, type ShellView } from "./components/Sidebar";
 import { StatusBar } from "./components/StatusBar";
+import { TrashPanel } from "./components/TrashPanel";
 
 // The graph renderer is a 184 kB chunk that only its own tab needs, so it loads with the tab.
 const GraphView = lazy(() =>
@@ -399,6 +402,9 @@ export default function App() {
     return () => window.removeEventListener("keydown", onKey);
   }, [searchOpen, view, loading, visible, activeKey, chooseNote]);
 
+  // The trash panel is a route like the graph, not a note. Leaving it puts the list back as it was.
+  const showNotes = useCallback(() => setView("notes"), []);
+
   // The palette opens from anywhere, including while a note is scrolled or a field has focus.
   useEffect(() => {
     const onKey = (event: KeyboardEvent): void => {
@@ -462,6 +468,24 @@ export default function App() {
                 onFilterTag={filterByTag}
               />
             </Suspense>
+          </PaneBoundary>
+        ) : view === "trash" ? (
+          <PaneBoundary title="The trash">
+            <TrashPanel
+              onLoad={getTrash}
+              onClose={showNotes}
+              onRestore={async (id: string, title: string): Promise<void> => {
+                const note = await restoreNote(id);
+                await refreshVault();
+                setNotice({ text: `Restored "${title}".` });
+                openNote(keyOfNote(note));
+              }}
+              onEmpty={async (): Promise<void> => {
+                await emptyTrash();
+                setNotice({ text: "Trash emptied." });
+                await refreshVault();
+              }}
+            />
           </PaneBoundary>
         ) : (
           <>

@@ -50,6 +50,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   at is marked an orphan. Links whose target does not exist are reported as unresolved instead of
   being invented as nodes. The pure graph code lives in `@lumos/vault-utils` (a browser-safe
   `./graph` entry point), so the daemon and the desktop share one implementation.
+
+### Added (continued 6)
 - `GET /graph` on the daemon read API returns that graph.
 - A Graph view in the desktop app: a canvas force layout with glow nodes sized by backlink count,
   curved edges, one hue per folder, and controls for tags, unlinked notes and a local depth that
@@ -583,3 +585,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `.github/workflows/validate.yml`, because it needs a browser binary and its own build. It is not
   part of `pre-push`, so a contributor is never blocked on a browser download. `oxlint` now lints
   `e2e` too, and `e2e` is a workspace package so `pnpm typecheck` covers it.
+
+### Added (continued 10)
+- A trash you can look through, not just undo. A delete's **Undo** only lives as long as its notice,
+  and the next notice replaces it, so the **Trash** tab in the sidebar lists every note a delete kept:
+  `GET /trash` answers them newest first with the folder and time each went, and `listTrash()` reads
+  them back from `.trash`. Each entry offers **Restore**, which puts the note back under the name it
+  had and opens it again, keeping the entry when a note has taken that name in the meantime.
+- **Empty the trash**, the one command in the daemon with no undo. It takes two presses in the app -
+  the button, then a confirm that names the cost and offers **Keep them** - before `DELETE /trash`
+  removes every entry and answers how many went; the panel closes once it lands, because an empty
+  list is not worth a pane of its own. A trash someone half-cleaned by hand is skipped rather than
+  refusing the rest, and emptying an empty trash is a success rather than a `404`. What that costs is
+  named in [LIMITATIONS.md](docs/LIMITATIONS.md): a local-first vault has no second copy to fall
+  back on, and the links those notes carried go with them - the graph drops the edge rather than
+  resurrecting a note to keep a link tidy.

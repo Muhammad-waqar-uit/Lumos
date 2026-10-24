@@ -9,7 +9,7 @@ The dark shell is built. The app renders a three-pane layout and loads the vault
 daemon (falling back to demo data when the daemon is offline):
 
 - `src/App.tsx` - state, vault loading, folder + search filtering, selection
-- `src/components/Sidebar.tsx` - the brand row (mark + wordmark) and folders with note counts
+- `src/components/Sidebar.tsx` - the brand row (mark + wordmark), the Notes/Graph/Trash view switch, and folders with note counts
 - `src/components/LumosMark.tsx` - the mark itself, drawn inline in `currentColor` so it takes `--color-brand` from the theme
 - `src/components/NoteList.tsx` - searchable note list (title, date, preview, tags) and the **New** button that opens the composer
 - `src/components/NoteComposer.tsx` - a new note: a folder picker, a textarea, Create, Cancel, and a failure that keeps the draft
@@ -18,13 +18,14 @@ daemon (falling back to demo data when the daemon is offline):
 - `src/components/NoteMeta.tsx` - the strip under the note header: tag chips with a remove button, a field that adds one, and a status picker; a failure stays on screen and keeps the draft
 - `src/components/Markdown.tsx` - the one Markdown renderer, used by the reader and by the editor's preview
 - `src/components/NoteActions.tsx` - rename, move and delete for the open note: a menu, a rename field, a folder picker, a delete that asks first, and a failure that keeps the panel open
+- `src/components/TrashPanel.tsx` - what a delete kept: every trashed note with its folder and when, a Restore per entry, and an Empty that asks first
 - `src/components/LinkPane.tsx` - the note's link: video player, image, or scraped reader card
 - `src/components/GraphView.tsx` - canvas link graph (routes, controls, click-to-open)
 - `src/components/PaneBoundary.tsx` - error boundary around the lazily loaded graph pane
 - `src/components/SearchModal.tsx` - the `Cmd/Ctrl+K` palette: ranked matches, keyboard selection, body matches from the daemon
 - `src/components/StatusBar.tsx` - connection state, the search shortcut, the note count, and a notice the app needs to say (a save whose refresh failed), plus the one action that answers it (**Undo** for a delete)
 - `src/lib/list-nav.ts` - the arithmetic behind `j`/`k` in the note list, plus the rule for when a key belongs to a field
-- `src/lib/api.ts` - daemon client (`/notes`, `/notes/search`, `/folders`, `/note` for reading, saving, renaming and deleting, `/note/move`, `/graph`, `/link`)
+- `src/lib/api.ts` - daemon client (`/notes`, `/notes/search`, `/folders`, `/note` for reading, saving, renaming and deleting, `/note/move`, `/trash` for listing, emptying and restoring, `/graph`, `/link`)
 - `src/lib/graph-palette.ts` - reads the `--color-graph-*` tokens and maps a folder to its hue, with a fallback token per lookup
 - `src/lib/demo.ts` - demo data used when the daemon is not running
 - `src/lib/search.ts` - fuse.js index over the loaded notes, plus the merge of local and body matches
@@ -179,6 +180,27 @@ wrong folder or named badly no longer means leaving the app.
 - Covered by `src/components/NoteActions.test.tsx` (the menu, the rename and its refusal, the link
   warning, one rename at a time, the folder list, and the delete that asks) and by the SSR renders in
   `src/components/NoteViewer.test.tsx` for the button being offered only while the daemon answers.
+
+### The trash
+
+A delete's **Undo** only lasts as long as its notice, and that notice is replaced by the next thing
+the app has to say. The **Trash** tab in the sidebar is what is left over: every note a delete kept,
+read once when the panel opens, newest first, each with its folder and the day and time it went.
+
+- Each entry offers **Restore**, which puts the note back under the name it had and opens it again.
+  A restore that would land on a note that took the name in the meantime is refused with the daemon's
+  sentence, and the entry stays in the list so the clash can be sorted out and tried again.
+- **Empty the trash** is the one action in the app with no undo, so it takes two presses: the button,
+  then a confirm that names the cost and offers **Keep them**. Only the second press sends it, and
+  the panel closes once it lands, because an empty list is not worth a pane of its own.
+- Emptying takes the links those notes carried with it. A `[[wikilink]]` to a note that is gone stays
+  in the body as text and the graph drops the edge; nothing resurrects a note to keep a link tidy.
+- A refusal - a trash that could not be read, an empty the vault would not take - keeps the panel
+  open with the daemon's own sentence and the list as it was.
+- The panel is a view like the graph, not a note, so **Close** puts the list back exactly as it was.
+- Covered by `src/components/TrashPanel.test.tsx`: the listing and its empty state, a failed read, a
+  restore that lands and one that is refused, the two-step empty, a refused empty that stays open,
+  and Close.
 
 ### Link pane
 

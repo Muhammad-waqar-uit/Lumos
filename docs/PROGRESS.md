@@ -4,6 +4,42 @@ Chronological record of what has been built. Newest entries first within each da
 
 ## 2026-10-24
 
+### Done — the trash is a list you can empty, not only an undo
+- [x] Phase 7's last open item: a delete's **Undo** only lived as long as its notice, so the first
+  delete you made after any other notice left you with a file in `.trash` and nothing in the app
+  that knew it was there. The vault's `.trash` is now readable (`listTrash()`) and removable
+  (`emptyTrash()`) in `@lumos/vault-utils`
+- [x] Each trashed entry carries the day and time it went, stamped in a `.deleted-at` file inside
+  the entry folder rather than derived from the id: the id is a timestamp only when it was minted
+  cleanly, so a counter-suffixed id (`…-000Z-1`) or an entry made by hand would have had no
+  reliable way back to a date. `listTrash()` reads that stamp, skips an entry with no readable note
+  in it rather than failing the whole listing, and a restore sweeps the stamp away with the rest
+- [x] Two daemon routes: `GET /trash` answers the entries newest first (`{ "trash": [...] }`, an
+  empty list rather than a `404`), and `DELETE /trash` removes every one and answers how many went.
+  There is no parameter for a single entry - restoring is how one note leaves - so the command with
+  no undo deliberately has no narrower form. A trash someone half-cleaned by hand is skipped rather
+  than refusing the rest
+- [x] A **Trash** tab in the sidebar's view switch, so it sits beside Notes and Graph rather than
+  hiding in a note's menu. It lists each entry with its folder and when it went, offers **Restore**
+  per entry (keeping it when a note has taken the name in the meantime, with the daemon's sentence),
+  and **Empty the trash** takes two presses - the button, then a confirm that names the cost and
+  offers **Keep them** - because it is the one action in the app with nothing to undo afterwards
+- [x] What emptying costs is written down rather than implied: [LIMITATIONS.md](LIMITATIONS.md) no
+  longer claims the trash cannot be listed or emptied, and instead names what is true - a local-first
+  vault has no second copy to fall back on, and the links those notes carried go with them (the graph
+  drops the edge rather than resurrecting a note to keep a link tidy)
+- [x] Tests at both ends: 6 in `packages/vault-utils/src/index.test.ts` (listing newest first, the
+  id-derived date from the stamp, a counter-suffixed id still reading its date, an entry with no note
+  skipped, emptying, and an empty trash being a count of zero), 4 in `apps/daemon/src/app.test.ts`
+  (an empty vault answering nothing, a delete listed and each entry restoring, an empty reporting the
+  count and leaving the rest of the vault alone, plus a zero when there is nothing to remove), and 10 in
+  `apps/desktop/src/components/TrashPanel.test.tsx` covering the listing and its empty state, a failed
+  read, a restore that lands and one that is refused, the two-step empty, a refused empty that stays
+  open, and Close
+- [x] Exercised against a running daemon rather than only through `app.inject()`: a note deleted
+  from the app, `GET /trash` naming it with the folder and time it went, a restore putting the same
+  bytes back and reopening the note, then an empty taking the entry count to zero
+
 ### Done — an E2E smoke test drives the built app in a real browser
 - [x] The Phase 0.1 gap: the components were covered in jsdom, but nothing proved the *built* bundle
   reached the daemon, or that the Markdown, highlighting and keyboard wiring survived bundling. A

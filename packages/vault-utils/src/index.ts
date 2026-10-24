@@ -664,6 +664,16 @@ export async function renameNote(
  */
 const TRASH_DIR = ".trash";
 
+/**
+ * Name of the file beside a trashed note that records when the delete happened.
+ *
+ * The entry's id is derived from the timestamp but is not a reliable record of it - a
+ * same-millisecond delete appends a counter - so the moment is written down rather than
+ * reconstructed. It sits beside the note's folder, not inside it, so a folder still holds exactly
+ * one note and `restoreNote` needs no change.
+ */
+const DELETED_AT = ".deleted-at";
+
 /** A delete that can be undone: the trash entry, and the note it holds. */
 export interface TrashedNote {
   /** Name the entry to restore it. Unique, and safe to put in a URL. */
@@ -716,7 +726,12 @@ export async function deleteNote(
 
   const at = options.now ?? new Date();
   const id = await claimTrashEntry(vaultDir, at);
-  await relocate(file, path.join(vaultDir, TRASH_DIR, id, ref.folder, ref.name), raw);
+  const entry = path.join(vaultDir, TRASH_DIR, id);
+  await relocate(file, path.join(entry, ref.folder, ref.name), raw);
+  // The id is derived from the timestamp but is not a reliable record of it - a same-millisecond
+  // delete appends a counter, and a hand-made entry has no timestamp at all - so the moment is
+  // written beside the note instead of being reconstructed from the folder name later.
+  await writeFile(path.join(entry, DELETED_AT), at.toISOString(), "utf8");
   return { id, folder: ref.folder, name: ref.name, deleted: at.toISOString() };
 }
 
@@ -752,6 +767,68 @@ export async function restoreNote(vaultDir: string, id: string): Promise<Note> {
   await relocate(source, target, raw);
   await rm(entry, { recursive: true, force: true }).catch(() => undefined);
   return readNote(target, folder);
+}
+
+/**
+ * List the notes waiting in the vault's trash, newest delete first.
+ *
+ * A delete can only be undone from the notice that offered it, so without this the trash is a
+ * folder a person has to open in a file manager to learn anything about. Each entry answers the
+ * same fields the restore route needs, so the caller never has to re-derive where a note came from.
+ *
+ * An entry that does not hold exactly one note is skipped rather than failing the whole list: a
+ * half-written or hand-edited entry is one person's problem, not a reason the rest stay invisible.
+ */
+export async function listTrash(vaultDir: string): Promise<TrashedNote[]> {
+  const trash = path.join(vaultDir, TRASH_DIR);
+  const ids = await readdir(trash, { withFileTypes: true }).catch((err: unknown) => {
+    if ((err as NodeJS.ErrnoException).code === "ENOENT") return [];
+    throw err;
+  });
+
+  const entries: TrashedNote[] = [];
+  for (const id of ids.filter((d) => d.isDirectory())) {
+    const entry = path.join(trash, id.name);
+    const folders = (await readdir(entry, { withFileTypes: true }).catch(() => [])).filter((d) =>
+      d.isDirectory(),
+    );
+    if (folders.length !== 1) continue;
+    const folder = folders[0].name;
+    const names = await listMarkdownFiles(path.join(entry, folder));
+    if (names.length !== 1) continue;
+
+    const written = await readFile(path.join(entry, DELETED_AT), "utf8").catch(() => "");
+    const at = new Date(written);
+    entries.push({
+      id: id.name,
+      folder,
+      name: names[0],
+      // A missing or unreadable stamp sorts last rather than taking the whole list down with it.
+      deleted: Number.isNaN(at.getTime()) ? new Date(0).toISOString() : at.toISOString(),
+    });
+  }
+
+  return entries.sort((a, b) => (a.deleted < b.deleted ? 1 : -1));
+}
+
+/**
+ * Remove every note in the trash, and report how many went.
+ *
+ * This is the one operation with no undo, so it is separate from `deleteNote` and answers a count
+ * rather than the entries: a person confirming it has already seen the list. The `.trash` folder
+ * itself stays, so the next delete finds it and no caller has to create it.
+ */
+export async function emptyTrash(vaultDir: string): Promise<{ removed: number }> {
+  const entries = await listTrash(vaultDir);
+  const trash = path.join(vaultDir, TRASH_DIR);
+
+  for (const entry of entries) {
+    await rm(path.join(trash, entry.id), { recursive: true, force: true });
+  }
+
+  // Anything that was not a note is left alone: this clears confirmed notes, not a person's own
+  // file-manager work.
+  return { removed: entries.length };
 }
 
 /**

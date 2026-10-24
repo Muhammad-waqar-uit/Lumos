@@ -186,3 +186,29 @@ export async function deleteNote(folder: string, name: string): Promise<TrashedN
 export function restoreNote(id: string): Promise<Note> {
   return send("POST", "/note/restore", { id });
 }
+
+/** What is in the trash right now, newest delete first. */
+export async function getTrash(): Promise<TrashedNote[]> {
+  const { trash } = await getJson<{ trash: TrashedNote[] }>("/trash");
+  return trash;
+}
+
+/**
+ * Remove every note in the trash, and answer how many went.
+ *
+ * The one write with no undo, so the caller has to have shown the list first and asked. A
+ * refusal arrives as an Error with the daemon's sentence, the same as every other write here.
+ */
+export async function emptyTrash(): Promise<{ removed: number }> {
+  const res = await fetch(`${BASE}/trash`, {
+    method: "DELETE",
+    headers: { accept: "application/json" },
+  });
+  const body = (await res.json().catch(() => null)) as
+    { removed?: number } | { error: string } | null;
+  if (!res.ok)
+    throw new Error(body && "error" in body ? body.error : `DELETE /trash -> ${res.status}`);
+  if (!body || !("removed" in body) || typeof body.removed !== "number")
+    throw new Error("DELETE /trash returned an unexpected body");
+  return { removed: body.removed };
+}

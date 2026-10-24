@@ -97,8 +97,11 @@ through the capture writer (stamped `source: desktop`), `PATCH /note` renames on
 (the file, its first heading and the links other notes have to it all follow, and the edited files
 come back as `updated`), `PATCH /note/meta` changes its tags or status in place, `POST /note/move`
 moves it to another folder under the name it already has,
-`DELETE /note` moves it into the vault's `.trash` and answers the entry, and `POST /note/restore`
-puts a trashed note back where it came from. All of them carry the same folder and filename guards
+`DELETE /note` moves it into the vault's `.trash` and answers the entry, `POST /note/restore`
+puts a trashed note back where it came from, `GET /trash` lists what those deletes kept (newest
+first, an empty trash as an empty list rather than a `404`), and `DELETE /trash` removes every entry
+and answers the count - deliberately with no parameter, because it is the one write with no undo.
+All of them carry the same folder and filename guards
 as the read routes, and a bad payload is a `400` that writes nothing. A name another note already
 holds is a `409` rather than a silent replacement, which a restore obeys too: an undo never
 overwrites the note that took the name while it was away.

@@ -18,9 +18,12 @@ import {
   saveNote,
   searchNotes,
   serializeNote,
+  listTrash,
+  emptyTrash,
   slugify,
   updateNote,
   updateNoteMeta,
+  type TrashedNote,
 } from "./index";
 
 let vault = "";
@@ -808,6 +811,71 @@ describe("restoreNote", () => {
     await expect(restoreNote(vault, "../Ideas")).rejects.toMatchObject({ reason: "unsafe" });
     await expect(restoreNote(vault, "..")).rejects.toMatchObject({ reason: "unsafe" });
     await expect(restoreNote(vault, "/tmp")).rejects.toMatchObject({ reason: "unsafe" });
+  });
+});
+
+describe("listTrash", () => {
+  /** Write a note and delete it at a known moment, so the entry is predictable. */
+  async function putAndDelete(folder: string, name: string, at: Date): Promise<TrashedNote> {
+    await put(folder, name, RAW);
+    return deleteNote(vault, { folder, name }, { now: at });
+  }
+
+  it("answers nothing for a vault that never had a delete", async () => {
+    await expect(listTrash(vault)).resolves.toEqual([]);
+  });
+
+  it("lists each deleted note with where it came from, newest first", async () => {
+    const first = await putAndDelete("Ideas", "2026-01-02-a.md", DELETED_AT);
+    const second = await putAndDelete(
+      "Reading",
+      "2026-01-03-b.md",
+      new Date("2026-01-06T11:00:00.000Z"),
+    );
+
+    expect(await listTrash(vault)).toEqual([
+      { id: second.id, folder: "Reading", name: "2026-01-03-b.md", deleted: second.deleted },
+      { id: first.id, folder: "Ideas", name: "2026-01-02-a.md", deleted: first.deleted },
+    ]);
+  });
+
+  it("skips a trash entry that is not a note, rather than failing the whole list", async () => {
+    await putAndDelete("Ideas", "2026-01-02-a.md", DELETED_AT);
+    const stray = path.join(vault, ".trash", "not-a-note", "Ideas");
+    await mkdir(stray, { recursive: true });
+    await writeFile(path.join(stray, "notes.txt"), "not a note", "utf8");
+
+    expect(await listTrash(vault)).toHaveLength(1);
+  });
+});
+
+describe("emptyTrash", () => {
+  async function putAndDelete(folder: string, name: string, at: Date): Promise<TrashedNote> {
+    await put(folder, name, RAW);
+    return deleteNote(vault, { folder, name }, { now: at });
+  }
+
+  it("removes every entry and reports how many went", async () => {
+    const a = await putAndDelete("Ideas", "2026-01-02-a.md", DELETED_AT);
+    await putAndDelete("Reading", "2026-01-03-b.md", new Date("2026-01-06T11:00:00.000Z"));
+
+    expect(await emptyTrash(vault)).toEqual({ removed: 2 });
+    expect(await readdir(path.join(vault, ".trash"))).toEqual([]);
+    // A restore of an emptied entry is a real miss, not a silent no-op.
+    await expect(restoreNote(vault, a.id)).rejects.toMatchObject({ reason: "missing" });
+  });
+
+  it("reports zero for a trash that is already empty", async () => {
+    await expect(emptyTrash(vault)).resolves.toEqual({ removed: 0 });
+  });
+
+  it("leaves the notes that were never deleted alone", async () => {
+    await put("Ideas", "2026-01-02-kept.md", RAW);
+    await putAndDelete("Ideas", "2026-01-03-gone.md", DELETED_AT);
+
+    await emptyTrash(vault);
+
+    expect(await readdir(path.join(vault, "Ideas"))).toEqual(["2026-01-02-kept.md"]);
   });
 });
 

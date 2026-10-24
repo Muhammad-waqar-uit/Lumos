@@ -179,6 +179,21 @@ works once.
 `409 a note with that name already exists` when a note has taken the name again while the deleted
 one was away - replacing it would be a second, silent delete.
 
+### `GET /trash`
+Everything in the trash right now, newest delete first:
+`{ "trash": [ { "id", "folder", "name", "deleted" } ] }`. It is a listing of trash entries, not of
+notes: nothing here has a title or a body, because the panel only needs the name to restore it and
+the folder and date to say which note it was. An empty trash answers `{ "trash": [] }`, which is a
+list of nothing rather than an error - the app says so itself.
+
+### `DELETE /trash`
+Removes every entry in the trash, and answers how many went: `{ "removed": 3 }`. There is no
+parameter for a single entry - restoring is how one note leaves, and this is the one command in the
+daemon with no undo, so it deliberately has no narrower form. `200` with `removed: 0` for an empty
+trash rather than a `404`, because asking to empty something that is already empty is not a mistake.
+Entries the folder listing cannot read are skipped rather than failing the whole request: a trash
+someone half-cleaned by hand should not be able to refuse the rest.
+
 ### `GET /link?url=<url>`
 One link, scraped for the desktop: `{ "link": LinkCard }` — how the app shows it inline (`kind`,
 `embedUrl`, `poster`, `frame`) plus the page's `title`, `site`, `description`, `image` and readable
