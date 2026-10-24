@@ -3,11 +3,12 @@ import type { FolderFilter } from "../lib/filter";
 import { LumosMark } from "./LumosMark";
 
 export type { FolderFilter } from "../lib/filter";
-export type ShellView = "notes" | "graph";
+export type ShellView = "notes" | "graph" | "trash";
 
 const VIEWS: { key: ShellView; label: string }[] = [
   { key: "notes", label: "Notes" },
   { key: "graph", label: "Graph" },
+  { key: "trash", label: "Trash" },
 ];
 
 interface Props {

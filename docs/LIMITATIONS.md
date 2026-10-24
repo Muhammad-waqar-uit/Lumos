@@ -198,13 +198,14 @@ play it — neither page can be read or copied.
   title on the same day land as `…-<slug>.md` and `…-<slug>-<millis>.md`, which is safe but ugly.
   A rename and a move refuse the collision instead (`409`), because someone is there to pick another
   name and a millisecond suffix in a note they named themselves is not what they asked for.
-- **A delete goes to a trash that is never emptied.** `DELETE /note` moves the file to
-  `.trash/<id>/<folder>/<name>`, and `POST /note/restore` is the undo. Nothing prunes the folder and
-  nothing expires, so it grows until someone deletes it by hand; there is no "empty trash" command,
-  no list of what is in there, and no way to browse or restore an older entry from the app - the undo
-  in the status bar is only for the delete you just made, and it disappears when the notice is
-  dismissed. A restore also needs the old name to be free: a note that took it in the meantime is a
-  `409`, and the trashed copy stays in the folder rather than replacing it.
+- **A trashed note lives only on this disk, and only until someone empties the trash.** `DELETE /note`
+  moves the file to `.trash/<id>/<folder>/<name>`; `GET /trash` lists it and `DELETE /trash` removes
+  every entry for good, with no grace period and no second copy anywhere - a local-first vault has no
+  server-side history to fall back on, so emptying is one of the few operations in the app with no
+  undo, which is why it takes two presses. Emptying also takes the links those notes carried with it:
+  a `[[wikilink]]` to a note that is gone stays in the body as text and the graph simply drops the
+  edge, rather than the link being rewritten or the note resurrected. A restore still needs the old
+  name to be free: a note that took it in the meantime is a `409`, and the trashed copy stays put.
 - **Editing tags or status re-serialises the block.** Only the frontmatter block is rewritten, and
   the body is byte-identical afterwards, but the block is parsed and written back out: a comment
   inside it, a hand-chosen key order, or YAML style someone preferred is not preserved. Only `tags`

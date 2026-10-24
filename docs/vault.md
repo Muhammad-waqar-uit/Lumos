@@ -137,8 +137,9 @@ in `@lumos/vault-utils`).
 `.trash` is a dot-folder inside the vault, so the note listings, the folder counts and the graph skip
 it without needing a rule of their own, and the file is still a plain Markdown note a person can open
 with a file manager. An entry is one delete: restoring it removes the entry, and a restore refuses to
-replace a note that has taken the name again. Nothing prunes the folder - a note waits there until it
-is restored or deleted by hand ([LIMITATIONS.md](LIMITATIONS.md)).
+replace a note that has taken the name again. `listTrash()` reads the folder back and `emptyTrash()`
+deletes every entry for good, which is the one operation here with no undo - a local-first vault has
+no second copy to fall back on ([LIMITATIONS.md](LIMITATIONS.md)).
 
 Two rules hold both operations together. **Nothing is ever overwritten**: a target name another note
 already holds is a `409`, not a second timestamp suffix and not a replacement, because the person
@@ -155,8 +156,9 @@ body links to the old title is rewritten, in the same operation, and the API ans
 `[[2026-10-20-learn-rust.md]]` becomes the new filename - and a `#heading`, a `|alias` or an `!`
 embed marker survives it. A link that still reaches the note afterwards is left alone (an alias in the
 frontmatter still resolves), and so is anything inside a code fence or inline code, because the graph
-does not read those as links either. [LIMITATIONS.md](LIMITATIONS.md) names what that leaves out, and
-the missing undo.
+does not read those as links either. [LIMITATIONS.md](LIMITATIONS.md) names what that leaves out: a
+rename rewrites those other notes as a side effect, and nothing undoes the cascade afterwards - only
+the delete has an undo.
 
 ## Compatibility
 

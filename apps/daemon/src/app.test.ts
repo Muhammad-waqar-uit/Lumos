@@ -862,6 +862,73 @@ describe("POST /note/restore", () => {
   });
 });
 
+describe("GET /trash", () => {
+  it("answers nothing for a vault with no deletes", async () => {
+    const { app } = await makeApp([NOTE]);
+
+    const res = await app.inject({ method: "GET", url: "/trash" });
+
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual({ trash: [] });
+  });
+
+  it("lists a deleted note with where it came from, and each entry restores", async () => {
+    const { vault, app } = await makeApp([NOTE]);
+    const [name] = await readdir(path.join(vault, "Ideas"));
+    await app.inject({
+      method: "DELETE",
+      url: `/note?folder=Ideas&name=${encodeURIComponent(name)}`,
+    });
+
+    const res = await app.inject({ method: "GET", url: "/trash" });
+
+    const entries = res.json<{ trash: { id: string; folder: string; name: string }[] }>().trash;
+    expect(entries).toHaveLength(1);
+    expect(entries[0]).toMatchObject({ folder: "Ideas", name });
+    // The listing's own id is what the restore route takes, so the panel needs no second lookup.
+    const restored = await app.inject({
+      method: "POST",
+      url: "/note/restore",
+      payload: { id: entries[0].id },
+    });
+    expect(restored.statusCode).toBe(200);
+  });
+});
+
+describe("DELETE /trash", () => {
+  it("removes every deleted note, reports the count, and leaves the rest of the vault alone", async () => {
+    const { vault, app } = await makeApp([NOTE]);
+    const [name] = await readdir(path.join(vault, "Ideas"));
+    await app.inject({
+      method: "DELETE",
+      url: `/note?folder=Ideas&name=${encodeURIComponent(name)}`,
+    });
+
+    const res = await app.inject({ method: "DELETE", url: "/trash" });
+
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual({ removed: 1 });
+    expect(await readdir(path.join(vault, ".trash"))).toEqual([]);
+    // The folder counts still describe the vault as it reads now.
+    const folders = await app.inject({ method: "GET", url: "/folders" });
+    expect(folders.json<{ folders: { folder: string; count: number }[] }>().folders).toContainEqual(
+      {
+        folder: "Ideas",
+        count: 0,
+      },
+    );
+  });
+
+  it("answers zero when there is nothing to remove", async () => {
+    const { app } = await makeApp([NOTE]);
+
+    const res = await app.inject({ method: "DELETE", url: "/trash" });
+
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual({ removed: 0 });
+  });
+});
+
 describe("GET /graph", () => {
   it("returns notes and tags as nodes, with unresolved links reported", async () => {
     const { app } = await makeApp([NOTE, { folder: "Goals", text: "learn rust" }]);

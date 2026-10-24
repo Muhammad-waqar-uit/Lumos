@@ -41,8 +41,6 @@ else on this page can close them.
 
 ### Phase 7 - Editing & enrichment (P2) - open items
 
-- [ ] Empty the trash, or list what is in it - a delete moves the file to `.trash` and Undo is only
-  for the delete just made ([LIMITATIONS.md](LIMITATIONS.md))
 - [ ] Bulk operations (move, tag, archive)
 
 ### Phase 8 - Polish & docs (P2) - open items

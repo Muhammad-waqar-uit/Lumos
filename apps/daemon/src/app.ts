@@ -13,8 +13,10 @@ import {
   NoteFileError,
   buildVaultGraph,
   deleteNote,
+  emptyTrash,
   getNotesByFolder,
   listNotes,
+  listTrash,
   moveNote,
   readNote,
   renameNote,
@@ -356,6 +358,24 @@ export async function createApp({
       throw err;
     }
   });
+
+  /**
+   * What is in the trash right now, newest delete first.
+   *
+   * Without this the only way to learn what a delete put there is a file manager, because the
+   * undo on offer expires with the notice that carried it. Each entry answers the same `id` the
+   * restore route takes, so the panel can offer both from one read.
+   */
+  app.get("/trash", async () => ({ trash: await listTrash(vault) }));
+
+  /**
+   * Remove every note in the trash.
+   *
+   * The one operation with no undo, so it answers a count rather than the entries it took: the
+   * person confirming it has just read the list from `GET /trash`. Notes that were never deleted
+   * are untouched.
+   */
+  app.delete("/trash", async () => emptyTrash(vault));
 
   return app;
 }
