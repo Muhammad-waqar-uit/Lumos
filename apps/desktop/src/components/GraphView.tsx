@@ -491,7 +491,10 @@ export function GraphView({
   const noteCount = visible.nodes.filter((node) => node.kind === "note").length;
 
   return (
-    <section aria-label="Vault graph" className="relative flex-1 overflow-hidden bg-background">
+    <section
+      aria-label="Vault graph"
+      className="fade-in relative flex-1 overflow-hidden bg-background"
+    >
       <div ref={hostRef} className="absolute inset-0" />
 
       <div className="pointer-events-none absolute inset-x-0 top-0 flex flex-wrap items-start justify-between gap-3 p-3">

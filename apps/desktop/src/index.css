@@ -298,6 +298,39 @@ body {
   background-color: var(--color-card);
 }
 
+/* Entrances for things that appear rather than arrive: a pane switched to, the palette, the
+ * bulk bar, a notice. One soft fade, so a switch reads as a change of place instead of a jump.
+ * Nothing here runs for anyone whose system asks for less motion. */
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes lumos-fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes lumos-slide-down {
+    from {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  .fade-in {
+    animation: lumos-fade-in 140ms ease-out;
+  }
+
+  .slide-down {
+    animation: lumos-slide-down 160ms ease-out;
+  }
+}
+
 .markdown img {
   max-width: 100%;
   border-radius: var(--radius-lg);

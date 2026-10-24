@@ -135,7 +135,7 @@ export function SearchModal({ entries, recent, connection, onOpen, onClose }: Pr
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center bg-background/80 p-4 pt-[12vh]"
+      className="fade-in fixed inset-0 z-50 flex items-start justify-center bg-background/80 p-4 pt-[12vh]"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}

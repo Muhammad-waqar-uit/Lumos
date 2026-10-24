@@ -73,7 +73,7 @@ export function NoteViewer({
   const isEditing = editing === note.file;
 
   return (
-    <main className="flex flex-1 flex-col overflow-hidden">
+    <main className="fade-in flex flex-1 flex-col overflow-hidden">
       <header className="flex items-start justify-between gap-4 border-b border-border px-6 py-4">
         <div className="min-w-0">
           <h2 className="text-lg font-semibold">{note.title}</h2>
