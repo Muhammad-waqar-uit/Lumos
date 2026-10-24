@@ -30,7 +30,9 @@ else on this page can close them.
 - [x] TanStack Router setup - the pane and the open note are `?view=` and `?note=` on the one `/`
   route, so a reload, the back button and a pasted link all land on the same place; an unknown
   view value falls back to the notes pane (`src/router.tsx`, `App.routing.test.tsx`)
-- [ ] zustand state management (currently plain React state)
+- [x] zustand state management - the vault index and the list's filters live in `src/lib/store.ts`;
+  the pane and the open note stay in the address, and session-only UI state stays in the
+  component (`store.test.ts`)
 
 ### Phase 7 - Editing & enrichment (P2) - open items
 

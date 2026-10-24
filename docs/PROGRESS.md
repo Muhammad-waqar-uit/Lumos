@@ -4,6 +4,27 @@ Chronological record of what has been built. Newest entries first within each da
 
 ## 2026-10-24
 
+### Done — the vault lives in a store, not in one component (zustand)
+- [x] **The store.** `src/lib/store.ts` holds what the whole shell shares: the daemon read with
+  its demo fallback (the graph is a separate read, so the notes survive a graph failure), the
+  re-read after every save or file operation - which throws rather than speaking for itself, so
+  the caller turns a failure into the status-bar notice - and the list's filters (folder, query,
+  tag). What is *open* (the pane and the note) deliberately stays in the address from the router,
+  and session-only UI state (notices, drafts, pane widths, recents) stays in the component: the
+  store holds only what more than one place reads or re-reads.
+- [x] **App onto it.** The eight `useState` slices and the two hand-rolled triple-read refreshes
+  collapsed into store selectors and one `refreshVault()`; `saveActiveNote` and
+  `createNoteAndOpen` now share the same re-read as the file operations instead of each carrying
+  their own copy of it.
+- [x] **Tests, red first.** `store.test.ts`: the daemon read, the demo fallback with its
+  connection flag, the graph failing on its own, the re-read applying all three reads, the re-read
+  *throwing* so a caller can notice it, and each filter changing only its own slice. The routing
+  test now resets the store per case - a module-level singleton would otherwise leak one test's
+  vault into the next. 176 desktop tests (168 before this, untouched), typecheck and lint clean.
+- [x] **`pnpm test:e2e` 5/5** against the built bundle, and `pnpm validate` green.
+- [x] **Docs.** desktop.md, roadmap (zustand done - the Phase 4 list is now closed), FEATURES,
+  TODO, CHANGELOG. One new dependency: `zustand`, lockfile committed.
+
 ### Done — the pane and the open note are the address (TanStack Router)
 - [x] **One route, two parameters.** `src/router.tsx` creates a TanStack Router over a single `/`
   route whose `validateSearch` carries `view` (notes/graph/trash) and `note` (`Folder/name.md`).

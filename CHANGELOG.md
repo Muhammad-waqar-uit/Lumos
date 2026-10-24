@@ -640,3 +640,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   "where you are". Six routing tests render the real shell through the router (`App.routing.test.tsx`),
   the 162 existing desktop tests were untouched and stay green, and the five e2e smoke tests pass
   against the built bundle.
+
+### Added (continued 14)
+
+- A vault store, the last Phase 4 item. What the whole shell shares - the daemon read with its
+  demo fallback, the re-read after every save or rename or move, and the list's filters (folder,
+  query, tag) - moved out of `App`'s eight `useState` slices and two hand-rolled triple-reads into
+  one zustand store (`src/lib/store.ts`), so every change re-reads the vault through the same
+  action instead of three near-copies of it. A failed re-read throws rather than speaking for
+  itself: the caller turns it into the status-bar notice, the one place that talks to the person.
+  The pane and the open note stay in the address (TanStack Router), and session-only UI state
+  stays in the component - the store holds only what more than one place reads or re-reads. Eight
+  store tests were written red first, covering the demo fallback, a graph failing on its own and
+  a re-read that throws; the routing test resets the store per case so a singleton cannot leak a
+  vault between tests.
