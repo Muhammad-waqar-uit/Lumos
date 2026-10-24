@@ -9,14 +9,24 @@
 import { lookup } from "node:dns/promises";
 import { isIP } from "node:net";
 import type { LinkCard, LinkMediaKind } from "@lumos/shared";
-import { asHttpUrl, extractPreview, parseLinkMedia } from "@lumos/vault-utils/link";
+import {
+  PREVIEW_TEXT_LIMIT,
+  asHttpUrl,
+  extractPreview,
+  parseLinkMedia,
+} from "@lumos/vault-utils/link";
+import { PdfReadError, extractPdfText } from "./read-pdf.js";
 
 const DEFAULT_TIMEOUT_MS = 8000;
 const DEFAULT_MAX_BYTES = 1_000_000;
+/** A PDF is read whole far more often than a page is: 10 MB, against a page's 1 MB. */
+const DEFAULT_MAX_PDF_BYTES = 10_000_000;
 const DEFAULT_MAX_REDIRECTS = 3;
 
 const REDIRECT_STATUS = new Set([301, 302, 303, 307, 308]);
 const READABLE_TYPES = new Set(["text/html", "application/xhtml+xml", "text/plain"]);
+/** Content types that say nothing about the bytes, so the body itself decides what it is. */
+const GENERIC_TYPES = new Set(["application/octet-stream", "binary/octet-stream"]);
 
 /** Hostnames that belong to the machine or the local network, whatever they resolve to. */
 const LOCAL_SUFFIXES = [".localhost", ".local", ".internal", ".lan", ".home.arpa", ".home"];
@@ -28,8 +38,8 @@ export type LinkErrorCode =
 export class LinkFetchError extends Error {
   readonly code: LinkErrorCode;
 
-  constructor(code: LinkErrorCode, message: string) {
-    super(message);
+  constructor(code: LinkErrorCode, message: string, options?: { cause?: unknown }) {
+    super(message, options);
     this.name = "LinkFetchError";
     this.code = code;
   }
@@ -162,38 +172,85 @@ async function request(fetchImpl: FetchLike, url: string, timeoutMs: number): Pr
   }
 }
 
-/** Read at most `maxBytes`, so a huge or endless response cannot exhaust the daemon. */
-async function readCapped(
+/**
+ * Read at most `maxBytes`, so a huge or endless response cannot exhaust the daemon.
+ *
+ * Bytes rather than text: a PDF is not decodable as UTF-8, and decoding belongs to the branch
+ * that knows what it is holding.
+ */
+async function readCappedBytes(
   response: Response,
   maxBytes: number,
-): Promise<{ body: string; truncated: boolean }> {
+): Promise<{ bytes: Uint8Array; truncated: boolean }> {
   const stream = response.body;
-  if (!stream) return { body: await response.text(), truncated: false };
+  if (!stream) return { bytes: new Uint8Array(await response.arrayBuffer()), truncated: false };
 
   const reader = stream.getReader();
-  const decoder = new TextDecoder();
-  let body = "";
+  const chunks: Uint8Array[] = [];
   let bytes = 0;
   let truncated = false;
 
   for (;;) {
     const { done, value } = await reader.read();
     if (done) break;
+    chunks.push(value);
     bytes += value.byteLength;
-    body += decoder.decode(value, { stream: true });
     if (bytes >= maxBytes) {
       truncated = true;
       await reader.cancel();
       break;
     }
   }
-  body += decoder.decode();
 
-  return { body: truncated ? body.slice(0, maxBytes) : body, truncated };
+  const merged = new Uint8Array(Math.min(bytes, maxBytes));
+  let offset = 0;
+  for (const chunk of chunks) {
+    if (offset >= merged.length) break;
+    const take = Math.min(chunk.byteLength, merged.length - offset);
+    merged.set(chunk.subarray(0, take), offset);
+    offset += take;
+  }
+  return { bytes: merged, truncated };
 }
 
 function contentType(response: Response): string {
   return (response.headers.get("content-type") ?? "").split(";")[0].trim().toLowerCase();
+}
+
+/** What a content type lets the daemon do before a single byte of the body is read. */
+function typeRole(type: string): "text" | "pdf" | "generic" | "refuse" {
+  if (type === "" || READABLE_TYPES.has(type)) return "text";
+  if (type === "application/pdf") return "pdf";
+  if (GENERIC_TYPES.has(type)) return "generic";
+  return "refuse";
+}
+
+const notAPage = (type: string): LinkFetchError =>
+  new LinkFetchError("not-a-page", `That link is not a web page (${type}).`);
+
+/** The five bytes every PDF begins with: `%PDF-`. */
+function hasPdfMagic(bytes: Uint8Array): boolean {
+  return (
+    bytes[0] === 0x25 &&
+    bytes[1] === 0x50 &&
+    bytes[2] === 0x44 &&
+    bytes[3] === 0x46 &&
+    bytes[4] === 0x2d
+  );
+}
+
+/** A page's opening tag, in the first kilobyte where every serializer puts it. */
+function looksLikeHtml(bytes: Uint8Array): boolean {
+  const head = new TextDecoder().decode(bytes.subarray(0, 1024));
+  return /^\s*(?:<\?xml[^>]*\?>\s*)?(?:<!doctype\s+html\b|<html\b|<head\b|<body\b)/i.test(head);
+}
+
+/** A PDF's card title is its file name; a download endpoint with no name shows the URL instead. */
+function pdfTitle(raw: string): string | null {
+  const last = new URL(raw).pathname.split("/").filter(Boolean).pop() ?? "";
+  if (!/\.pdf$/i.test(last)) return null;
+  const name = decodeURIComponent(last).replace(/\.pdf$/i, "");
+  return name || null;
 }
 
 /** Media the app plays from the URL alone, so the daemon has nothing to read for them. */
@@ -267,15 +324,53 @@ export async function fetchLinkCard(
   }
 
   const type = contentType(response);
-  if (type && !READABLE_TYPES.has(type)) {
-    throw new LinkFetchError("not-a-page", `That link is not a web page (${type}).`);
-  }
+  const role = typeRole(type);
+  // A known non-page is refused before its body is downloaded.
+  if (role === "refuse") throw notAPage(type);
 
-  const { body, truncated: bodyTruncated } = await readCapped(response, maxBytes);
-  const preview = extractPreview(body);
+  // Bytes first: a PDF cannot be decoded as text, and a file served without a real type is
+  // judged by what it contains rather than by a header that said nothing useful.
+  const cap = role === "text" ? maxBytes : DEFAULT_MAX_PDF_BYTES;
+  const { bytes, truncated: bytesTruncated } = await readCappedBytes(response, cap);
   const finalUrl = current;
   const original = media.url;
 
+  let form: "pdf" | "text";
+  if (role === "generic") {
+    if (hasPdfMagic(bytes)) form = "pdf";
+    else if (looksLikeHtml(bytes)) form = "text";
+    else throw notAPage(type);
+  } else {
+    form = role;
+  }
+
+  if (form === "pdf") {
+    let text: string;
+    try {
+      text = await extractPdfText(bytes);
+    } catch (err: unknown) {
+      // The parser's own words stay out of the pane; the cause rides on the error it becomes.
+      if (err instanceof PdfReadError) {
+        throw new LinkFetchError("not-a-page", err.message, { cause: err });
+      }
+      throw err;
+    }
+    const cut = text.length > PREVIEW_TEXT_LIMIT;
+    return {
+      media,
+      title: pdfTitle(finalUrl),
+      site: new URL(finalUrl).hostname,
+      description: null,
+      image: null,
+      text: cut ? text.slice(0, PREVIEW_TEXT_LIMIT).trimEnd() : text,
+      truncated: bytesTruncated || cut,
+      ...(finalUrl === original ? {} : { finalUrl }),
+    };
+  }
+
+  const overCap = bytes.length > maxBytes;
+  const pageBytes = overCap ? bytes.subarray(0, maxBytes) : bytes;
+  const preview = extractPreview(new TextDecoder().decode(pageBytes));
   return {
     media,
     title: preview.title,
@@ -283,7 +378,7 @@ export async function fetchLinkCard(
     description: preview.description,
     image: preview.image,
     text: preview.text,
-    truncated: preview.truncated || bodyTruncated,
+    truncated: preview.truncated || bytesTruncated || overCap,
     ...(finalUrl === original ? {} : { finalUrl }),
   };
 }

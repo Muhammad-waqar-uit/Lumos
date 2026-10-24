@@ -223,6 +223,10 @@ shows that link in the viewer instead of only linking out.
 - Any other **page** is scraped by the daemon and shown as a card: title, site, description and lead
   image, with the page's readable text underneath. The text is rendered as text, never as HTML. If it
   was cut at the 6,000-character cap the pane says so and offers the real page.
+- A **PDF** link is read the same way, with no new pane: the daemon extracts the document's text into
+  the same card, the title comes from the file name, and the text is capped and rendered exactly like
+  a page's. What could not be read - an encrypted file, a broken one - arrives as the daemon's
+  sentence beside **Retry**, like any other refusal.
 - States: a loading line while the page is read, the daemon's own refusal message with a **Retry**
   beside it (a private host, a non-page content type, a timeout), and — with the daemon down — a line
   saying the page cannot be read while the link itself stays clickable.

@@ -108,7 +108,8 @@ overwrites the note that took the name while it was away.
 
 `GET /link` is the only endpoint that makes an outbound request. It accepts `http` and `https` only,
 refuses local and private addresses on every redirect hop, and caps time (8 s), redirects (3) and body
-size (1 MiB). A refusal is a `400` with a message, an unreachable page a `502`; the URL is never
+size (1 MiB - 10 MiB for a PDF, whose text it reads like any other page). A refusal is a `400` with a
+message, an unreachable page a `502`; the URL is never
 logged. See [docs/daemon.md](../../docs/daemon.md) for the full contract and
 [docs/LIMITATIONS.md](../../docs/LIMITATIONS.md) for what it deliberately cannot read.
 

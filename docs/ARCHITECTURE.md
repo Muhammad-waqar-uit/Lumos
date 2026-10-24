@@ -41,7 +41,8 @@ WhatsApp ──► Daemon ──► vault/*.md ◄── Desktop (Tauri UI)
   - `handler.ts` - route a parsed command to a reply; the vault directory arrives as an argument.
   - `app.ts` - `createApp()`, which builds the Fastify app (CORS + routes) over a given vault, so the routes can be tested without binding a port.
   - `server.ts` - entry point: build the app, listen on loopback, start WhatsApp.
-  - `fetch-link.ts` - fetch one link for the desktop, with the guards and caps `GET /link` returns as refusals.
+  - `fetch-link.ts` - fetch one link for the desktop, with the guards and caps `GET /link` returns as refusals; a PDF response is handed to
+  - `read-pdf.ts` - the daemon's one parser dependency: a PDF's bytes become the same readable text a page produces (`unpdf`), or a refusal with a fixed sentence
   - `whatsapp.ts` - Baileys connection, allowlist, message handling.
 
 Tests sit beside the modules they cover (`commands.test.ts`, `handler.test.ts`, `app.test.ts`,

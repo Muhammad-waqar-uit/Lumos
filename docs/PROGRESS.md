@@ -4,6 +4,40 @@ Chronological record of what has been built. Newest entries first within each da
 
 ## 2026-10-24
 
+### Done — the link pane reads a PDF, and files that arrive without a useful type
+- [x] Phase 5's last open item: `GET /link` refused every non-HTML content type with its type
+  named, so a PDF link - a paper, a report, a spec - was a dead end. The fetcher now classifies
+  the response before reading it: HTML/XHTML/plain text and an empty type are read as pages as
+  before, `application/pdf` is parsed, `application/octet-stream` (and `binary/octet-stream`) is
+  judged by its first bytes - `%PDF-` magic or a doctype - and anything else (video, JSON,
+  archives) is still refused with its type named *before* its body is downloaded, so the old
+  fast refusal did not turn into a wasted download
+- [x] The reader had to become byte-based to do it: a PDF is not decodable as UTF-8, so
+  `readCapped` reads bytes and the branch that knows what it holds does the decoding. Pages are
+  capped as they were (1 MiB, 6,000 characters); a PDF gets 10 MiB because documents are read
+  whole far more often than pages, and its text lands in the same cap and the same card
+- [x] `read-pdf.ts` is the daemon's first parser dependency: `unpdf` wraps pdf.js for serverless
+  use - no worker, no canvas - which suits a headless local daemon. It states its own boundary:
+  a failure becomes `PdfReadError` with the one sentence a person sees ("That PDF could not be
+  read."), with the parser's actual error kept as the cause rather than swallowed. A scan with no
+  text layer is not a failure - it reads as empty, and the pane already says a page had no
+  readable text
+- [x] A PDF's card title is its file name (`annual-report.pdf` → `annual-report`), not the
+  document's metadata - predictable, testable, and honest about where it came from
+- [x] 6 new fetcher tests replace the old "pdf is refused" one: extraction and the filename title,
+  a PDF and an HTML file arriving as `application/octet-stream`, a binary that is still refused
+  with its type named, a broken PDF's fixed sentence, and the 6,000-character cap. The route test's
+  refusal fixture moved to `video/mp4`, since the daemon can no longer produce that message for a
+  PDF. 28 fetcher tests and 143 daemon tests in total, typecheck clean
+- [x] Found while making the cap test pass, and written down rather than papered over: this pdf.js
+  build returns only text the document draws *inside its page box* - a fixture with one
+  page-spanning line (what no real producer writes) was cut at the box edge, so the cap fixture is
+  now wrapped lines like a real document. [LIMITATIONS.md](LIMITATIONS.md) names the boundary for
+  real PDFs too: off-canvas text is not returned
+- [x] Exercised against a running daemon on real URLs, not only injected fetches: W3C's dummy.pdf
+  came back as `{ title: "dummy", text: "Dummy PDF file" }` through `GET /link`, and `example.com`
+  still extracted its title and prose unchanged
+
 ### Done — the trash is a list you can empty, not only an undo
 - [x] Phase 7's last open item: a delete's **Undo** only lived as long as its notice, so the first
   delete you made after any other notice left you with a file in `.trash` and nothing in the app

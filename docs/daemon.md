@@ -215,14 +215,19 @@ The URL is untrusted like a vault path, so only `http` and `https` are accepted,
 local is refused: `localhost`, `*.local`, `*.internal`, loopback, private, link-local and
 reserved addresses — including a public URL that *redirects* into them, since every hop is
 checked. A URL carrying credentials is refused too. The fetch is bounded: 8 s, 3 redirects and
-1 MiB of body, and the content type has to be HTML, XHTML or plain text. A refusal is a `400`
-with a message, an unreachable page is a `502`; neither is a stack trace, and the URL itself is
+1 MiB of body - 10 MiB when the response is a PDF, which is read in whole far more often than a
+page is. HTML, XHTML and plain text are read as pages; `application/pdf` is read as a document and
+answered as the same card, with its file name as the title; a file served as
+`application/octet-stream` (or `binary/octet-stream`) is judged by its first bytes - a PDF by its
+`%PDF-` magic, a page by its doctype - and anything else, video or JSON or an archive, is refused
+before its body is downloaded, named by its content type. A refusal is a `400` with a message, an
+unreachable page is a `502`; neither is a stack trace, and the URL itself is
 never logged (it can carry private detail).
 
 A name is resolved and every answer is checked, which closes the ordinary rebinding case; a name
 that resolves publicly and then moves is a known, accepted limit of a reader on a personal machine.
-[LIMITATIONS.md](LIMITATIONS.md) lists what the reader cannot do at all - no JavaScript, no PDFs, no
-local addresses even by choice - and why each of those is deliberate.
+[LIMITATIONS.md](LIMITATIONS.md) lists what the reader cannot do at all - no JavaScript, no local
+addresses even by choice - and why each of those is deliberate.
 
 ### `GET /graph`
 The vault's link graph: `{ "graph": { "nodes": GraphNode[], "edges": GraphEdge[], "unresolved":
