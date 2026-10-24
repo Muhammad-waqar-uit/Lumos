@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useRef, useState, type ReactNode } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { FOLDERS, type Folder, type Note, type VaultEntry } from "@lumos/shared";
 import type { FolderFilter, TagCount } from "../lib/filter";
 import { NoteComposer } from "./NoteComposer";
@@ -34,6 +35,9 @@ interface Props {
 }
 
 export const keyOf = (n: VaultEntry): string => `${n.folder}/${n.name}`;
+
+/** Above this many notes the list windows itself; below it, every row is simply rendered. */
+export const VIRTUALIZE_ABOVE = 50;
 
 const BULK_BUTTON =
   "rounded-md border border-border px-2 py-1 text-[11px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground";
@@ -75,6 +79,88 @@ export function NoteList({
     tag !== null && !tagCounts.some((counted) => counted.tag === tag)
       ? [{ tag, count: 0 }, ...tagCounts]
       : tagCounts;
+
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  // Every row in the DOM is a row React re-renders on every keystroke of the search above them,
+  // so a large vault windows itself. A small vault needs no machinery - and gets none: the rows
+  // are exactly as they were.
+  const virtualized = notes.length > VIRTUALIZE_ABOVE;
+  // The library hands back functions the React Compiler cannot memoize; it skips this component
+  // rather than memoizing them wrongly, which is exactly what the rule is warning about.
+  // oxlint-disable-next-line react-hooks/incompatible-library
+  const virtualizer = useVirtualizer({
+    count: virtualized ? notes.length : 0,
+    getScrollElement: () => scrollRef.current,
+    // Roughly a title line, two excerpt lines and the folder/tags strip; each row measures
+    // itself as it renders, and this is only the guess the scrollbar starts from.
+    estimateSize: () => 96,
+    overscan: 8,
+  });
+
+  /** One row: its checkbox, the button that opens the note, and the folder/tags strip beneath. */
+  const rowBody = (n: VaultEntry): ReactNode => {
+    const key = keyOf(n);
+    const isActive = key === selected;
+    return (
+      <div className={"transition-colors " + (isActive ? "bg-accent" : "hover:bg-accent/40")}>
+        <div className="flex items-start gap-2 px-4 pt-3">
+          {onToggleSelect ? (
+            <input
+              type="checkbox"
+              aria-label={`Select ${n.title}`}
+              checked={selection?.has(key) ?? false}
+              onChange={() => onToggleSelect(key)}
+              className="mt-1 size-3.5 shrink-0 accent-brand"
+            />
+          ) : null}
+          <button
+            type="button"
+            onClick={() => onSelect(key)}
+            aria-current={isActive ? "true" : undefined}
+            className="block min-w-0 flex-1 text-left"
+          >
+            <span className="flex items-baseline justify-between gap-2">
+              <span className="truncate text-sm font-medium">{n.title}</span>
+              <span className="shrink-0 text-[11px] text-muted-foreground">
+                {formatDate(n.created)}
+              </span>
+            </span>
+            <span className="mt-1 line-clamp-2 block text-xs text-muted-foreground">
+              {n.excerpt}
+            </span>
+          </button>
+        </div>
+        <div className="flex flex-wrap items-center gap-1.5 px-4 pb-3 pt-1.5 text-[11px] text-muted-foreground">
+          <span>{n.folder}</span>
+          {n.problems && n.problems.length > 0 ? (
+            <span
+              title={n.problems.join("; ")}
+              className="rounded border border-border px-1 text-foreground"
+            >
+              ! frontmatter
+            </span>
+          ) : null}
+          {n.tags.map((noteTag) => {
+            const isFiltered = noteTag === tag;
+            return (
+              <button
+                key={noteTag}
+                type="button"
+                aria-pressed={isFiltered}
+                onClick={() => onTag(isFiltered ? null : noteTag)}
+                className={
+                  "rounded px-1 transition-colors hover:text-foreground " +
+                  (isFiltered ? "text-foreground" : "")
+                }
+              >
+                #{noteTag}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <section className="fade-in flex shrink-0 flex-col" style={{ width }}>
@@ -189,84 +275,44 @@ export function NoteList({
           </button>
         </div>
       ) : null}
-      <div className="flex-1 overflow-y-auto">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto">
         {composing ? null : loading ? (
           <p className="p-4 text-sm text-muted-foreground">Loading…</p>
         ) : notes.length === 0 ? (
           <p className="p-4 text-sm text-muted-foreground">
             {tag === null ? "No notes here yet." : `No notes tagged #${tag}.`}
           </p>
-        ) : (
-          <ul className="divide-y divide-border">
-            {notes.map((n) => {
-              const key = keyOf(n);
-              const isActive = key === selected;
+        ) : virtualized ? (
+          <ul
+            className="divide-y divide-border"
+            style={{ height: virtualizer.getTotalSize(), position: "relative" }}
+          >
+            {virtualizer.getVirtualItems().map((row) => {
+              const n = notes[row.index];
+              if (!n) return null;
               return (
-                <li key={key}>
-                  <div
-                    className={
-                      "transition-colors " + (isActive ? "bg-accent" : "hover:bg-accent/40")
-                    }
-                  >
-                    <div className="flex items-start gap-2 px-4 pt-3">
-                      {onToggleSelect ? (
-                        <input
-                          type="checkbox"
-                          aria-label={`Select ${n.title}`}
-                          checked={selection?.has(key) ?? false}
-                          onChange={() => onToggleSelect(key)}
-                          className="mt-1 size-3.5 shrink-0 accent-brand"
-                        />
-                      ) : null}
-                      <button
-                        type="button"
-                        onClick={() => onSelect(key)}
-                        aria-current={isActive ? "true" : undefined}
-                        className="block min-w-0 flex-1 text-left"
-                      >
-                        <span className="flex items-baseline justify-between gap-2">
-                          <span className="truncate text-sm font-medium">{n.title}</span>
-                          <span className="shrink-0 text-[11px] text-muted-foreground">
-                            {formatDate(n.created)}
-                          </span>
-                        </span>
-                        <span className="mt-1 line-clamp-2 block text-xs text-muted-foreground">
-                          {n.excerpt}
-                        </span>
-                      </button>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-1.5 px-4 pb-3 pt-1.5 text-[11px] text-muted-foreground">
-                      <span>{n.folder}</span>
-                      {n.problems && n.problems.length > 0 ? (
-                        <span
-                          title={n.problems.join("; ")}
-                          className="rounded border border-border px-1 text-foreground"
-                        >
-                          ! frontmatter
-                        </span>
-                      ) : null}
-                      {n.tags.map((noteTag) => {
-                        const isFiltered = noteTag === tag;
-                        return (
-                          <button
-                            key={noteTag}
-                            type="button"
-                            aria-pressed={isFiltered}
-                            onClick={() => onTag(isFiltered ? null : noteTag)}
-                            className={
-                              "rounded px-1 transition-colors hover:text-foreground " +
-                              (isFiltered ? "text-foreground" : "")
-                            }
-                          >
-                            #{noteTag}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
+                <li
+                  key={keyOf(n)}
+                  data-index={row.index}
+                  ref={virtualizer.measureElement}
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    transform: `translateY(${row.start}px)`,
+                  }}
+                >
+                  {rowBody(n)}
                 </li>
               );
             })}
+          </ul>
+        ) : (
+          <ul className="divide-y divide-border">
+            {notes.map((n) => (
+              <li key={keyOf(n)}>{rowBody(n)}</li>
+            ))}
           </ul>
         )}
       </div>

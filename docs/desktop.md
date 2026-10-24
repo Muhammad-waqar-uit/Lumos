@@ -14,7 +14,7 @@ daemon (falling back to demo data when the daemon is offline):
 - `src/lib/bulk.ts` - the bulk helper: one write over many notes with every refusal kept, and the one sentence the status bar shows for it
 - `src/components/Sidebar.tsx` - the brand row (mark + wordmark), the Notes/Graph/Trash view switch, and folders with note counts
 - `src/components/LumosMark.tsx` - the mark itself, drawn inline in `currentColor` so it takes `--color-brand` from the theme
-- `src/components/NoteList.tsx` - searchable note list (title, date, preview, tags), the **New** button that opens the composer, and the selection checkboxes with the bulk bar (move, add-tag, archive, clear) they raise
+- `src/components/NoteList.tsx` - searchable note list (title, date, preview, tags), the **New** button that opens the composer, the selection checkboxes with the bulk bar (move, add-tag, archive, clear) they raise, and a windowed row list above 50 notes so a large vault keeps a small DOM
 - `src/components/NoteComposer.tsx` - a new note: a folder picker, a textarea, Create, Cancel, and a failure that keeps the draft
 - `src/components/NoteViewer.tsx` - note header (folder, date, source, url) + backlinks + link pane + Markdown body, the Edit button that turns the body into the editor, and the **...** button that opens the file operations
 - `src/components/NoteEditor.tsx` - the body as a textarea with a live preview of the draft beside it: Save, Cancel, the preview toggle, the unsaved marker and a failure that keeps the draft

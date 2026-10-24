@@ -4,6 +4,24 @@ Chronological record of what has been built. Newest entries first within each da
 
 ## 2026-10-24
 
+### Done — the list windows itself (virtualization, Phase 8)
+- [x] **The change.** `NoteList` windows itself above 50 notes (`VIRTUALIZE_ABOVE`): the scroll
+  container is handed to `@tanstack/react-virtual`, each row measures itself as it renders, and
+  only the visible window plus an overscan of eight is in the DOM. Below the threshold nothing
+  changed - a small vault needs no machinery and gets none, which is also why every existing
+  component test kept passing untouched. The row itself moved into one `rowBody` both paths
+  share, so the windowed and the plain list cannot drift apart.
+- [x] **Tests, red first.** Sixty notes put a *window* of rows in the DOM - not sixty - with the
+  first row present; three notes still render all three. jsdom has no layout, so the test gives
+  the scroll container a `clientHeight` and the rows an `offsetHeight`: the virtualizer's only
+  two size inputs, read out of its source rather than guessed, and restored after the test.
+- [x] **One suppression, documented.** oxlint's React-Compiler rule flags `useVirtualizer` as
+  memoization-incompatible; the one-line disable sits beside a comment saying why - the library
+  hands back functions the compiler must not memoize, and skipping the component is the correct
+  answer the rule is asking for.
+- [x] `pnpm test:e2e` 5/5 against the built bundle, `pnpm validate` green (187 desktop tests).
+- [x] **Docs.** TODO, FEATURES, desktop.md, LIMITATIONS (what a windowed list cannot promise).
+
 ### Done — the panes stop jumping (subtle transitions, Phase 8)
 - [x] Two keyframes in `index.css` - a 140 ms fade and a 160 ms slide-down - applied where things
   appear rather than arrive: each pane (the note list and viewer, the graph, the trash), the

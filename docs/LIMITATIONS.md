@@ -46,6 +46,11 @@ Each entry says what is given up. Where a limit is deliberate, the alternative i
   repository has no Ollama to judge the quality of what comes back - only the wiring around it is
   tested, and that wiring was exercised live against a real daemon. The day it plans for is the
   machine's own, and a note outside the newest 20 is not in the prompt at all.
+- **The note list windows itself above 50 notes, so the DOM stops at the window.** Rows beyond it
+  are not rendered until they scroll into view, and `j`/`k` past the window moves the highlight
+  without guaranteeing the row is on screen yet - the list has never auto-scrolled, so the
+  scrollbar is how a person follows. Below 50 notes nothing is virtualized and every row is
+  exactly as it was.
 - **A page is cached for the session, not refreshed.** The first read of a URL is kept in memory
   (`src/lib/link-cache.ts`), so reopening a note, switching tabs and StrictMode's double mount all
   reuse one request and one scrape; a second caller while the first is still in flight joins it

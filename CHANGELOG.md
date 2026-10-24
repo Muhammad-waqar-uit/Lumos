@@ -674,3 +674,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   rather than a jump. Both keyframes sit behind `prefers-reduced-motion: no-preference`, so a
   system that asks for less motion gets none; there is no new dependency, only plain CSS beside
   the tokens it already uses.
+
+### Added (continued 17)
+
+- List virtualization, the second Phase 8 item. Above 50 notes the list windows itself: only the
+  rows on screen (plus a small overscan) are in the DOM, each measuring itself as it renders, so
+  a keystroke in the search above no longer re-renders every row of a large vault. Below 50 notes
+  nothing changed - the rows are exactly as they were, which is also why every existing component
+  test kept passing untouched. One new dependency: `@tanstack/react-virtual`, headless, from the
+  same family as the router.

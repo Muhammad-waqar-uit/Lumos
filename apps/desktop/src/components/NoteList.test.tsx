@@ -77,6 +77,46 @@ describe("NoteList - states", () => {
   });
 });
 
+describe("NoteList - a large vault", () => {
+  it("puts a window of rows in the DOM, not the whole vault", () => {
+    // jsdom gives every element a zero-height box, and a window over nothing is nothing: the
+    // virtualizer reads the scroll container's clientHeight (its size) and each row's offsetHeight
+    // (its measurement), so both are told a plausible size - all the virtualizer was ever asked.
+    Object.defineProperty(HTMLElement.prototype, "clientHeight", {
+      configurable: true,
+      get(this: HTMLElement) {
+        return this.classList.contains("overflow-y-auto") ? 600 : 0;
+      },
+    });
+    Object.defineProperty(HTMLElement.prototype, "offsetHeight", {
+      configurable: true,
+      get() {
+        return 100;
+      },
+    });
+    const many = Array.from({ length: 60 }, (_, i) =>
+      entry({ title: `note ${i}`, name: `2026-10-20-note-${i}.md` }),
+    );
+    renderList({ notes: many });
+
+    // The list is the one part of the shell that has to scale: every row in the DOM is a row
+    // React re-renders on every keystroke of the search above them.
+    const rows = screen.getAllByRole("listitem");
+    expect(rows.length).toBeGreaterThan(0);
+    expect(rows.length).toBeLessThan(60);
+    expect(screen.getByText("note 0")).toBeDefined();
+    Reflect.deleteProperty(HTMLElement.prototype, "clientHeight");
+    Reflect.deleteProperty(HTMLElement.prototype, "offsetHeight");
+  });
+
+  it("renders every row while the vault is small enough to just show", () => {
+    renderList({
+      notes: [entry({ title: "one" }), entry({ title: "two" }), entry({ title: "three" })],
+    });
+    expect(screen.getAllByRole("listitem")).toHaveLength(3);
+  });
+});
+
 describe("NoteList - rows", () => {
   it("shows the title, folder and tags, and opens the note that was clicked", () => {
     const onSelect = vi.fn();

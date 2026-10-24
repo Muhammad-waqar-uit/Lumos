@@ -45,7 +45,8 @@ else on this page can close them.
 - [x] Subtle transitions - a pane switched to, the palette, the bulk bar and a notice each enter
   with one soft fade (`fade-in`/`slide-down` in `index.css`), and none of it runs for
   `prefers-reduced-motion`
-- [ ] List virtualization, so a large vault does not put every row in the DOM at once
+- [x] List virtualization - above 50 notes the list windows itself (`VIRTUALIZE_ABOVE` in
+  `NoteList.tsx`, `@tanstack/react-virtual`); below that, every row is simply rendered as before
 - [ ] A daemon-side search index, so a body match does not read whole files on every query
 - [ ] Screenshots in the docs
 - [ ] `USAGE.md` - a standalone guide; the README's usage section covers the commands today
