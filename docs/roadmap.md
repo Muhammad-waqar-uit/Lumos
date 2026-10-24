@@ -29,7 +29,7 @@ folder, so progress is always visible.
 - Link expansion for `/read` and `/interview` (title, description, image). ✅ (`GET /link`, and the desktop reads the page in place)
 - Instagram and Facebook links play in place through their own embeds, with the caption card the daemon reads. ✅
 - `/find <query>` over the vault. ✅ (title, tags and body; five matches per reply, the rest counted)
-- `/plan today|tomorrow` backed by a local Ollama model.
+- `/plan today|tomorrow` backed by a local Ollama model. ✅ (the vault's 20 newest notes become the prompt; a missing Ollama or model answers with one sentence instead)
 - Tag extraction and auto-tagging. ✅ (`#hashtags` in a message become the note's frontmatter tags, using the graph's own rules)
 - Settings from a config file, with the environment overriding it. ✅ (`lumos.config.json`, see [daemon.md](daemon.md))
 

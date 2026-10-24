@@ -12,6 +12,9 @@
  */
 import { readFile } from "node:fs/promises";
 import path from "node:path";
+// The defaults belong beside the module that acts on them, so a configured daemon and a bare
+// one cannot drift apart into two different Ollama addresses.
+import { DEFAULT_OLLAMA_MODEL, DEFAULT_OLLAMA_URL } from "./plan.js";
 
 export interface Config {
   /** Absolute path to the vault the routes read and `/message` writes into. */
@@ -21,6 +24,10 @@ export interface Config {
   allowedNumbers: string[];
   /** False runs the HTTP API alone, which is what `LUMOS_DISABLE_WHATSAPP=1` also means. */
   whatsapp: boolean;
+  /** Where Ollama listens for `/plan`. */
+  ollamaUrl: string;
+  /** The model `/plan` asks, named as `ollama pull` would name it. */
+  ollamaModel: string;
 }
 
 /** A setting that cannot be used, with a sentence a person can act on. */
@@ -32,13 +39,22 @@ export class ConfigError extends Error {
 }
 
 /** The settings a file may carry. Anything else is a typo, and is refused rather than ignored. */
-const FILE_KEYS = ["vaultPath", "port", "allowedNumbers", "whatsapp"] as const;
+const FILE_KEYS = [
+  "vaultPath",
+  "port",
+  "allowedNumbers",
+  "whatsapp",
+  "ollamaUrl",
+  "ollamaModel",
+] as const;
 
 type FileConfig = Partial<{
   vaultPath: string;
   port: number;
   allowedNumbers: string[];
   whatsapp: boolean;
+  ollamaUrl: string;
+  ollamaModel: string;
 }>;
 
 export interface LoadOptions {
@@ -75,6 +91,14 @@ export async function loadConfig(options: LoadOptions = {}): Promise<Config> {
         ? (fromFile.allowedNumbers ?? [])
         : splitNumbers(env.ALLOWED_NUMBERS),
     whatsapp: env.LUMOS_DISABLE_WHATSAPP === "1" ? false : (fromFile.whatsapp ?? true),
+    ollamaUrl:
+      env.OLLAMA_URL === undefined
+        ? (fromFile.ollamaUrl ?? DEFAULT_OLLAMA_URL)
+        : readNonEmptyString(env.OLLAMA_URL, "OLLAMA_URL"),
+    ollamaModel:
+      env.OLLAMA_MODEL === undefined
+        ? (fromFile.ollamaModel ?? DEFAULT_OLLAMA_MODEL)
+        : readNonEmptyString(env.OLLAMA_MODEL, "OLLAMA_MODEL"),
   };
 }
 
@@ -141,7 +165,22 @@ function validate(value: unknown, baseDir: string, file: string): FileConfig {
     config.whatsapp = record.whatsapp;
   }
 
+  if (record.ollamaUrl !== undefined) {
+    config.ollamaUrl = readNonEmptyString(record.ollamaUrl, `"ollamaUrl" in ${file}`);
+  }
+  if (record.ollamaModel !== undefined) {
+    config.ollamaModel = readNonEmptyString(record.ollamaModel, `"ollamaModel" in ${file}`);
+  }
+
   return config;
+}
+
+/** A setting that has to name a place or a thing: never blank, wherever it came from. */
+function readNonEmptyString(value: unknown, label: string): string {
+  if (typeof value !== "string" || value.trim() === "") {
+    throw new ConfigError(`${label} must be a non-empty string.`);
+  }
+  return value;
 }
 
 /** A port is a whole number in range, whether it arrived as a string or a number. */

@@ -20,9 +20,8 @@ Markdown notes to the vault. It lives in [`apps/daemon`](../apps/daemon).
 | `src/config.ts` | `loadConfig()` - reads the JSON config file, lets the environment override it, and refuses a setting it cannot use with a sentence naming it.
 | `src/handler.ts` | `handleMessage()` - routes a parsed command to a reply string. The vault directory is an argument, so the caller decides where a note lands.
 | `src/app.ts` | `createApp()` - builds the Fastify app (CORS + every route) over a vault directory, so a test can drive it without binding a port.
-| `src/server.ts` | Entry point: builds the app, listens on loopback, boots the WhatsApp connection.
-| `src/fetch-link.ts` | Fetches one link for the desktop, with the guards `GET /link` relies on.
-| `src/whatsapp.ts` | Baileys connection, QR auth, allowlist, message loop.
+| `src/server.ts` | Entry point: builds the app, listens on loopback, boots the WhatsApp connection.| `src/fetch-link.ts` | Fetches one link for the desktop, with the guards `GET /link` relies on.
+| `src/plan.ts` | `buildPlan()` - the vault's newest notes become one prompt for the local Ollama model; every failure arrives as a sentence a person can act on, never as the socket's own words. | `src/whatsapp.ts` | Baileys connection, QR auth, allowlist, message loop.
 
 ## Commands
 
@@ -32,7 +31,7 @@ Markdown notes to the vault. It lives in [`apps/daemon`](../apps/daemon).
 | `/interview <text or link>` | `vault/Interviews/` |
 | `/goal <text>` | `vault/Goals/` |
 | `/read <link>` | `vault/Reading/` |
-| `/plan today\|tomorrow` | (planned - Ollama) |
+| `/plan today\|tomorrow` | Replies with a plan from the vault's 20 newest notes, through the local Ollama model. Ollama stopped, a timeout or a model that is not pulled each answer with the sentence that says so |
 | `/find <query>` | Search the vault; replies with the title and folder of each match |
 | `/help` | prints the command list |
 | plain text | `vault/Inbox/` |
@@ -271,7 +270,9 @@ points. It is git-ignored, because a vault path and phone numbers belong to one 
   "vaultPath": "../../vault",
   "port": 3001,
   "allowedNumbers": ["15550100000"],
-  "whatsapp": true
+  "whatsapp": true,
+  "ollamaUrl": "http://127.0.0.1:11434",
+  "ollamaModel": "llama3.2:3b"
 }
 ```
 
@@ -288,6 +289,8 @@ the daemon was launched.
 | `ALLOWED_NUMBERS` | `""` | Comma-separated sender numbers (country code + number, no `+`). Empty blocks all. |
 | `VAULT_PATH` | `../../vault` | Vault directory, relative to the daemon's working directory. |
 | `PORT` | `3001` | Port to listen on, 1-65535. The host is always `127.0.0.1`. |
+| `OLLAMA_URL` | `http://127.0.0.1:11434` | Where the local Ollama listens. `/plan` names this address in its reply when nothing answers there. |
+| `OLLAMA_MODEL` | `llama3.2:3b` | The model `/plan` asks, named as `ollama pull` would name it. |
 | `LUMOS_DISABLE_WHATSAPP` | unset | Set to `1` to run the HTTP API on its own, with no WhatsApp connection (what the route tests use). |
 
 Numbers are normalised however they were written: `+1 (555) 010-0000`, `1 555 010 0000` and
@@ -330,6 +333,10 @@ write). Keeping this logic in packages lets the desktop app reuse it.
   offline: which addresses and hostnames are refused (including a redirect into the local network),
   the redirect limit, the byte cap, a missing content type, and the fact that a network error never
   leaks its detail into the message.
+- `src/plan.test.ts` - `/plan` with Ollama injected: the prompt the model is sent (the day being
+  planned for, the newest twenty notes and nothing older), the empty vault answered without a
+  request, and every failure sentence - nothing listening, a timeout, a missing model, a bad
+  status, an unreadable answer - with the socket's own words kept out of the reply.
 
 Not covered yet: the WhatsApp session itself, which needs a real linked device, and the Tauri shell.
 The routes are covered without a port, and the graph builder by the `@lumos/vault-utils` suite, both
@@ -337,9 +344,9 @@ against a temporary vault.
 
 ## Planned enhancements
 
-See the **Plan** section of [`TODO.md`](TODO.md): `/plan` with Ollama is what is left of the daemon's
-own roadmap. Settings, tag extraction and the read API have all landed - a captured message's
+The daemon's phase in the **Plan** section of [`TODO.md`](TODO.md) is closed: `/plan` with Ollama,
+settings, tag extraction and the read API have all landed - a captured message's
 `#hashtags` become its frontmatter tags (see [vault.md](vault.md)), and the settings come from a
 config file as well as the environment (see Configuration above). The parser, the filing path,
-`/find`, the link fetcher, the config loader and the HTTP routes are covered by tests (see Tests
+`/find`, the link fetcher, the config loader, the plan module and the HTTP routes are covered by tests (see Tests
 above).

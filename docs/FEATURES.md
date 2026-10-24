@@ -9,7 +9,6 @@ then what is in progress, then what is done.
 
 | Feature | Status | Notes |
 |---|---|---|
-| `/plan` with Ollama | planned | Local AI daily planning |
 | Link enrichment | idea | Summaries and key points from links |
 
 ## In progress
@@ -20,9 +19,10 @@ Nothing in progress.
 
 | Feature | Notes |
 |---|---|
-| Config file | `lumos.config.json` for the vault path, port, allowlist and the WhatsApp switch, with the environment overriding it. A missing file means the defaults; a bad one stops the daemon with one sentence naming the setting |
+| Config file | `lumos.config.json` for the vault path, port, allowlist, the WhatsApp switch and the two Ollama settings, with the environment overriding it. A missing file means the defaults; a bad one stops the daemon with one sentence naming the setting |
 | WhatsApp capture | Baileys multi-device, allowlist, auto-reconnect |
 | Command parsing | `/idea`, `/interview`, `/goal`, `/read`, `/plan`, `/find`, `/help` |
+| `/plan` | `/plan today` or `tomorrow` replies with at most five short points from the local Ollama model, over the vault's 20 newest notes and the machine's own date. An empty vault answers without a request; Ollama stopped, a timeout, a missing model, a bad status or an unreadable answer each reply with one actionable sentence. `ollamaUrl`/`ollamaModel` in the config file (`OLLAMA_URL`/`OLLAMA_MODEL` in the environment), defaulting to `http://127.0.0.1:11434` and `llama3.2:3b` (`plan.ts` in the daemon) |
 | Vault writer | Markdown + YAML frontmatter, slugified filenames |
 | HTTP API | `POST /message`, `GET /health`, the six read-API routes in the row below, `PUT /note` for saving an edited body, `POST /notes` for creating one, and `PATCH /note`, `POST /note/move` and `DELETE /note` for renaming, moving and deleting |
 | Link expansion | `GET /link` reads title/description/og:image and the readable text of a page, for `/read` and `/interview` links. A PDF link is read the same way - its text through the same card, titled by its file name - and a file served without a useful content type is judged by its bytes rather than refused (`fetch-link.ts` + `read-pdf.ts` in the daemon, `unpdf` for the parsing) |

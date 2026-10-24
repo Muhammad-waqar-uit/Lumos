@@ -40,6 +40,12 @@ Each entry says what is given up. Where a limit is deliberate, the alternative i
   text the document draws outside its own page box - content some producers hide off-canvas - is
   not returned at all. A PDF's card title is its file name, not the document's metadata. Everything
   else that is not a page - JSON, video, archives - is still refused and named by its content type.
+- **`/plan` needs a running Ollama with its model pulled, and says so instead of planning.** The
+  reply is only as good as a small local model reading the vault's 20 newest notes: there is no
+  fine-tuning, no memory of earlier plans, and no asking for more than five points. This
+  repository has no Ollama to judge the quality of what comes back - only the wiring around it is
+  tested, and that wiring was exercised live against a real daemon. The day it plans for is the
+  machine's own, and a note outside the newest 20 is not in the prompt at all.
 - **A page is cached for the session, not refreshed.** The first read of a URL is kept in memory
   (`src/lib/link-cache.ts`), so reopening a note, switching tabs and StrictMode's double mount all
   reuse one request and one scrape; a second caller while the first is still in flight joins it

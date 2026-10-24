@@ -7,6 +7,7 @@ import qrcode from "qrcode-terminal";
 import pino from "pino";
 import path from "node:path";
 import { handleMessage } from "./handler.js";
+import type { PlanOptions } from "./plan.js";
 
 const AUTH_DIR = path.resolve(process.cwd(), "auth_info");
 
@@ -15,8 +16,13 @@ const userPart = (jid?: string | null) => jid?.split("@")[0]?.split(":")[0] ?? "
 /**
  * Connect to WhatsApp and answer messages. The vault and the allowlist arrive as arguments, so
  * this module never decides where a note lands or whose message is filed - `config.ts` owns those.
+ * The same is true of the Ollama `/plan` uses: it arrives too, or the plan module's defaults apply.
  */
-export async function startWhatsApp(vault: string, allowedNumbers: readonly string[]) {
+export async function startWhatsApp(
+  vault: string,
+  allowedNumbers: readonly string[],
+  plan?: PlanOptions,
+) {
   const allowed = new Set(allowedNumbers);
   const { state, saveCreds } = await useMultiFileAuthState(AUTH_DIR);
   const { version } = await fetchLatestBaileysVersion();
@@ -43,7 +49,7 @@ export async function startWhatsApp(vault: string, allowedNumbers: readonly stri
         console.log("Logged out. Delete the auth_info folder and restart to link again.");
       } else {
         console.log(`Connection closed (${code}). Reconnecting...`);
-        setTimeout(() => startWhatsApp(vault, allowedNumbers).catch(console.error), 3000);
+        setTimeout(() => startWhatsApp(vault, allowedNumbers, plan).catch(console.error), 3000);
       }
     }
   });
@@ -72,7 +78,7 @@ export async function startWhatsApp(vault: string, allowedNumbers: readonly stri
       }
 
       try {
-        const reply = await handleMessage(text, vault);
+        const reply = await handleMessage(text, vault, { plan });
         await sock.sendMessage(jid, { text: reply });
       } catch (err) {
         console.error(err);

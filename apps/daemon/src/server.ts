@@ -26,12 +26,14 @@ async function readSettings(): Promise<Config> {
 
 const config = await readSettings();
 
-const app = await createApp({ vault: config.vault, logger: true });
+const plan = { url: config.ollamaUrl, model: config.ollamaModel };
+
+const app = await createApp({ vault: config.vault, logger: true, plan });
 
 await app.listen({ host: "127.0.0.1", port: config.port });
 
 if (config.whatsapp) {
-  startWhatsApp(config.vault, config.allowedNumbers).catch((err) => app.log.error(err));
+  startWhatsApp(config.vault, config.allowedNumbers, plan).catch((err) => app.log.error(err));
 } else {
   app.log.info("WhatsApp bridge disabled (LUMOS_DISABLE_WHATSAPP=1 or whatsapp: false)");
 }
