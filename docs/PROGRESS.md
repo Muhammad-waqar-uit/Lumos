@@ -4,6 +4,29 @@ Chronological record of what has been built. Newest entries first within each da
 
 ## 2026-10-24
 
+### Done — bulk move, tag and archive from the list (Phase 7)
+- [x] **The helper.** `src/lib/bulk.ts`: `runBulk` settles one write over many notes with
+  `allSettled` - a refusal on one note (a name taken, a folder gone) never abandons the rest,
+  and the daemon's own sentence travels back per failure, exactly as a single-note operation
+  speaks. `bulkNotice` is the one sentence the status bar shows: what landed, and the first
+  refusal when something did not. A non-Error rejection reads "unknown error" rather than
+  whatever the socket said.
+- [x] **The UI.** A checkbox per row (`Select <title>`) and a bulk bar that appears with the
+  first selection: the count, a folder picker for move, a tag field (Enter or **Add tag**),
+  **Archive**, and **Clear**. Archive is the note's existing `status: archived` - the vault
+  gained no new concept. Leaving the notes pane drops the selection, so a bulk action can never
+  be one pane-switch away from notes the person is no longer looking at; that clear lives in the
+  view-change event, not an effect (the lint said so, and was right).
+- [x] **Wiring.** The shell runs the chosen writes through the store's `refreshVault()` and
+  reports `bulkNotice`; a refresh that fails after a landed bulk is a notice, not a silent
+  success.
+- [x] **Tests, red first.** Six cases over the helper (counts, refusals kept, the daemon's own
+  sentences, single/plural wording) and three end-to-end through the real shell: archive exactly
+  the selected notes with the notice and a spent selection, move through the folder picker, and
+  a partial failure carrying the daemon's sentence. 185 desktop tests; `pnpm test:e2e` 5/5
+  against the built bundle, whose list markup this change reworked.
+- [x] **Docs.** TODO (Phase 7 closed), FEATURES, desktop.md, CHANGELOG.
+
 ### Done — the vault lives in a store, not in one component (zustand)
 - [x] **The store.** `src/lib/store.ts` holds what the whole shell shares: the daemon read with
   its demo fallback (the graph is a separate read, so the notes survive a graph failure), the

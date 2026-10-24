@@ -1,6 +1,6 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearch } from "@tanstack/react-router";
-import type { Folder, Note } from "@lumos/shared";
+import type { Folder, Note, VaultEntry } from "@lumos/shared";
 import {
   createNote,
   deleteNote,
@@ -13,6 +13,7 @@ import {
   saveNote,
   updateNoteMeta,
 } from "./lib/api";
+import { bulkNotice, runBulk } from "./lib/bulk";
 import { useVaultStore } from "./lib/store";
 import { backlinks } from "@lumos/vault-utils/graph";
 import { DEMO_GRAPH, demoNote } from "./lib/demo";
@@ -75,6 +76,8 @@ export default function App() {
   const navigate = useNavigate({ from: "/" });
   const [fetched, setFetched] = useState<{ key: string; note: Note } | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
+  // The notes chosen for a bulk action, by the same key the list knows them by.
+  const [selection, setSelection] = useState<ReadonlySet<string>>(new Set());
   // Keys of the notes opened this session, for the palette's empty state. A reload starts empty.
   const [recent, setRecent] = useState<string[]>([]);
   // The list's width lives here, not in NoteList: the Graph tab unmounts the list, and a width that
@@ -91,6 +94,40 @@ export default function App() {
   useEffect(() => {
     void loadVault();
   }, [loadVault]);
+
+  // Leaving the notes pane drops the selection: a bulk action must not be one pane-switch away
+  // from notes the person was no longer looking at.
+  const toggleSelect = useCallback((key: string): void => {
+    setSelection((current) => {
+      const next = new Set(current);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }, []);
+
+  /**
+   * Run one write over the selected notes, then say what happened and re-read the vault.
+   *
+   * A refusal on one note never abandons the rest (`runBulk` settles every write), and the
+   * summary - including the first refusal in the daemon's own words - is the status-bar notice.
+   */
+  const bulkWrite = useCallback(
+    async (action: string, write: (entry: VaultEntry) => Promise<unknown>): Promise<void> => {
+      const targets = notes.filter((n) => selection.has(keyOf(n)));
+      const summary = await runBulk(targets, write);
+      setSelection(new Set());
+      setNotice({ text: bulkNotice(action, summary) });
+      try {
+        await refreshVault();
+      } catch (err: unknown) {
+        setNotice({
+          text: `${action} done, but the list could not be refreshed (${reasonOf(err)}).`,
+        });
+      }
+    },
+    [notes, selection, refreshVault],
+  );
 
   // Folder and query decide which tags are on offer; the tag then narrows that same set, so a
   // count is always a count of what is actually listed.
@@ -150,6 +187,9 @@ export default function App() {
   /** Every view change goes through here, so the address always says which pane is open. */
   const setView = useCallback(
     (next: ShellView): void => {
+      // Leaving the notes pane drops the selection: a bulk action must not be one pane-switch
+      // away from notes the person was no longer looking at.
+      if (next !== "notes") setSelection(new Set());
       // "notes" is the pane a plain address already means, so it is dropped rather than written.
       void navigate({ search: (prev) => ({ ...prev, view: next === "notes" ? undefined : next }) });
     },
@@ -467,6 +507,24 @@ export default function App() {
               onCreate={createNoteAndOpen}
               canCreate={connection === "daemon"}
               activeFolder={activeFolder}
+              selection={selection}
+              onToggleSelect={toggleSelect}
+              onClearSelection={() => setSelection(new Set())}
+              onBulkMove={(toFolder) =>
+                void bulkWrite("Moved", (entry) => moveNote(entry.folder, entry.name, toFolder))
+              }
+              onBulkTag={(tagToAdd) =>
+                void bulkWrite("Tagged", (entry) =>
+                  updateNoteMeta(entry.folder, entry.name, {
+                    tags: [...new Set([...entry.tags, tagToAdd])],
+                  }),
+                )
+              }
+              onBulkArchive={() =>
+                void bulkWrite("Archived", (entry) =>
+                  updateNoteMeta(entry.folder, entry.name, { status: "archived" }),
+                )
+              }
             />
             <PaneSplitter width={listWidth} onWidth={resizeList} />
             <NoteViewer

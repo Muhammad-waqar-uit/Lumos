@@ -36,7 +36,9 @@ else on this page can close them.
 
 ### Phase 7 - Editing & enrichment (P2) - open items
 
-- [ ] Bulk operations (move, tag, archive)
+- [x] Bulk operations (move, tag, archive) - checkboxes in the list choose notes, a bulk bar offers
+  move/tag/archive/clear, and every write is settled on its own so one refusal never abandons the
+  rest (`lib/bulk.ts`, `App.bulk.test.tsx`)
 
 ### Phase 8 - Polish & docs (P2) - open items
 
