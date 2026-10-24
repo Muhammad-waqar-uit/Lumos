@@ -123,7 +123,9 @@ export function NoteViewer({
       </header>
       <NoteMeta
         // A fresh field per file, so a half-typed tag never lands on the note opened next.
-        key={note.file}
+        // The prefix keeps this key to itself: these three children all reset on the same file,
+        // and one shared key made React warn about duplicates in this list.
+        key={`meta-${note.file}`}
         note={note}
         canEdit={connection === "daemon"}
         onTags={onTags}
@@ -132,7 +134,7 @@ export function NoteViewer({
       {!isEditing && actionsOpen ? (
         <NoteActions
           // A fresh panel per file, so a rename draft never lands on the note opened after it.
-          key={note.file}
+          key={`actions-${note.file}`}
           note={note}
           linkedFrom={backlinks.length}
           onRename={onRename}
@@ -164,7 +166,7 @@ export function NoteViewer({
       {isEditing ? (
         <NoteEditor
           // A fresh draft per file: the key is what stops one note's text landing in another.
-          key={note.file}
+          key={`editor-${note.file}`}
           note={note}
           onSave={onSave}
           onSaved={() => setEditing(null)}
