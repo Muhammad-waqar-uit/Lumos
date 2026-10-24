@@ -1,7 +1,7 @@
 /**
  * @lumos/vault-utils - read, list, search, parse, and write the Lumos Markdown vault.
  */
-import { mkdir, readdir, readFile, rename, rm, writeFile } from "node:fs/promises";
+import { mkdir, readdir, readFile, rename, rm, stat, writeFile } from "node:fs/promises";
 import type { Dirent } from "node:fs";
 import path from "node:path";
 import YAML from "yaml";
@@ -237,25 +237,102 @@ export async function listNotes(vaultDir: string): Promise<VaultEntry[]> {
   return groups.flat().sort((a, b) => (a.created < b.created ? 1 : -1));
 }
 
-/** Case-insensitive search across title, content, and tags. */
-export async function searchNotes(vaultDir: string, query: string): Promise<VaultEntry[]> {
-  const q = query.trim().toLowerCase();
-  if (!q) return [];
-  const all = await listNotes(vaultDir);
-  const results: VaultEntry[] = [];
-  for (const entry of all) {
-    const haystack = `${entry.title}\n${entry.excerpt}\n${entry.tags.join(" ")}`.toLowerCase();
-    let full = haystack;
-    if (!haystack.includes(q)) {
-      try {
-        full = (await readFile(entry.file, "utf8")).toLowerCase();
-      } catch {
-        full = haystack;
-      }
+/** How the index reads a note file. `readFile` by default; a test counts what the cache saved. */
+async function readBody(file: string): Promise<string> {
+  return readFile(file, "utf8");
+}
+
+/** A search index kept across queries, so one vault read serves every keystroke. */
+export interface NoteSearch {
+  /** Case-insensitive search across title, excerpt, tags, and the whole body. */
+  search(query: string): Promise<VaultEntry[]>;
+}
+
+/** A body the index has read, and the file state that reading was true of. */
+interface CachedBody {
+  /** Modification time and size: the pair a rewrite always changes, and cheap to read back. */
+  mtimeMs: number;
+  size: number;
+  /** The file's text, lowercased once, because a query never needs the original casing. */
+  lower: string;
+}
+
+/** What an entry's listing says about it, as one lowercased haystack. */
+function summaryOf(entry: VaultEntry): string {
+  return `${entry.title}\n${entry.excerpt}\n${entry.tags.join(" ")}`.toLowerCase();
+}
+
+/**
+ * Build a search index over a vault that keeps the note bodies it has read.
+ *
+ * `searchNotes` re-reads every note body a listing does not already match, which is fine for a
+ * single `/find` reply and wasteful for the desktop's palette, which asks again on every pause in
+ * typing. This index remembers each body against the file's mtime and size, so a repeated query
+ * stats the files and scans memory instead of the disk. A body is re-read when either figure moves,
+ * which is what every write to the file does, and an entry for a note that has left the vault - or
+ * moved under a new name - is dropped on the next query.
+ *
+ * The index is not a cache of the listing: `listNotes` still runs per query, so a note created by
+ * another process - the WhatsApp path, an editor - is searched as soon as it is on disk.
+ */
+export function createNoteSearch(
+  vaultDir: string,
+  { readText = readBody }: { readText?: (file: string) => Promise<string> } = {},
+): NoteSearch {
+  const bodies = new Map<string, CachedBody>();
+
+  /** The body for one file, re-read only when the file is not what the cache remembers. */
+  async function bodyOf(file: string): Promise<string | null> {
+    let info: Awaited<ReturnType<typeof stat>>;
+    try {
+      info = await stat(file);
+    } catch {
+      bodies.delete(file);
+      return null;
     }
-    if (full.includes(q)) results.push(entry);
+
+    const cached = bodies.get(file);
+    if (cached && cached.mtimeMs === info.mtimeMs && cached.size === info.size) return cached.lower;
+
+    try {
+      const lower = (await readText(file)).toLowerCase();
+      bodies.set(file, { mtimeMs: info.mtimeMs, size: info.size, lower });
+      return lower;
+    } catch {
+      // A file that vanished between the stat and the read is simply not searchable.
+      bodies.delete(file);
+      return null;
+    }
   }
-  return results;
+
+  return {
+    async search(query: string): Promise<VaultEntry[]> {
+      const q = query.trim().toLowerCase();
+      if (!q) return [];
+
+      const entries = await listNotes(vaultDir);
+      const results: VaultEntry[] = [];
+      const live = new Set<string>();
+
+      for (const entry of entries) {
+        live.add(entry.file);
+        if (summaryOf(entry).includes(q)) {
+          results.push(entry);
+          continue;
+        }
+        const body = await bodyOf(entry.file);
+        if (body !== null && body.includes(q)) results.push(entry);
+      }
+
+      for (const file of bodies.keys()) if (!live.has(file)) bodies.delete(file);
+      return results;
+    },
+  };
+}
+
+/** Case-insensitive search across title, content, and tags, over a throwaway index. */
+export async function searchNotes(vaultDir: string, query: string): Promise<VaultEntry[]> {
+  return createNoteSearch(vaultDir).search(query);
 }
 
 /** Frontmatter aliases, which links may resolve to. */

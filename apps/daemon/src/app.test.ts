@@ -174,6 +174,35 @@ describe("GET /notes/search", () => {
       expect(res.json()).toEqual({ notes: [] });
     }
   });
+
+  it("finds a note another process wrote after the app started", async () => {
+    const { vault, app } = await makeApp();
+    await mkdir(path.join(vault, "Reading"), { recursive: true });
+    await writeFile(
+      path.join(vault, "Reading", "2026-05-02-edited.md"),
+      '---\nsource: whatsapp\ncreated: "2026-05-02T00:00:00.000Z"\ntags: []\nstatus: new\n---\n\n# Edited\n\nA note about quantizing models.',
+    );
+
+    const res = await app.inject({ method: "GET", url: "/notes/search?q=quantizing" });
+    expect(res.statusCode).toBe(200);
+    expect(res.json<{ notes: { title: string }[] }>().notes.map((n) => n.title)).toEqual([
+      "Edited",
+    ]);
+  });
+
+  it("drops a note that was deleted after the index saw it", async () => {
+    const { vault, app } = await makeApp([
+      { folder: "Goals", text: "learn rust\n\nthe body mentions quantizing" },
+    ]);
+    const hit = await app.inject({ method: "GET", url: "/notes/search?q=quantizing" });
+    expect(hit.json<{ notes: unknown[] }>().notes).toHaveLength(1);
+
+    const [name] = await readdir(path.join(vault, "Goals"));
+    await rm(path.join(vault, "Goals", name));
+
+    const gone = await app.inject({ method: "GET", url: "/notes/search?q=quantizing" });
+    expect(gone.json()).toEqual({ notes: [] });
+  });
 });
 
 describe("POST /notes", () => {

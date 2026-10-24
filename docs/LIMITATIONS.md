@@ -263,12 +263,19 @@ play it — neither page can be read or copied.
 
 ## Performance
 
-These are design observations, not measurements — no vault large enough to show them has been built.
+Mostly design observations. The search figures below are measured; the rest have no vault large
+enough behind them yet.
 
-- **Nothing is indexed.** `/graph` reads every note body on each request, and `searchNotes` reads
-  whole files whenever the excerpt does not match, so both grow with the size of the vault. A rename
-  reads the whole vault too, because it has to know who links to the note before it can rewrite them
-  - so renaming is proportional to the vault, not to the note.
+- **Only search is indexed.** `GET /notes/search` keeps the note bodies it has read in memory and
+  re-reads one only when its mtime or size moved, so a repeated query no longer touches the disk for
+  a body. The listing is still read fresh on every query - that is what makes a note written by the
+  phone appear at once - so a query stays proportional to the vault's *file count and parse*, which
+  was 184-185 ms of the 350-446 ms it used to take over 600 notes (1.9 MB, Windows). `/graph` reads
+  every note body on each request and a rename reads the whole vault, because it has to know who
+  links to the note before it can rewrite them.
+- **The index costs memory.** It holds the lowercased text of every note it has searched, so it is
+  roughly the size of the vault's Markdown, and it lives in the daemon's process - a restart starts
+  it empty, and a second client shares the same index rather than getting its own.
 - **The link cache is memory only.** A URL costs one fetch and a scrape of up to 1 MiB per session,
   reused for every later visit to it; the map is unbounded, which is fine for a session's worth of
   links and is not a store.

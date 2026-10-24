@@ -75,6 +75,17 @@ A second note with the same text gets its own file — the writer never overwrit
 ### `GET /notes/search?q=<query>`
 Case-insensitive search across titles, content, and tags: `{ "notes": VaultEntry[] }`.
 
+The app builds one index at startup (`createNoteSearch`) and answers every query from it. The
+listing is read fresh on each query, so a note the WhatsApp bridge or an editor wrote is found
+immediately; the note bodies are kept in memory and re-read only when a file's mtime or size
+moved. That is the whole gain: the palette asks on every pause in typing, and the second query
+for the same vault no longer reads a megabyte of Markdown again. A body for a note that has left
+the vault is dropped on the next query, so a delete does not keep its text in memory.
+
+Measured on 600 notes (1.9 MB) on Windows with the daemon's routes: `searchNotes` (uncached)
+350-446 ms per query, warm `createNoteSearch` 184-185 ms. The remainder is the always-fresh
+listing and its YAML parse, not search.
+
 ### `GET /folders`
 Note counts per folder: `{ "folders": [{ "folder": "Ideas", "count": 3 }] }`.
 

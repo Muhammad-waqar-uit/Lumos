@@ -2,7 +2,29 @@
 
 Chronological record of what has been built. Newest entries first within each date.
 
-## 2026-10-24
+## 2026-10-25
+
+### Done — search stops reading the vault twice (daemon-side index, Phase 8)
+- [x] **The change.** `createNoteSearch` (`packages/vault-utils`) keeps each note body it has read,
+  lowercased once, beside the file's mtime and size. A body is re-read only when either figure
+  moves, and the entry for a note that has left the vault - deleted, or moved under a new name -
+  is dropped on the next query. `searchNotes` stays as the one-shot API WhatsApp's `/find` uses and
+  is now a thin wrapper over a throwaway index, so the matching rule (title, excerpt, tags, body)
+  exists in one place.
+- [x] **What is deliberately not cached.** The listing still runs per query. A cache of the
+  listing would make the app miss a note the phone wrote a second ago, and the gain would be the
+  part that is cheap to redo; the 1.9 MB of Markdown was the part worth keeping.
+- [x] **Tests, red first.** Six over the index: a body-only match, a title match answered as
+  before, an empty query, one body read across three searches (an injected reader counts them),
+  a re-read after the file changes, and an entry forgotten when the note is deleted. Two route
+  tests hold the lifecycle the app actually has a risk of getting wrong: a note another process
+  wrote after startup is found, and a note deleted after the index saw it stops matching.
+- [x] **Measured, not assumed.** A throwaway 600-note vault (1.9 MB) against the real routes:
+  `searchNotes` 446/370/345 ms, warm `createNoteSearch` 366/184/185 ms - the cache halves the
+  query and the remainder is the always-fresh listing and its YAML parse.
+- [x] `pnpm validate` green (210 vault-utils, 158 daemon, 187 desktop tests).
+- [x] **Docs.** daemon.md (how the route answers now, and the numbers), LIMITATIONS (what is not
+  indexed, and what the index costs in memory).
 
 ### Done — the list windows itself (virtualization, Phase 8)
 - [x] **The change.** `NoteList` windows itself above 50 notes (`VIRTUALIZE_ABOVE`): the scroll

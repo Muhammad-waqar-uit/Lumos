@@ -12,6 +12,7 @@ import cors from "@fastify/cors";
 import {
   NoteFileError,
   buildVaultGraph,
+  createNoteSearch,
   deleteNote,
   emptyTrash,
   getNotesByFolder,
@@ -22,7 +23,6 @@ import {
   renameNote,
   restoreNote,
   saveNote,
-  searchNotes,
   updateNote,
   updateNoteMeta,
 } from "@lumos/vault-utils";
@@ -102,6 +102,10 @@ export async function createApp({
     return reply.code(500).send({ error: "The daemon could not finish that request." });
   });
 
+  // One search index for the life of the app, so the palette's repeated queries stat the vault and
+  // scan memory instead of re-reading every note body on each pause in typing.
+  const search = createNoteSearch(vault);
+
   app.get("/health", async () => ({ ok: true }));
 
   app.post<{ Body: { text?: string } }>("/message", async (req, reply) => {
@@ -113,9 +117,9 @@ export async function createApp({
   /** List every note in the vault, newest first. */
   app.get("/notes", async () => ({ notes: await listNotes(vault) }));
 
-  /** Case-insensitive search across titles, content, and tags. */
+  /** Case-insensitive search across titles, content, and tags, from the app's warm index. */
   app.get<{ Querystring: { q?: string } }>("/notes/search", async (req) => {
-    return { notes: await searchNotes(vault, req.query.q ?? "") };
+    return { notes: await search.search(req.query.q ?? "") };
   });
 
   /**
