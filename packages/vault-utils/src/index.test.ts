@@ -1,9 +1,10 @@
-import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readdir, readFile, rm, utimes, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
   buildVaultGraph,
+  createNoteSearch,
   defaultFrontmatter,
   deleteNote,
   getNotesByFolder,
@@ -1081,6 +1082,67 @@ describe("searchNotes", () => {
 
   it("returns nothing when nothing matches", async () => {
     expect(await searchNotes(vault, "quantum")).toEqual([]);
+  });
+});
+
+// The keyword sits past the 200-character excerpt, so a hit can only have come from the body.
+const DEEP = `---\nsource: whatsapp\ncreated: "2026-01-02T00:00:00.000Z"\ntags: []\nstatus: new\n---\n\n# Notes\n\n${"filler ".repeat(40)}pinning the model.`;
+
+describe("createNoteSearch", () => {
+  beforeEach(async () => {
+    await put("Reading", "2026-01-02-deep.md", DEEP);
+  });
+
+  it("finds a note by text deep in its body", async () => {
+    const search = createNoteSearch(vault);
+    expect((await search.search("pinning")).map((e) => e.name)).toEqual(["2026-01-02-deep.md"]);
+  });
+
+  it("answers a title match the same way the one-shot search does", async () => {
+    const search = createNoteSearch(vault);
+    expect((await search.search("NOTES")).map((e) => e.name)).toEqual(["2026-01-02-deep.md"]);
+  });
+
+  it("returns nothing for an empty query", async () => {
+    expect(await createNoteSearch(vault).search("  ")).toEqual([]);
+  });
+
+  it("reads a body once, however often it is searched", async () => {
+    let reads = 0;
+    const search = createNoteSearch(vault, {
+      readText: async (file) => {
+        reads += 1;
+        return readFile(file, "utf8");
+      },
+    });
+
+    await search.search("pinning");
+    await search.search("pinning");
+    await search.search("docking");
+
+    expect(reads).toBe(1);
+  });
+
+  it("re-reads a note whose file changed", async () => {
+    const search = createNoteSearch(vault);
+    await search.search("pinning");
+
+    const file = path.join(vault, "Reading", "2026-01-02-deep.md");
+    await writeFile(file, DEEP.replace("pinning", "docking"), "utf8");
+    const later = new Date(Date.now() + 5_000);
+    await utimes(file, later, later);
+
+    expect((await search.search("docking")).map((e) => e.name)).toEqual(["2026-01-02-deep.md"]);
+    expect(await search.search("pinning")).toEqual([]);
+  });
+
+  it("forgets a note that is no longer in the vault", async () => {
+    const search = createNoteSearch(vault);
+    await search.search("pinning");
+
+    await rm(path.join(vault, "Reading"), { recursive: true, force: true });
+
+    expect(await search.search("pinning")).toEqual([]);
   });
 });
 

@@ -47,7 +47,9 @@ else on this page can close them.
   `prefers-reduced-motion`
 - [x] List virtualization - above 50 notes the list windows itself (`VIRTUALIZE_ABOVE` in
   `NoteList.tsx`, `@tanstack/react-virtual`); below that, every row is simply rendered as before
-- [ ] A daemon-side search index, so a body match does not read whole files on every query
+- [x] A daemon-side search index - `createNoteSearch` in `@lumos/vault-utils`, one per daemon,
+  keeps a body's lowercased text against the file's mtime and size and re-reads it only when
+  either moves; a repeated query was 350-446 ms → 184-185 ms over 600 notes
 - [ ] Screenshots in the docs
 - [ ] `USAGE.md` - a standalone guide; the README's usage section covers the commands today
 

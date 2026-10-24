@@ -683,3 +683,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   nothing changed - the rows are exactly as they were, which is also why every existing component
   test kept passing untouched. One new dependency: `@tanstack/react-virtual`, headless, from the
   same family as the router.
+
+### Changed (continued)
+
+- The daemon answers `GET /notes/search` from a warm index instead of re-reading the vault on every
+  query, the third Phase 8 item. The palette asks on every pause in typing, and each query read
+  every note file twice - once for the listing, once for the bodies. Bodies are now kept in memory
+  and re-read only when a file's mtime or size moves, and a note that leaves the vault loses its
+  entry. Measured over 600 notes (1.9 MB): 350-446 ms per query before, 184-185 ms warm. The
+  listing is still read fresh, so a note the phone just wrote is found immediately.
