@@ -95,7 +95,7 @@ export function TrashPanel({ onLoad, onRestore, onEmpty, onClose }: Props) {
   }, [busy, onEmpty, onClose]);
 
   return (
-    <section aria-label="Trash" className="border-b border-border px-6 py-2.5">
+    <section aria-label="Trash" className="fade-in border-b border-border px-6 py-2.5">
       <div className="flex items-center justify-between gap-2">
         <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Trash</p>
         <button type="button" onClick={onClose} className={BUTTON}>

@@ -77,7 +77,7 @@ export function NoteList({
       : tagCounts;
 
   return (
-    <section className="flex shrink-0 flex-col" style={{ width }}>
+    <section className="fade-in flex shrink-0 flex-col" style={{ width }}>
       <div className="border-b border-border p-3">
         <div className="flex items-center gap-2">
           <label htmlFor="note-search" className="sr-only">
@@ -139,7 +139,7 @@ export function NoteList({
         <div
           role="toolbar"
           aria-label="Bulk actions"
-          className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-2 text-xs"
+          className="slide-down flex flex-wrap items-center gap-2 border-b border-border px-4 py-2 text-xs"
         >
           <span className="tabular-nums text-muted-foreground">{selectedCount} selected</span>
           <select

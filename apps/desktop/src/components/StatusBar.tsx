@@ -46,7 +46,7 @@ export function StatusBar({
               type="button"
               onClick={onDismissNotice}
               title="Dismiss"
-              className="truncate text-amber-400 hover:underline"
+              className="fade-in truncate text-amber-400 hover:underline"
             >
               {notice}
             </button>

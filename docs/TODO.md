@@ -42,8 +42,9 @@ else on this page can close them.
 
 ### Phase 8 - Polish & docs (P2) - open items
 
-- [ ] Subtle transitions - panes and panels change without a fade; only hover colours transition
-  today
+- [x] Subtle transitions - a pane switched to, the palette, the bulk bar and a notice each enter
+  with one soft fade (`fade-in`/`slide-down` in `index.css`), and none of it runs for
+  `prefers-reduced-motion`
 - [ ] List virtualization, so a large vault does not put every row in the DOM at once
 - [ ] A daemon-side search index, so a body match does not read whole files on every query
 - [ ] Screenshots in the docs

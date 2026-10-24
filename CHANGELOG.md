@@ -665,3 +665,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   daemon's own words - the same sentences a single-note operation speaks. Leaving the notes pane
   drops the selection, so a bulk action can never fire at notes the person is no longer looking
   at. Six helper tests and three end-to-end through the real shell, written red first.
+
+### Added (continued 16)
+
+- Subtle transitions, the first Phase 8 item. A pane switched to - the note list and viewer, the
+  graph, the trash - the search palette, the bulk bar and a status-bar notice each enter with one
+  short fade or slide-down instead of appearing mid-frame, so a switch reads as a change of place
+  rather than a jump. Both keyframes sit behind `prefers-reduced-motion: no-preference`, so a
+  system that asks for less motion gets none; there is no new dependency, only plain CSS beside
+  the tokens it already uses.

@@ -4,6 +4,19 @@ Chronological record of what has been built. Newest entries first within each da
 
 ## 2026-10-24
 
+### Done — the panes stop jumping (subtle transitions, Phase 8)
+- [x] Two keyframes in `index.css` - a 140 ms fade and a 160 ms slide-down - applied where things
+  appear rather than arrive: each pane (the note list and viewer, the graph, the trash), the
+  search palette, the bulk bar, and the status-bar notice. Note switches and hover colours were
+  already instant and stay that way; the animations run on mount, so nothing replays while a
+  pane is merely re-rendered.
+- [x] Both keyframes live inside `@media (prefers-reduced-motion: no-preference)`: a system that
+  asks for less motion gets none - the classes then match nothing and the UI is exactly as
+  before. No new dependency; plain CSS next to the tokens it uses.
+- [x] Verified by the suites rather than by eye: 185 desktop tests and `pnpm test:e2e` 5/5 - the
+  classes change no structure, and the e2e run is what proves the built bundle still renders.
+  How it *feels* is the one check only a person can make (same category as the `[!]` items).
+
 ### Done — bulk move, tag and archive from the list (Phase 7)
 - [x] **The helper.** `src/lib/bulk.ts`: `runBulk` settles one write over many notes with
   `allSettled` - a refusal on one note (a name taken, a folder gone) never abandons the rest,
