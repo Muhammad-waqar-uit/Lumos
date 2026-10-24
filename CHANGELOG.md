@@ -711,3 +711,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in `assets/`. The light wordmark is the same geometry recoloured for white: ink text, amber
   darkened to `#C77F00`, no glow. The embedded C2PA provenance block the artwork arrived with is
   stripped from every asset, so the files hold nothing but the drawing.
+
+### Added (continued 19)
+
+- Screenshots in the docs, the last Phase 8 item: `docs/images/` holds the notes view with its
+  backlinks, the search palette with a result marked as matching only inside the body, and the graph.
+  They were taken with Playwright against the running app over a throwaway eight-note vault, so no
+  personal note is in any of them, and the README and `USAGE.md` both use them.

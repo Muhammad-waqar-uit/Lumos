@@ -10,6 +10,8 @@ Lumos is a personal knowledge management system that lets you capture thoughts, 
 
 Lumos transforms WhatsApp into an effortless capture tool for your second brain. Instead of opening apps or breaking your flow, you can just send a message and have it automatically organized into folders like Ideas, Interviews, Goals, Reading, or Inbox.
 
+![The Lumos desktop app: folders and tag chips, the note list, and the open note with its tags, status and backlinks](docs/images/notes.png)
+
 ## Features
 
 - **WhatsApp Integration**: Link a dedicated WhatsApp number using Baileys (multi-device) - no third-party WhatsApp API keys required

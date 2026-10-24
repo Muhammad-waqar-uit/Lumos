@@ -76,6 +76,8 @@ hiding the note. Pointing Obsidian at the vault is the intended way to browse it
 
 ## The desktop app
 
+![The desktop app: folder sidebar and tag chips on the left, the note list in the middle, the open note with its tags, status and backlinks on the right](docs/images/notes.png)
+
 ### Finding a note
 
 - **Folders** in the sidebar, with a count per folder; **All** is the whole vault.
@@ -84,8 +86,10 @@ hiding the note. Pointing Obsidian at the vault is the intended way to browse it
   narrow; pick it again to clear. A tag on a note row does the same thing.
 - **`Cmd/Ctrl+K`** opens the palette: fuzzy ranking over titles, tags and previews, plus a body
   search from the daemon for words that appear nowhere in the preview - those rows are marked *in
-  the body*. Arrow keys move, `Enter` opens, `Esc` closes. Empty, it lists the notes you opened this
-  session.
+  the body*, as the last row is here. Arrow keys move, `Enter` opens, `Esc` closes. Empty, it lists
+  the notes you opened this session.
+
+  ![The search palette over a vault, with one result marked as matching only inside the note body](docs/images/search.png)
 - **`j` / `k`** move down and up the list without leaving the viewer.
 
 ### Reading
@@ -124,6 +128,8 @@ note holds, say - never abandons the rest; the status bar says what landed and r
 refusal in the daemon's own words. The selection is dropped when you leave the notes pane.
 
 ### The graph
+
+![The graph tab: notes sized by their backlinks with one hue per folder, tag nodes around them, and the Tags, Unlinked and Depth controls](docs/images/graph.png)
 
 **Graph** draws the vault as a force graph: notes as nodes sized by how many notes link to them, one
 hue per folder, tag nodes, and unlinked notes marked. Click a note to open it, a tag node for

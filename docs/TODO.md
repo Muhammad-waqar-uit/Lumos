@@ -50,7 +50,9 @@ else on this page can close them.
 - [x] A daemon-side search index - `createNoteSearch` in `@lumos/vault-utils`, one per daemon,
   keeps a body's lowercased text against the file's mtime and size and re-reads it only when
   either moves; a repeated query was 350-446 ms → 184-185 ms over 600 notes
-- [ ] Screenshots in the docs
+- [x] Screenshots in the docs - three in `docs/images/`, taken with Playwright against the running
+  desktop on a throwaway vault (the browser panel's own overlay would have been in the frame): the
+  notes view with backlinks, the palette with a body-only match, and the graph
 - [x] `USAGE.md` - a standalone guide: the two halves and how to start each, capture from WhatsApp and
   what happens to a message, the vault layout and frontmatter, the desktop app end to end (finding,
   reading, writing, bulk, graph, panes, keys), the HTTP API, settings, and a troubleshooting table

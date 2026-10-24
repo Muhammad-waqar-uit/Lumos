@@ -4,6 +4,21 @@ Chronological record of what has been built. Newest entries first within each da
 
 ## 2026-10-25
 
+### Done — three pictures of the app (screenshots, Phase 8)
+- [x] `docs/images/` holds the notes view (folders, tag chips, the list, the open note with its tags,
+  status and backlinks), the search palette with a row marked *in the body*, and the graph with its
+  tag nodes and depth control. `README.md` takes the first as its hero and `USAGE.md` places each
+  beside the section it explains.
+- [x] **Taken with Playwright, not the browser panel.** The panel's own floating badge sat over the
+  app's title in the first capture, and hiding it in the page did not remove it from the frame - the
+  badge is drawn by the shell, not by the document. A throwaway Playwright script photographs only
+  the page, waits for the list to fill rather than for the first paint (the first attempt caught an
+  empty shell), and reports console errors, of which there were none.
+- [x] **A throwaway vault, not the real one.** Eight notes over the five folders, with links, tags,
+  a task list, a table and a code fence, so each panel has something to show; the first graph shot
+  was a bare chain, so a few cross-links were added to the same notes and the shot retaken. Nothing
+  from anyone's vault is in a published image.
+
 ### Done — the new mark, everywhere it is drawn
 - [x] The artwork is replaced: a wand throwing a four-point spark, with three rays ending in nodes.
   Five places held the old ring-and-spokes lamp and all five now hold the new drawing - the sidebar
