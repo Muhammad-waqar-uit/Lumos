@@ -701,3 +701,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   actions, the graph, the panes and the keys - plus the HTTP API with runnable requests, every
   setting, and a troubleshooting table of the messages the app and the daemon actually print. The
   README links it, and the README keeps the tour rather than the reference.
+
+### Changed (continued 2)
+
+- The brand mark is redrawn: a wand throwing a four-point spark, with three rays ending in nodes,
+  replacing the ring-and-spokes lamp. It lands everywhere the old mark was - the sidebar (still
+  inline in `currentColor`, so it keeps taking `--color-brand`), the browser tab, the window,
+  taskbar and installer icons (regenerated from one 512 tile with `tauri icon`), and the four SVGs
+  in `assets/`. The light wordmark is the same geometry recoloured for white: ink text, amber
+  darkened to `#C77F00`, no glow. The embedded C2PA provenance block the artwork arrived with is
+  stripped from every asset, so the files hold nothing but the drawing.

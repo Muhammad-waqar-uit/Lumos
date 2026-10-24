@@ -50,8 +50,9 @@ add it back.
 
 ## Brand mark
 
-The mark is a lamp seen from above: a ring, three spokes and a lit centre. It appears in four
-places, each from the source that suits it:
+The mark is a wand throwing a four-point spark, with three rays ending in nodes - the spark is what
+the name means, and the rays are the notes a captured thought returns as. It appears in four places,
+each from the source that suits it:
 
 | Where | File |
 | --- | --- |
@@ -61,9 +62,15 @@ places, each from the source that suits it:
 | READMEs | [`assets/`](../assets) - `lumos-logo-on-dark-bg.svg`, `lumos-mark.svg`, `lumos-app-icon.svg`, `lumos-logo-on-light.svg` |
 
 The sidebar draws the mark inline and in `currentColor` rather than importing the SVG, so it takes
-its amber from `--color-brand` and no component holds a hex value. `--color-brand` is deliberately
-the only warm colour in the shell: it marks the app, and no button, border or state uses it, so the
-quiet greys stay quiet.
+its amber from `--color-brand` and no component holds a hex value. Its viewBox is cropped to the
+artwork, because the shape sits off-centre in the 200-unit tile and an uncropped mark looks
+lopsided in an icon-sized slot. `--color-brand` is deliberately the only warm colour in the shell:
+it marks the app, and no button, border or state uses it, so the quiet greys stay quiet.
+
+The tab icon and the installer icons come from one drawing (`lumos-app-icon.svg`, a 512
+tile at `rx 116`), so a change to the mark is made once and the browser tab cannot drift from the
+window. The light wordmark is the same geometry recoloured: no tile, ink text, the amber darkened
+to `#C77F00` to hold its edge on white, and the glow dropped with the ground it was lighting.
 
 The graph view is the exception: a canvas cannot use a utility class. Its colours are plain custom
 properties on `:root` (`--color-graph-edge`, `--color-graph-tag`, `--color-graph-folder-1` … `-5`),

@@ -4,6 +4,25 @@ Chronological record of what has been built. Newest entries first within each da
 
 ## 2026-10-25
 
+### Done — the new mark, everywhere it is drawn
+- [x] The artwork is replaced: a wand throwing a four-point spark, with three rays ending in nodes.
+  Five places held the old ring-and-spokes lamp and all five now hold the new drawing - the sidebar
+  component (inline, `currentColor`, so `--color-brand` still supplies the hue), the browser tab,
+  the four `assets/` SVGs, and the Tauri icon set, which is generated rather than hand-exported:
+  `pnpm --filter desktop tauri icon ../../assets/lumos-app-icon.svg` rebuilt the PNG, ICO and ICNS
+  files from the one 512 tile. The mobile icon folders that command also writes were deleted - this
+  is a desktop app.
+- [x] **The light variant is a recolour, not a second drawing.** Same geometry, no tile, ink text,
+  the amber darkened to `#C77F00` so it holds its edge on white, and the glow dropped with the
+  ground it was lighting. Losing the glow is the one visible concession: a radial wash that reads as
+  light on near-black reads as a smudge on white.
+- [x] **The sidebar mark's viewBox is cropped** (`20 40 140 140`) - the art sits off-centre in the
+  200-unit tile, which left the icon lopsided in a 24px slot. Checked by screenshotting the running
+  app, not by reading the SVG.
+- [x] The C2PA provenance block every delivered file carried is stripped, so the assets hold the
+  drawing and nothing else. `docs/design.md` describes the new mark and why the tab and the window
+  icons cannot drift apart.
+
 ### Done — a guide that stands on its own (USAGE.md, Phase 8)
 - [x] `USAGE.md` at the root: what the daemon and the desktop each are and how to start them, the
   WhatsApp commands and what a message becomes (title, filename, tags, frontmatter), the vault's
