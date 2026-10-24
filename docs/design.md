@@ -36,7 +36,7 @@ in `hsl()` for you.
   --color-border: hsl(0 0% 14.9%);
   --color-input: hsl(0 0% 14.9%);
   --color-ring: hsl(0 0% 83.1%);
-  --color-brand: hsl(40 100% 65%);        /* ~#FFC24B, the lamp */
+  --color-brand: hsl(40 100% 65%);        /* ~#FFC24B, the spark and wand */
   --radius-lg: 0.5rem;
 }
 ```
