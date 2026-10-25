@@ -26,25 +26,27 @@ start. RULES.md is the contract; this file is the practical walkthrough.
 
 `pnpm install` also installs the git hooks (via the `prepare` script) — don't skip it.
 
-## Branch, then work (mandatory)
+## Committing to `main`
 
-`main` is protected and always releasable. **Never commit to `main`** — the `pre-commit` hook
-rejects it and `git commit --no-verify` is not an acceptable workaround.
+This repository works on one branch: `main`. Commit there and push there — there is no branch to
+create and nothing to merge back, and `git commit --no-verify` is still not an option.
 
 ```bash
 git checkout main && git pull
-git checkout -b feat/vault-search        # <type>/<short-kebab-description>
+# ... work, small commits, each passing the hooks ...
+pnpm validate
+git commit -m "feat(daemon): add /find endpoint"
+git push
 ```
 
-Prefixes match the commit types: `feat/` `fix/` `refactor/` `perf/` `docs/` `test/` `chore/` `ci/`
-`hotfix/`. Keep the branch short-lived, one topic only, and rebase on `main` to catch up
-(`git rebase origin/main` — never merge `main` into your branch). Full model: [RULES.md §6](RULES.md).
-
+Keep one topic per commit so a change can be reverted on its own, and never rewrite published
+history. If you fork and send a pull request instead, the same gate runs on it. Full model:
+[RULES.md §6](RULES.md).
 ## Checks that run automatically
 
 | Hook         | Runs                                                                 |
 | ------------ | -------------------------------------------------------------------- |
-| `pre-commit` | blocks commits on `main`, then `lint-staged` (oxlint --fix + prettier) |
+| `pre-commit` | `lint-staged` on the staged files (oxlint --fix + prettier)          |
 | `commit-msg` | `commitlint` — enforces `<type>(<scope>): <description>`             |
 | `pre-push`   | `pnpm validate` — lint + format:check + typecheck + test + build     |
 
@@ -95,10 +97,11 @@ Valid types: `feat` · `fix` · `chore` · `docs` · `style` · `refactor` · `t
 - **Local-first**: do not introduce a required cloud dependency for core features.
 - Keep changes minimal and focused. Match the surrounding code rather than introducing a new style.
 
-## Before you open a pull request
+## Before you push
 
-- `pnpm validate` is green locally, and the same check passes in CI
-  (`.github/workflows/validate.yml` runs it on every pull request into `main`).
+- `pnpm validate` is green locally — `pre-push` runs it for you, and CI runs it again on the push
+  (`.github/workflows/validate.yml`).
+- The commit holds one topic, so `git revert <sha>` can take it back on its own.
 - The docs your change affects are updated **in the same commit**: [docs/TODO.md](docs/TODO.md),
   [docs/PROGRESS.md](docs/PROGRESS.md), [docs/FEATURES.md](docs/FEATURES.md),
   [docs/LIMITATIONS.md](docs/LIMITATIONS.md), [CHANGELOG.md](CHANGELOG.md), and the matching

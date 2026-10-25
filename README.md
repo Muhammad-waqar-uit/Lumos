@@ -202,7 +202,7 @@ the details.
 
 This is a pnpm monorepo. Commands can be run from root or from individual apps.
 
-**Every change must pass `pnpm validate` before it is pushed, and nothing is committed directly to `main`.** Work happens on a short-lived branch; the git hooks (Husky + lint-staged + commitlint) block a commit on `main`, a badly formatted commit message, or a red gate. See [RULES.md](RULES.md) for the enforced standard and [AGENTS.md](AGENTS.md) for the working agreement. GitHub Actions runs the same gate on every pull request ([.github/workflows/validate.yml](.github/workflows/validate.yml)).
+**Every change must pass `pnpm validate` before it is pushed.** The project works on a single branch, `main`; the git hooks (Husky + lint-staged + commitlint) block a badly formatted commit message or a red gate, and `pre-push` re-runs the full gate. See [RULES.md](RULES.md) for the enforced standard and [AGENTS.md](AGENTS.md) for the working agreement. GitHub Actions runs the same gate on every push ([.github/workflows/validate.yml](.github/workflows/validate.yml)).
 
 ```bash
 # Install all dependencies
@@ -220,8 +220,8 @@ pnpm test
 # Run the E2E smoke suite against the built app (needs Chromium once)
 pnpm test:e2e
 
-# Start a branch before writing any code
-git checkout -b feat/my-change
+# Start from the newest main before writing any code (there is only one branch)
+git checkout main && git pull
 ```
 
 ## Roadmap
@@ -255,7 +255,7 @@ Tracking:
 
 Standards and agent docs:
 
-- [RULES.md](RULES.md) - build, commit and branch rules (enforced by git hooks)
+- [RULES.md](RULES.md) - build, commit and git rules (enforced by git hooks)
 - [AGENTS.md](AGENTS.md) - working agreement for AI agents working in this repo
 - [CLAUDE.md](CLAUDE.md) - Claude Code entry point
 
@@ -272,7 +272,7 @@ Reference:
 
 Contributions are welcome! Please feel free to submit issues, feature requests, or pull requests.
 
-Read [CONTRIBUTING.md](CONTRIBUTING.md) and [RULES.md](RULES.md) first: commits go on a branch (never `main`), the commit message must be `<type>(<scope>): <description>`, and `pnpm validate` must be green.
+Read [CONTRIBUTING.md](CONTRIBUTING.md) and [RULES.md](RULES.md) first: work lands on `main` with one topic per commit, the commit message must be `<type>(<scope>): <description>`, and `pnpm validate` must be green.
 
 ## License
 

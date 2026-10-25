@@ -746,3 +746,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   sentence that says which (already linked, or capture switched off). The button also showed itself
   when the daemon was unreachable, which is when the page cannot load; it now shows while the daemon
   answers and reads **Pair**.
+
+### Changed (continued 3)
+
+- The repository works on one branch, `main`, instead of a short-lived branch per change. Commits land
+  there and are pushed there; the `pre-commit` hook no longer refuses a commit on `main`, and the one
+  rule that replaces the merge review is that a commit holds one topic, so `git revert <sha>` can
+  take it back on its own. `RULES.md` §6 was rewritten around the loop (pull, work, `pnpm validate`,
+  commit, push) and what the trade-off gave up - a review step in front of `main`, with CI reporting
+  on the push rather than blocking it - is recorded in `docs/LIMITATIONS.md`. `AGENTS.md`,
+  `CLAUDE.md`, `CONTRIBUTING.md`, `README.md`, `docs/ARCHITECTURE.md`, `docs/FEATURES.md`,
+  `docs/PLAN.md` and `docs/roadmap.md` follow the same change, and the three branches that were
+  still open were merged into `main` and deleted.

@@ -21,30 +21,35 @@ pnpm workspace (pnpm **only** — never npm or yarn):
 
 ## Non-negotiables
 
-1. **Never commit to `main`.** Every change goes on a short-lived branch and lands through a PR.
-2. **`pnpm validate` must pass** before you push. Husky enforces it locally and GitHub Actions runs
-   the same gate on every pull request (`.github/workflows/validate.yml`); do not bypass hooks. The
-   `pre-commit` hook also refuses to commit while you are on `main`.
+1. **Work on `main`.** This repository has one branch — commit there and push there. One topic per
+   commit, so a change can be reverted on its own.
+2. **`pnpm validate` must pass** before you push. Husky enforces it locally (the `pre-push` hook)
+   and GitHub Actions runs the same gate on every push (`.github/workflows/validate.yml`); do not
+   bypass hooks.
 3. **Commit format** `<type>(<scope>): <description>` — the pre-commit and `commit-msg` hooks block
    anything else, and `git commit --no-verify` is not an option.
 4. **Zero `any`**, zero unjustified suppressions, no swallowed errors, no skipped or weakened tests.
 5. **Docs move with the code** in the same commit (see "Docs you must keep current").
-6. **One topic per branch and per PR.** Do not mix a refactor with a feature.
+6. **One topic per commit.** Do not mix a refactor with a feature — a revert should only ever take
+   back the thing it names.
 
-## Branches — never work on `main`
+## One branch: `main`
+
+Everything lands on `main` — commit there, push there. There is no branch to create and no PR to
+carry a solo change; the gate is the hooks plus GitHub Actions on every push.
 
 ```bash
 git checkout main && git pull
-git checkout -b feat/vault-search          # <type>/<short-kebab-description>
 # ... small commits, each passing the hooks ...
 pnpm validate
-git push -u origin feat/vault-search       # open a PR into main, squash-merge, delete branch
+git add <only the files you touched>
+git commit -m "feat(daemon): add /find endpoint"   # <type>(<scope>): <description>
+git push
 ```
 
-Prefixes match the commit types: `feat/` `fix/` `refactor/` `perf/` `docs/` `test/` `chore/` `ci/`
-`hotfix/`. Rebase on `main` to catch up (`git rebase origin/main`) — never merge `main` down.
-Full model: [RULES.md §6](RULES.md).
-
+One topic per commit, so `git revert <sha>` takes a change back on its own. Full model:
+[RULES.md §6](RULES.md). If the project gains contributors the branch-and-PR model this replaced is
+in git history, and CI already runs on pull requests.
 ## Commands
 
 ```bash

@@ -109,14 +109,15 @@ lumos/
 
 - **pnpm only** (pnpm workspace, `pnpm-lock.yaml` committed).
 - **Lint:** oxlint, kept in step with the TypeScript version. **Format:** prettier.
-- **Husky hooks** — `pre-commit` refuses to commit while on `main`, then runs lint-staged on the
-  staged files; `commit-msg` runs commitlint; `pre-push` runs `pnpm validate`
-  (lint + format:check + typecheck + test + build). None of the hooks can be bypassed.
+- **Husky hooks** — `pre-commit` runs lint-staged on the staged files; `commit-msg` runs
+  commitlint; `pre-push` runs `pnpm validate` (lint + format:check + typecheck + test + build). None
+  of the hooks can be bypassed.
 - **One TypeScript version** (`~6.0.3`) across all four workspaces, each with a `typecheck` script.
-- **Workflow:** every change lives on a short-lived `<type>/<short-description>` branch and lands in
-  `main` through a pull request (squash-merge). `main` is always releasable. See [RULES.md §6](../RULES.md).
-- **CI:** `.github/workflows/validate.yml` runs `pnpm validate` and `pnpm test:e2e` as two jobs on every PR into `main` and every push
-  to `main`. It calls the same `validate` script the hooks do, reads pnpm's version from the
+- **Workflow:** one branch, `main` — commits land there directly and are pushed there, one topic per
+  commit so any change can be reverted on its own. The hooks and CI are the gate. See
+  [RULES.md §6](../RULES.md).
+- **CI:** `.github/workflows/validate.yml` runs `pnpm validate` and `pnpm test:e2e` as two jobs on every push
+  to `main` (and on every pull request, for a fork). It calls the same `validate` script the hooks do, reads pnpm's version from the
   `packageManager` field, and caches the pnpm store against `pnpm-lock.yaml`. A second job runs
-  `pnpm test:e2e` against a real Chromium. Branch protection on `main` requires both checks and an
-  up-to-date branch, so it is enforced rather than only reported.
+  `pnpm test:e2e` against a real Chromium. Because work lands on `main` directly, CI reports on a
+  push after it has arrived; the blocking gate is the local `pre-push` hook.

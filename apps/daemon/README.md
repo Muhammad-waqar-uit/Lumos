@@ -189,7 +189,7 @@ pnpm test
 
 The tests write into a temporary directory (`VAULT_PATH`), never into your `vault/`.
 
-The daemon can run headless with `LUMOS_DISABLE_WHATSAPP=1` when you only need the HTTP API. Read [RULES.md](../../RULES.md) before contributing — commits go on a branch, never on `main`.
+The daemon can run headless with `LUMOS_DISABLE_WHATSAPP=1` when you only need the HTTP API. Read [RULES.md](../../RULES.md) before contributing — work lands on `main`, one topic per commit.
 
 ## WhatsApp Authentication
 

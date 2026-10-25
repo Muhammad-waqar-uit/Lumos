@@ -121,7 +121,7 @@ Root keeps only what convention demands: `README.md`, `CHANGELOG.md`, `CONTRIBUT
 | Linter | oxlint | Fast, and compatible with the TypeScript version in use |
 | Formatter | prettier | One formatter, no style debates; runs on staged files |
 | Git hooks | Husky + lint-staged + commitlint | The standards are enforced, not aspirational |
-| Branching | Short-lived `<type>/<description>` branches, PR into `main`, squash-merge | `main` stays releasable; every change is reviewable in isolation |
+| Branching | One branch, `main`, one topic per commit | No merge to perform for a solo change; `git revert` is the way back. Given up: a review step in front of `main` |
 | TypeScript version | One version (`~6.0.3`) across all workspaces | Avoids cross-package type mismatches |
 | Link scraping | Hand-written extraction in `@lumos/vault-utils/link`, no new dependency | `link-preview-js` and cheerio would add weight to a package that stays side-effect free and browser-safe; the subset needed (title, og tags, readable text) is a few pure functions the tests can pin. Given up: the edge cases a full HTML parser handles |
 

@@ -1,7 +1,7 @@
 # RULES — Build, Commit & Branch Standards
 
 > **Every change must pass `pnpm validate` before it is pushed.** These rules are enforced by git
-> hooks and reviewed on every pull request. Read this file before contributing.
+> hooks and by GitHub Actions on every push to `main`. Read this file before contributing.
 
 ## 1. The validation gate (MANDATORY)
 
@@ -9,7 +9,7 @@ Git hooks are installed with **Husky** and **cannot be bypassed** — no `--no-v
 
 | Hook         | Runs                                                                   |
 | ------------ | ---------------------------------------------------------------------- |
-| `pre-commit` | rejects commits on `main`, then `lint-staged` on staged files only      |
+| `pre-commit` | `lint-staged` on the staged files only (oxlint --fix + prettier)        |
 | `commit-msg` | `commitlint` validates the message format                              |
 | `pre-push`   | `pnpm validate` — lint + format:check + typecheck + test + build        |
 
@@ -95,72 +95,48 @@ chore: add husky hooks and lint-staged
 Imperative mood, lower-case description, no trailing period. A message like `update stuff` is
 **rejected** — be specific.
 
-## 6. Branching model (MANDATORY)
+## 6. Branching model
 
-`main` is **always releasable** and is **protected**. Nobody commits to `main` directly — not
-humans, not agents. Every change travels through a short-lived branch and a pull request.
+This repository works on **one branch**: `main`. Commits are made there and pushed there; there is
+no long-lived development branch and nothing to merge back. The history is linear, and every commit
+passed the hooks on the way in.
 
-### 6.1 Branch naming
+Why: with a single author a short-lived branch adds a merge to perform and a second state to
+reconcile, while the gate that actually protects `main` — `pre-commit`, `commit-msg`, `pre-push` and
+GitHub Actions on every push — runs either way. What we gave up is a review step in front of `main`,
+so the compensating rule is that **one commit holds one topic**: an off-topic edit goes in its own
+commit, so `git revert <sha>` can take it back cleanly.
 
-```
-<type>/<short-kebab-description>
-```
-
-The `type` is the *same vocabulary as commit types*:
-
-| Prefix      | Use for                                              |
-| ----------- | ---------------------------------------------------- |
-| `feat/`     | new user-facing capability                           |
-| `fix/`      | bug fix                                              |
-| `refactor/` | behaviour-preserving restructuring                   |
-| `perf/`     | performance work                                     |
-| `docs/`     | documentation only                                   |
-| `test/`     | tests only                                           |
-| `chore/`    | tooling, deps, config, housekeeping                  |
-| `ci/`       | pipeline changes                                     |
-| `hotfix/`   | urgent fix branched from a release tag               |
-
-Examples: `feat/vault-search`, `fix/daemon-traversal-guard`, `chore/tooling-and-rules`.
-
-### 6.2 The lifecycle
+### 6.1 The loop
 
 ```bash
-git checkout main && git pull                  # 1. start from a fresh main
-git checkout -b feat/vault-search              # 2. short-lived branch
-
-# 3. work in small commits, each passing the pre-commit hook
+git checkout main && git pull      # 1. start from the newest main
+# ... work ...
+pnpm validate                      # 2. the full gate, before anything leaves the machine
+git add <the files you touched>    # 3. never `git add -A`
 git commit -m "feat(daemon): add /find endpoint"
-git commit -m "feat(desktop): wire the search box"
-
-pnpm validate && git push -u origin feat/vault-search   # 4. push (pre-push runs validate)
-# 5. open a PR into main, keep it small, request review
-# 6. squash-merge once green; delete the branch
+git push                           # 4. pre-push runs validate again
 ```
 
-### 6.3 Rules
+### 6.2 Rules
 
-- **One topic per branch.** A branch that does two unrelated things gets split.
-- **Short-lived.** Rebase on `main` daily; if a branch lives past ~3 days, split it.
-- **Rebase, don't merge, to catch up:** `git fetch origin && git rebase origin/main`.
-  Never merge `main` into a feature branch.
-- **Merge only via PR.** Squash-merge to keep `main` linear and its history readable.
-- **Never rewrite published history** on `main` or on a branch someone else has pulled.
-- **Delete the branch** after merge — locally and on the remote.
-- **Never force-push `main`.**
-- **Never `git push --no-verify`.** (The hooks reject it; so does review.)
-- **Stash or branch before switching** — never carry unrelated dirty files across a checkout.
+- **One topic per commit.** A commit that does two unrelated things gets split.
+- **Never rewrite published history** on `main` — no `git push --force`, no rebasing pushed commits.
+- **Never commit on a red gate**, and never make it green by disabling a rule.
+- **Never bypass the hooks** (`--no-verify`) — they are the whole review.
+- **Stash or commit before switching** — never carry unrelated dirty files across a checkout.
+- A risky change is still a commit, not a branch: if it has to come out, `git revert` it.
 
-### 6.4 Special branches
+### 6.3 If branches come back
 
-| Branch                | Meaning                                                          |
-| --------------------- | ---------------------------------------------------------------- |
-| `main`                | always releasable; protected; the only long-lived branch         |
-| `release/x.y.z`       | optional stabilisation branch cut from `main` before a release   |
-| `hotfix/x.y.z`        | urgent patch branched from the release tag, merged to `main` too |
-
-`develop` is **not** used.
+With more than one author, restore the model from git history (`git log -p -- RULES.md`): a
+`<type>/<short-description>` branch per change, a PR into `main`, squash-merge, delete the branch.
+`.github/workflows/validate.yml` already runs on pull requests, so nothing else has to change.
 
 ## 7. Pull requests
+
+Pull requests are for outside contributors and for anything that should be reviewed before it lands;
+the maintainer commits to `main` directly.
 
 - Title follows the commit-message format (`feat(desktop): …`).
 - Body answers: *what changed*, *why*, *how it was verified*, *what is still open*.

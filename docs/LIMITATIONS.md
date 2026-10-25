@@ -249,10 +249,11 @@ play it — neither page can be read or copied.
 
 ## Delivery and process
 
-- **An administrator can still push to `main` directly.** Branch protection requires a pull request,
-  the `pnpm validate` and `pnpm test:e2e` checks and an up-to-date branch, but `enforce_admins` is
-  off, so a break-glass push stays possible on a personal repository. The gate is a guardrail, not a
-  lock.
+- **Nothing reviews a change before it reaches `main`.** The project works on a single branch, so a
+  commit reaches the remote as soon as `pre-push` (`pnpm validate`) passes; CI runs the same gate on
+  the push, which reports a breakage after it has landed rather than blocking it. One topic per
+  commit keeps `git revert` a clean way back. We gave up the pre-merge review step in exchange for
+  not maintaining a second branch and a merge per change.
 - **CI is Linux-only.** Windows and macOS are not exercised by the workflow, so CRLF handling, path
   separators and the Tauri build are local observations.
 - **The E2E smoke suite is a smoke suite, not a full pass.** Its 5 tests cover one happy path through

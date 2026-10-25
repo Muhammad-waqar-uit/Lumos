@@ -77,23 +77,25 @@ Nothing in flight. The next item to pick up is the first one under **Plan**.
 - [x] oxlint as the linter (kept in step with the TypeScript version), prettier as the formatter
 - [x] Husky hooks: `pre-commit` (lint-staged), `commit-msg` (commitlint), `pre-push` (`pnpm validate`)
 - [x] Root scripts: `lint`, `lint:fix`, `format`, `format:check`, `typecheck`, `build`, `validate`
-- [x] `pre-commit` refuses to commit while on `main` - the branch workflow is enforced, not just
-  documented
+- [x] The hooks enforce the workflow rather than describing it - commitlint on the message,
+  `pre-push` on the gate. The `pre-commit` guard that refused to commit on `main` was removed on
+  2026-10-25, when the repository moved to a single branch
 - [x] `pnpm validate` = lint + format:check + typecheck + test + build
 - [x] One TypeScript version (`~6.0.3`) across every workspace, with a `typecheck` script in each
 - [x] `RULES.md` (build / commit / branch standards), `AGENTS.md` (agent working agreement), `CLAUDE.md`
-- [x] Branching model in writing: short-lived `<type>/<description>` branches, PR into `main`,
-  squash-merge
+- [x] Workflow in writing: one branch (`main`), one topic per commit, rewritten 2026-10-25. The
+  short-lived `<type>/<description>` branch + PR model it replaced is in git history
 - [x] Generated Tauri schemas excluded from formatting; prettier clean across the repo
 
 ### Phase 0.1: Enforcement (P1)
 
 - [x] GitHub Actions workflow (`.github/workflows/validate.yml`) running `pnpm validate` on every PR
   into `main` and every push to `main`
-- [x] Branch protection on `main`: requires a pull request and both CI checks (`pnpm validate` and
-  `pnpm test:e2e`), with `strict` on so a stale branch cannot merge; force pushes and deletions
+- [x] Branch protection on `main`: required a pull request and both CI checks (`pnpm validate` and
+  `pnpm test:e2e`), with `strict` on so a stale branch could not merge; force pushes and deletions
   blocked (validate on since 2026-10-19, first run on `main` green in `38790615355`; e2e added with
-  the Playwright suite)
+  the Playwright suite). Superseded 2026-10-25: work lands on `main` directly, so the blocking gate
+  is now the local `pre-push` hook and CI reports on the push
 - [x] Test runner (vitest) wired up and added to the validation gate - 223 tests over
   `@lumos/vault-utils` and the daemon, plus 108 over the desktop (filtering, demo data, search
   ranking, recent notes, the link cache, list movement, pane widths, graph layout memory, the

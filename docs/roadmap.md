@@ -6,11 +6,11 @@ Milestones are ordered; each maps to a phase in [`PLAN.md`](PLAN.md) and a secti
 ## M0 - Tooling & enforcement (Phase 0) ✅
 
 oxlint + prettier, Husky hooks (pre-commit / commit-msg / pre-push), lint-staged and commitlint, the
-`pnpm validate` gate, a single TypeScript version across the workspace, and the branch-based
-workflow written down in [`RULES.md`](../RULES.md) with [`AGENTS.md`](../AGENTS.md) and
-[`CLAUDE.md`](../CLAUDE.md) for agents. GitHub Actions runs the same gate on every PR into `main`
-(`.github/workflows/validate.yml`), and branch protection on `main` requires that check before a pull
-request can merge, so the gate is enforced rather than only reported.
+`pnpm validate` gate, a single TypeScript version across the workspace, and the workflow written
+down in [`RULES.md`](../RULES.md) with [`AGENTS.md`](../AGENTS.md) and [`CLAUDE.md`](../CLAUDE.md)
+for agents. GitHub Actions runs the same gate on every push to `main`
+(`.github/workflows/validate.yml`), so a breakage is reported even when the local hook was skipped
+by hand.
 
 ## M1 - Tracking docs (Phase 1) ✅
 

@@ -12,11 +12,10 @@ browses it. Shared code lives in `packages/shared` and `packages/vault-utils`. p
 
 ## Hard rules
 
-1. **Never commit to `main`.** Branch first — `feat/`, `fix/`, `refactor/`, `perf/`, `docs/`,
-   `test/`, `chore/`, `ci/`, `hotfix/` + a short kebab description. PR into `main`, squash-merge.
+1. **Work on `main`.** This repository has one branch; commit there and push there, one topic per
+   commit so a change can be reverted on its own.
 2. **Never bypass the hooks.** `git commit --no-verify` and `git push --no-verify` are not options.
-   Pre-commit blocks commits on `main` and runs lint-staged, commit-msg runs commitlint, pre-push
-   runs `pnpm validate`.
+   Pre-commit runs lint-staged, commit-msg runs commitlint, pre-push runs `pnpm validate`.
 3. **`pnpm validate` must be green** (lint + format:check + typecheck + test + build) before you finish.
    Never finish on red, and never make it green by disabling a rule.
 4. **No suppressions to pass a check.** No `@ts-ignore` / `@ts-expect-error` without a written
@@ -24,7 +23,7 @@ browses it. Shared code lives in `packages/shared` and `packages/vault-utils`. p
    weakened assertions, no skipped tests. Fix the cause.
 5. **Commit messages:** `<type>(<scope>): <description>`, imperative, lower-case, no trailing period.
    Types: `feat` `fix` `chore` `docs` `style` `refactor` `test` `build` `ci` `perf` `revert`.
-6. **Keep small and focused.** One concern per branch, one concern per commit, one topic per PR.
+6. **Keep small and focused.** One concern per commit, so a revert takes back only that concern.
 7. **Never read, write, commit, or log `vault/`** — it holds the user's private notes.
 
 ## Working style expected here
