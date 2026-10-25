@@ -16,7 +16,7 @@ The daemon acts as a bridge between WhatsApp and your second brain. It:
 ## Features
 
 - **WhatsApp Multi-Device Support**: Uses Baileys for stable WhatsApp Web integration
-- **Command Parsing**: Handles `/idea`, `/interview`, `/goal`, `/read`, `/plan`, `/find`, `/help`
+- **Command Parsing**: Handles `/idea`, `/interview`, `/goal`, `/read`, `/plan`, `/find`, `/help`, `/newfolder`, a bare `/` for the menu, and `/<folder>` for any folder the vault has
 - **Smart Note Generation**: Creates timestamped, slugified filenames with frontmatter
 - **URL Extraction**: Automatically detects and stores URLs in note metadata
 - **Hashtag Tags**: `#tags` written in a message become the note's frontmatter tags, read with the same rules the link graph uses
@@ -66,6 +66,12 @@ Send a text message for processing (useful for testing without WhatsApp).
 }
 ```
 
+### GET /qrcode
+
+The WhatsApp pairing page: HTML, `no-store`, refreshing itself because the code rotates. It draws
+the code the socket is waiting for, or says that there is nothing to pair (already linked, or
+capture switched off). The code is answered to the loopback caller and never logged.
+
 ### GET /health
 
 Health check endpoint.
@@ -87,13 +93,15 @@ touches the vault.
 | --- | --- |
 | `GET /notes` | every note, newest first |
 | `GET /notes/search?q=<query>` | case-insensitive matches across title, tags and body |
-| `GET /folders` | note counts per folder |
+| `GET /folders` | note counts per folder, including the ones still empty |
 | `GET /note?folder=<Folder>&name=<file.md>` | one note; `400` for an unsafe name, `404` when missing |
 | `GET /graph` | the vault's link graph: notes, tags, links and unresolved targets |
 | `GET /link?url=<url>` | one remote link, described for the desktop: playable media, or the page's metadata and readable text |
 
-Seven write routes serve the desktop: `PUT /note` replaces a note's body, `POST /notes` creates one
-through the capture writer (stamped `source: desktop`), `PATCH /note` renames one to a new title
+Eight write routes serve the desktop: `POST /folders` makes a folder (a name already in use is a
+`409`, one that could not be a directory inside the vault a `400`), `PUT /note` replaces a note's
+body, `POST /notes` creates one through the capture writer (stamped `source: desktop`), `PATCH /note`
+renames one to a new title
 (the file, its first heading and the links other notes have to it all follow, and the edited files
 come back as `updated`), `PATCH /note/meta` changes its tags or status in place, `POST /note/move`
 moves it to another folder under the name it already has,
@@ -185,7 +193,10 @@ The daemon can run headless with `LUMOS_DISABLE_WHATSAPP=1` when you only need t
 
 ## WhatsApp Authentication
 
-On first run with `ALLOWED_NUMBERS` set, the daemon generates a QR code for linking. The authentication state is persisted in `auth_info/` directory in the daemon folder. This directory contains sensitive session data - **never commit it** (it's git-ignored).
+On first run the daemon generates a QR code for linking. It is printed to the terminal and served at
+`GET /qrcode` as a page a phone can scan - that page is what the desktop's **Pair** button opens. The
+authentication state is persisted in `auth_info/` directory in the daemon folder. This directory
+contains sensitive session data - **never commit it** (it's git-ignored).
 
 If you get logged out, delete `auth_info/` and restart to scan a new QR code.
 
@@ -236,7 +247,8 @@ Filenames follow the pattern: `YYYY-MM-DD-slugified-title.md`. If a collision oc
 
 ### QR code doesn't appear
 - Ensure `ALLOWED_NUMBERS` is set correctly
-- Check terminal output for errors
+- Check terminal output for errors, and open `http://127.0.0.1:3001/qrcode` - it says so plainly if
+  capture is off (`LUMOS_DISABLE_WHATSAPP=1`, or `"whatsapp": false`)
 - Delete `auth_info/` if corrupted
 
 ### Messages ignored

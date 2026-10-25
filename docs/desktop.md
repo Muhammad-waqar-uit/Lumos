@@ -12,7 +12,7 @@ daemon (falling back to demo data when the daemon is offline):
 - `src/router.tsx` - the TanStack Router factory: one route at `/` whose typed search parameters carry `view` and `note`, validated so a hand-edited address cannot smuggle a pane in
 - `src/lib/store.ts` - the vault store (zustand): the daemon read with its demo fallback, the re-read after every change, and the list's filters
 - `src/lib/bulk.ts` - the bulk helper: one write over many notes with every refusal kept, and the one sentence the status bar shows for it
-- `src/components/Sidebar.tsx` - the brand row (mark + wordmark), the Notes/Graph/Trash view switch, and folders with note counts
+- `src/components/Sidebar.tsx` - the brand row (mark + wordmark), the Notes/Graph/Trash view switch, folders with note counts, and **+ New folder**: a name, a `POST /folders`, and the new folder becomes what the list is looking at. A refusal (a name already taken, or one the vault cannot make) keeps the form open with the daemon's sentence
 - `src/components/LumosMark.tsx` - the mark itself, drawn inline in `currentColor` so it takes `--color-brand` from the theme
 - `src/components/NoteList.tsx` - searchable note list (title, date, preview, tags), the **New** button that opens the composer, the selection checkboxes with the bulk bar (move, add-tag, archive, clear) they raise, and a windowed row list above 50 notes so a large vault keeps a small DOM
 - `src/components/NoteComposer.tsx` - a new note: a folder picker, a textarea, Create, Cancel, and a failure that keeps the draft
@@ -26,10 +26,10 @@ daemon (falling back to demo data when the daemon is offline):
 - `src/components/GraphView.tsx` - canvas link graph (routes, controls, click-to-open)
 - `src/components/PaneBoundary.tsx` - error boundary around the lazily loaded graph pane
 - `src/components/SearchModal.tsx` - the `Cmd/Ctrl+K` palette: ranked matches, keyboard selection, body matches from the daemon
-- `src/components/StatusBar.tsx` - connection state, the search shortcut, the note count, and a notice the app needs to say (a save whose refresh failed), plus the QR connect button that appears when the daemon is not connected, allowing users to scan the QR code at `http://127.0.0.1:3001/qrcode` to pair WhatsApp
+- `src/components/StatusBar.tsx` - connection state, the search shortcut, the note count, and a notice the app needs to say (a save whose refresh failed), plus a **Pair** button that opens the daemon's pairing page (`http://127.0.0.1:3001/qrcode`) in the browser: the page draws the code WhatsApp is waiting for. The button is offered while the daemon answers, because the daemon is what serves it - pairing and "connected to the daemon" are different things, and the button is about the phone
 - `src/lib/list-nav.ts` - the arithmetic behind `j`/`k` in the note list, plus the rule for when a key belongs to a field
-- `src/lib/api.ts` - daemon client (`/notes`, `/notes/search`, `/folders`, `/note` for reading, saving, renaming and deleting, `/note/move`, `/trash` for listing, emptying and restoring, `/graph`, `/link`)
-- `src/lib/graph-palette.ts` - reads the `--color-graph-*` tokens and maps a folder to its hue, with a fallback token per lookup
+- `src/lib/api.ts` - daemon client (`/notes`, `/notes/search`, `/folders` for reading and creating folders, `/note` for reading, saving, renaming and deleting, `/note/move`, `/trash` for listing, emptying and restoring, `/graph`, `/link`)
+- `src/lib/graph-palette.ts` - reads the `--color-graph-*` tokens and maps a folder name to its hue, with a fallback token per lookup. It takes the vault's folder list rather than a fixed one, so a folder made later gets a colour instead of the tag grey
 - `src/lib/demo.ts` - demo data used when the daemon is not running
 - `src/lib/search.ts` - fuse.js index over the loaded notes, plus the merge of local and body matches
 - `src/index.css` - Tailwind v4 import + dark design tokens + `.markdown` typography for notes
@@ -348,6 +348,18 @@ sidebar's own width is fixed.
 
 On the **Graph** tab the list and viewer are replaced by the link graph, with its controls in a
 header bar above the canvas. The sidebar stays visible in both views.
+
+### Folders come from the vault
+
+The sidebar, the composer's folder picker, the move menus and the graph legend all read one list:
+the folders the daemon answers with `GET /folders`, which is the vault's own directories. There is
+no fixed set in the app, so a folder made on WhatsApp - `/newfolder Movies` - is in every one of
+those menus on the next read, with a count of zero until something is filed in it. Moving a note
+offers only folders the vault actually has, so the picker cannot ask for a directory that does not
+exist.
+
+The graph legend grows with the vault: the theme defines five folder hues and a sixth folder cycles
+back through them, which is why the legend labels each colour rather than relying on it.
 
 ## Access to the vault
 

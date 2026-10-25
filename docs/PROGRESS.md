@@ -4,6 +4,45 @@ Chronological record of what has been built. Newest entries first within each da
 
 ## 2026-10-25
 
+### Done — the Pair button goes somewhere
+- [x] The status bar's QR button opened `http://127.0.0.1:3001/qrcode`, which did not exist: the
+  daemon only ever printed the code in the terminal, so the button was a 404 and the docs described it
+  as working. It is a page now (`GET /qrcode`): the code the socket is waiting for, drawn as
+  half-block text in a `<pre>`, refreshing every ten seconds because the code rotates, `no-store` so a
+  stale one is never served, and a plain sentence when there is nothing to pair
+- [x] **The polarity is the part worth knowing.** `qrcode-terminal` has two modes: the plain one draws
+  ANSI background colours, which a page cannot use (all spaces once escaped), and the small one draws
+  the *light* modules as blocks. So the page is light-on-dark - rendered the other way round it would
+  be an inverted code, which a phone may refuse. A test pins the block characters, the absence of
+  escape codes and equal line widths; whether a camera reads it is under **Needs your testing**
+- [x] The button itself was backwards: it appeared when the daemon was *not* reachable, which is
+  exactly when the page cannot be served. It now shows while the daemon answers, and says **Pair**
+
+### Done — folders you make, and a menu to find them by
+- [x] `Folder` is no longer a union of five names. A folder is a directory, so the set is the
+  vault's own: `listFolderNames()` reads it (seed folders first, then the rest alphabetically,
+  dot-directories left out) and `createFolder()` makes one after the same name check the routes use.
+  Every route that used to test `FOLDERS.includes(...)` now asks the vault, so a folder made a
+  moment ago is accepted instead of refused as unknown
+- [x] `/newfolder Movies` on WhatsApp, or **+ New folder** in the sidebar, which is `POST /folders`.
+  The reply names the command the folder just earned (`Send /movies <text>`), because the point of
+  making a folder is being able to file into it without guessing
+- [x] `/movies` needed no entry anywhere: the command map is built from the folder list
+  (`folderCommands()`), so any folder answers to its own name - `To Read` to `/to-read` - while the
+  four documented shorthands (`/idea`, `/interview`, `/goal`, `/read`) still work. A folder's own
+  name wins over a shorthand, because the folder is the thing the person made
+- [x] A bare `/` answers with the menu. WhatsApp offers no slash-command autocomplete in a chat, so
+  the list has to be one keystroke away instead of remembered; the menu is built from the folders on
+  disk, which is why it lists a folder made a minute ago. That limit is written down in
+  [LIMITATIONS.md](LIMITATIONS.md) rather than papered over
+- [x] The desktop had five folder lists baked in - sidebar, composer, move menus, bulk move, graph
+  legend - and all five read one list now. The graph gave every unknown folder the tag grey; it
+  takes the colour list from the vault instead, so a folder made later has a hue of its own
+- [x] Verified through the real interface, not only the units: `POST /message` with `/newfolder Movies`
+  then `/movies https://example.com/trailer` wrote `Movies/…md` with `url:` in its frontmatter, and
+  `GET /folders` answered `Movies` with a count. `pnpm validate` green - 592 tests (vault-utils 226,
+  daemon 175, desktop 191)
+
 ### Done — three pictures of the app (screenshots, Phase 8)
 - [x] `docs/images/` holds the notes view (folders, tag chips, the list, the open note with its tags,
   status and backlinks), the search palette with a row marked *in the body*, and the graph with its

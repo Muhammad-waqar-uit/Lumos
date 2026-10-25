@@ -30,8 +30,22 @@ folder; anything else goes to `Inbox`.
 | `/read <link>` | `vault/Reading/` | Same fetch as `/interview` |
 | `/plan today` / `/plan tomorrow` | no file | Replies with up to five points from your 20 newest notes, through the Ollama model on your machine |
 | `/find <query>` | no file | Replies with the title and folder of up to five matches, and counts the rest |
-| `/help` | no file | Prints the command list |
+| `/<folder> <text or link>` | that folder | Any folder you have, by its own name: `/movies` files into `Movies`, `/to-read` into `To Read` |
+| `/newfolder <name>` | no file | Makes the folder and answers the command that now files into it |
+| `/` | no file | The menu: one line per folder, plus the commands above |
+| `/help` | no file | Prints the same command list |
 | plain text | `vault/Inbox/` | |
+
+**Folders.** A folder is a directory in the vault, so there is no list to add to: `/newfolder
+Movies` makes one, and from the next message `/movies https://example.com/trailer` files into it -
+the URL goes into the note's frontmatter and the title falls back to the site name. Names answer
+lower-cased with spaces as dashes, so a `To Read` folder is `/to-read`. The four shorthands above
+(`/idea`, `/interview`, `/goal`, `/read`) are kept for the folders they were written for, and your
+own folder wins if a name ever collides.
+
+**Finding the commands.** WhatsApp cannot suggest a command while you type in a chat, so send `/` on
+its own: the reply is the menu, built from the folders your vault has, so a folder you made a minute
+ago is already in it. That is the whole trick - one keystroke instead of a cheat sheet.
 
 What happens to what you send:
 
@@ -49,9 +63,12 @@ invents a plan.
 
 ```
 vault/
-  Inbox/  Ideas/  Interviews/  Goals/  Reading/
-  .trash/            # what a delete keeps, until you empty it
+  Inbox/  Ideas/  Interviews/  Goals/  Reading/   # the five a new vault starts with
+  Movies/  To Read/                               # and any others you make
+  .trash/                                         # what a delete keeps, until you empty it
 ```
+
+`.`-folders are the app's own and are never listed or read as notes.
 
 Every note is a Markdown file with a YAML frontmatter block:
 
@@ -80,7 +97,10 @@ hiding the note. Pointing Obsidian at the vault is the intended way to browse it
 
 ### Finding a note
 
-- **Folders** in the sidebar, with a count per folder; **All** is the whole vault.
+- **Folders** in the sidebar, with a count per folder; **All** is the whole vault. The list is the
+  vault's own directories, so a folder made on WhatsApp is here on the next read - and **+ New
+  folder** at the bottom of the sidebar makes one from the app (the name is checked and a duplicate
+  is refused with the reason).
 - **Search over the list** narrows the current folder as you type.
 - **Tag chips** above the list show the tags in what you are looking at, with counts. Pick one to
   narrow; pick it again to clear. A tag on a note row does the same thing.
@@ -171,10 +191,20 @@ curl "http://127.0.0.1:3001/notes/search?q=habit"
 curl "http://127.0.0.1:3001/note?folder=Ideas&name=2026-10-25-build-a-habit-tracker.md"
 ```
 
+```bash
+# make a folder, then file into it
+curl -X POST http://127.0.0.1:3001/folders \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Movies"}'
+curl -X POST http://127.0.0.1:3001/message \
+  -H "Content-Type: application/json" \
+  -d '{"text":"/movies https://example.com/trailer"}'
+```
+
 Every route, its request shape and its refusals are in [docs/daemon.md](docs/daemon.md). The ones
 you are most likely to reach for: `GET /notes`, `/notes/search`, `/note`, `/folders`, `/graph`,
-`/trash`; `POST /message`, `/notes`, `/note/move`, `/note/restore`; `PUT /note`; `PATCH /note` and
-`/note/meta`; `DELETE /note` and `/trash`.
+`/trash`; `POST /message`, `/notes`, `/folders`, `/note/move`, `/note/restore`; `PUT /note`;
+`PATCH /note` and `/note/meta`; `DELETE /note` and `/trash`.
 
 ## Settings
 
@@ -211,8 +241,8 @@ A missing file means the defaults; a bad one stops the daemon with one sentence 
 | *Daemon offline - showing demo notes* in the status bar | The desktop could not reach `127.0.0.1:3001`. Start the daemon, or carry on looking around: the demo vault is a full copy of the interface |
 | A note row says *! frontmatter* | The note's YAML block does not parse. The note is still readable and editable; the viewer lists what is wrong |
 | *409* on a rename or a restore | Another note already holds that name. Nothing was replaced - choose another title |
-| `400 unknown folder` | A folder outside `Inbox`, `Ideas`, `Interviews`, `Goals`, `Reading`. Nothing was written |
-| The QR code never appears | `LUMOS_DISABLE_WHATSAPP=1` is set, or `whatsapp: false` in the config file |
+| `400 unknown folder` | The route was asked to file into a folder the vault does not have. Nothing was written - make it with `/newfolder` or **+ New folder**, or check the spelling |
+| The QR code never appears | `LUMOS_DISABLE_WHATSAPP=1` is set, or `whatsapp: false` in the config file. `http://127.0.0.1:3001/qrcode` says which |
 | `/plan` replies *"… is not answering for Ollama"* | Start Ollama (`ollama serve`); `ollama list` should show the model named by `ollamaModel` |
 | The port is already in use | Another daemon is running. Stop it, or set `PORT` |
 

@@ -21,7 +21,7 @@ WhatsApp ──► Daemon ──► vault/*.md ◄── Desktop (Tauri UI)
 
 1. A message arrives on the Lumos WhatsApp number.
 2. The daemon checks the sender against `ALLOWED_NUMBERS`.
-3. The message text is parsed into a command (`parseMessage`).
+3. The message text is parsed into a command (`parseMessage`), against the folders the vault has - there is no fixed command table, so a folder made a moment ago is already a command. A bare `/` comes back as the menu rather than as an unknown command.
 4. For note commands the vault writer creates a Markdown file with YAML frontmatter.
 5. The daemon replies to the sender with a confirmation.
 6. The desktop app requests the vault from the daemon read API (`/notes`, `/folders`, `/note`, `/graph`) and renders it (demo data when the daemon is offline).
@@ -54,14 +54,14 @@ injected, so no port is bound and no network request is made.
 
 - **Shell**: Tauri 2.x (Rust backend) hosting a Vite/React frontend.
 - **UI**: Tailwind CSS + shadcn/ui, dark minimal theme.
-- **Access to the vault**: the daemon HTTP API today - the read routes plus `PUT /note`, `POST /notes`, `PATCH /note`, `POST /note/move` and `DELETE /note` to write; Tauri filesystem commands are a possible future path so it can run without the daemon.
+- **Access to the vault**: the daemon HTTP API today - the read routes plus `POST /folders`, `PUT /note`, `POST /notes`, `PATCH /note`, `POST /note/move` and `DELETE /note` to write; Tauri filesystem commands are a possible future path so it can run without the daemon. Folders are read, never assumed: the sidebar, the composer, both move menus and the graph legend all draw from one `GET /folders` list held in the store.
 - **Panes**: the notes list + viewer, or the link graph, sharing the folder sidebar. The list column is resizable through `PaneSplitter`, and the width lives in the shell rather than in the pane. The graph renderer loads lazily with its tab, so the notes path stays light.
 - **Link pane**: a note's link is shown in the viewer - a player, an image, or the scraped page - instead of only linking out. It reads through `src/lib/api.ts` like every other pane and has its own loading, error and retry states.
 
 ## Vault
 
 - Plain Markdown files with YAML frontmatter.
-- Folders: `Inbox`, `Ideas`, `Interviews`, `Goals`, `Reading`.
+- Folders: a directory each, so the set is whatever the vault holds. `Inbox`, `Ideas`, `Interviews`, `Goals` and `Reading` are the seed a new vault starts with; `/newfolder <name>` (or `POST /folders`) adds more, and `listFolderNames()` in `@lumos/vault-utils` is the one place the set is read.
 - Filenames: `YYYY-MM-DD-slug.md`. See [vault.md](vault.md).
 
 ## UI Theme (Dark Minimal)

@@ -718,3 +718,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   backlinks, the search palette with a result marked as matching only inside the body, and the graph.
   They were taken with Playwright against the running app over a throwaway eight-note vault, so no
   personal note is in any of them, and the README and `USAGE.md` both use them.
+
+### Added (continued 32)
+
+- Folders you make. `Folder` was a union of five names and the five were compiled into the daemon,
+  the app and the graph palette; it is now just "a directory in the vault", read from disk. A new
+  `Movies` folder answers to `/movies <link>` on WhatsApp the moment it exists, `To Read` to
+  `/to-read`, and the four documented shorthands (`/idea`, `/interview`, `/goal`, `/read`) still
+  work. `/newfolder <name>` makes one from the chat, **+ New folder** in the desktop sidebar does the
+  same through a new `POST /folders`, and every folder-checking route asks the vault instead of a
+  constant, so a folder made a second ago is accepted rather than refused as unknown. The sidebar,
+  composer, move menus, bulk move and graph legend all read that one list, so a folder made on the
+  phone is a destination in the app without a restart.
+- A bare `/` answers with the menu. WhatsApp has no slash-command autocomplete inside a chat, so the
+  command list is one keystroke away: `/` replies with one line per folder, built from the folders on
+  disk, plus `/newfolder`, `/plan`, `/find` and `/help`. The limit itself is recorded in
+  `docs/LIMITATIONS.md` - the chat cannot suggest a command while you type, and this is the
+  substitute rather than a fix.
+
+### Fixed
+
+- The desktop status bar's QR button opened `http://127.0.0.1:3001/qrcode`, which the daemon did not
+  serve: pairing only ever printed the code in the terminal, so the button was a 404 and the docs
+  described a page that did not exist. `GET /qrcode` is real now - the code the socket is waiting
+  for, drawn as half-block text so a phone can scan it from the app, refreshing itself every ten
+  seconds because the code rotates, and never cached. With nothing to pair it answers with the
+  sentence that says which (already linked, or capture switched off). The button also showed itself
+  when the daemon was unreachable, which is when the page cannot load; it now shows while the daemon
+  answers and reads **Pair**.

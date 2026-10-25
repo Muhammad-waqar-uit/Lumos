@@ -13,13 +13,22 @@ The vault is git-ignored: it holds your personal notes and never belongs in vers
 
 ## Folders
 
+A folder *is* a directory: there is no registry, so a folder you make is a folder the app and the
+desktop both see, and a directory you delete outside Lumos stops being one. New vaults start with
+these five, which are also the ones the docs can name:
+
 | Folder | Written by |
 |---|---|
 | `Inbox/` | plain text messages (no command) |
-| `Ideas/` | `/idea` |
+| `Ideas/` | `/idea` (or `/ideas`) |
 | `Interviews/` | `/interview` |
 | `Goals/` | `/goal` |
 | `Reading/` | `/read` |
+
+Any other folder answers to its own name: a `Movies` folder takes `/movies <link>`, and `To Read`
+takes `/to-read`. Make one with `/newfolder Movies` on WhatsApp, or with **+ New folder** in the
+desktop sidebar. Directories starting with a dot are the app's own (`.trash/`) and are never listed
+as folders or read as notes.
 
 ## File naming
 

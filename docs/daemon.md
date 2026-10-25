@@ -21,7 +21,8 @@ Markdown notes to the vault. It lives in [`apps/daemon`](../apps/daemon).
 | `src/handler.ts` | `handleMessage()` - routes a parsed command to a reply string. The vault directory is an argument, so the caller decides where a note lands.
 | `src/app.ts` | `createApp()` - builds the Fastify app (CORS + every route) over a vault directory, so a test can drive it without binding a port.
 | `src/server.ts` | Entry point: builds the app, listens on loopback, boots the WhatsApp connection.| `src/fetch-link.ts` | Fetches one link for the desktop, with the guards `GET /link` relies on.
-| `src/plan.ts` | `buildPlan()` - the vault's newest notes become one prompt for the local Ollama model; every failure arrives as a sentence a person can act on, never as the socket's own words. | `src/whatsapp.ts` | Baileys connection, QR auth, allowlist, message loop.
+| `src/plan.ts` | `buildPlan()` - the vault's newest notes become one prompt for the local Ollama model; every failure arrives as a sentence a person can act on, never as the socket's own words. | `src/whatsapp.ts` | Baileys connection, QR auth, allowlist, message loop. |
+| `src/qr.ts` | The pairing code the socket emits, held between the socket and `GET /qrcode`, plus its half-block rendering for the page. |
 
 ## Commands
 
@@ -33,12 +34,22 @@ Markdown notes to the vault. It lives in [`apps/daemon`](../apps/daemon).
 | `/read <link>` | `vault/Reading/` |
 | `/plan today\|tomorrow` | Replies with a plan from the vault's 20 newest notes, through the local Ollama model. Ollama stopped, a timeout or a model that is not pulled each answer with the sentence that says so |
 | `/find <query>` | Search the vault; replies with the title and folder of each match |
+| `/<folder> <text or link>` | Any folder the vault has, by its own name: a `Movies` folder answers to `/movies`, and `To Read` to `/to-read`. There is no second list of commands to keep in step, so a folder made a moment ago works on the next message |
+| `/newfolder <name>` (also `/folder`) | Makes the folder and answers the command that now files into it. A name already in use is refused, and so is one that could not be a directory inside the vault |
+| `/` on its own | The menu: one line per folder plus the non-filing commands, read from the folders on disk |
 | `/help` | prints the command list |
 | plain text | `vault/Inbox/` |
 
 ## HTTP API
 
 The daemon listens on `127.0.0.1:3001`.
+
+### `GET /qrcode`
+The WhatsApp pairing page: HTML, never cached, refreshing itself every ten seconds because the code
+rotates. It draws the code the socket is waiting for, so a phone can be paired from the app instead
+of from the terminal the daemon was started in. With nothing to pair - already linked, or capture
+off - it is still a `200`, with the sentence that says which. The code is a session secret: it is
+answered to the loopback caller that asked and never logged.
 
 ### `POST /message`
 ```json
@@ -87,7 +98,17 @@ Measured on 600 notes (1.9 MB) on Windows with the daemon's routes: `searchNotes
 listing and its YAML parse, not search.
 
 ### `GET /folders`
-Note counts per folder: `{ "folders": [{ "folder": "Ideas", "count": 3 }] }`.
+Note counts per folder: `{ "folders": [{ "folder": "Ideas", "count": 3 }] }`. The list is the
+vault's own directories, so a folder made a moment ago is in it and an empty one still appears.
+
+### `POST /folders`
+```json
+{ "name": "Movies" }
+```
+Response: `{ "folder": "Movies" }`. A name already in use is a `409` and one that could not be a
+directory inside the vault - a separator, `..`, a leading dot - is a `400`; both carry a sentence.
+Every folder a route accepts is checked against this same list, so `POST /notes` into a folder made
+here succeeds without a restart.
 
 ### `GET /note?folder=<Folder>&name=<file.md>`
 A single note (`frontmatter` + `content`), plus `problems`: an array of frontmatter complaints, empty
@@ -310,9 +331,10 @@ than listened on: a random port is one the desktop cannot find.
 
 ## WhatsApp authentication
 
-On first run a QR code is printed to the terminal. Scan it from the Lumos number's
-**Settings > Linked Devices > Link a Device**. The session is stored in `apps/daemon/auth_info/`,
-which is git-ignored and must never be shared. Delete it to force a fresh pairing.
+On first run a QR code is printed to the terminal and served at `GET /qrcode`, which is the page
+the desktop's **Pair** button opens. Scan it from the Lumos number's **Settings > Linked Devices >
+Link a Device**. The session is stored in `apps/daemon/auth_info/`, which is git-ignored and must
+never be shared. Delete it to force a fresh pairing.
 
 ## Shared packages
 

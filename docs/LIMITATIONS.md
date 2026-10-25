@@ -128,6 +128,10 @@ play it — neither page can be read or copied.
   empty `ALLOWED_NUMBERS` blocks everything (a deliberate default).
 - **A URL in a plain message is stored, not fetched.** Link expansion happens when the desktop opens
   the note; the WhatsApp reply never includes the page title.
+- **There is no command autocomplete while you type.** That is WhatsApp's side, not the daemon's: a
+  chat with this account is a chat, and nothing in it can suggest `/movies` as you type. A bare `/`
+  is the substitute - it answers with the menu, built from the folders on disk - so the commands are
+  one message away instead of remembered.
 
 ## Desktop
 

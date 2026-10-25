@@ -58,3 +58,6 @@ vault
 idea/
 # Local preview artifacts
 .preview-vault
+
+# A walkthrough for demoing Lumos, written for the person presenting it - local, never committed
+DEMO-GUIDE.md

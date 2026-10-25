@@ -25,6 +25,8 @@ Lumos transforms WhatsApp into an effortless capture tool for your second brain.
 - **Links in place**: A YouTube or Vimeo link plays in the note viewer, an Instagram reel or post and a Facebook video or post render through the platform's own embed with their caption beside them, an image link shows the image, and any other page is scraped by the daemon and read as text without leaving the app (private hosts are refused)
 - **Keyboard search**: `Cmd/Ctrl+K` opens a palette over the vault - typo-tolerant matches on titles, tags and previews, plus body matches from the daemon - and `Enter` opens the note; with nothing typed it lists what you opened this session
 - **Readable notes**: Markdown with tables, task lists and syntax-highlighted code, and a link plays or reads in place instead of sending you to a browser
+- **Folders you make**: a folder is a directory, so `/newfolder Movies` is all it takes - `/movies <link>` files into it, and the desktop picks it up everywhere folders are offered
+- **A command menu on demand**: send `/` and the bot replies with the commands your vault actually has, which is as close to autocomplete as a chat gets
 
 ## Architecture
 
@@ -52,12 +54,19 @@ Lumos consists of two main applications:
 | `/interview <text or link>` | Save interview notes/resources | `vault/Interviews/` |
 | `/goal <text>` | Save a goal | `vault/Goals/` |
 | `/read <link>` | Save something to read | `vault/Reading/` |
+| `/<folder> <text or link>` | Save into any folder you have - `/movies` into `Movies`, `/to-read` into `To Read` | that folder |
+| `/newfolder <name>` | Make a folder, then `/<name>` files into it | - |
+| `/` | Show the menu, built from your folders | - |
 | `/plan today\|tomorrow` | Plan command - answers that it is not built yet | - |
 | `/find <query>` | Search the vault (title, tags, body; five matches per reply) | - |
 | `/help` | Show available commands | - |
 | *(plain text)* | Quick capture | `vault/Inbox/` |
 
-URLs in messages are automatically detected and stored in the note's frontmatter.
+Folders are just directories, so there is no fixed set to live with: `/newfolder Movies` makes one
+and `/movies <link>` files into it from then on, and it appears in the desktop's sidebar, composer,
+move menus and graph on the next read. A bare `/` answers with the menu, because WhatsApp cannot
+suggest commands while you type. URLs in messages are automatically detected and stored in the note's
+frontmatter.
 
 ## Getting Started
 
@@ -101,13 +110,14 @@ cd apps/daemon
 pnpm dev
 ```
 
-On first run, a QR code will appear in your terminal. 
+On first run, a QR code appears in your terminal and at `http://127.0.0.1:3001/qrcode`, which is
+the page the desktop's **Pair** button opens.
 
 ### Linking WhatsApp
 
 1. Open WhatsApp on the phone number you want to use as **Lumos** (the receiving number)
 2. Go to **Settings > Linked Devices > Link a Device**
-3. Scan the QR code displayed in your terminal
+3. Scan the QR code from your terminal, or from the pairing page the daemon serves
 4. You'll see `WhatsApp connected.` in the logs
 
 The session is saved in `apps/daemon/auth_info/` - you only need to scan once. This folder is git-ignored for security.

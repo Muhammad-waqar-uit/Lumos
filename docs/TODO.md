@@ -9,7 +9,7 @@ Priority: P0 critical, P1 high, P2 medium, P3 low
 
 ## Needs your testing
 
-Four checks that no unit test can close: each needs a device, a real window or a pointer. They are
+Five checks that no unit test can close: each needs a device, a real window or a pointer. They are
 first because they are the shortest path to knowing the app works end to end, and because nothing
 else on this page can close them.
 
@@ -22,6 +22,10 @@ else on this page can close them.
   verified in Chromium, which is the engine's family but not the engine.
 - [!] **The graph's "Show notes" button** (P2) - selecting a tag node on the canvas needs a real
   pointer hit, so the wiring is typechecked but has never been pressed.
+- [!] **Scanning the pairing page** (P2) - `GET /qrcode` is tested for what it draws (half-block text,
+  no colour codes, equal line widths) but not for whether a phone camera reads it. The polarity is the
+  risky part: `qrcode-terminal` draws light modules as blocks, so the page is light-on-dark. Scan it
+  once with a real phone before trusting it over the terminal's own QR.
 
 ## Plan
 
@@ -39,6 +43,10 @@ else on this page can close them.
 - [x] Bulk operations (move, tag, archive) - checkboxes in the list choose notes, a bulk bar offers
   move/tag/archive/clear, and every write is settled on its own so one refusal never abandons the
   rest (`lib/bulk.ts`, `App.bulk.test.tsx`)
+- [ ] Rename or remove a folder (P3) - folders can be made from the chat and from the sidebar, but
+  not renamed or deleted, because either one has to decide what happens to the notes inside. Two
+  candidates: refuse while the folder holds notes, or move them to Inbox in one step and say how
+  many moved. Needs that decision before it is built
 
 ### Phase 8 - Polish & docs (P2) - open items
 
@@ -155,6 +163,11 @@ Nothing in flight. The next item to pick up is the first one under **Plan**.
 - [x] Tag extraction: `#hashtags` in a captured message become the note's frontmatter tags, using
   the graph's own `extractTags()` rules (headings and code excluded, lower-cased, de-duplicated); no
   model, so it stays deterministic and offline
+- [x] Folders you make - a folder is a directory, so the set is the vault's own: `/newfolder Movies`
+  makes one and `/movies <link>` files into it, `POST /folders` does the same for the desktop's **+
+  New folder**, and every folder-checking route asks the vault rather than a constant. The sidebar,
+  composer, move menus and graph legend all read that one list (`listFolderNames()`), and a bare `/`
+  answers with the menu built from it, since WhatsApp itself offers no command autocomplete
 - [x] Config file support - `lumos.config.json` (`vaultPath`, `port`, `allowedNumbers`, `whatsapp`)
   with the environment overriding it, so a one-off `VAULT_PATH=... pnpm dev` still wins while the
   file stays the thing a person edits. A relative `vaultPath` resolves against the file, not the
