@@ -38,19 +38,17 @@ export function StatusBar({
   /** The one way back from what the notice describes, offered next to it. */
   action?: StatusAction | null;
 }) {
-  // Render the QR connect button when connected to daemon
+  // The pairing page is served by the daemon, so the button is only offered while it answers.
   const qrcodeButton =
-    connection !== "daemon" ? (
-      <>
-        <button
-          type="button"
-          onClick={() => window.open("http://127.0.0.1:3001/qrcode", "_blank")}
-          title="Connect WhatsApp"
-          className="shrink-0 rounded border border-border px-1.5 py-0.5 text-foreground transition-colors hover:bg-accent"
-        >
-          QR
-        </button>
-      </>
+    connection === "daemon" ? (
+      <button
+        type="button"
+        onClick={() => window.open("http://127.0.0.1:3001/qrcode", "_blank")}
+        title="Pair WhatsApp - shows the code the daemon is waiting for"
+        className="shrink-0 rounded border border-border px-1.5 py-0.5 text-foreground transition-colors hover:bg-accent"
+      >
+        Pair
+      </button>
     ) : null;
 
   return (

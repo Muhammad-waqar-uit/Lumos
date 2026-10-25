@@ -32,6 +32,7 @@ import type { LinkCard } from "@lumos/shared";
 import { LinkFetchError, fetchLinkCard } from "./fetch-link.js";
 import { handleMessage } from "./handler.js";
 import type { PlanOptions } from "./plan.js";
+import { pendingQr, qrToText } from "./qr.js";
 
 /**
  * A note filename the routes will touch: a plain `.md` name with no separators and no `..`.
@@ -67,6 +68,46 @@ export interface AppOptions {
   fetchLink?: (url: string) => Promise<LinkCard>;
   /** The Ollama `/plan` answers from, handed down rather than read here. */
   plan?: PlanOptions;
+  /** The pairing code `GET /qrcode` shows. The socket sets it; tests inject one. */
+  qr?: () => string | null;
+}
+
+/** Escape the few characters that matter inside the pairing page's HTML. */
+function escapeHtml(value: string): string {
+  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+/**
+ * The pairing page: a QR when WhatsApp is waiting for one, and a sentence either way.
+ *
+ * It is a plain page rather than part of the desktop because pairing is the daemon's own business -
+ * the code lives in the daemon's memory, and the app is only one place a person might be looking. It
+ * refreshes itself, because a code that has expired is worse than no code: it scans and does nothing.
+ */
+function qrPage(body: string): string {
+  return `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="refresh" content="10">
+<title>Lumos - pair WhatsApp</title>
+<style>
+  body { background: #12100e; color: #f5efe6; font-family: ui-sans-serif, system-ui, sans-serif;
+    display: flex; min-height: 100vh; margin: 0; align-items: center; justify-content: center; }
+  main { max-width: 44rem; padding: 2rem; text-align: center; }
+  h1 { font-size: 1.05rem; font-weight: 600; margin: 0 0 0.5rem; }
+  p { color: #b9b0a4; font-size: 0.85rem; line-height: 1.5; margin: 0.5rem 0 1rem; }
+  /* Light-on-dark, because that is the polarity qrToText draws in. Each character cell covers one
+     module across and two down, so the line height is exactly two character widths (2ch): a module
+     that is not square is a module a camera may not read. */
+  pre { background: #000; color: #fff; border-radius: 0.5rem; display: inline-block;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 16px;
+    letter-spacing: 0; line-height: 2ch; margin: 0; padding: 1rem; }
+</style>
+</head>
+<body><main>${body}</main></body>
+</html>`;
 }
 
 export async function createApp({
@@ -74,6 +115,7 @@ export async function createApp({
   logger = false,
   fetchLink = fetchLinkCard,
   plan,
+  qr = pendingQr,
 }: AppOptions): Promise<FastifyInstance> {
   const app = Fastify({ logger });
 
@@ -120,6 +162,25 @@ export async function createApp({
   }
 
   app.get("/health", async () => ({ ok: true }));
+
+  /**
+   * The WhatsApp pairing code, as a page. The code is a session secret, so it is answered to the
+   * loopback caller that asked and never logged; a phone that is already linked has none to show.
+   */
+  app.get("/qrcode", async (_req, reply) => {
+    reply.type("text/html; charset=utf-8").header("cache-control", "no-store");
+    const code = qr();
+    if (!code) {
+      return qrPage(
+        "<h1>Nothing to pair right now</h1><p>WhatsApp is either already linked, or capture is switched off (LUMOS_DISABLE_WHATSAPP=1). Start the daemon with WhatsApp enabled to get a code.</p>",
+      );
+    }
+    return qrPage(
+      `<h1>Pair WhatsApp</h1><p>WhatsApp &gt; Linked devices &gt; Link a device, then scan this. It refreshes itself.</p><pre>${escapeHtml(
+        qrToText(code),
+      )}</pre>`,
+    );
+  });
 
   app.post<{ Body: { text?: string } }>("/message", async (req, reply) => {
     const text = req.body?.text;

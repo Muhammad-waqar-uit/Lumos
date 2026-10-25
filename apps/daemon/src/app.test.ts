@@ -27,7 +27,11 @@ afterAll(async () => {
  */
 async function makeApp(
   seed: NoteInput[] = [],
-  options: { fetchLink?: (url: string) => Promise<LinkCard>; plan?: PlanOptions } = {},
+  options: {
+    fetchLink?: (url: string) => Promise<LinkCard>;
+    plan?: PlanOptions;
+    qr?: () => string | null;
+  } = {},
 ): Promise<{ vault: string; app: FastifyInstance }> {
   const vault = await mkdtemp(path.join(tmpdir(), "lumos-routes-"));
   tempDirs.push(vault);
@@ -61,6 +65,34 @@ describe("GET /health", () => {
     const res = await app.inject({ method: "GET", url: "/health" });
     expect(res.statusCode).toBe(200);
     expect(res.json()).toEqual({ ok: true });
+  });
+});
+
+describe("GET /qrcode", () => {
+  it("shows the code as a block drawing a phone can scan", async () => {
+    const { app } = await makeApp([], { qr: () => "2@pairing-code" });
+    const res = await app.inject({ method: "GET", url: "/qrcode" });
+
+    expect(res.statusCode).toBe(200);
+    expect(res.headers["content-type"]).toContain("text/html");
+    expect(res.body).toContain("<pre>");
+    expect(res.body).toContain("█");
+  });
+
+  it("says what to do when there is nothing to pair", async () => {
+    const { app } = await makeApp([], { qr: () => null });
+    const res = await app.inject({ method: "GET", url: "/qrcode" });
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toContain("Nothing to pair right now");
+    expect(res.body).not.toContain("<pre>");
+  });
+
+  it("is never cached, because the code rotates", async () => {
+    const { app } = await makeApp([], { qr: () => "2@pairing-code" });
+    const res = await app.inject({ method: "GET", url: "/qrcode" });
+
+    expect(res.headers["cache-control"]).toBe("no-store");
   });
 });
 

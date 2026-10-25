@@ -8,6 +8,7 @@ import pino from "pino";
 import path from "node:path";
 import { handleMessage } from "./handler.js";
 import type { PlanOptions } from "./plan.js";
+import { clearQr, setQr } from "./qr.js";
 
 const AUTH_DIR = path.resolve(process.cwd(), "auth_info");
 
@@ -37,12 +38,18 @@ export async function startWhatsApp(
 
   sock.ev.on("connection.update", ({ connection, lastDisconnect, qr }) => {
     if (qr) {
+      // Held for `GET /qrcode` as well as printed here, because whoever pairs the phone may be
+      // looking at the app rather than at this terminal.
+      setQr(qr);
       console.log(
         "\nScan this QR with the Lumos number: WhatsApp > Linked devices > Link a device\n",
       );
       qrcode.generate(qr, { small: true });
     }
-    if (connection === "open") console.log("WhatsApp connected.");
+    if (connection === "open") {
+      clearQr();
+      console.log("WhatsApp connected.");
+    }
     if (connection === "close") {
       const code = (lastDisconnect?.error as any)?.output?.statusCode;
       if (code === DisconnectReason.loggedOut) {
