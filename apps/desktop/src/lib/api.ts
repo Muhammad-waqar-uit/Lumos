@@ -43,6 +43,65 @@ export async function createFolder(name: string): Promise<string> {
   return body.folder;
 }
 
+/** What a folder rename did: the new name, the notes now under it, and whose links followed. */
+export interface FolderRename {
+  folder: string;
+  moved: number;
+  /** Vault ids (`Folder/name.md`) of the notes whose links were rewritten to the new path. */
+  updated: string[];
+}
+
+/** What removing a folder did: where its notes went, and what is left of it. */
+export interface FolderRemoval {
+  folder: string;
+  /** Where the notes were moved - Inbox unless the daemon was told otherwise. */
+  to: string;
+  moved: number;
+  updated: string[];
+  /** True when the directory still holds files that are not notes, so it was kept. */
+  leftover: boolean;
+}
+
+/**
+ * Rename a folder and answer what moved with it.
+ *
+ * The notes inside keep their filenames and their dates; only their path changes. The daemon also
+ * rewrites the links that named the old folder, and answers those files as `updated`.
+ *
+ * A refusal - a name already in use, or a folder that is not there - arrives as an Error with the
+ * daemon's sentence, the same as every other write here.
+ */
+export async function renameFolder(folder: string, to: string): Promise<FolderRename> {
+  const res = await fetch(`${BASE}/folder`, {
+    method: "PATCH",
+    headers: { "content-type": "application/json", accept: "application/json" },
+    body: JSON.stringify({ folder, to }),
+  });
+  const body = (await res.json().catch(() => null)) as FolderRename | { error: string } | null;
+  if (!res.ok)
+    throw new Error(body && "error" in body ? body.error : `PATCH /folder -> ${res.status}`);
+  if (!body || !("folder" in body)) throw new Error("PATCH /folder returned an unexpected body");
+  return body;
+}
+
+/**
+ * Remove a folder: its notes move to Inbox and the directory goes.
+ *
+ * The daemon answers how many notes moved and whether the directory was kept because it still
+ * holds files that are not notes, so the caller can say what happened rather than guess.
+ */
+export async function removeFolder(folder: string): Promise<FolderRemoval> {
+  const res = await fetch(`${BASE}/folder?folder=${encodeURIComponent(folder)}`, {
+    method: "DELETE",
+    headers: { accept: "application/json" },
+  });
+  const body = (await res.json().catch(() => null)) as FolderRemoval | { error: string } | null;
+  if (!res.ok)
+    throw new Error(body && "error" in body ? body.error : `DELETE /folder -> ${res.status}`);
+  if (!body || !("folder" in body)) throw new Error("DELETE /folder returned an unexpected body");
+  return body;
+}
+
 /** Every note in the vault, newest first. */
 export async function getNotes(): Promise<VaultEntry[]> {
   const { notes } = await getJson<{ notes: VaultEntry[] }>("/notes");

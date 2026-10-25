@@ -30,6 +30,25 @@ takes `/to-read`. Make one with `/newfolder Movies` on WhatsApp, or with **+ New
 desktop sidebar. Directories starting with a dot are the app's own (`.trash/`) and are never listed
 as folders or read as notes.
 
+A folder can also be renamed (`/renamefolder Movies|Film`, or **Rename** in the sidebar) and removed
+(`/delfolder Movies`, or **Delete** in the sidebar). Both are the same operation on the directory
+itself:
+
+| Operation | What happens |
+|---|---|
+| Rename | One `rename` on disk. Every note inside keeps its filename, its date and its bytes; only the path changes. The links that *named the folder* are rewritten in the notes that carried them |
+| Remove | The notes move to Inbox and the directory goes. A folder is only a place to file things, so removing one never takes a note with it; the reply says how many moved |
+
+A link written by title, by slug or by bare filename still resolves after either change - the
+resolver finds a note wherever it lives - so only a link that wrote the folder path is corrected.
+That is deliberate: it is the author's wording rather than a stale path, and rewriting it would be
+the app editing a sentence that was already true.
+
+Files that are not notes are left exactly where they are, the same rule the trash follows, so a
+stray `cover.jpg` keeps the directory and the reply says the folder was kept. Every name is checked
+against the destination before anything moves, so a refusal changes nothing - a folder left half
+emptied would be worse than one that was not touched.
+
 ## File naming
 
 `YYYY-MM-DD-slug.md`, where the slug is derived from the note title (lowercased, non-alphanumerics

@@ -204,7 +204,7 @@ curl -X POST http://127.0.0.1:3001/message \
 Every route, its request shape and its refusals are in [docs/daemon.md](docs/daemon.md). The ones
 you are most likely to reach for: `GET /notes`, `/notes/search`, `/note`, `/folders`, `/graph`,
 `/trash`; `POST /message`, `/notes`, `/folders`, `/note/move`, `/note/restore`; `PUT /note`;
-`PATCH /note` and `/note/meta`; `DELETE /note` and `/trash`.
+`PATCH /note`, `/note/meta` and `/folder`; `DELETE /note`, `/trash` and `/folder`.
 
 ## Settings
 

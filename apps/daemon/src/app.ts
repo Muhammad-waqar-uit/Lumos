@@ -22,6 +22,8 @@ import {
   listTrash,
   moveNote,
   readNote,
+  removeFolder,
+  renameFolder,
   renameNote,
   restoreNote,
   saveNote,
@@ -246,6 +248,54 @@ export async function createApp({
     } catch (err: unknown) {
       if (err instanceof NoteFileError)
         return reply.code(err.reason === "exists" ? 409 : 400).send({ error: err.message });
+      throw err;
+    }
+  });
+
+  /**
+   * Rename a folder, and carry the links that named it.
+   *
+   * A folder is a directory, so this is one rename on disk: every note inside keeps its filename
+   * and its date. The links that wrote the old path are rewritten in the notes that carried them,
+   * and the files touched come back as `updated`, so a backlink cannot be left pointing at a
+   * folder that is no longer there.
+   *
+   * A name already in use is a `409` and nothing is merged into it; a folder that is not there is
+   * a `404`. The route never invents a folder to rename.
+   */
+  app.patch<{ Body: { folder?: string; to?: string } }>("/folder", async (req, reply) => {
+    const { folder, to } = req.body ?? {};
+    if (!folder || !to?.trim())
+      return reply.code(400).send({ error: "folder and to are required" });
+    // No `knownFolder` guard here: the vault checks the name itself and answers with a sentence
+    // a person can act on ("There is no folder called Gone."), which "unknown folder" is not.
+    // The same check that keeps a separator out of `createFolder` keeps one out here.
+    try {
+      return await renameFolder(vault, { from: folder, to });
+    } catch (err: unknown) {
+      const refusal = noteRefusal(err);
+      if (refusal) return reply.code(refusal.status).send({ error: refusal.message });
+      throw err;
+    }
+  });
+
+  /**
+   * Remove a folder: its notes move to Inbox, and the directory goes.
+   *
+   * Moving rather than deleting is the whole point of the route - a folder is a place to file
+   * things, so removing one must never take a note with it. `leftover` is true when the directory
+   * still holds files that are not notes, which are left exactly where they are. A folder that is
+   * not there is a `404`, and Inbox itself is refused: it is where the notes would go.
+   */
+  app.delete<{ Querystring: { folder?: string } }>("/folder", async (req, reply) => {
+    const { folder } = req.query;
+    if (!folder) return reply.code(400).send({ error: "folder is required" });
+
+    try {
+      return await removeFolder(vault, folder);
+    } catch (err: unknown) {
+      const refusal = noteRefusal(err);
+      if (refusal) return reply.code(refusal.status).send({ error: refusal.message });
       throw err;
     }
   });

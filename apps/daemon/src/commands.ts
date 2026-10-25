@@ -62,6 +62,13 @@ export function parseMessage(raw: string, folders: readonly string[] = DEFAULT_F
 
   if (!name || name === "help") return { kind: "help" };
   if (name === "newfolder" || name === "folder") return { kind: "newFolder", name: body };
+  // `|` is the one separator a folder name can never carry, so `/renamefolder A|B` cannot be read
+  // the wrong way however the names are written.
+  if (name === "renamefolder") {
+    const [from, ...to] = body.split("|");
+    return { kind: "renameFolder", from: (from ?? "").trim(), to: to.join("|").trim() };
+  }
+  if (name === "delfolder" || name === "removefolder") return { kind: "removeFolder", name: body };
   if (name === "plan") {
     return { kind: "plan", when: body.toLowerCase() === "tomorrow" ? "tomorrow" : "today" };
   }

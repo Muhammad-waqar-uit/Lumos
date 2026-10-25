@@ -156,7 +156,8 @@ curl http://127.0.0.1:3001/health
 
 The daemon also serves the API the desktop uses — the read routes `GET /notes`, `/notes/search?q=`,
 `/folders`, `/note?folder=&name=`, `/graph` and `/link?url=`, and the writes `PUT /note`, `POST
-/notes`, `PATCH /note` (rename), `POST /note/move` and `DELETE /note` — with its own guards (unknown
+/notes`, `PATCH /note` (rename), `POST /note/move`, `DELETE /note`, `POST /folders`, `PATCH /folder`
+(folder rename) and `DELETE /folder` (remove, notes to Inbox) — with its own guards (unknown
 folders and unsafe filenames are a `400`, a name another note already holds is a `409`, local
 addresses are refused by `/link`) and CORS limited to local origins and the methods it serves.
 [docs/daemon.md](docs/daemon.md) documents each one.

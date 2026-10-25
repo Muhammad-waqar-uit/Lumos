@@ -241,6 +241,15 @@ play it — neither page can be read or copied.
 - **A rename rewrites the first heading.** It is the title the app shows, so leaving it behind would
   make the header and the list disagree; a note whose `# heading` was hand-written differently loses
   that wording. The frontmatter is not touched, and a note with no heading keeps its body untouched.
+- **A folder rename only rewrites links that named the folder.** A link written by title, by slug
+  or by bare filename still resolves after the move - the resolver finds the note wherever it lives
+  - so only a link like `Movies/…md` is rewritten to the new path. That is the author's wording
+  rather than a broken path, and rewriting every link that merely mentions the folder would be the
+  app editing sentences that were already true.
+- **A folder with files that are not notes is kept, not emptied.** Removing one moves the notes to
+  Inbox and leaves any `cover.jpg` or `.obsidian/` where it is, the same rule the trash follows; the
+  reply says the folder was kept, because a folder that still holds files cannot be removed without
+  deleting something someone made outside Lumos.
 - **Frontmatter validation is a report, not a repair.** The four fields the app reads are checked when
   a note is loaded, and the reasons travel to the viewer and the API, but the file on disk is never
   rewritten: a bad `created` keeps its written value, so the note sorts by it as a string until you

@@ -36,6 +36,8 @@ Markdown notes to the vault. It lives in [`apps/daemon`](../apps/daemon).
 | `/find <query>` | Search the vault; replies with the title and folder of each match |
 | `/<folder> <text or link>` | Any folder the vault has, by its own name: a `Movies` folder answers to `/movies`, and `To Read` to `/to-read`. There is no second list of commands to keep in step, so a folder made a moment ago works on the next message |
 | `/newfolder <name>` (also `/folder`) | Makes the folder and answers the command that now files into it. A name already in use is refused, and so is one that could not be a directory inside the vault |
+| `/renamefolder <from>\|<to>` | Renames a folder. Every note inside keeps its filename and its date, and the links that named the old folder are rewritten in the notes that carried them. The separator is `\|` because that is the one character a folder name can never carry, so the two halves cannot be read the wrong way |
+| `/delfolder <name>` (also `/removefolder`) | Removes a folder and moves its notes to Inbox. A folder is only a place to file things, so removing one never takes a note with it; the reply says how many moved |
 | `/` on its own | The menu: one line per folder plus the non-filing commands, read from the folders on disk |
 | `/help` | prints the command list |
 | plain text | `vault/Inbox/` |
@@ -109,6 +111,40 @@ Response: `{ "folder": "Movies" }`. A name already in use is a `409` and one tha
 directory inside the vault - a separator, `..`, a leading dot - is a `400`; both carry a sentence.
 Every folder a route accepts is checked against this same list, so `POST /notes` into a folder made
 here succeeds without a restart.
+
+### `PATCH /folder`
+```json
+{ "folder": "Movies", "to": "Film" }
+```
+Renames a folder. A folder is a directory, so this is one `rename` on disk: every note inside keeps
+its filename, its date and its bytes, and only the path to them changes.
+
+The links that *named the folder* are rewritten in the notes that carried them, and the files
+touched come back as `updated`. Only a written path is corrected: a link by title, by slug or by
+bare filename still resolves after the rename (the resolver finds a note wherever it lives), so it
+is the author's wording rather than a stale path and is left exactly as written.
+
+Response: `{ "folder": "Film", "moved": 2, "updated": ["Ideas/2026-10-20-see-it.md"] }`.
+
+`400` for a missing `to`, a name the vault cannot make, or a rename to the name it already has;
+`404` for a folder that is not there; `409` for a name another folder already holds - a rename
+never merges two folders, because the person renaming is right there and can choose another name.
+
+### `DELETE /folder?folder=<Folder>`
+
+Removes a folder by moving its notes to Inbox, and answers what happened:
+`{ "folder": "Movies", "to": "Inbox", "moved": 2, "updated": [], "leftover": false }`.
+
+Moving rather than deleting is the whole point of the route: a folder is a place to file things, so
+removing one must never take a note with it. Every name is checked against the destination *before*
+anything moves, because a refusal halfway through would leave the folder half emptied, which is
+worse than not having started. Files that are not notes are left exactly where they are - the same
+rule the trash follows - so a stray file keeps the directory and `leftover` says so rather than the
+caller having to guess why the folder is still there.
+
+`400` for a missing `folder`, a destination the vault cannot make, or removing Inbox itself (that is
+where the notes would go); `404` for a folder that is not there; `409` when the destination already
+holds one of the names, with nothing moved.
 
 ### `GET /note?folder=<Folder>&name=<file.md>`
 A single note (`frontmatter` + `content`), plus `problems`: an array of frontmatter complaints, empty
@@ -347,17 +383,22 @@ write). Keeping this logic in packages lets the desktop app reuse it.
 `pnpm --filter daemon test` runs the daemon suite (vitest):
 
 - `src/commands.test.ts` - `parseMessage` over every command and over malformed input: blank
-  messages, a bare `/`, unknown commands, `https` links inside plain text, and `/plan` falling back
-  to `today` for anything it does not recognise.
+  messages, a bare `/`, unknown commands, `https` links inside plain text, `/plan` falling back
+  to `today` for anything it does not recognise, and `/renamefolder` split on its `|` separator -
+  including a name carrying spaces, a missing half, and a body with a second `|` in it.
 - `src/handler.test.ts` - `handleMessage` from the message to the file on disk: the reply strings, the
   generated filename, and the frontmatter that was written. It passes a temporary directory in as the
-  vault, so your own vault is never touched.
+  vault, so your own vault is never touched. Renaming and removing a folder each get their own
+  throwaway vault per test, because those operations move whole directories around and a shared one
+  would make every case depend on what the last left behind.
 - `src/app.test.ts` - every route through `app.inject()`: the note listings and their empty case, search
   and its blank query, `POST /notes` creating a note with the right source and refusing every bad
   payload, the folder counts, `/note`'s guards (a missing parameter, an unknown folder, and
   each traversal shape tried against a decoy file left outside the folders), `PUT /note` saving a body
   with the frontmatter untouched and refusing every one of those shapes, `PATCH /note` renaming a note
-  and answering its new name, `POST /note/move` moving one and refusing to replace what is already
+  and answering its new name, `PATCH /folder` renaming a folder with the notes that came with it and
+  the links it rewrote, `DELETE /folder` moving its notes to Inbox and refusing Inbox itself,
+  `POST /note/move` moving one and refusing to replace what is already
   there, `DELETE /note` removing one and reading `404` for a file it cannot find, the graph's nodes,
   edges and unresolved links, `/link`'s refusals and its status codes with the fetcher injected, the
   plain `500` for a route that throws unexpectedly (built over a vault path that is a file, so the

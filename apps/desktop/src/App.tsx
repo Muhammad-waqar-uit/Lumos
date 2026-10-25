@@ -8,6 +8,8 @@ import {
   getNote,
   getTrash,
   moveNote,
+  removeFolder,
+  renameFolder,
   renameNote,
   restoreNote,
   emptyTrash,
@@ -431,6 +433,71 @@ export default function App() {
     [refreshVault, setActiveFolder, setView],
   );
 
+  /**
+   * Rename a folder, then look at it under its new name.
+   *
+   * The filter has to move with it: the list was looking through the old name, and a folder filter
+   * that outlives the folder would leave an empty pane with no explanation. A note that was open
+   * inside it has a new key, so its address is dropped rather than left pointing at a path that is
+   * not there - the next note in the list takes over.
+   */
+  const renameFolderInPlace = useCallback(
+    async (folder: string, to: string): Promise<void> => {
+      const { folder: renamed, moved, updated } = await renameFolder(folder, to);
+      if (activeFolder === folder) setActiveFolder(renamed);
+      // The open note's key carried the old folder, so it cannot be re-read under that name.
+      if (selected?.startsWith(`${folder}/`)) {
+        void navigate({ search: (prev) => ({ ...prev, note: undefined }) });
+        setFetched(null);
+      }
+      const notesWord = moved === 1 ? "1 note" : `${moved} notes`;
+      const links =
+        updated.length === 0
+          ? ""
+          : ` ${updated.length} ${updated.length === 1 ? "link" : "links"} followed.`;
+      setNotice({ text: `Renamed ${folder} to ${renamed}. ${notesWord} moved.${links}` });
+      try {
+        await refreshVault();
+      } catch (err: unknown) {
+        setNotice({
+          text: `Renamed, but the list could not be refreshed (${reasonOf(err)}).`,
+        });
+      }
+    },
+    [activeFolder, navigate, refreshVault, selected, setActiveFolder],
+  );
+
+  /**
+   * Remove a folder, taking the daemon's word for where its notes went.
+   *
+   * The notes are in Inbox afterwards, so that is where the list goes - the folder it was looking
+   * through has just been removed, and staying there would show nothing. A directory kept because
+   * it holds files that are not notes is said in the notice rather than passed over.
+   */
+  const removeFolderFromVault = useCallback(
+    async (folder: string): Promise<void> => {
+      const { to, moved, leftover } = await removeFolder(folder);
+      if (activeFolder === folder) setActiveFolder(to);
+      if (selected?.startsWith(`${folder}/`)) {
+        void navigate({ search: (prev) => ({ ...prev, note: undefined }) });
+        setFetched(null);
+      }
+      const notesWord = moved === 1 ? "1 note" : `${moved} notes`;
+      const kept = leftover
+        ? ` The folder still holds files that are not notes, so it was kept.`
+        : "";
+      setNotice({ text: `Removed ${folder}. ${notesWord} moved to ${to}.${kept}` });
+      try {
+        await refreshVault();
+      } catch (err: unknown) {
+        setNotice({
+          text: `Removed, but the list could not be refreshed (${reasonOf(err)}).`,
+        });
+      }
+    },
+    [activeFolder, navigate, refreshVault, selected, setActiveFolder],
+  );
+
   // The trash panel is a route like the graph, not a note. Leaving it puts the list back as it was.
   const showNotes = useCallback(() => setView("notes"), [setView]);
 
@@ -482,6 +549,8 @@ export default function App() {
           view={view}
           onView={setView}
           onCreateFolder={connection === "daemon" ? createFolderAndOpen : undefined}
+          onRenameFolder={connection === "daemon" ? renameFolderInPlace : undefined}
+          onRemoveFolder={connection === "daemon" ? removeFolderFromVault : undefined}
         />
         {view === "graph" ? (
           <PaneBoundary title="The graph view">

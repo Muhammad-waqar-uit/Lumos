@@ -76,6 +76,8 @@ export type Parsed =
   | { kind: "plan"; when: "today" | "tomorrow" }
   | { kind: "find"; query: string }
   | { kind: "newFolder"; name: string }
+  | { kind: "renameFolder"; from: string; to: string }
+  | { kind: "removeFolder"; name: string }
   | { kind: "help" }
   | { kind: "unknown"; command: string };
 

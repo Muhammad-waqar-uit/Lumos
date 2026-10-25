@@ -1,7 +1,7 @@
 import { mkdtemp, readdir, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { parseNote } from "@lumos/vault-utils";
 import { handleMessage } from "./handler";
 
@@ -137,6 +137,8 @@ describe("handleMessage - replies", () => {
       "/goal <text or link> -> Goals",
       "/read <text or link> -> Reading",
       "/newfolder <name> - then /<name> files into it",
+      "/renamefolder <from>|<to> - a folder's notes and links follow",
+      "/delfolder <name> - the folder goes, its notes move to Inbox",
       "/plan today | tomorrow",
       "/find <query>",
       "/help",
@@ -193,6 +195,126 @@ describe("handleMessage - folders the person makes", () => {
       "A folder name cannot start with a dot.",
     );
     expect(await handleMessage("/newfolder", vault)).toBe("Usage: /newfolder <name>");
+  });
+});
+
+describe("handleMessage - renaming and removing a folder", () => {
+  // A throwaway vault per test. These operations move whole directories around, so sharing the
+  // suite's vault would make every test depend on what the last one left behind - and a note's
+  // filename comes from its title, so the same sentence filed twice collides by name.
+  let box = "";
+
+  beforeEach(async () => {
+    box = await mkdtemp(path.join(tmpdir(), "lumos-folders-"));
+  });
+
+  afterEach(async () => {
+    await rm(box, { recursive: true, force: true });
+  });
+
+  /** Filenames in one folder of this test's own vault. */
+  async function files(folder: string): Promise<string[]> {
+    try {
+      return (await readdir(path.join(box, folder))).sort();
+    } catch (err: unknown) {
+      if ((err as NodeJS.ErrnoException).code === "ENOENT") return [];
+      throw err;
+    }
+  }
+
+  it("renames a folder and counts the notes that came with it", async () => {
+    await handleMessage("/newfolder Films", box);
+    await handleMessage("/films a note in the new folder", box);
+
+    expect(await handleMessage("/renamefolder Films|Cinema", box)).toBe(
+      "Renamed Films to Cinema. 1 note moved.",
+    );
+    expect(await files("Cinema")).toHaveLength(1);
+    expect(await files("Films")).toEqual([]);
+  });
+
+  it("renames a folder whose name has spaces, using the separator", async () => {
+    await handleMessage("/newfolder Movie Night", box);
+
+    expect(await handleMessage("/renamefolder Movie Night|Film Night", box)).toBe(
+      "Renamed Movie Night to Film Night. 0 notes moved.",
+    );
+    expect(await files("Film Night")).toEqual([]);
+    expect(await files("Movie Night")).toEqual([]);
+  });
+
+  it("rewrites a link that named the folder, and says how many followed", async () => {
+    await handleMessage("/newfolder Films", box);
+    await handleMessage("/films https://example.com/one", box);
+    const [film] = await files("Films");
+    // The linking note lives in a folder of its own, so this test reads back exactly one file.
+    await handleMessage("/newfolder Links", box);
+    await handleMessage(`/links see [[Films/${film}]] for the list`, box);
+
+    const reply = await handleMessage("/renamefolder Films|Cinema", box);
+
+    expect(reply).toBe("Renamed Films to Cinema. 1 note moved. 1 link(s) followed.");
+    const [note] = await files("Links");
+    const raw = await readFile(path.join(box, "Links", note), "utf8");
+    expect(raw).toContain(`[[Cinema/${film}]]`);
+    expect(raw).not.toContain("[[Films/");
+  });
+
+  it("asks for both names when the separator is missing", async () => {
+    await handleMessage("/newfolder Films", box);
+
+    expect(await handleMessage("/renamefolder Films", box)).toBe(
+      "Usage: /renamefolder <from>|<to>",
+    );
+    expect(await files("Films")).toEqual([]);
+  });
+
+  it("refuses a folder that is not there, and one whose name is taken", async () => {
+    await handleMessage("/newfolder Films", box);
+    await handleMessage("/films a note", box);
+    await handleMessage("/newfolder Taken", box);
+
+    expect(await handleMessage("/renamefolder Gone|Cinema", box)).toBe(
+      "There is no folder called Gone.",
+    );
+    expect(await handleMessage("/renamefolder Films|Taken", box)).toBe(
+      "A folder called Taken is already there.",
+    );
+    // The refused rename left the folder and its note exactly where they were.
+    expect(await files("Films")).toHaveLength(1);
+  });
+
+  it("removes a folder and moves its notes to Inbox", async () => {
+    await handleMessage("/newfolder Films", box);
+    await handleMessage("/films a note in the new folder", box);
+
+    expect(await handleMessage("/delfolder Films", box)).toBe(
+      "Removed Films. 1 note moved to Inbox.",
+    );
+    expect(await files("Films")).toEqual([]);
+    expect(await files("Inbox")).toHaveLength(1);
+  });
+
+  it("removes a folder that has no notes in it", async () => {
+    await handleMessage("/newfolder Empty", box);
+
+    expect(await handleMessage("/delfolder Empty", box)).toBe(
+      "Removed Empty. 0 notes moved to Inbox.",
+    );
+    expect(await files("Empty")).toEqual([]);
+  });
+
+  it("asks for a name when none is given, and refuses a folder that is not there", async () => {
+    expect(await handleMessage("/delfolder", box)).toBe("Usage: /delfolder <name>");
+    expect(await handleMessage("/delfolder Gone", box)).toBe("There is no folder called Gone.");
+  });
+
+  it("stops listing a removed folder as a command", async () => {
+    await handleMessage("/newfolder Films", box);
+
+    await handleMessage("/delfolder Films", box);
+
+    expect(await handleMessage("/films anything", box)).toContain("Unknown command /films");
   });
 });
 

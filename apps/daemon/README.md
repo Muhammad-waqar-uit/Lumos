@@ -98,10 +98,13 @@ touches the vault.
 | `GET /graph` | the vault's link graph: notes, tags, links and unresolved targets |
 | `GET /link?url=<url>` | one remote link, described for the desktop: playable media, or the page's metadata and readable text |
 
-Eight write routes serve the desktop: `POST /folders` makes a folder (a name already in use is a
-`409`, one that could not be a directory inside the vault a `400`), `PUT /note` replaces a note's
-body, `POST /notes` creates one through the capture writer (stamped `source: desktop`), `PATCH /note`
-renames one to a new title
+Ten write routes serve the desktop: `POST /folders` makes a folder (a name already in use is a
+`409`, one that could not be a directory inside the vault a `400`), `PATCH /folder` renames one -
+every note inside keeps its filename and date, and the links that named the folder are rewritten in
+the notes that carried them - `DELETE /folder` moves its notes to Inbox and drops the empty
+directory (Inbox itself is refused, and non-note files keep the folder), `PUT /note` replaces a
+note's body, `POST /notes` creates one through the capture writer (stamped `source: desktop`),
+`PATCH /note` renames one to a new title
 (the file, its first heading and the links other notes have to it all follow, and the edited files
 come back as `updated`), `PATCH /note/meta` changes its tags or status in place, `POST /note/move`
 moves it to another folder under the name it already has,

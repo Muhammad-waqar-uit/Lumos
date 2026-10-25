@@ -406,6 +406,203 @@ describe("POST /folders", () => {
   });
 });
 
+describe("PATCH /folder", () => {
+  it("renames the folder and counts the notes that came with it", async () => {
+    const { vault, app } = await makeApp([
+      { folder: "Movies", text: "the trailer" },
+      { folder: "Movies", text: "the review" },
+    ]);
+
+    const res = await app.inject({
+      method: "PATCH",
+      url: "/folder",
+      payload: { folder: "Movies", to: "Film" },
+    });
+
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual({ folder: "Film", moved: 2, updated: [] });
+    expect(await readdir(vault)).toContain("Film");
+    expect(await readdir(vault)).not.toContain("Movies");
+    // The notes came with it, filenames and dates intact - a folder is one directory.
+    expect(await readdir(path.join(vault, "Film"))).toHaveLength(2);
+  });
+
+  it("stops the old folder being a destination, and the new one becomes one", async () => {
+    const { app } = await makeApp([{ folder: "Movies", text: "the trailer" }]);
+    await app.inject({
+      method: "PATCH",
+      url: "/folder",
+      payload: { folder: "Movies", to: "Film" },
+    });
+
+    const stale = await app.inject({
+      method: "POST",
+      url: "/notes",
+      payload: { folder: "Movies", text: "too late" },
+    });
+    expect(stale.statusCode).toBe(400);
+
+    const fresh = await app.inject({
+      method: "POST",
+      url: "/notes",
+      payload: { folder: "Film", text: "right on time" },
+    });
+    expect(fresh.statusCode).toBe(200);
+  });
+
+  it("rewrites the links that named the folder, and answers which notes were touched", async () => {
+    const { vault, app } = await makeApp([
+      { folder: "Movies", text: "the trailer" },
+      { folder: "Ideas", text: "see [[Movies/2026-01-02-the-trailer.md]] for it" },
+    ]);
+    // The seeded note carries today's date, so the link above has to be built from the real name.
+    const [film] = await readdir(path.join(vault, "Movies"));
+    const linking = (await readdir(path.join(vault, "Ideas")))[0];
+    await writeFile(
+      path.join(vault, "Ideas", linking),
+      `---\nsource: whatsapp\ncreated: 2026-01-01T00:00:00.000Z\ntags: []\n---\n\n# Ideas\n\nsee [[Movies/${film}]] for it\n`,
+      "utf8",
+    );
+
+    const res = await app.inject({
+      method: "PATCH",
+      url: "/folder",
+      payload: { folder: "Movies", to: "Film" },
+    });
+
+    expect(res.statusCode).toBe(200);
+    expect(res.json<{ updated: string[] }>().updated).toEqual([`Ideas/${linking}`]);
+    const raw = await readFile(path.join(vault, "Ideas", linking), "utf8");
+    expect(raw).toContain(`[[Film/${film}]]`);
+    expect(raw).not.toContain("[[Movies/");
+  });
+
+  it("answers 404 for a folder that is not there, and 409 for one whose name is taken", async () => {
+    const { app } = await makeApp([{ folder: "Movies", text: "the trailer" }]);
+    await app.inject({ method: "POST", url: "/folders", payload: { name: "Film" } });
+
+    const gone = await app.inject({
+      method: "PATCH",
+      url: "/folder",
+      payload: { folder: "Gone", to: "Cinema" },
+    });
+    expect(gone.statusCode).toBe(404);
+    expect(gone.json()).toEqual({ error: "There is no folder called Gone." });
+
+    // Both directories are on disk, so this is a real clash rather than a seed name.
+    const taken = await app.inject({
+      method: "PATCH",
+      url: "/folder",
+      payload: { folder: "Movies", to: "Film" },
+    });
+    expect(taken.statusCode).toBe(409);
+    expect(taken.json()).toEqual({ error: "A folder called Film is already there." });
+  });
+
+  it("refuses a request with no new name, or a name the vault cannot make", async () => {
+    const { vault, app } = await makeApp([{ folder: "Movies", text: "the trailer" }]);
+
+    for (const to of [undefined, "   ", "a/b", "../out"]) {
+      const res = await app.inject({
+        method: "PATCH",
+        url: "/folder",
+        payload: { folder: "Movies", to },
+      });
+      expect(res.statusCode, String(to)).toBe(400);
+    }
+    // Nothing was renamed by any of them.
+    expect(await readdir(vault)).toContain("Movies");
+  });
+});
+
+describe("DELETE /folder", () => {
+  it("moves every note to Inbox and removes the directory", async () => {
+    const { vault, app } = await makeApp([
+      { folder: "Movies", text: "the trailer" },
+      { folder: "Movies", text: "the review" },
+    ]);
+
+    const res = await app.inject({ method: "DELETE", url: "/folder?folder=Movies" });
+
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual({
+      folder: "Movies",
+      to: "Inbox",
+      moved: 2,
+      updated: [],
+      leftover: false,
+    });
+    expect(await readdir(path.join(vault, "Inbox"))).toHaveLength(2);
+    expect(await readdir(vault)).not.toContain("Movies");
+  });
+
+  it("reports the folder as gone from the listing and the menus", async () => {
+    const { app } = await makeApp([{ folder: "Movies", text: "the trailer" }]);
+    await app.inject({ method: "DELETE", url: "/folder?folder=Movies" });
+
+    const folders = await app.inject({ method: "GET", url: "/folders" });
+    expect(
+      folders.json<{ folders: { folder: string }[] }>().folders.map((f) => f.folder),
+    ).not.toContain("Movies");
+    // A note can no longer be filed into it either.
+    const filed = await app.inject({
+      method: "POST",
+      url: "/notes",
+      payload: { folder: "Movies", text: "too late" },
+    });
+    expect(filed.statusCode).toBe(400);
+  });
+
+  it("keeps the directory when it holds a file that is not a note, and says so", async () => {
+    const { vault, app } = await makeApp([{ folder: "Movies", text: "the trailer" }]);
+    await writeFile(path.join(vault, "Movies", "cover.jpg"), "not a note", "utf8");
+
+    const res = await app.inject({ method: "DELETE", url: "/folder?folder=Movies" });
+
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toMatchObject({ moved: 1, leftover: true });
+    // Only notes are the app's to move; someone else's file stays exactly where it is.
+    expect(await readdir(path.join(vault, "Movies"))).toEqual(["cover.jpg"]);
+    expect(await readdir(path.join(vault, "Inbox"))).toHaveLength(1);
+  });
+
+  it("refuses Inbox, because that is where the notes would go", async () => {
+    const { app } = await makeApp([{ folder: "Inbox", text: "a thought" }]);
+
+    const res = await app.inject({ method: "DELETE", url: "/folder?folder=Inbox" });
+
+    expect(res.statusCode).toBe(400);
+    expect(res.json()).toEqual({ error: "Inbox is where its notes would go." });
+  });
+
+  it("answers 404 for a folder that is not there, and 400 with no folder named", async () => {
+    const { app } = await makeApp();
+
+    const gone = await app.inject({ method: "DELETE", url: "/folder?folder=Gone" });
+    expect(gone.statusCode).toBe(404);
+    expect(gone.json()).toEqual({ error: "There is no folder called Gone." });
+
+    const empty = await app.inject({ method: "DELETE", url: "/folder" });
+    expect(empty.statusCode).toBe(400);
+    expect(empty.json()).toEqual({ error: "folder is required" });
+  });
+
+  it("answers 409 instead of replacing a note Inbox already holds", async () => {
+    const { vault, app } = await makeApp([{ folder: "Movies", text: "the trailer" }]);
+    const [clash] = await readdir(path.join(vault, "Movies"));
+    const held = "# Inbox already has this name\n\nmine\n";
+    await mkdir(path.join(vault, "Inbox"), { recursive: true });
+    await writeFile(path.join(vault, "Inbox", clash), held, "utf8");
+
+    const res = await app.inject({ method: "DELETE", url: "/folder?folder=Movies" });
+
+    expect(res.statusCode).toBe(409);
+    expect(res.json()).toEqual({ error: `Inbox already has a note called ${clash}.` });
+    // Nothing moved: a refusal part-way would leave the folder half emptied.
+    expect(await readdir(path.join(vault, "Movies"))).toEqual([clash]);
+  });
+});
+
 describe("GET /note", () => {
   it("refuses a request without both parameters", async () => {
     const { app } = await makeApp([NOTE]);

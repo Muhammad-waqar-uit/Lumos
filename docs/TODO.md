@@ -43,10 +43,15 @@ else on this page can close them.
 - [x] Bulk operations (move, tag, archive) - checkboxes in the list choose notes, a bulk bar offers
   move/tag/archive/clear, and every write is settled on its own so one refusal never abandons the
   rest (`lib/bulk.ts`, `App.bulk.test.tsx`)
-- [ ] Rename or remove a folder (P3) - folders can be made from the chat and from the sidebar, but
-  not renamed or deleted, because either one has to decide what happens to the notes inside. Two
-  candidates: refuse while the folder holds notes, or move them to Inbox in one step and say how
-  many moved. Needs that decision before it is built
+- [x] Rename or remove a folder - `PATCH /folder` and `DELETE /folder`, plus `/renamefolder
+  <from>|<to>` and `/delfolder <name>` on WhatsApp. Removing moves the notes to Inbox rather than
+  deleting them: a folder is only a place to file things, so removing one must never take a note
+  with it, and the reply says how many moved. A rename is one `rename` on disk - every note keeps
+  its filename and date - and the links that *named the folder* are rewritten in the notes that
+  carried them (`folderPathEdits()`), because a link by title or bare filename still resolves after
+  either change and is the author's wording rather than a stale path. Every name is checked against
+  the destination before anything moves, so a refusal changes nothing. In the sidebar the two
+  controls sit on the folder the list is looking at, behind a confirm that names the consequence
 
 ### Phase 8 - Polish & docs (P2) - open items
 

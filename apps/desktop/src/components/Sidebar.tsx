@@ -21,18 +21,49 @@ interface Props {
   onView: (view: ShellView) => void;
   /** Makes a folder and answers its name. Rejecting keeps the form open with the reason. */
   onCreateFolder?: (name: string) => Promise<string>;
+  /**
+   * Renames the active folder. Rejecting keeps the form open with the reason, exactly as making
+   * one does. Absent while there is no daemon to ask.
+   */
+  onRenameFolder?: (folder: string, to: string) => Promise<void>;
+  /**
+   * Removes the active folder, moving its notes to Inbox. Rejecting keeps the question on screen
+   * with the reason. Absent while there is no daemon to ask.
+   */
+  onRemoveFolder?: (folder: string) => Promise<void>;
 }
 
-export function Sidebar({ folders, total, active, onSelect, view, onView, onCreateFolder }: Props) {
+export function Sidebar({
+  folders,
+  total,
+  active,
+  onSelect,
+  view,
+  onView,
+  onCreateFolder,
+  onRenameFolder,
+  onRemoveFolder,
+}: Props) {
   const [creating, setCreating] = useState(false);
   const [name, setName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  // The two folder operations. They act on the folder the list is looking at, which is the only
+  // folder a person can mean without saying so - a menu per row would be a control inside a
+  // button, and this way the action is always about what is on screen.
+  const [renaming, setRenaming] = useState(false);
+  const [renameTo, setRenameTo] = useState("");
+  const [confirming, setConfirming] = useState(false);
 
   const items: { key: FolderFilter; label: string; count: number }[] = [
     { key: "All", label: "All notes", count: total },
     ...folders.map((f) => ({ key: f.folder as FolderFilter, label: f.folder, count: f.count })),
   ];
+
+  // "All notes" is a view over the vault, not a folder in it, so there is nothing to rename or
+  // remove while it is showing.
+  const activeIsFolder = active !== "All";
+  const activeCount = folders.find((f) => f.folder === active)?.count ?? 0;
 
   const create = async (): Promise<void> => {
     if (!onCreateFolder || busy || !name.trim()) return;
@@ -49,6 +80,51 @@ export function Sidebar({ folders, total, active, onSelect, view, onView, onCrea
       setBusy(false);
     }
   };
+
+  const rename = async (): Promise<void> => {
+    if (!onRenameFolder || busy || !renameTo.trim() || !activeIsFolder) return;
+    setBusy(true);
+    setError(null);
+    try {
+      await onRenameFolder(active, renameTo.trim());
+      setRenaming(false);
+      setRenameTo("");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "That folder could not be renamed.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const remove = async (): Promise<void> => {
+    if (!onRemoveFolder || busy || !activeIsFolder) return;
+    setBusy(true);
+    setError(null);
+    try {
+      await onRemoveFolder(active);
+      setConfirming(false);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "That folder could not be removed.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  /** Close whatever folder form is open, and forget the reason it was showing. */
+  const closeFolderForms = (): void => {
+    setCreating(false);
+    setRenaming(false);
+    setConfirming(false);
+    setName("");
+    setRenameTo("");
+    setError(null);
+  };
+
+  const errorLine = error ? <p className="mt-1 text-[11px] text-amber-400">{error}</p> : null;
+  const quietButton =
+    "rounded-md border border-border px-2 py-0.5 text-[11px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-50";
+  const cancelButton =
+    "rounded-md px-2 py-0.5 text-[11px] text-muted-foreground transition-colors hover:text-foreground";
 
   return (
     <aside className="flex w-56 shrink-0 flex-col border-r border-border bg-card/40">
@@ -106,66 +182,167 @@ export function Sidebar({ folders, total, active, onSelect, view, onView, onCrea
           );
         })}
       </nav>
-      {onCreateFolder ? (
+      {onCreateFolder || onRenameFolder || onRemoveFolder ? (
         <div className="border-t border-border px-2 py-2">
-          {creating ? (
+          {activeIsFolder && (onRenameFolder || onRemoveFolder) && !renaming && !confirming ? (
+            <div className="mb-1.5 flex gap-1.5">
+              {onRenameFolder ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setError(null);
+                    setRenameTo(active);
+                    setRenaming(true);
+                  }}
+                  className={quietButton}
+                >
+                  Rename
+                </button>
+              ) : null}
+              {onRemoveFolder ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setError(null);
+                    setConfirming(true);
+                  }}
+                  className={quietButton}
+                >
+                  Delete
+                </button>
+              ) : null}
+            </div>
+          ) : null}
+
+          {renaming ? (
             <form
               onSubmit={(event) => {
                 event.preventDefault();
-                void create();
+                void rename();
               }}
             >
-              <label htmlFor="new-folder-name" className="sr-only">
-                Folder name
+              <label htmlFor="rename-folder-name" className="sr-only">
+                New folder name
               </label>
               <input
-                id="new-folder-name"
-                value={name}
-                onChange={(event) => setName(event.currentTarget.value)}
+                id="rename-folder-name"
+                value={renameTo}
+                onChange={(event) => setRenameTo(event.currentTarget.value)}
                 onKeyDown={(event) => {
                   if (event.key === "Escape") {
-                    setCreating(false);
-                    setName("");
+                    setRenaming(false);
+                    setRenameTo("");
                     setError(null);
                   }
                 }}
-                placeholder="Folder name"
+                placeholder="New name"
                 autoFocus
                 disabled={busy}
                 className="w-full rounded-md border border-input bg-background px-2 py-1 text-xs outline-none placeholder:text-muted-foreground focus:border-ring focus:ring-1 focus:ring-ring"
               />
               <div className="mt-1.5 flex gap-1.5">
-                <button
-                  type="submit"
-                  disabled={busy || !name.trim()}
-                  className="rounded-md border border-border px-2 py-0.5 text-[11px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-50"
-                >
-                  {busy ? "Making…" : "Make folder"}
+                <button type="submit" disabled={busy || !renameTo.trim()} className={quietButton}>
+                  {busy ? "Renaming…" : "Rename folder"}
                 </button>
                 <button
                   type="button"
                   onClick={() => {
-                    setCreating(false);
-                    setName("");
+                    setRenaming(false);
+                    setRenameTo("");
                     setError(null);
                   }}
                   disabled={busy}
-                  className="rounded-md px-2 py-0.5 text-[11px] text-muted-foreground transition-colors hover:text-foreground"
+                  className={cancelButton}
                 >
                   Cancel
                 </button>
               </div>
-              {error ? <p className="mt-1 text-[11px] text-amber-400">{error}</p> : null}
+              {errorLine}
             </form>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setCreating(true)}
-              className="w-full rounded-md px-2.5 py-1.5 text-left text-xs text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
-            >
-              + New folder
-            </button>
-          )}
+          ) : null}
+
+          {confirming ? (
+            <div>
+              <p className="text-[11px] leading-snug text-muted-foreground">
+                Remove <span className="text-foreground">{active}</span>?{" "}
+                {activeCount === 1 ? "Its note moves" : "Its notes move"} to Inbox.
+              </p>
+              <div className="mt-1.5 flex gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => void remove()}
+                  disabled={busy}
+                  className={quietButton}
+                >
+                  {busy ? "Removing…" : "Remove"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setConfirming(false);
+                    setError(null);
+                  }}
+                  disabled={busy}
+                  className={cancelButton}
+                >
+                  Cancel
+                </button>
+              </div>
+              {errorLine}
+            </div>
+          ) : null}
+
+          {onCreateFolder ? (
+            creating ? (
+              <form
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  void create();
+                }}
+              >
+                <label htmlFor="new-folder-name" className="sr-only">
+                  Folder name
+                </label>
+                <input
+                  id="new-folder-name"
+                  value={name}
+                  onChange={(event) => setName(event.currentTarget.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Escape") closeFolderForms();
+                  }}
+                  placeholder="Folder name"
+                  autoFocus
+                  disabled={busy}
+                  className="w-full rounded-md border border-input bg-background px-2 py-1 text-xs outline-none placeholder:text-muted-foreground focus:border-ring focus:ring-1 focus:ring-ring"
+                />
+                <div className="mt-1.5 flex gap-1.5">
+                  <button type="submit" disabled={busy || !name.trim()} className={quietButton}>
+                    {busy ? "Making…" : "Make folder"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={closeFolderForms}
+                    disabled={busy}
+                    className={cancelButton}
+                  >
+                    Cancel
+                  </button>
+                </div>
+                {errorLine}
+              </form>
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  setError(null);
+                  setCreating(true);
+                }}
+                className="w-full rounded-md px-2.5 py-1.5 text-left text-xs text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
+              >
+                + New folder
+              </button>
+            )
+          ) : null}
         </div>
       ) : null}
     </aside>

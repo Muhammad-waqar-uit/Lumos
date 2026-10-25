@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Folder rename and removal. `/renamefolder <from>|<to>` and `/delfolder <name>` on WhatsApp,
+  `PATCH /folder` and `DELETE /folder` on the API, and **Rename**/**Delete** on every folder row in
+  the desktop sidebar. The rename is one directory rename on disk - every note inside keeps its
+  filename, date and bytes - and the links that named the old folder are rewritten in the notes that
+  carried them; the remove moves the notes to Inbox before dropping the directory, so removing a
+  folder never takes a note with it. Files that are not notes are left in place and the folder is
+  kept, the same rule the trash follows.
 - Monorepo scaffold with pnpm workspaces (`apps/daemon`, `apps/desktop`, `packages`).
 - Daemon core: command parser, vault writer, message handler, Fastify HTTP API.
 - WhatsApp bridge via Baileys with QR authentication, sender allowlist, and auto-reconnect.

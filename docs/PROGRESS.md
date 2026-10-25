@@ -4,6 +4,30 @@ Chronological record of what has been built. Newest entries first within each da
 
 ## 2026-10-25
 
+### Done — a folder can be renamed or removed
+- [x] `renameFolder()` and `removeFolderNotes()` in `@lumos/vault-utils`. The rename is one
+  directory rename: every note inside keeps its filename, its date and its bytes, and the links
+  that *named the folder* (`Movies/…md`) are rewritten in the notes that carried them - a link by
+  title or slug still resolves, because the resolver finds the note wherever it lives, so the
+  author's wording is left alone. The remove moves the notes to Inbox (the folder is only a place
+  to file things, so removing one never takes a note with it), then drops the empty directory; a
+  folder still holding non-note files is kept and the reply says so, the same rule the trash
+  follows. Every name is checked before anything moves, so a refusal changes nothing
+- [x] `PATCH /folder` and `DELETE /folder` on the daemon, plus `/renamefolder Movies|Film` and
+  `/delfolder Movies` (`/removefolder`) on WhatsApp. The separator is `|` because that is the one
+  character a folder name can never carry, so the two halves cannot be read the wrong way. Inbox
+  cannot be removed - there is nowhere to move its notes - and a folder that does not exist is a
+  `404` in the daemon's own sentence
+- [x] The sidebar's every folder row carries **Rename** and **Delete**: rename is an inline field
+  that follows the row to its new name and count; delete asks first ("Remove Movies? The 12 notes
+  inside move to Inbox."), and the Inbox becomes what the list is looking at afterwards. Both are
+  offered only while the daemon answers - with the daemon down the app is showing demo data, and a
+  write button over demo data would be a lie
+- [x] Verified through the real interface, not only the units: `PATCH /folder` renamed a folder on
+  a fixture vault and the notes landed in the new path with the links rewritten;
+  `DELETE /folder` moved its notes to Inbox and the directory was gone. `pnpm validate` green -
+  659 tests (vault-utils 248, daemon 206, desktop 205)
+
 ### Done — the Pair button goes somewhere
 - [x] The status bar's QR button opened `http://127.0.0.1:3001/qrcode`, which did not exist: the
   daemon only ever printed the code in the terminal, so the button was a 404 and the docs described it

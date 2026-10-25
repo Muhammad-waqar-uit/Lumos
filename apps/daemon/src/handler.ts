@@ -3,6 +3,8 @@ import {
   NoteFileError,
   createFolder,
   listFolderNames,
+  removeFolder,
+  renameFolder,
   saveNote,
   searchNotes,
 } from "@lumos/vault-utils";
@@ -32,6 +34,8 @@ function helpText(folders: readonly string[]): string {
     "Lumos - send a command and the message is filed.",
     ...folders.map((folder) => `/${commandOf(folder)} <text or link> -> ${folder}`),
     "/newfolder <name> - then /<name> files into it",
+    "/renamefolder <from>|<to> - a folder's notes and links follow",
+    "/delfolder <name> - the folder goes, its notes move to Inbox",
     "/plan today | tomorrow",
     "/find <query>",
     "/help",
@@ -91,6 +95,29 @@ export async function handleMessage(
       } catch (err: unknown) {
         // A name already in use or one that cannot be a folder is answered, not thrown: the person
         // is holding a phone and can act on the sentence.
+        if (err instanceof NoteFileError) return err.message;
+        throw err;
+      }
+    }
+    case "renameFolder": {
+      if (!parsed.from || !parsed.to) return "Usage: /renamefolder <from>|<to>";
+      try {
+        const { folder, moved, updated } = await renameFolder(vaultDir, parsed);
+        const notes = moved === 1 ? "1 note" : `${moved} notes`;
+        const links = updated.length > 0 ? ` ${updated.length} link(s) followed.` : "";
+        return `Renamed ${parsed.from} to ${folder}. ${notes} moved.${links}`;
+      } catch (err: unknown) {
+        if (err instanceof NoteFileError) return err.message;
+        throw err;
+      }
+    }
+    case "removeFolder": {
+      if (!parsed.name.trim()) return "Usage: /delfolder <name>";
+      try {
+        const { folder, to, moved } = await removeFolder(vaultDir, parsed.name);
+        const notes = moved === 1 ? "1 note" : `${moved} notes`;
+        return `Removed ${folder}. ${notes} moved to ${to}.`;
+      } catch (err: unknown) {
         if (err instanceof NoteFileError) return err.message;
         throw err;
       }

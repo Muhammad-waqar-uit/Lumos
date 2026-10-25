@@ -1,7 +1,7 @@
 /**
  * @lumos/vault-utils - read, list, search, parse, and write the Lumos Markdown vault.
  */
-import { mkdir, readdir, readFile, rename, rm, stat, writeFile } from "node:fs/promises";
+import { mkdir, readdir, readFile, rename, rm, rmdir, stat, writeFile } from "node:fs/promises";
 import type { Dirent } from "node:fs";
 import path from "node:path";
 import YAML from "yaml";
@@ -289,6 +289,188 @@ export async function createFolder(vaultDir: string, name: string): Promise<stri
 
   await mkdir(dir);
   return folder;
+}
+
+/** What a folder rename changed: the new name, the notes now under it, and whose links followed. */
+export interface FolderRename {
+  /** The folder's name after the rename. */
+  folder: string;
+  /** How many notes are now under it. */
+  moved: number;
+  /** Vault ids (`Folder/name.md`) of the notes whose links were rewritten to the new path. */
+  updated: string[];
+}
+
+/** What removing a folder did: where its notes went, and what is left of it. */
+export interface FolderRemoval {
+  /** The folder that was removed. */
+  folder: string;
+  /** Where its notes were moved. */
+  to: string;
+  /** How many notes moved. */
+  moved: number;
+  /** Vault ids of the notes whose links were rewritten to the new path. */
+  updated: string[];
+  /** True when the directory still holds files that are not notes, so it was kept. */
+  leftover: boolean;
+}
+
+/**
+ * The edits a folder change needs so links that *named the folder* still do.
+ *
+ * A link may carry its target's path - `[[Ideas/2026-10-20-learn-rust.md]]` - and a folder rename
+ * or a bulk move changes that path even though the note is the same one it always was. Only the
+ * folder segment is corrected, and only in a link that wrote it: a link by title, by slug or by
+ * bare filename still resolves after either change (the resolver finds a note wherever it lives),
+ * so it is the author's wording rather than a stale path and is left exactly as written.
+ *
+ * Read after the change, because the notes carrying those links have moved with the folder.
+ */
+async function folderPathEdits(vaultDir: string, from: string, to: string): Promise<LinkEdit[]> {
+  const notes = await readVaultNotes(vaultDir);
+  const edits: LinkEdit[] = [];
+
+  for (const { folder, name, file, raw } of notes) {
+    const close = frontmatterClose(raw);
+    const head = close === null ? "" : raw.slice(0, close);
+    const { text, count } = rewriteLinks(close === null ? raw : raw.slice(close), (target) => {
+      const slash = Math.max(target.lastIndexOf("/"), target.lastIndexOf("\\"));
+      if (slash === -1) return null;
+      // The path may be written in any case; the folder is what changed, not the note's own name.
+      if (target.slice(0, slash).toLowerCase() !== from.toLowerCase()) return null;
+      return `${to}/${target.slice(slash + 1)}`;
+    });
+    if (count > 0) edits.push({ id: `${folder}/${name}`, file, text: head + text });
+  }
+  return edits;
+}
+
+/** Answer with a refusal when the folder is not a directory the vault has, or fall through. */
+async function requireFolder(vaultDir: string, folder: string): Promise<void> {
+  try {
+    const info = await stat(path.join(vaultDir, folder));
+    if (!info.isDirectory())
+      throw new NoteFileError("missing", `There is no folder called ${folder}.`);
+  } catch (err: unknown) {
+    if (err instanceof NoteFileError) throw err;
+    if ((err as NodeJS.ErrnoException).code === "ENOENT")
+      throw new NoteFileError("missing", `There is no folder called ${folder}.`);
+    throw err;
+  }
+}
+
+/** Refuse when a directory the vault would write into is already there. */
+async function requireVacant(vaultDir: string, folder: string): Promise<void> {
+  try {
+    await stat(path.join(vaultDir, folder));
+    throw new NoteFileError("exists", `A folder called ${folder} is already there.`);
+  } catch (err: unknown) {
+    if (err instanceof NoteFileError) throw err;
+    if ((err as NodeJS.ErrnoException).code !== "ENOENT") throw err;
+  }
+}
+
+/**
+ * Rename a folder, and carry the links that named it.
+ *
+ * A folder is a directory, so this is one `rename`: every note inside keeps its filename, its
+ * date and its bytes, and only the path to them changes. Links that wrote that path are rewritten
+ * in the notes that carried them and answered as `updated`, because a link that names a folder
+ * would otherwise point at a folder that is not there - and the graph would silently lose the edge
+ * that the author had written down.
+ *
+ * A name already in use is refused rather than merged into, and the folder is checked to exist
+ * before anything is touched: a rename is the one operation here that cannot be undone by typing
+ * the old name back if it turns out the new one was already taken.
+ */
+export async function renameFolder(
+  vaultDir: string,
+  input: { from: string; to: string },
+): Promise<FolderRename> {
+  const from = input.from.trim();
+  const to = input.to.trim();
+  const problem = folderNameProblem(from) ?? folderNameProblem(to);
+  if (problem) throw new NoteFileError("unsafe", problem);
+  if (from === to) throw new NoteFileError("invalid", `${from} is already called that.`);
+
+  await requireFolder(vaultDir, from);
+  await requireVacant(vaultDir, to);
+
+  await rename(path.join(vaultDir, from), path.join(vaultDir, to));
+
+  const edits = await folderPathEdits(vaultDir, from, to);
+  for (const edit of edits) await writeNoteFile(edit.file, edit.text);
+
+  return {
+    folder: to,
+    moved: (await listMarkdownFiles(path.join(vaultDir, to))).length,
+    updated: edits.map((edit) => edit.id),
+  };
+}
+
+/**
+ * Remove a folder by moving its notes somewhere else - `Inbox` unless the caller says otherwise.
+ *
+ * Moving rather than deleting is the whole point: a folder is only a place to file things, so
+ * removing one must never take a note with it. Every name is checked against the destination
+ * *before* anything moves, because a refusal halfway through would leave the folder half emptied,
+ * which is worse than not having started.
+ *
+ * Files that are not notes are left exactly where they are. That is the same rule the trash
+ * follows - only notes are this app's to move - so a stray file keeps the directory, and
+ * `leftover` says so rather than the caller having to guess why the folder is still there.
+ */
+export async function removeFolder(
+  vaultDir: string,
+  name: string,
+  options: { to?: string } = {},
+): Promise<FolderRemoval> {
+  const folder = name.trim();
+  const to = (options.to ?? "Inbox").trim();
+  const problem = folderNameProblem(folder) ?? folderNameProblem(to);
+  if (problem) throw new NoteFileError("unsafe", problem);
+  if (folder === to) throw new NoteFileError("invalid", `${folder} is where its notes would go.`);
+
+  await requireFolder(vaultDir, folder);
+  const dir = path.join(vaultDir, folder);
+  const names = await listMarkdownFiles(dir);
+
+  // A name the destination already holds is refused up front: `relocate` will not overwrite, so
+  // without this the folder would be emptied as far as the first clash and then stop.
+  for (const name of names) {
+    try {
+      await stat(path.join(vaultDir, to, name));
+      throw new NoteFileError("exists", `${to} already has a note called ${name}.`);
+    } catch (err: unknown) {
+      if (err instanceof NoteFileError) throw err;
+      if ((err as NodeJS.ErrnoException).code !== "ENOENT") throw err;
+    }
+  }
+
+  for (const name of names) {
+    const from = path.join(dir, name);
+    await relocate(from, path.join(vaultDir, to, name), await readFile(from, "utf8"));
+  }
+
+  const edits = await folderPathEdits(vaultDir, folder, to);
+  for (const edit of edits) await writeNoteFile(edit.file, edit.text);
+
+  let leftover = false;
+  try {
+    await rmdir(dir);
+  } catch (err: unknown) {
+    const code = (err as NodeJS.ErrnoException).code;
+    if (code === "ENOTEMPTY" || code === "EEXIST") leftover = true;
+    else if (code !== "ENOENT") throw err;
+  }
+
+  return {
+    folder,
+    to,
+    moved: names.length,
+    updated: edits.map((edit) => edit.id),
+    leftover,
+  };
 }
 
 /** How the index reads a note file. `readFile` by default; a test counts what the cache saved. */

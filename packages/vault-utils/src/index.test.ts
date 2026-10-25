@@ -16,7 +16,9 @@ import {
   moveNote,
   parseNote,
   readNote,
+  renameFolder,
   renameNote,
+  removeFolder,
   replaceNoteBody,
   restoreNote,
   saveNote,
@@ -1109,6 +1111,248 @@ describe("createFolder", () => {
   it("keeps a name with a space in it as written", async () => {
     expect(await createFolder(vault, "Movie Night")).toBe("Movie Night");
     expect(await readdir(vault)).toContain("Movie Night");
+  });
+});
+
+describe("renameFolder", () => {
+  const NAME = "2026-01-02-learn-rust.md";
+
+  it("renames the directory and keeps every note in it byte for byte", async () => {
+    await put("Movies", NAME, RAW);
+    const { folder, moved } = await renameFolder(vault, { from: "Movies", to: "Film" });
+
+    expect(folder).toBe("Film");
+    expect(moved).toBe(1);
+    expect(await readdir(path.join(vault, "Film"))).toEqual([NAME]);
+    expect(await readdir(path.join(vault, "Movies")).catch(() => null)).toBeNull();
+    expect(await readFile(path.join(vault, "Film", NAME), "utf8")).toBe(RAW);
+  });
+
+  it("renames an empty folder, and counts zero notes in it", async () => {
+    await mkdir(path.join(vault, "Scratch"));
+    const { moved } = await renameFolder(vault, { from: "Scratch", to: "Notes" });
+
+    expect(moved).toBe(0);
+    expect(await readdir(vault)).toContain("Notes");
+  });
+
+  it("rewrites the links that named the folder, and answers which notes were touched", async () => {
+    await put("Movies", NAME, RAW);
+    await put(
+      "Ideas",
+      "2026-01-01-see-it.md",
+      "---\ncreated: 2026-01-01T00:00:00.000Z\n---\n\n# See it\n\n[[Movies/2026-01-02-learn-rust.md]] and [the file](Movies/2026-01-02-learn-rust.md)\n",
+    );
+
+    const { updated } = await renameFolder(vault, { from: "Movies", to: "Film" });
+
+    expect(updated).toEqual(["Ideas/2026-01-01-see-it.md"]);
+    const raw = await readFile(path.join(vault, "Ideas", "2026-01-01-see-it.md"), "utf8");
+    expect(raw).toContain("[[Film/2026-01-02-learn-rust.md]]");
+    // The markdown link keeps its label; only the target's folder moved.
+    expect(raw).toContain("[the file](Film/2026-01-02-learn-rust.md)");
+  });
+
+  it("leaves a link written by title alone, because it still resolves after the rename", async () => {
+    await put("Movies", NAME, RAW);
+    await put(
+      "Ideas",
+      "2026-01-01-see-it.md",
+      "---\ncreated: 2026-01-01T00:00:00.000Z\n---\n\n# See it\n\n[[Learn Rust]]\n",
+    );
+
+    const { updated } = await renameFolder(vault, { from: "Movies", to: "Film" });
+
+    expect(updated).toEqual([]);
+    const raw = await readFile(path.join(vault, "Ideas", "2026-01-01-see-it.md"), "utf8");
+    expect(raw).toContain("[[Learn Rust]]");
+  });
+
+  it("rewrites a link a note inside the folder wrote to its own folder", async () => {
+    await put("Movies", NAME, RAW);
+    await put(
+      "Movies",
+      "2026-01-03-sibling.md",
+      "---\ncreated: 2026-01-03T00:00:00.000Z\n---\n\n# Sibling\n\n[[Movies/2026-01-02-learn-rust.md]]\n",
+    );
+
+    const { updated } = await renameFolder(vault, { from: "Movies", to: "Film" });
+
+    expect(updated).toEqual(["Film/2026-01-03-sibling.md"]);
+    const raw = await readFile(path.join(vault, "Film", "2026-01-03-sibling.md"), "utf8");
+    expect(raw).toContain("[[Film/2026-01-02-learn-rust.md]]");
+  });
+
+  it("leaves the graph pointing at the note after the rename", async () => {
+    await put("Movies", NAME, RAW);
+    await put(
+      "Ideas",
+      "2026-01-01-see-it.md",
+      "---\ncreated: 2026-01-01T00:00:00.000Z\n---\n\n# See it\n\n[[Movies/2026-01-02-learn-rust.md]]\n",
+    );
+
+    await renameFolder(vault, { from: "Movies", to: "Film" });
+
+    const graph = await buildVaultGraph(vault);
+    expect(graph.edges).toContainEqual({
+      source: "Ideas/2026-01-01-see-it.md",
+      target: "Film/2026-01-02-learn-rust.md",
+      kind: "link",
+    });
+    expect(graph.unresolved).toEqual([]);
+  });
+
+  it("refuses a name already in use, and renames nothing", async () => {
+    await mkdir(path.join(vault, "Movies"));
+    await mkdir(path.join(vault, "Film"));
+
+    await expect(renameFolder(vault, { from: "Movies", to: "Film" })).rejects.toMatchObject({
+      reason: "exists",
+    });
+    expect(await readdir(vault)).toEqual(expect.arrayContaining(["Movies", "Film"]));
+  });
+
+  it("reports a folder that is not there", async () => {
+    await expect(renameFolder(vault, { from: "Gone", to: "Film" })).rejects.toMatchObject({
+      reason: "missing",
+    });
+  });
+
+  it("refuses a name the vault cannot make, and renames nothing", async () => {
+    await mkdir(path.join(vault, "Movies"));
+    await expect(renameFolder(vault, { from: "Movies", to: "a/b" })).rejects.toMatchObject({
+      reason: "unsafe",
+    });
+    expect(await readdir(vault)).toContain("Movies");
+  });
+
+  it("refuses the name it already has, rather than reporting a change", async () => {
+    await mkdir(path.join(vault, "Movies"));
+    await expect(renameFolder(vault, { from: "Movies", to: " Movies " })).rejects.toMatchObject({
+      reason: "invalid",
+    });
+    expect(await readdir(vault)).toContain("Movies");
+  });
+
+  it("will not touch the dot-folders the app keeps for itself", async () => {
+    await mkdir(path.join(vault, ".trash"), { recursive: true });
+    await expect(renameFolder(vault, { from: ".trash", to: "Trash" })).rejects.toMatchObject({
+      reason: "unsafe",
+    });
+  });
+});
+
+describe("removeFolder", () => {
+  const A = "2026-01-02-a.md";
+  const B = "2026-01-03-b.md";
+
+  it("moves every note to Inbox and removes the directory", async () => {
+    await put("Movies", A, RAW);
+    await put("Movies", B, RAW);
+
+    const removed = await removeFolder(vault, "Movies");
+
+    expect(removed).toEqual({
+      folder: "Movies",
+      to: "Inbox",
+      moved: 2,
+      updated: [],
+      leftover: false,
+    });
+    expect((await readdir(path.join(vault, "Inbox"))).sort()).toEqual([A, B]);
+    expect(await readdir(path.join(vault, "Movies")).catch(() => null)).toBeNull();
+  });
+
+  it("removes a folder that had no notes in it", async () => {
+    await mkdir(path.join(vault, "Scratch"));
+
+    expect(await removeFolder(vault, "Scratch")).toMatchObject({ moved: 0, leftover: false });
+    expect(await readdir(vault)).not.toContain("Scratch");
+  });
+
+  it("creates the destination when the vault does not have it yet", async () => {
+    await put("Movies", A, RAW);
+
+    await removeFolder(vault, "Movies", { to: "Archives" });
+
+    expect(await readdir(path.join(vault, "Archives"))).toEqual([A]);
+  });
+
+  it("refuses to replace a note the destination already holds, and moves nothing", async () => {
+    await put("Movies", A, RAW);
+    await put("Movies", B, RAW);
+    const held = "# Inbox already has this name\n\nmine\n";
+    await put("Inbox", A, held);
+
+    await expect(removeFolder(vault, "Movies")).rejects.toMatchObject({ reason: "exists" });
+
+    // Both notes are still in the folder that was being removed.
+    expect((await readdir(path.join(vault, "Movies"))).sort()).toEqual([A, B]);
+    expect(await readFile(path.join(vault, "Inbox", A), "utf8")).toBe(held);
+  });
+
+  it("keeps the directory when it holds a file that is not a note, and says so", async () => {
+    await put("Movies", A, RAW);
+    await writeFile(path.join(vault, "Movies", "cover.jpg"), "not a note", "utf8");
+
+    const removed = await removeFolder(vault, "Movies");
+
+    expect(removed).toMatchObject({ moved: 1, leftover: true });
+    expect(await readdir(path.join(vault, "Inbox"))).toEqual([A]);
+    expect(await readdir(path.join(vault, "Movies"))).toEqual(["cover.jpg"]);
+  });
+
+  it("rewrites the links that named the folder, and answers which notes were touched", async () => {
+    await put("Movies", A, RAW);
+    await put(
+      "Ideas",
+      "2026-01-01-see-it.md",
+      "---\ncreated: 2026-01-01T00:00:00.000Z\n---\n\n# See it\n\n[[Movies/2026-01-02-a.md]]\n",
+    );
+
+    const removed = await removeFolder(vault, "Movies");
+
+    expect(removed.updated).toEqual(["Ideas/2026-01-01-see-it.md"]);
+    const raw = await readFile(path.join(vault, "Ideas", "2026-01-01-see-it.md"), "utf8");
+    expect(raw).toContain("[[Inbox/2026-01-02-a.md]]");
+  });
+
+  it("leaves a link written by title alone, because the note it points at is the same one", async () => {
+    await put("Movies", A, RAW);
+    await put(
+      "Ideas",
+      "2026-01-01-see-it.md",
+      "---\ncreated: 2026-01-01T00:00:00.000Z\n---\n\n# See it\n\n[[Learn Rust]]\n",
+    );
+
+    const removed = await removeFolder(vault, "Movies");
+
+    expect(removed.updated).toEqual([]);
+    const raw = await readFile(path.join(vault, "Ideas", "2026-01-01-see-it.md"), "utf8");
+    expect(raw).toContain("[[Learn Rust]]");
+  });
+
+  it("reports a folder that is not there", async () => {
+    await expect(removeFolder(vault, "Gone")).rejects.toMatchObject({ reason: "missing" });
+  });
+
+  it("refuses the folder the notes would be moved into", async () => {
+    await put("Inbox", A, RAW);
+    await expect(removeFolder(vault, "Inbox")).rejects.toMatchObject({ reason: "invalid" });
+    expect(await readdir(path.join(vault, "Inbox"))).toEqual([A]);
+  });
+
+  it("refuses a name the vault cannot make, and removes nothing", async () => {
+    await put("Movies", A, RAW);
+    await expect(removeFolder(vault, "Movies", { to: "../out" })).rejects.toMatchObject({
+      reason: "unsafe",
+    });
+    expect(await readdir(path.join(vault, "Movies"))).toEqual([A]);
+  });
+
+  it("will not touch the dot-folders the app keeps for itself", async () => {
+    await mkdir(path.join(vault, ".trash"), { recursive: true });
+    await expect(removeFolder(vault, ".trash")).rejects.toMatchObject({ reason: "unsafe" });
   });
 });
 

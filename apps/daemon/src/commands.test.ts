@@ -180,4 +180,57 @@ describe("parseMessage - folders made by the person", () => {
     });
     expect(parseMessage("/folder Recipes")).toEqual({ kind: "newFolder", name: "Recipes" });
   });
+
+  it("splits /renamefolder on the one separator a folder name cannot carry", () => {
+    // `|` is refused by folderNameProblem, so there is no folder whose name could be read as part
+    // of the other side of this command.
+    expect(parseMessage("/renamefolder Movies|Film")).toEqual({
+      kind: "renameFolder",
+      from: "Movies",
+      to: "Film",
+    });
+  });
+
+  it("keeps spaces and further separators in the new name", () => {
+    expect(parseMessage("/renamefolder  To Read  |  Reading List  ")).toEqual({
+      kind: "renameFolder",
+      from: "To Read",
+      to: "Reading List",
+    });
+    expect(parseMessage("/renamefolder A|B|C")).toEqual({
+      kind: "renameFolder",
+      from: "A",
+      to: "B|C",
+    });
+  });
+
+  it("leaves a missing half empty rather than guessing at it", () => {
+    expect(parseMessage("/renamefolder Movies|")).toEqual({
+      kind: "renameFolder",
+      from: "Movies",
+      to: "",
+    });
+    expect(parseMessage("/renamefolder |Film")).toEqual({
+      kind: "renameFolder",
+      from: "",
+      to: "Film",
+    });
+    expect(parseMessage("/renamefolder")).toEqual({ kind: "renameFolder", from: "", to: "" });
+  });
+
+  it("reads /delfolder with the name that follows, and accepts its longer spelling", () => {
+    expect(parseMessage("/delfolder Movie Night")).toEqual({
+      kind: "removeFolder",
+      name: "Movie Night",
+    });
+    expect(parseMessage("/removefolder Movies")).toEqual({
+      kind: "removeFolder",
+      name: "Movies",
+    });
+  });
+
+  it("matches the folder commands case-insensitively", () => {
+    expect(parseMessage("/RENAMEFOLDER A|B")).toMatchObject({ kind: "renameFolder" });
+    expect(parseMessage("/DELfolder Movies")).toEqual({ kind: "removeFolder", name: "Movies" });
+  });
 });
