@@ -3,10 +3,13 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
+  NoteFileError,
   buildVaultGraph,
+  createFolder,
   createNoteSearch,
   defaultFrontmatter,
   deleteNote,
+  listFolderNames,
   getNotesByFolder,
   listNotes,
   makeTitle,
@@ -1045,6 +1048,67 @@ describe("listing notes", () => {
     );
     const [entry] = await getNotesByFolder(vault, "Ideas");
     expect(entry).not.toHaveProperty("problems");
+  });
+});
+
+describe("listFolderNames", () => {
+  it("starts with the seed folders on an empty vault", async () => {
+    expect(await listFolderNames(vault)).toEqual([
+      "Inbox",
+      "Ideas",
+      "Interviews",
+      "Goals",
+      "Reading",
+    ]);
+  });
+
+  it("puts a folder made later after the seed ones, alphabetically", async () => {
+    await mkdir(path.join(vault, "Movies"));
+    await mkdir(path.join(vault, "Archives"));
+    const folders = await listFolderNames(vault);
+    expect(folders.slice(0, 5)).toEqual(["Inbox", "Ideas", "Interviews", "Goals", "Reading"]);
+    expect(folders.slice(5)).toEqual(["Archives", "Movies"]);
+  });
+
+  it("leaves out the dot-folders the app keeps for itself", async () => {
+    await mkdir(path.join(vault, ".trash", "2026-01-01"), { recursive: true });
+    expect(await listFolderNames(vault)).not.toContain(".trash");
+  });
+
+  it("ignores a file sitting where a folder would be", async () => {
+    await writeFile(path.join(vault, "loose.txt"), "not a folder", "utf8");
+    expect(await listFolderNames(vault)).not.toContain("loose.txt");
+  });
+
+  it("answers the seed folders for a vault that does not exist", async () => {
+    expect(await listFolderNames(path.join(vault, "missing"))).toHaveLength(5);
+  });
+
+  it("does not repeat a seed folder that is already on disk", async () => {
+    await mkdir(path.join(vault, "Inbox"));
+    const folders = await listFolderNames(vault);
+    expect(folders.filter((name) => name === "Inbox")).toHaveLength(1);
+  });
+});
+
+describe("createFolder", () => {
+  it("makes a directory and answers the name", async () => {
+    expect(await createFolder(vault, "  Movies  ")).toBe("Movies");
+    expect(await readdir(vault)).toContain("Movies");
+  });
+
+  it("refuses a name already in use", async () => {
+    await createFolder(vault, "Movies");
+    await expect(createFolder(vault, "Movies")).rejects.toThrow("already there");
+  });
+
+  it.each(["", "   ", "..", ".hidden", "a/b", "a\\b", "bad:name"])("refuses %j", async (name) => {
+    await expect(createFolder(vault, name)).rejects.toBeInstanceOf(NoteFileError);
+  });
+
+  it("keeps a name with a space in it as written", async () => {
+    expect(await createFolder(vault, "Movie Night")).toBe("Movie Night");
+    expect(await readdir(vault)).toContain("Movie Night");
   });
 });
 

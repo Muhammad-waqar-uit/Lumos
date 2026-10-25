@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import type { Note } from "@lumos/shared";
+import { DEFAULT_FOLDERS, type Note } from "@lumos/shared";
 import { NoteViewer } from "./NoteViewer";
 
 /** The viewer renders to a string in Node, so the markdown pipeline is testable without jsdom. */
@@ -32,6 +32,7 @@ function render(
       onRename={async () => {}}
       onMove={async () => {}}
       onDelete={async () => {}}
+      folders={DEFAULT_FOLDERS}
       onTags={async () => {}}
       onStatus={async () => {}}
     />,

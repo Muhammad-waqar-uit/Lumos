@@ -23,6 +23,26 @@ export async function getFolders(): Promise<FolderCount[]> {
   return folders;
 }
 
+/**
+ * Make a folder in the vault, and answer its name.
+ *
+ * A refusal - a name already in use, or one the vault cannot make - arrives as an Error with the
+ * daemon's sentence, the same as every other write here.
+ */
+export async function createFolder(name: string): Promise<string> {
+  const res = await fetch(`${BASE}/folders`, {
+    method: "POST",
+    headers: { "content-type": "application/json", accept: "application/json" },
+    body: JSON.stringify({ name }),
+  });
+  const body = (await res.json().catch(() => null)) as
+    { folder: string } | { error: string } | null;
+  if (!res.ok)
+    throw new Error(body && "error" in body ? body.error : `POST /folders -> ${res.status}`);
+  if (!body || !("folder" in body)) throw new Error("POST /folders returned an unexpected body");
+  return body.folder;
+}
+
 /** Every note in the vault, newest first. */
 export async function getNotes(): Promise<VaultEntry[]> {
   const { notes } = await getJson<{ notes: VaultEntry[] }>("/notes");

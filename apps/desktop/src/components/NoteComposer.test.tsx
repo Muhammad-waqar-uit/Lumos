@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { Folder, Note } from "@lumos/shared";
+import { DEFAULT_FOLDERS, type Folder, type Note } from "@lumos/shared";
 import { NoteComposer } from "./NoteComposer";
 
 afterEach(cleanup);
@@ -32,6 +32,7 @@ function setup(
   render(
     <NoteComposer
       initialFolder="Inbox"
+      folders={DEFAULT_FOLDERS}
       onCreate={create}
       onCreated={onCreated}
       onCancel={onCancel}

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { FolderCount } from "../lib/api";
 import type { FolderFilter } from "../lib/filter";
 import { LumosMark } from "./LumosMark";
@@ -18,13 +19,36 @@ interface Props {
   onSelect: (folder: FolderFilter) => void;
   view: ShellView;
   onView: (view: ShellView) => void;
+  /** Makes a folder and answers its name. Rejecting keeps the form open with the reason. */
+  onCreateFolder?: (name: string) => Promise<string>;
 }
 
-export function Sidebar({ folders, total, active, onSelect, view, onView }: Props) {
+export function Sidebar({ folders, total, active, onSelect, view, onView, onCreateFolder }: Props) {
+  const [creating, setCreating] = useState(false);
+  const [name, setName] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
   const items: { key: FolderFilter; label: string; count: number }[] = [
     { key: "All", label: "All notes", count: total },
     ...folders.map((f) => ({ key: f.folder as FolderFilter, label: f.folder, count: f.count })),
   ];
+
+  const create = async (): Promise<void> => {
+    if (!onCreateFolder || busy || !name.trim()) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const folder = await onCreateFolder(name.trim());
+      setName("");
+      setCreating(false);
+      onSelect(folder);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "That folder could not be made.");
+    } finally {
+      setBusy(false);
+    }
+  };
 
   return (
     <aside className="flex w-56 shrink-0 flex-col border-r border-border bg-card/40">
@@ -82,6 +106,68 @@ export function Sidebar({ folders, total, active, onSelect, view, onView }: Prop
           );
         })}
       </nav>
+      {onCreateFolder ? (
+        <div className="border-t border-border px-2 py-2">
+          {creating ? (
+            <form
+              onSubmit={(event) => {
+                event.preventDefault();
+                void create();
+              }}
+            >
+              <label htmlFor="new-folder-name" className="sr-only">
+                Folder name
+              </label>
+              <input
+                id="new-folder-name"
+                value={name}
+                onChange={(event) => setName(event.currentTarget.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Escape") {
+                    setCreating(false);
+                    setName("");
+                    setError(null);
+                  }
+                }}
+                placeholder="Folder name"
+                autoFocus
+                disabled={busy}
+                className="w-full rounded-md border border-input bg-background px-2 py-1 text-xs outline-none placeholder:text-muted-foreground focus:border-ring focus:ring-1 focus:ring-ring"
+              />
+              <div className="mt-1.5 flex gap-1.5">
+                <button
+                  type="submit"
+                  disabled={busy || !name.trim()}
+                  className="rounded-md border border-border px-2 py-0.5 text-[11px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-50"
+                >
+                  {busy ? "Making…" : "Make folder"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCreating(false);
+                    setName("");
+                    setError(null);
+                  }}
+                  disabled={busy}
+                  className="rounded-md px-2 py-0.5 text-[11px] text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  Cancel
+                </button>
+              </div>
+              {error ? <p className="mt-1 text-[11px] text-amber-400">{error}</p> : null}
+            </form>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setCreating(true)}
+              className="w-full rounded-md px-2.5 py-1.5 text-left text-xs text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
+            >
+              + New folder
+            </button>
+          )}
+        </div>
+      ) : null}
     </aside>
   );
 }

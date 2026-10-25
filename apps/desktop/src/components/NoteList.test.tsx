@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { Folder, Note, VaultEntry } from "@lumos/shared";
+import { DEFAULT_FOLDERS, type Folder, type Note, type VaultEntry } from "@lumos/shared";
 import { NoteList } from "./NoteList";
 
 afterEach(cleanup);
@@ -35,6 +35,7 @@ function renderList(overrides: Partial<Parameters<typeof NoteList>[0]> = {}): vo
       onCreate={async () => madeNote()}
       canCreate={true}
       activeFolder="All"
+      folders={DEFAULT_FOLDERS}
       {...overrides}
     />,
   );

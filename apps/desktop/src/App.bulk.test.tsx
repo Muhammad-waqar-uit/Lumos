@@ -79,7 +79,11 @@ vi.mock("./lib/api", () => ({
 
 beforeEach(() => {
   vi.clearAllMocks();
-  getFolders.mockResolvedValue([{ folder: "Inbox", count: 3 }]);
+  // The picker offers the folders the vault has, so a move needs a destination in this list.
+  getFolders.mockResolvedValue([
+    { folder: "Inbox", count: 3 },
+    { folder: "Goals", count: 0 },
+  ]);
   getNotes.mockResolvedValue(fixtures.notes);
   getGraph.mockResolvedValue({ nodes: [], edges: [], unresolved: [] } satisfies GraphData);
   getNote.mockResolvedValue(fixtures.note);

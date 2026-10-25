@@ -12,10 +12,12 @@ import cors from "@fastify/cors";
 import {
   NoteFileError,
   buildVaultGraph,
+  createFolder,
   createNoteSearch,
   deleteNote,
   emptyTrash,
   getNotesByFolder,
+  listFolderNames,
   listNotes,
   listTrash,
   moveNote,
@@ -26,7 +28,7 @@ import {
   updateNote,
   updateNoteMeta,
 } from "@lumos/vault-utils";
-import { FOLDERS, type Folder, type LinkCard } from "@lumos/shared";
+import type { LinkCard } from "@lumos/shared";
 import { LinkFetchError, fetchLinkCard } from "./fetch-link.js";
 import { handleMessage } from "./handler.js";
 import type { PlanOptions } from "./plan.js";
@@ -106,6 +108,17 @@ export async function createApp({
   // scan memory instead of re-reading every note body on each pause in typing.
   const search = createNoteSearch(vault);
 
+  /**
+   * The folders a request may name. Read from the vault per request rather than fixed at startup, so
+   * a folder made a moment ago is accepted at once, and a folder deleted outside the app is not.
+   */
+  const folders = (): Promise<string[]> => listFolderNames(vault);
+
+  /** Guard a folder that arrived in a request against the ones that actually exist. */
+  async function knownFolder(folder: string): Promise<boolean> {
+    return (await folders()).includes(folder);
+  }
+
   app.get("/health", async () => ({ ok: true }));
 
   app.post<{ Body: { text?: string } }>("/message", async (req, reply) => {
@@ -147,15 +160,33 @@ export async function createApp({
   /** The vault's link graph: notes, internal links, tags, and links with no target yet. */
   app.get("/graph", async () => ({ graph: await buildVaultGraph(vault) }));
 
-  /** Note counts per vault folder. */
+  /** Note counts per vault folder, including the folders that are still empty. */
   app.get("/folders", async () => {
     const groups = await Promise.all(
-      FOLDERS.map(async (folder) => ({
+      (await folders()).map(async (folder) => ({
         folder,
         count: (await getNotesByFolder(vault, folder)).length,
       })),
     );
     return { folders: groups };
+  });
+
+  /**
+   * Make a folder. The name is untrusted like any other path, so the vault checks it before it
+   * becomes a directory - a separator in it would put the folder outside the vault. A name already
+   * in use is a `409`: the caller asked for something to happen, and nothing would.
+   */
+  app.post<{ Body: { name?: string } }>("/folders", async (req, reply) => {
+    const { name } = req.body ?? {};
+    if (typeof name !== "string") return reply.code(400).send({ error: "name is required" });
+
+    try {
+      return { folder: await createFolder(vault, name) };
+    } catch (err: unknown) {
+      if (err instanceof NoteFileError)
+        return reply.code(err.reason === "exists" ? 409 : 400).send({ error: err.message });
+      throw err;
+    }
   });
 
   /**
@@ -171,26 +202,23 @@ export async function createApp({
     const { folder, text } = req.body ?? {};
     if (!folder || !text?.trim())
       return reply.code(400).send({ error: "folder and text are required" });
-    if (!FOLDERS.includes(folder as Folder))
-      return reply.code(400).send({ error: "unknown folder" });
+    if (!(await knownFolder(folder))) return reply.code(400).send({ error: "unknown folder" });
 
-    const createdFolder = folder as Folder;
     const { file } = await saveNote(
       vault,
-      { folder: createdFolder, text: text.trim() },
+      { folder, text: text.trim() },
       {
         source: "desktop",
       },
     );
-    return { note: await readNote(file, createdFolder) };
+    return { note: await readNote(file, folder) };
   });
 
   /** Read a single note by folder + filename. */
   app.get<{ Querystring: { folder?: string; name?: string } }>("/note", async (req, reply) => {
     const { folder, name } = req.query;
     if (!folder || !name) return reply.code(400).send({ error: "folder and name are required" });
-    if (!FOLDERS.includes(folder as Folder))
-      return reply.code(400).send({ error: "unknown folder" });
+    if (!(await knownFolder(folder))) return reply.code(400).send({ error: "unknown folder" });
     if (!isNoteName(name)) return reply.code(400).send({ error: "invalid name" });
     try {
       return { note: await readNote(path.join(vault, folder, name), folder) };
@@ -215,8 +243,7 @@ export async function createApp({
       // A missing body and an empty one are different requests: the second means "delete the text".
       if (typeof content !== "string")
         return reply.code(400).send({ error: "content is required" });
-      if (!FOLDERS.includes(folder as Folder))
-        return reply.code(400).send({ error: "unknown folder" });
+      if (!(await knownFolder(folder))) return reply.code(400).send({ error: "unknown folder" });
       if (!isNoteName(name)) return reply.code(400).send({ error: "invalid name" });
 
       try {
@@ -246,8 +273,7 @@ export async function createApp({
       const { folder, name, title } = req.body ?? {};
       if (!folder || !name) return reply.code(400).send({ error: "folder and name are required" });
       if (!title?.trim()) return reply.code(400).send({ error: "title is required" });
-      if (!FOLDERS.includes(folder as Folder))
-        return reply.code(400).send({ error: "unknown folder" });
+      if (!(await knownFolder(folder))) return reply.code(400).send({ error: "unknown folder" });
       if (!isNoteName(name)) return reply.code(400).send({ error: "invalid name" });
 
       try {
@@ -273,8 +299,7 @@ export async function createApp({
     async (req, reply) => {
       const { folder, name, tags, status } = req.body ?? {};
       if (!folder || !name) return reply.code(400).send({ error: "folder and name are required" });
-      if (!FOLDERS.includes(folder as Folder))
-        return reply.code(400).send({ error: "unknown folder" });
+      if (!(await knownFolder(folder))) return reply.code(400).send({ error: "unknown folder" });
       if (!isNoteName(name)) return reply.code(400).send({ error: "invalid name" });
 
       if (tags !== undefined && (!Array.isArray(tags) || tags.some((t) => typeof t !== "string")))
@@ -306,7 +331,7 @@ export async function createApp({
       const { folder, name, toFolder } = req.body ?? {};
       if (!folder || !name || !toFolder)
         return reply.code(400).send({ error: "folder, name and toFolder are required" });
-      if (!FOLDERS.includes(folder as Folder) || !FOLDERS.includes(toFolder as Folder))
+      if (!(await knownFolder(folder)) || !(await knownFolder(toFolder)))
         return reply.code(400).send({ error: "unknown folder" });
       if (!isNoteName(name)) return reply.code(400).send({ error: "invalid name" });
 
@@ -334,8 +359,7 @@ export async function createApp({
   app.delete<{ Querystring: { folder?: string; name?: string } }>("/note", async (req, reply) => {
     const { folder, name } = req.query;
     if (!folder || !name) return reply.code(400).send({ error: "folder and name are required" });
-    if (!FOLDERS.includes(folder as Folder))
-      return reply.code(400).send({ error: "unknown folder" });
+    if (!(await knownFolder(folder))) return reply.code(400).send({ error: "unknown folder" });
     if (!isNoteName(name)) return reply.code(400).send({ error: "invalid name" });
 
     try {

@@ -117,11 +117,67 @@ describe("parseMessage - other commands", () => {
     expect(parseMessage("/help me")).toEqual({ kind: "help" });
   });
 
-  it.each(["/bogus", "/bogus ignored args", "/"])("reports %s as unknown", (raw) => {
+  it("treats a bare slash as the menu", () => {
+    // A phone keyboard has no command autocomplete for a chat, so one keystroke asks for the list.
+    expect(parseMessage("/")).toEqual({ kind: "help" });
+    expect(parseMessage("  /  ")).toEqual({ kind: "help" });
+  });
+
+  it.each(["/bogus", "/bogus ignored args"])("reports %s as unknown", (raw) => {
     expect(parseMessage(raw).kind).toBe("unknown");
   });
 
   it("names the unknown command so the reply can echo it", () => {
     expect(parseMessage("/nope whatever")).toEqual({ kind: "unknown", command: "nope" });
+  });
+});
+
+describe("parseMessage - folders made by the person", () => {
+  const folders = ["Inbox", "Ideas", "Interviews", "Goals", "Reading", "Movies"];
+
+  it("files into a folder by its name", () => {
+    expect(parseMessage("/movies https://example.com/trailer", folders)).toEqual({
+      kind: "note",
+      folder: "Movies",
+      text: "",
+      url: "https://example.com/trailer",
+    });
+  });
+
+  it("turns the spaces of a folder name into dashes for the command", () => {
+    expect(parseMessage("/to-read a link", [...folders, "To Read"])).toEqual({
+      kind: "note",
+      folder: "To Read",
+      text: "a link",
+    });
+  });
+
+  it("only knows the folders it is given", () => {
+    expect(parseMessage("/movies x", ["Inbox"])).toEqual({ kind: "unknown", command: "movies" });
+  });
+
+  it("keeps the shorthand for a folder whose own name it is not", () => {
+    // `/idea` has always been the command, and the folder it names is `Ideas`.
+    expect(parseMessage("/idea shout", folders)).toEqual({
+      kind: "note",
+      folder: "Ideas",
+      text: "shout",
+    });
+  });
+
+  it("matches a folder's own name before a shorthand with the same word", () => {
+    expect(parseMessage("/read x", [...folders, "Read"])).toEqual({
+      kind: "note",
+      folder: "Read",
+      text: "x",
+    });
+  });
+
+  it("reads /newfolder with the name that follows", () => {
+    expect(parseMessage("/newfolder Movie Night")).toEqual({
+      kind: "newFolder",
+      name: "Movie Night",
+    });
+    expect(parseMessage("/folder Recipes")).toEqual({ kind: "newFolder", name: "Recipes" });
   });
 });

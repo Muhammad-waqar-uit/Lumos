@@ -1,6 +1,6 @@
 import { useRef, useState, type ReactNode } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { FOLDERS, type Folder, type Note, type VaultEntry } from "@lumos/shared";
+import type { Folder, Note, VaultEntry } from "@lumos/shared";
 import type { FolderFilter, TagCount } from "../lib/filter";
 import { NoteComposer } from "./NoteComposer";
 
@@ -24,6 +24,8 @@ interface Props {
   canCreate: boolean;
   /** Where the list is looking, so a new note starts in the folder you are already in. */
   activeFolder: FolderFilter;
+  /** Every folder the vault has, for the composer and the bulk move. */
+  folders: readonly Folder[];
   /** The notes chosen for a bulk action, by key (`Folder/name.md`). Omitted = no selecting. */
   selection?: ReadonlySet<string>;
   onToggleSelect?: (key: string) => void;
@@ -62,6 +64,7 @@ export function NoteList({
   onCreate,
   canCreate,
   activeFolder,
+  folders,
   selection,
   onToggleSelect,
   onClearSelection,
@@ -216,6 +219,7 @@ export function NoteList({
         <NoteComposer
           // "All notes" is not a folder anything can be filed into, so a new note starts in Inbox.
           initialFolder={activeFolder === "All" ? "Inbox" : activeFolder}
+          folders={folders}
           onCreate={onCreate}
           onCreated={() => setComposing(false)}
           onCancel={() => setComposing(false)}
@@ -237,7 +241,7 @@ export function NoteList({
             className="rounded-md border border-border bg-background px-2 py-1 text-xs outline-none focus:border-ring"
           >
             <option value="">Move to…</option>
-            {FOLDERS.map((folder) => (
+            {folders.map((folder) => (
               <option key={folder} value={folder}>
                 {folder}
               </option>

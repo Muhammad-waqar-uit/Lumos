@@ -2,17 +2,66 @@
  * @lumos/shared - core types shared by the daemon and desktop apps.
  */
 
-/** Vault folders that notes can be filed into. */
-export type Folder = "Inbox" | "Ideas" | "Interviews" | "Goals" | "Reading";
+/**
+ * A vault folder. There is no fixed set: the vault's own directories are the folders, and anyone
+ * can add one (`/newfolder Movies` on WhatsApp, or the button in the app).
+ */
+export type Folder = string;
 
-/** All vault folders, in display order. */
-export const FOLDERS: readonly Folder[] = [
+/**
+ * The folders a vault starts with, in display order.
+ *
+ * A seed, not a limit: these are the ones the app and the docs can name without first asking the
+ * vault, so an empty vault still has somewhere for a note to go.
+ */
+export const DEFAULT_FOLDERS: readonly Folder[] = [
   "Inbox",
   "Ideas",
   "Interviews",
   "Goals",
   "Reading",
 ] as const;
+
+/** Characters a folder name can never carry: a separator would let it escape the vault. */
+const FOLDER_NAME_RE = /^[^\\/:*?"<>|]+$/;
+
+/** A control character would travel into a filename; there is no folder name that needs one. */
+function hasControlCharacter(value: string): boolean {
+  return [...value].some((char) => char.charCodeAt(0) < 0x20 || char.charCodeAt(0) === 0x7f);
+}
+
+/**
+ * Why a name cannot be a folder, or null when it can.
+ *
+ * The same rule guards the WhatsApp command and the HTTP route, because both end up as a directory
+ * under the vault and a name carrying a separator would put it somewhere else entirely.
+ */
+export function folderNameProblem(name: string): string | null {
+  const trimmed = name.trim();
+  if (!trimmed) return "Give the folder a name.";
+  if (trimmed.length > 64) return "A folder name is at most 64 characters.";
+  if (trimmed === "." || trimmed === "..") return "That name is not a folder.";
+  // Separators first: `../escape` is a traversal attempt, not a hidden folder, and the sentence
+  // should say the thing the person actually typed.
+  if (!FOLDER_NAME_RE.test(trimmed)) return 'A folder name cannot contain / \\ : * ? " < > |';
+  if (hasControlCharacter(trimmed)) return "A folder name cannot contain control characters.";
+  if (trimmed.startsWith(".")) return "A folder name cannot start with a dot.";
+  return null;
+}
+
+/**
+ * The word a folder answers to after a slash: `Movies` is `/movies`, `To Read` is `/to-read`.
+ *
+ * It has to be typeable on a phone keyboard, which is why spaces and punctuation collapse into a
+ * dash rather than being kept as written.
+ */
+export function folderCommand(folder: string): string {
+  return folder
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
 
 /** The payload needed to create a note. */
 export interface NoteInput {
@@ -26,6 +75,7 @@ export type Parsed =
   | ({ kind: "note" } & NoteInput)
   | { kind: "plan"; when: "today" | "tomorrow" }
   | { kind: "find"; query: string }
+  | { kind: "newFolder"; name: string }
   | { kind: "help" }
   | { kind: "unknown"; command: string };
 

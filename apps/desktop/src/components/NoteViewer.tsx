@@ -32,6 +32,8 @@ interface Props {
   onRename: (title: string) => Promise<void>;
   onMove: (toFolder: string) => Promise<void>;
   onDelete: () => Promise<void>;
+  /** Every folder the vault has, offered by the move menu. */
+  folders: readonly string[];
   /** The header's own edits: the tag list as a whole, and the status. */
   onTags: (tags: string[]) => Promise<void>;
   onStatus: (status: string) => Promise<void>;
@@ -46,6 +48,7 @@ export function NoteViewer({
   onRename,
   onMove,
   onDelete,
+  folders,
   onTags,
   onStatus,
 }: Props) {
@@ -137,6 +140,7 @@ export function NoteViewer({
           key={`actions-${note.file}`}
           note={note}
           linkedFrom={backlinks.length}
+          folders={folders}
           onRename={onRename}
           onMove={onMove}
           onDelete={onDelete}

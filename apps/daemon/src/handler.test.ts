@@ -123,35 +123,76 @@ describe("handleMessage - replies", () => {
 
   it("answers /help with the command list", async () => {
     const reply = await handleMessage("/help", vault);
-    expect(reply).toContain("/idea <text>");
-    expect(reply).toContain("Anything without a command goes to Inbox.");
+    expect(reply).toContain("/idea <text or link> -> Ideas");
+    expect(reply).toContain("No command at all -> Inbox.");
   });
 
-  it("lists every command, including itself", async () => {
-    // The whole list, in order, so a command that is added or renamed has to be added here too.
+  it("lists one line per folder the vault has, in order", async () => {
+    // The whole menu, so a command that is added or renamed has to be added here too.
     expect((await handleMessage("/help", vault)).split("\n")).toEqual([
-      "Commands:",
-      "/idea <text>",
-      "/interview <link or text>",
-      "/goal <text>",
-      "/read <link>",
+      "Lumos - send a command and the message is filed.",
+      "/inbox <text or link> -> Inbox",
+      "/idea <text or link> -> Ideas",
+      "/interview <text or link> -> Interviews",
+      "/goal <text or link> -> Goals",
+      "/read <text or link> -> Reading",
+      "/newfolder <name> - then /<name> files into it",
       "/plan today | tomorrow",
       "/find <query>",
       "/help",
-      "Anything without a command goes to Inbox.",
+      "No command at all -> Inbox.",
     ]);
   });
 
-  it("answers a malformed command instead of throwing", async () => {
-    const reply = await handleMessage("/", vault);
-    expect(reply).toContain("Unknown command /");
-    expect(reply).toContain("Commands:");
+  it("opens the menu for a bare slash", async () => {
+    expect(await handleMessage("/", vault)).toBe(await handleMessage("/help", vault));
   });
 
   it("lists the commands for an unknown one", async () => {
     const reply = await handleMessage("/bogus something", vault);
     expect(reply).toContain("Unknown command /bogus");
-    expect(reply).toContain("/goal <text>");
+    expect(reply).toContain("/goal <text or link> -> Goals");
+  });
+});
+
+describe("handleMessage - folders the person makes", () => {
+  it("creates a folder and says which command now files into it", async () => {
+    expect(await handleMessage("/newfolder Movies", vault)).toBe(
+      "Created Movies. Send /movies <text> to file into it.",
+    );
+    expect(await filesIn("Movies")).toEqual([]);
+  });
+
+  it("files a later message into the new folder", async () => {
+    const reply = await handleMessage("/movies https://example.com/trailer", vault);
+    expect(reply).toBe("Filed in Movies: example.com");
+    expect(await filesIn("Movies")).toHaveLength(1);
+
+    const file = (await filesIn("Movies"))[0];
+    const { frontmatter } = parseNote(await readFile(path.join(vault, "Movies", file), "utf8"));
+    expect(frontmatter.url).toBe("https://example.com/trailer");
+  });
+
+  it("announces the new command in the menu", async () => {
+    expect(await handleMessage("/", vault)).toContain("/movies <text or link> -> Movies");
+  });
+
+  it("refuses a name already in use instead of pretending", async () => {
+    expect(await handleMessage("/newfolder Movies", vault)).toBe(
+      "A folder called Movies is already there.",
+    );
+  });
+
+  it("refuses a name that would leave the vault, and says which rule it broke", async () => {
+    for (const name of ["../escape", "a/b"]) {
+      expect(await handleMessage(`/newfolder ${name}`, vault)).toBe(
+        'A folder name cannot contain / \\ : * ? " < > |',
+      );
+    }
+    expect(await handleMessage("/newfolder .hidden", vault)).toBe(
+      "A folder name cannot start with a dot.",
+    );
+    expect(await handleMessage("/newfolder", vault)).toBe("Usage: /newfolder <name>");
   });
 });
 

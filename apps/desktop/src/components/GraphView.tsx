@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ForceGraph from "force-graph";
-import { FOLDERS, type GraphData, type GraphEdge, type GraphNode } from "@lumos/shared";
+import type { GraphData, GraphEdge, GraphNode } from "@lumos/shared";
 import { neighborhood } from "@lumos/vault-utils/graph";
 import type { Connection } from "../lib/api";
 import { folderColor, readGraphPalette } from "../lib/graph-palette";
@@ -111,6 +111,8 @@ interface Props {
   onOpen: (id: string) => void;
   /** Show the notes carrying a tag in the notes view, so a tag node is also a filter. */
   onFilterTag: (tag: string) => void;
+  /** The vault's folders, which decide each note's colour and what the legend shows. */
+  folders: readonly string[];
 }
 
 export function GraphView({
@@ -121,6 +123,7 @@ export function GraphView({
   activeKey,
   onOpen,
   onFilterTag,
+  folders,
 }: Props) {
   const hostRef = useRef<HTMLDivElement | null>(null);
   const graphRef = useRef<GraphInstance | null>(null);
@@ -139,7 +142,7 @@ export function GraphView({
   const [selected, setSelected] = useState<string | null>(null);
   const [hovered, setHovered] = useState<string | null>(null);
 
-  const palette = useMemo(() => readGraphPalette(), []);
+  const palette = useMemo(() => readGraphPalette(folders), [folders]);
 
   // The canvas needs pixel dimensions, which only the DOM knows.
   useEffect(() => {
@@ -547,12 +550,12 @@ export function GraphView({
             {data.unresolved.length} unresolved
           </span>
           <span className="flex flex-wrap items-center justify-end gap-x-2 gap-y-1">
-            {FOLDERS.map((folder, index) => (
+            {folders.map((folder) => (
               <span key={folder} className="flex items-center gap-1">
                 <span
                   aria-hidden
                   className="inline-block h-1.5 w-1.5 rounded-full"
-                  style={{ backgroundColor: palette.folders[index] ?? palette.tag }}
+                  style={{ backgroundColor: folderColor(palette, folder) }}
                 />
                 {folder}
               </span>

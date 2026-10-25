@@ -2,6 +2,7 @@ import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import type { Folder, Note, VaultEntry } from "@lumos/shared";
 import {
+  createFolder,
   createNote,
   deleteNote,
   getNote,
@@ -406,6 +407,30 @@ export default function App() {
     return () => window.removeEventListener("keydown", onKey);
   }, [searchOpen, view, loading, visible, activeKey, chooseNote]);
 
+  /**
+   * Make a folder, then re-read the vault so it appears in the sidebar and in every menu.
+   *
+   * The new folder becomes what the list is looking at: making a folder is asking to put something
+   * in it, and an empty folder you were not taken to is not an answer. The name comes back so the
+   * caller can say what happened.
+   */
+  const createFolderAndOpen = useCallback(
+    async (name: string): Promise<string> => {
+      const folder = await createFolder(name);
+      try {
+        await refreshVault();
+      } catch (err: unknown) {
+        setNotice({
+          text: `Made ${folder}, but the list could not be refreshed (${reasonOf(err)}).`,
+        });
+      }
+      setActiveFolder(folder);
+      setView("notes");
+      return folder;
+    },
+    [refreshVault, setActiveFolder, setView],
+  );
+
   // The trash panel is a route like the graph, not a note. Leaving it puts the list back as it was.
   const showNotes = useCallback(() => setView("notes"), [setView]);
 
@@ -431,6 +456,10 @@ export default function App() {
   // Resolved against the live listing, so a note that left the vault is not offered again.
   const recentNotes = useMemo(() => recentEntries(recent, notes), [recent, notes]);
 
+  // Every folder the vault has, in the order the sidebar lists them. One list feeds the composer,
+  // the move menus and the graph legend, so a folder made a moment ago is offered in all of them.
+  const folderNames = useMemo(() => folders.map((f) => f.folder), [folders]);
+
   /** A tag picked in the list or on a graph node shows that tag's notes and drops the rest. */
   const filterByTag = (value: string): void => {
     setTag(nodeTag(value) ?? value);
@@ -452,6 +481,7 @@ export default function App() {
           onSelect={setActiveFolder}
           view={view}
           onView={setView}
+          onCreateFolder={connection === "daemon" ? createFolderAndOpen : undefined}
         />
         {view === "graph" ? (
           <PaneBoundary title="The graph view">
@@ -470,6 +500,7 @@ export default function App() {
                 activeKey={activeKey}
                 onOpen={openNote}
                 onFilterTag={filterByTag}
+                folders={folderNames}
               />
             </Suspense>
           </PaneBoundary>
@@ -507,6 +538,7 @@ export default function App() {
               onCreate={createNoteAndOpen}
               canCreate={connection === "daemon"}
               activeFolder={activeFolder}
+              folders={folderNames}
               selection={selection}
               onToggleSelect={toggleSelect}
               onClearSelection={() => setSelection(new Set())}
@@ -536,6 +568,7 @@ export default function App() {
               onRename={renameActiveNote}
               onMove={moveActiveNote}
               onDelete={deleteActiveNote}
+              folders={folderNames}
               onTags={(tags) => editActiveMeta({ tags })}
               onStatus={(status) => editActiveMeta({ status })}
             />

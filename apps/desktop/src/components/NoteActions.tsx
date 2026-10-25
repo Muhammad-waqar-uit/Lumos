@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FOLDERS, type Folder, type Note } from "@lumos/shared";
+import type { Folder, Note } from "@lumos/shared";
 
 type Mode = "menu" | "rename" | "move" | "delete";
 
@@ -7,6 +7,8 @@ interface Props {
   note: Note;
   /** Notes that link here. A rename rewrites their links, which the panel says before it happens. */
   linkedFrom: number;
+  /** Every folder the vault has, so the move menu offers a folder made a moment ago. */
+  folders: readonly Folder[];
   /** Each rejects with the daemon's sentence, which the panel shows instead of closing. */
   onRename: (title: string) => Promise<void>;
   onMove: (toFolder: string) => Promise<void>;
@@ -26,17 +28,22 @@ const BUTTON =
  * rename that was refused because another note holds the name is something the person can act on, and
  * closing on it would hide the reason.
  */
-export function NoteActions({ note, linkedFrom, onRename, onMove, onDelete, onClose }: Props) {
+export function NoteActions({
+  note,
+  linkedFrom,
+  folders,
+  onRename,
+  onMove,
+  onDelete,
+  onClose,
+}: Props) {
   const [mode, setMode] = useState<Mode>("menu");
   const [title, setTitle] = useState(note.title);
   // Moving only offers folders this note is not already in, so the menu cannot ask for a no-op.
-  const [folder, setFolder] = useState<Folder>(
-    () => FOLDERS.find((candidate) => candidate !== note.folder) ?? FOLDERS[0],
-  );
+  const otherFolders = folders.filter((candidate) => candidate !== note.folder);
+  const [folder, setFolder] = useState<Folder>(() => otherFolders[0] ?? note.folder);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const otherFolders = FOLDERS.filter((candidate) => candidate !== note.folder);
 
   /**
    * Run one operation, and close the panel only when it landed.

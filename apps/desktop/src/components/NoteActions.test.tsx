@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { Note } from "@lumos/shared";
+import { DEFAULT_FOLDERS, type Note } from "@lumos/shared";
 import { NoteActions } from "./NoteActions";
 
 afterEach(cleanup);
@@ -30,6 +30,7 @@ function setup(
     move?: (folder: string) => Promise<void>;
     remove?: () => Promise<void>;
     linkedFrom?: number;
+    folders?: readonly string[];
   } = {},
 ) {
   const onRename = vi.fn(overrides.rename ?? ((): Promise<void> => Promise.resolve()));
@@ -40,6 +41,7 @@ function setup(
     <NoteActions
       note={note()}
       linkedFrom={overrides.linkedFrom ?? 0}
+      folders={overrides.folders ?? DEFAULT_FOLDERS}
       onRename={onRename}
       onMove={onMove}
       onDelete={onDelete}
@@ -158,6 +160,18 @@ describe("NoteActions - move", () => {
     fireEvent.click(screen.getByRole("button", { name: "Move" }));
 
     await waitFor(() => expect(onMove).toHaveBeenCalledWith("Reading"));
+  });
+
+  it("offers a folder made after the first render", async () => {
+    // The folders come from the vault, so one made a moment ago is already a destination.
+    const { onMove } = setup({ folders: [...DEFAULT_FOLDERS, "Movies"] });
+
+    fireEvent.click(screen.getByRole("button", { name: "Move" }));
+    const select = screen.getByLabelText("Move to") as HTMLSelectElement;
+    fireEvent.change(select, { target: { value: "Movies" } });
+    fireEvent.click(screen.getByRole("button", { name: "Move" }));
+
+    await waitFor(() => expect(onMove).toHaveBeenCalledWith("Movies"));
   });
 });
 

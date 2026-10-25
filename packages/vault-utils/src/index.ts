@@ -5,6 +5,7 @@ import { mkdir, readdir, readFile, rename, rm, stat, writeFile } from "node:fs/p
 import type { Dirent } from "node:fs";
 import path from "node:path";
 import YAML from "yaml";
+import { DEFAULT_FOLDERS, folderNameProblem } from "@lumos/shared";
 import type {
   Frontmatter,
   GraphData,
@@ -235,6 +236,59 @@ export async function listNotes(vaultDir: string): Promise<VaultEntry[]> {
   const folders = dirents.filter((d) => d.isDirectory()).map((d) => d.name);
   const groups = await Promise.all(folders.map((f) => getNotesByFolder(vaultDir, f)));
   return groups.flat().sort((a, b) => (a.created < b.created ? 1 : -1));
+}
+
+/**
+ * The folders a vault has: its own directories, plus the seed folders a fresh vault starts with.
+ *
+ * A folder is a directory, so there is no list to keep in sync and no way for a note's folder and
+ * the folder list to disagree. Directories starting with a dot are internal (the trash lives in
+ * one) and are left out. The seed folders come first, in their documented order, because those are
+ * the ones a person navigates by; anything they added follows, alphabetically.
+ */
+export async function listFolderNames(
+  vaultDir: string,
+  seed: readonly string[] = DEFAULT_FOLDERS,
+): Promise<string[]> {
+  let dirents: Dirent[];
+  try {
+    dirents = await readdir(vaultDir, { withFileTypes: true });
+  } catch (err: unknown) {
+    if ((err as NodeJS.ErrnoException).code === "ENOENT") return [...seed];
+    throw err;
+  }
+
+  const found = new Set(
+    dirents.filter((d) => d.isDirectory() && !d.name.startsWith(".")).map((d) => d.name),
+  );
+  const rest = [...found].filter((name) => !seed.includes(name)).sort((a, b) => a.localeCompare(b));
+  return [...seed, ...rest];
+}
+
+/**
+ * Create a folder in the vault, and answer its name.
+ *
+ * The name comes from a chat message or an HTTP body, so it is checked before it is joined to
+ * anything: a separator in it would make a directory outside the vault. A name already in use is
+ * refused rather than accepted quietly - `/newfolder Movies` twice should say the folder is there,
+ * because the second one creates nothing and the person asked for something to happen.
+ */
+export async function createFolder(vaultDir: string, name: string): Promise<string> {
+  const folder = name.trim();
+  const problem = folderNameProblem(folder);
+  if (problem) throw new NoteFileError("unsafe", problem);
+
+  const dir = path.join(vaultDir, folder);
+  try {
+    await stat(dir);
+    throw new NoteFileError("exists", `A folder called ${folder} is already there.`);
+  } catch (err: unknown) {
+    if (err instanceof NoteFileError) throw err;
+    if ((err as NodeJS.ErrnoException).code !== "ENOENT") throw err;
+  }
+
+  await mkdir(dir);
+  return folder;
 }
 
 /** How the index reads a note file. `readFile` by default; a test counts what the cache saved. */

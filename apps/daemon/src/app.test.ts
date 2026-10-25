@@ -72,11 +72,11 @@ describe("POST /message", () => {
     expect(res.json()).toEqual({ error: "text is required" });
   });
 
-  it("answers a malformed message instead of crashing the daemon", async () => {
+  it("answers a bare slash with the menu instead of crashing the daemon", async () => {
     const { app } = await makeApp();
     const res = await app.inject({ method: "POST", url: "/message", payload: { text: "/" } });
     expect(res.statusCode).toBe(200);
-    expect(res.json<{ reply: string }>().reply).toContain("Unknown command /");
+    expect(res.json<{ reply: string }>().reply).toContain("Lumos - send a command");
   });
 
   it("files the note into the vault the app was given", async () => {
@@ -310,6 +310,67 @@ describe("GET /folders", () => {
     ]);
     expect(folders.find((f) => f.folder === "Ideas")?.count).toBe(2);
     expect(folders.find((f) => f.folder === "Goals")?.count).toBe(0);
+  });
+});
+
+describe("POST /folders", () => {
+  it("makes a folder and answers its name", async () => {
+    const { app, vault } = await makeApp();
+    const res = await app.inject({ method: "POST", url: "/folders", payload: { name: "Movies" } });
+
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual({ folder: "Movies" });
+    expect(await readdir(vault)).toContain("Movies");
+  });
+
+  it("accepts a note into the folder it just made, without a restart", async () => {
+    const { app } = await makeApp();
+    await app.inject({ method: "POST", url: "/folders", payload: { name: "Movies" } });
+
+    const res = await app.inject({
+      method: "POST",
+      url: "/notes",
+      payload: { folder: "Movies", text: "the trailer that got away" },
+    });
+
+    expect(res.statusCode).toBe(200);
+    expect(res.json<{ note: { folder: string } }>().note.folder).toBe("Movies");
+  });
+
+  it("lists the new folder with a count of zero", async () => {
+    const { app } = await makeApp();
+    await app.inject({ method: "POST", url: "/folders", payload: { name: "Movies" } });
+
+    const res = await app.inject({ method: "GET", url: "/folders" });
+    expect(res.json<{ folders: { folder: string; count: number }[] }>().folders).toContainEqual({
+      folder: "Movies",
+      count: 0,
+    });
+  });
+
+  it("refuses a name already in use with a 409", async () => {
+    const { app } = await makeApp();
+    await app.inject({ method: "POST", url: "/folders", payload: { name: "Movies" } });
+
+    const res = await app.inject({ method: "POST", url: "/folders", payload: { name: "Movies" } });
+    expect(res.statusCode).toBe(409);
+    expect(res.json()).toEqual({ error: "A folder called Movies is already there." });
+  });
+
+  it("refuses a name that would leave the vault with a 400", async () => {
+    const { app, vault } = await makeApp();
+    for (const name of ["../escape", "a/b", ""]) {
+      const res = await app.inject({ method: "POST", url: "/folders", payload: { name } });
+      expect(res.statusCode).toBe(400);
+    }
+    expect(await readdir(vault)).toEqual([]);
+  });
+
+  it("asks for a name when the body has none", async () => {
+    const { app } = await makeApp();
+    const res = await app.inject({ method: "POST", url: "/folders", payload: {} });
+    expect(res.statusCode).toBe(400);
+    expect(res.json()).toEqual({ error: "name is required" });
   });
 });
 

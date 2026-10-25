@@ -1,9 +1,11 @@
 import { useRef, useState } from "react";
-import { FOLDERS, type Folder, type Note } from "@lumos/shared";
+import type { Folder, Note } from "@lumos/shared";
 
 interface Props {
   /** Where the composer starts. The folder the list is showing, or Inbox when it is showing all. */
   initialFolder: Folder;
+  /** Every folder the vault has, so a folder made a moment ago can be filed into. */
+  folders: readonly Folder[];
   /** Creates the note and answers it as the vault now reads it. Rejecting keeps the draft. */
   onCreate: (folder: Folder, text: string) => Promise<Note>;
   onCreated: (note: Note) => void;
@@ -17,7 +19,7 @@ interface Props {
  * The draft belongs to this composer. A failed create keeps it and says why - typing a paragraph
  * into a form that throws it away when the daemon is down is not a bug, it is a broken promise.
  */
-export function NoteComposer({ initialFolder, onCreate, onCreated, onCancel }: Props) {
+export function NoteComposer({ initialFolder, folders, onCreate, onCreated, onCancel }: Props) {
   const [folder, setFolder] = useState<Folder>(initialFolder);
   const [draft, setDraft] = useState("");
   const [creating, setCreating] = useState(false);
@@ -58,7 +60,7 @@ export function NoteComposer({ initialFolder, onCreate, onCreated, onCancel }: P
         onChange={(event) => setFolder(event.target.value as Folder)}
         className="mb-2 w-full rounded-md border border-input bg-background px-2 py-1.5 text-xs outline-none focus:border-ring focus:ring-1 focus:ring-ring"
       >
-        {FOLDERS.map((name) => (
+        {folders.map((name) => (
           <option key={name} value={name}>
             {name}
           </option>

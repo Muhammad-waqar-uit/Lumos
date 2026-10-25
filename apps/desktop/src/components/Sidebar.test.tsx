@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { Folder } from "@lumos/shared";
 import { Sidebar } from "./Sidebar";
@@ -78,5 +78,45 @@ describe("Sidebar", () => {
 
     fireEvent.click(screen.getByRole("tab", { name: "Notes" }));
     expect(onView).toHaveBeenCalledWith("notes");
+  });
+});
+
+describe("Sidebar - a new folder", () => {
+  it("offers no control while there is no daemon to make one", () => {
+    renderSidebar();
+
+    expect(screen.queryByRole("button", { name: "+ New folder" })).toBeNull();
+  });
+
+  it("makes a folder and opens it", async () => {
+    const onCreateFolder = vi.fn(async (name: string): Promise<string> => name);
+    const onSelect = vi.fn();
+    renderSidebar({ onCreateFolder, onSelect });
+
+    fireEvent.click(screen.getByRole("button", { name: "+ New folder" }));
+    fireEvent.change(screen.getByLabelText("Folder name"), { target: { value: "Recipes" } });
+    fireEvent.click(screen.getByRole("button", { name: "Make folder" }));
+
+    await waitFor(() => expect(onCreateFolder).toHaveBeenCalledWith("Recipes"));
+    await waitFor(() => expect(onSelect).toHaveBeenCalledWith("Recipes"));
+    // The form closes itself once the folder exists.
+    expect(screen.queryByLabelText("Folder name")).toBeNull();
+  });
+
+  it("keeps the form open with the daemon's reason when the name is refused", async () => {
+    const onCreateFolder = vi.fn(async (): Promise<string> => {
+      throw new Error("A folder called Movies is already there.");
+    });
+    const onSelect = vi.fn();
+    renderSidebar({ onCreateFolder, onSelect });
+
+    fireEvent.click(screen.getByRole("button", { name: "+ New folder" }));
+    fireEvent.change(screen.getByLabelText("Folder name"), { target: { value: "Movies" } });
+    fireEvent.click(screen.getByRole("button", { name: "Make folder" }));
+
+    expect(await screen.findByText("A folder called Movies is already there.")).toBeTruthy();
+    expect(screen.getByLabelText("Folder name")).toBeTruthy();
+    expect(onCreateFolder).toHaveBeenCalledTimes(1);
+    expect(onSelect).not.toHaveBeenCalled();
   });
 });

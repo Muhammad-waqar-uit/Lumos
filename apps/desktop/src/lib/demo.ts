@@ -1,4 +1,4 @@
-import type { GraphData, Note, VaultEntry } from "@lumos/shared";
+import { DEFAULT_FOLDERS, type GraphData, type Note, type VaultEntry } from "@lumos/shared";
 import { buildGraphFromNotes } from "@lumos/vault-utils/graph";
 import type { FolderCount } from "./api";
 
@@ -98,12 +98,10 @@ export const DEMO_GRAPH: GraphData = buildGraphFromNotes(
   })),
 );
 
-export const DEMO_FOLDERS: FolderCount[] = ["Inbox", "Ideas", "Interviews", "Goals", "Reading"].map(
-  (folder) => ({
-    folder: folder as FolderCount["folder"],
-    count: DEMO_NOTES.filter((n) => n.folder === folder).length,
-  }),
-);
+export const DEMO_FOLDERS: FolderCount[] = DEFAULT_FOLDERS.map((folder) => ({
+  folder,
+  count: DEMO_NOTES.filter((n) => n.folder === folder).length,
+}));
 
 /** Build a Note from a listing entry when the daemon cannot serve the full note. */
 export function demoNote(from: VaultEntry): Note {

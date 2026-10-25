@@ -1,5 +1,3 @@
-import { FOLDERS } from "@lumos/shared";
-
 /**
  * Canvas cannot read Tailwind classes, so the graph paints from the same tokens the
  * rest of the UI uses (see `src/index.css`). Each lookup falls back to another token
@@ -9,8 +7,12 @@ export interface GraphPalette {
   edge: string;
   tag: string;
   label: string;
-  folders: string[];
+  /** A colour per folder name, in the order the folders were given. */
+  folders: ReadonlyMap<string, string>;
 }
+
+/** How many folder hues the theme defines; a vault with more folders cycles through them. */
+const FOLDER_HUES = 5;
 
 function tokenOf(styles: CSSStyleDeclaration, names: string[]): string {
   for (const name of names) {
@@ -20,21 +22,25 @@ function tokenOf(styles: CSSStyleDeclaration, names: string[]): string {
   return "";
 }
 
-export function readGraphPalette(): GraphPalette {
+export function readGraphPalette(folderNames: readonly string[]): GraphPalette {
   const styles = getComputedStyle(document.documentElement);
+  const hues = Array.from({ length: FOLDER_HUES }, (_, index) =>
+    tokenOf(styles, [`--color-graph-folder-${index + 1}`, "--color-foreground"]),
+  );
+  const fallback = tokenOf(styles, ["--color-muted-foreground"]);
+
   return {
     edge: tokenOf(styles, ["--color-graph-edge", "--color-border"]),
     tag: tokenOf(styles, ["--color-graph-tag", "--color-muted-foreground"]),
     label: tokenOf(styles, ["--color-foreground", "--color-muted-foreground"]),
-    folders: FOLDERS.map((_, index) =>
-      tokenOf(styles, [`--color-graph-folder-${index + 1}`, "--color-foreground"]),
+    folders: new Map(
+      folderNames.map((name, index) => [name, hues[index % hues.length] || fallback]),
     ),
   };
 }
 
-/** A folder keeps its hue as the vault grows, because it is keyed off the folder list. */
+/** A folder keeps its hue as the vault grows, because it is keyed off the folder list itself. */
 export function folderColor(palette: GraphPalette, folder: string | undefined): string {
-  const index = folder ? FOLDERS.findIndex((f) => f === folder) : -1;
-  if (index === -1 || palette.folders.length === 0) return palette.tag;
-  return palette.folders[index % palette.folders.length];
+  if (!folder) return palette.tag;
+  return palette.folders.get(folder) ?? palette.tag;
 }
