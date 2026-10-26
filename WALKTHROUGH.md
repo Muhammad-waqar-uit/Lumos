@@ -253,14 +253,16 @@ tools over it - list, search, read, create, edit, rename, move, delete, restore 
 starts it over stdio: no port, no token, nothing hosted.
 
 ```bash
-claude mcp add lumos --scope user -- pnpm --dir "$PWD/apps/mcp" start
+claude mcp add --scope user lumos -- pnpm --dir "$PWD/apps/mcp" start
 claude mcp list
 ```
 
 In a session, `/mcp` lists the tools. Then ask for something you would otherwise search by hand:
 *find the notes about the habit tracker and file the newest one under Goals.*
 
-- With the vault somewhere other than this repo, put `-e LUMOS_VAULT=/path/to/notes` before the `--`.
+- With the vault somewhere other than this repo, add `--env LUMOS_VAULT=/path/to/notes --transport stdio`
+  before the server name (the second flag is there because a name straight after `--env` is read as
+  another `KEY=value` pair).
 - A note the agent writes is an ordinary note, stamped `source: mcp` in its frontmatter.
 - A delete goes to the vault's trash, so it is recoverable; renaming a folder or emptying the trash
   stays a decision you make in the app.

@@ -33,19 +33,30 @@ ever printed.
 ### Claude Code
 
 ```bash
-claude mcp add lumos --scope user -- pnpm --dir /absolute/path/to/lumos/apps/mcp start
+claude mcp add --scope user lumos -- pnpm --dir /absolute/path/to/lumos/apps/mcp start
 ```
 
 With a vault outside this repository:
 
 ```bash
-claude mcp add lumos --scope user \
-  -e LUMOS_VAULT=/absolute/path/to/notes \
-  -- pnpm --dir /absolute/path/to/lumos/apps/mcp start
+claude mcp add --scope user --env LUMOS_VAULT=/absolute/path/to/notes --transport stdio \
+  lumos -- pnpm --dir /absolute/path/to/lumos/apps/mcp start
 ```
 
+Three details of that syntax are load-bearing, and all three are Claude Code's rules rather than
+ours: its options come **before** the server name; everything after `--` is the command, passed
+through untouched, which is what keeps `--dir` from being read as Claude's own flag; and a name
+placed directly after `--env` is read as another `KEY=value` pair and rejected, which is why
+`--transport stdio` sits between them.
+
 `--scope user` makes it available in every project; drop it to keep the server to the current one.
-`claude mcp list` reports whether it starts, and `/mcp` inside a session lists its tools.
+`claude mcp add` prints `Added …` when the configuration is written, `claude mcp list` shows whether
+the server connects, `claude mcp get lumos` shows one server's details, and `/mcp` inside a session
+lists its tools.
+
+The server also survives being shut down the way the client does it: Claude Code closes a stdio
+server's stdin and waits 300 ms before ending the process tree on Windows (SIGINT on macOS and
+Linux), and this server exits as soon as stdin closes — checked by hand, exit 0.
 
 The launcher is the package manager rather than `node`, deliberately: `tsx` resolves through this
 workspace's install, so there is no build step before the first run. `pnpm --dir … start` writes its
@@ -78,8 +89,8 @@ accepts, so a key from one call is an argument to the next unchanged.
 | Tool | What it does | Reads |
 |---|---|---|
 | `list_folders` | Every folder with how many notes it holds | yes |
-| `list_notes` | Notes newest first, optionally one folder, with titles, tags and an excerpt | yes |
-| `search_notes` | Case-insensitive search across title, tags and body | yes |
+| `list_notes` | Notes newest first, optionally one folder, with titles, tags and dates | yes |
+| `search_notes` | Case-insensitive search across title, tags and body, with the start of each body so the match is visible | yes |
 | `read_note` | One note in full: title, tags, status, date, body | yes |
 | `create_note` | A new note in an existing folder, filed exactly as a captured message would be | no |
 | `update_note` | Replaces the body, the tags or the status | no |
@@ -139,7 +150,7 @@ bargain the editor already makes against Obsidian, and it is written down in
 
 ## Tests
 
-43 tests, run by `pnpm test` from the root:
+44 tests, run by `pnpm test` from the root:
 
 - `tools.test.ts` — the operations against a temporary vault: what a created note looks like on
   disk, every refusal, a rename that carries its backlinks, a delete and a restore round trip.
@@ -147,7 +158,8 @@ bargain the editor already makes against Obsidian, and it is written down in
   the vault.
 - `server.test.ts` — the real server over the real protocol, through the SDK's in-memory transport:
   the tool list a client sees, the annotations that mark the read-only ones, a refusal that leaves
-  the session working, and a delete/restore driven entirely by the text the tools answered.
+  the session working, a search that shows why it matched where a browse stays one line a note, and
+  a delete/restore driven entirely by the text the tools answered.
 
 The stdio entry point was checked by hand as well — a spawned process, a real `initialize`, twelve
 tools, a note written and found — but no automated test spawns it, because the transport is the only

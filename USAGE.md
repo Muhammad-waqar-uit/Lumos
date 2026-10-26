@@ -232,18 +232,20 @@ notes. No port is opened - the client starts the process and speaks to it over s
 vault stays a folder of Markdown files throughout.
 
 ```bash
-claude mcp add lumos --scope user -- pnpm --dir /absolute/path/to/lumos/apps/mcp start
+claude mcp add --scope user lumos -- pnpm --dir /absolute/path/to/lumos/apps/mcp start
 ```
 
 If your vault lives somewhere other than this repository's `vault/`:
 
 ```bash
-claude mcp add lumos --scope user \
-  -e LUMOS_VAULT=/absolute/path/to/notes \
-  -- pnpm --dir /absolute/path/to/lumos/apps/mcp start
+claude mcp add --scope user --env LUMOS_VAULT=/absolute/path/to/notes --transport stdio \
+  lumos -- pnpm --dir /absolute/path/to/lumos/apps/mcp start
 ```
 
-`claude mcp list` says whether it starts, and `/mcp` in a session lists the tools. From there you
+Claude Code's own options go before the server name and everything after `--` is the command it
+runs; a name placed directly after `--env` would be read as another `KEY=value` pair, which is what
+`--transport stdio` is doing between them. `claude mcp add` prints `Added …` when it worked,
+`claude mcp list` says whether the server connects, and `/mcp` in a session lists the tools. From there you
 can ask for things in your own words - *find the notes about the desk lamp and file the newest one
 under Ideas* - and the agent does it through the tools rather than by guessing at filenames.
 
