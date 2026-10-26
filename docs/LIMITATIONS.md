@@ -155,6 +155,13 @@ play it — neither page can be read or copied.
   caught. The graph canvas is the one component with no test at all, because it draws through the
   graph library and jsdom cannot render it. An E2E runner is tracked under **Plan** in
   [TODO.md](TODO.md).
+- **A capture is noticed by polling, so it can be up to 15s late.** The app reads the link's state
+every 15s (3s while the panel is open) and re-reads the vault when a message was answered. That is
+the only signal it has: there is no server-sent event, and the daemon does not watch the directory.
+- **Only a WhatsApp capture is noticed, and only while both halves are running.** A note written by
+  Obsidian, another agent or a shell script is on disk but invisible until the next read, because the
+  trigger is the link's activity rather than the filesystem. With the daemon stopped the app is in
+  its demo mode and polls nothing, so a capture that happened meanwhile appears on the next load.
 - **The palette runs four commands, and only while the daemon answers.** Writing a note, making a
   folder, the graph and the trash. It does not yet offer "new note in *this* folder" per folder, a
   move or a tag of the open note, or a command history; a palette that listed everything would be a

@@ -52,6 +52,10 @@ else on this page can close them.
 - [x] Commands in the palette - New note, New folder (named in the palette itself), Open the graph,
   Open the trash. The composer's open state moved from the list to the shell for it, because two
   places can now open it
+- [x] Live capture - a note written by WhatsApp appears in an open window within one poll, named in
+  the status bar with **Open** (or counted, with **Open newest**). The trigger is the link's `lastAt`,
+  so an edit made in another editor still needs a read; that limit is in
+  [LIMITATIONS.md](LIMITATIONS.md)
 
 - [x] Bulk operations (move, tag, archive) - checkboxes in the list choose notes, a bulk bar offers
   move/tag/archive/clear, and every write is settled on its own so one refusal never abandons the

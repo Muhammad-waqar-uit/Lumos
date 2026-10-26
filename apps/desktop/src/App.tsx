@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import type { Folder, Note, VaultEntry, WhatsAppStatus } from "@lumos/shared";
 import {
@@ -20,6 +20,7 @@ import {
   updateNoteMeta,
 } from "./lib/api";
 import { bulkNotice, runBulk } from "./lib/bulk";
+import { addedNotes, captureNotice } from "./lib/capture";
 import { useVaultStore } from "./lib/store";
 import { backlinks } from "@lumos/vault-utils/graph";
 import { DEMO_GRAPH, demoNote } from "./lib/demo";
@@ -33,7 +34,7 @@ import { PaneBoundary } from "./components/PaneBoundary";
 import { PaneSplitter } from "./components/PaneSplitter";
 import { SearchModal } from "./components/SearchModal";
 import { Sidebar, type ShellView } from "./components/Sidebar";
-import { StatusBar } from "./components/StatusBar";
+import { StatusBar, type StatusAction } from "./components/StatusBar";
 import { TrashPanel } from "./components/TrashPanel";
 import { WhatsAppPanel, type WhatsAppRead } from "./components/WhatsAppPanel";
 
@@ -102,12 +103,49 @@ export default function App() {
   const [notice, setNotice] = useState<{
     text: string;
     undo?: { id: string; title: string };
+    /** A note the notice invites you to open - one that just arrived, say. */
+    open?: { key: string; label: string };
   } | null>(null);
+  // When the daemon last answered a WhatsApp message, as of the previous read, and the keys the
+  // list held then: together they turn "the link did something" into "this note is new".
+  // `undefined` is "no read yet", which is not the same as "read, and nothing has been answered":
+  // the first capture after opening the app has to be noticed, so where the app started is recorded
+  // rather than assumed to be empty.
+  const lastCaptureAt = useRef<string | null | undefined>(undefined);
+  const knownKeys = useRef<ReadonlySet<string>>(new Set());
 
   // Load the vault from the daemon; the store falls back to demo data if it is not running.
   useEffect(() => {
     void loadVault();
   }, [loadVault]);
+
+  // A ref mirror of what the list holds, for the capture diff below: the poll reads it without
+  // being torn down and rebuilt every time a note arrives.
+  useEffect(() => {
+    knownKeys.current = new Set(notes.map(keyOf));
+  }, [notes]);
+
+  /**
+   * A message was captured: read the vault again and say what arrived.
+   *
+   * A note WhatsApp writes is invisible to an open window - nothing pushes it - so the app has to
+   * notice, and the link's own read is the free signal: `lastAt` only moves when the daemon answered
+   * someone. The listing is diffed against what the app already held, so a message that wrote no
+   * note (`/find`, `/plan`) costs a refresh and says nothing.
+   */
+  const pullArrivals = useCallback(async (): Promise<void> => {
+    const before = knownKeys.current;
+    try {
+      await refreshVault();
+    } catch (err: unknown) {
+      setNotice({
+        text: `A note arrived, but the list could not be refreshed (${reasonOf(err)}).`,
+      });
+      return;
+    }
+    const said = captureNotice(addedNotes(before, useVaultStore.getState().notes));
+    if (said) setNotice(said);
+  }, [refreshVault]);
 
   /**
    * Read the WhatsApp link's state, now and then.
@@ -128,6 +166,15 @@ export default function App() {
         if (!alive) return;
         setWhatsapp(next);
         setWhatsappRead("ok");
+        // `lastAt` moving means the daemon answered a message. The first read only records where it
+        // started, so opening the app does not announce everything captured earlier today - but a
+        // capture that arrives afterwards is noticed even when nothing had been answered before.
+        if (lastCaptureAt.current === undefined) {
+          lastCaptureAt.current = next.lastAt;
+        } else if (next.lastAt !== lastCaptureAt.current) {
+          lastCaptureAt.current = next.lastAt;
+          void pullArrivals();
+        }
       } catch {
         // The failure is not dropped: the panel says the last check failed.
         if (alive) setWhatsappRead("error");
@@ -140,7 +187,7 @@ export default function App() {
       alive = false;
       window.clearInterval(timer);
     };
-  }, [connection, whatsappOpen]);
+  }, [connection, whatsappOpen, pullArrivals]);
 
   /** Start answering WhatsApp messages again, and take the daemon's word for the new state. */
   const startWhatsAppLink = useCallback(async (): Promise<void> => {
@@ -597,8 +644,24 @@ export default function App() {
     setView("notes");
   };
 
-  // The undo rides with its notice, so it is offered exactly as long as that notice is showing.
-  const pendingUndo = notice?.undo;
+  /**
+   * The one button a notice can offer: undo a delete, or open the note that just arrived.
+   *
+   * Derived from the notice rather than remembered beside it, so a later notice can never leave a
+   * button behind that acts on something no longer on screen.
+   */
+  const noticeAction = useMemo<StatusAction | null>(() => {
+    if (!notice) return null;
+    if (notice.undo) {
+      const { id, title } = notice.undo;
+      return { label: "Undo", onClick: () => void undoDelete(id, title) };
+    }
+    if (notice.open) {
+      const { key, label } = notice.open;
+      return { label, onClick: () => openNote(key) };
+    }
+    return null;
+  }, [notice, undoDelete, openNote]);
 
   return (
     <div className="flex h-full flex-col">
@@ -715,14 +778,7 @@ export default function App() {
         onSearch={() => setSearchOpen(true)}
         notice={notice?.text ?? null}
         onDismissNotice={() => setNotice(null)}
-        action={
-          pendingUndo
-            ? {
-                label: "Undo",
-                onClick: () => void undoDelete(pendingUndo.id, pendingUndo.title),
-              }
-            : null
-        }
+        action={noticeAction}
         whatsapp={connection === "daemon" ? whatsapp : null}
         onWhatsApp={() => setWhatsappOpen(true)}
       />

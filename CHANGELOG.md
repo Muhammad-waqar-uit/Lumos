@@ -16,6 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the phone, and the daemon reports `logged-out` when that happens. The report also carries `lastAt`,
   when a message was last answered, so the panel can show a link that is up and idle rather than
   leaving "connected" to mean both things.
+- Notes captured while the app is open now appear without a reload. The link's own read carries
+  when a message was last answered, so a change there pulls the vault and diffs the listing: one new
+  note is named in the status bar with **Open**, several are counted with **Open newest**. Nothing
+  jumps the pane - a capture can land mid-edit.
 - Commands in the `Cmd/Ctrl+K` palette: **New note** (the composer, in the Notes view), **New folder**
   (name it in the palette, `Enter` makes it and the list looks at it), **Open the graph** and
   **Open the trash**. With nothing typed they sit under the recent notes; typing puts any command

@@ -39,6 +39,19 @@ Chronological record of what has been built. Newest entries first within each da
   panel says `last message 14:31` beside the state. It is deliberately not part of the state
   machine: answering a message does not change whether the link is up, and a `since` that moved on
   every note would say nothing about the connection
+- [x] **A capture arrives while the window is open.** Nothing pushes a file written by WhatsApp to
+  the app, so it notices from the read it was already making: `lastAt` moves when the daemon answers
+  a message, and a change there pulls the vault and diffs it against what the app held. One note is
+  named (`New note from WhatsApp: "Plan the week"`) with **Open**, several are counted with **Open
+  newest**, and the pane never jumps - a capture can land mid-edit. `undefined` means "not read yet"
+  and `null` means "read, nothing answered", because the first capture after opening the app has to
+  be noticed and a ref that starts at null would have swallowed it
+- [x] **Exercised against a stub daemon, not a phone.** A throwaway server served `/whatsapp`,
+  `/notes`, `/folders` and `/graph` with an endpoint that added a note and moved `lastAt`. In the
+  real app the list went from 0 to 1 note with the notice `New note from WhatsApp: "Plan the week"`
+  and an **Open** button; two captures between polls produced `2 new notes from WhatsApp` +
+  **Open newest**, which opened `?note=Inbox/note-3.md`. The network log showed `/notes` re-read only
+  when the link reported activity - the 15s poll is `/whatsapp` alone
 - [x] Verified against a running daemon, not only the units: `GET /whatsapp` answered
   `{"enabled":false,"state":"off","since":null,"error":null,"qr":null}` on a daemon started with
   `LUMOS_DISABLE_WHATSAPP=1`, `POST /whatsapp/connect` answered `409` with the setting named, and

@@ -152,6 +152,12 @@ phone linked, so **Connect** needs no code. Taking the device off the account is
 **Linked devices > Log out** - that stays on the phone, and the panel says `WhatsApp unlinked` when it
 happens.
 
+A note captured while the app is open appears on its own, within about 15 seconds: the status bar says
+`New note from WhatsApp: "…"` with **Open**, or counts them and offers **Open newest**. Nothing jumps
+the pane, so a capture cannot move the app under you mid-edit. A note written by another program (an
+editor, a script) is still invisible until the next read - the signal is the WhatsApp link's activity,
+not the folder.
+
 ### Doing something to several notes
 
 Tick the checkbox on a row and a bulk bar appears: **Move** (a folder picker), **Add tag**,
