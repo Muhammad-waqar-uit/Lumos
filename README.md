@@ -32,7 +32,7 @@ Lumos transforms WhatsApp into an effortless capture tool for your second brain.
 
 ## Architecture
 
-Lumos consists of two main applications:
+Lumos is three programs over one vault:
 
 - **[apps/daemon](apps/daemon/README.md)** - A Node.js service that connects to WhatsApp via Baileys, exposes an HTTP API, parses commands, and writes notes to the vault
 - **[apps/desktop](apps/desktop/README.md)** - A Tauri desktop app (React + TypeScript) for browsing, searching, and managing your second brain

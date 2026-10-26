@@ -2,7 +2,7 @@
 
 ## Overview
 
-Lumos is a pnpm monorepo. Two applications share a common Markdown vault:
+Lumos is a pnpm monorepo. Three programs share a common Markdown vault:
 
 - **`apps/daemon`** - capture service. Connects to WhatsApp, parses messages, writes Markdown notes.
 - **`apps/desktop`** - Tauri desktop UI. Browses, searches, and (later) edits the vault.
@@ -131,7 +131,7 @@ lumos/
 - **Husky hooks** — `pre-commit` runs lint-staged on the staged files; `commit-msg` runs
   commitlint; `pre-push` runs `pnpm validate` (lint + format:check + typecheck + test + build). None
   of the hooks can be bypassed.
-- **One TypeScript version** (`~6.0.3`) across all four workspaces, each with a `typecheck` script.
+- **One TypeScript version** (`~6.0.3`) across every workspace, each with a `typecheck` script.
 - **Workflow:** one branch, `main` — commits land there directly and are pushed there, one topic per
   commit so any change can be reverted on its own. The hooks and CI are the gate. See
   [RULES.md §6](../RULES.md).

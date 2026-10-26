@@ -48,7 +48,7 @@ with plain React state and a local filter:
 
 ### Shared / Infra
 - pnpm workspaces (pnpm only)
-- One TypeScript version (`~6.0.3`) across all four workspaces; the desktop app additionally uses a tsconfig project reference for its Vite config
+- One TypeScript version (`~6.0.3`) across every workspace; the desktop app additionally uses a tsconfig project reference for its Vite config
 - vitest (tests), run inside the `pnpm validate` gate
 - oxlint (lint) + prettier (format)
 - Husky hooks, lint-staged, commitlint
