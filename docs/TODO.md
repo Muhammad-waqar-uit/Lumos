@@ -14,8 +14,11 @@ that has to be signed in. They are first because they are the shortest path to k
 end to end, and because nothing else on this page can close them.
 
 - [!] **The Tauri shell** (P1) - `pnpm --filter desktop tauri dev`: the window opens, the vault
-  loads, the daemon URL is right, and the packaged bundle runs. The Rust side, the window
-  configuration and the bundle have never been exercised.
+  loads, the daemon URL is right, and the packaged bundle runs. The Rust side now compiles and
+  links (`cargo build` green, 2026-10-26) - the failure seen that day was the app shell's bundled
+  Git putting its own `link.exe` ahead of MSVC's, so run `tauri dev` from a plain terminal (or
+  after `vcvars64.bat`), not from a shell the app prepared. The window configuration and the
+  packaged bundle are still unexercised.
 - [!] **A live WhatsApp session** (P1) - pair a device with the QR code and send a real message, so
   the capture path is checked against the platform rather than against a parser and a stub.
 - [!] **The social embeds inside the packaged window** (P2) - a reel, a video and a post were

@@ -149,6 +149,14 @@ play it — neither page can be read or copied.
 - **The Tauri shell is untested by CI.** Only the web UI is exercised (in a browser). The Rust side,
   the window configuration and the packaged bundle are manual checks: `pnpm --filter desktop tauri dev`.
   The check is listed under **Needs your testing** in [TODO.md](TODO.md).
+- **`tauri dev` fails from a shell the desktop app prepared.** On Windows the app's bundled Git puts
+  its own `usr/bin/link.exe` (GNU coreutils, a hardlink tool) ahead of MSVC's linker on `PATH`, so
+  `cargo` fails with `link: missing operand after '@…linker-arguments'` and the generic "install
+  Visual Studio build tools" note - even though the build tools are installed and compile the whole
+  workspace. Run `tauri dev` from a plain terminal, or after `vcvars64.bat`; with that environment
+  `cargo build` is green in about a minute. What is given up: the repo cannot make a launch command
+  immune to the environment it is launched from, so this is a documented workaround rather than a
+  fix - the same symptom from any other `PATH` shadowing behaves the same way.
 - **No end-to-end test.** The sidebar, note list, search palette and link pane are now covered as
   components in jsdom, and the viewer through SSR renders, but nothing drives the built app in a
   real browser: a broken route, a chunk that fails to load or a bad Tauri bundle would not be
