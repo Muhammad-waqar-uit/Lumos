@@ -134,7 +134,12 @@ Nothing in flight. The next item to pick up is the first one under **Plan**.
 - [x] The hooks enforce the workflow rather than describing it - commitlint on the message,
   `pre-push` on the gate. The `pre-commit` guard that refused to commit on `main` was removed on
   2026-10-25, when the repository moved to a single branch
-- [x] `pnpm validate` = lint + format:check + typecheck + test + build
+- [x] `pnpm validate` = lint + format:check + docs:check + typecheck + test + counts:check + build
+- [x] Test counts in the docs can no longer drift (2026-10-26) - every `pnpm test` writes a JSON
+  report beside its package, `docs/TESTING.md` is generated from those reports
+  (`pnpm counts:update`), and the gate fails when the committed table no longer matches a run
+  (`scripts/gen-test-counts.mjs`). The claims in the README and FEATURES now link to the table
+  instead of restating numbers, so there is one place a count can live
 - [x] One TypeScript version (`~6.0.3`) across every workspace, with a `typecheck` script in each
 - [x] `RULES.md` (build / commit / branch standards), `AGENTS.md` (agent working agreement), `CLAUDE.md`
 - [x] Workflow in writing: one branch (`main`), one topic per commit, rewritten 2026-10-25. The

@@ -23,7 +23,9 @@
     "test": "pnpm -r run test",
     "test:e2e": "pnpm --filter e2e run test:e2e",
     "build": "pnpm -r run build",
-    "validate": "pnpm run lint && pnpm run format:check && pnpm run docs:check && pnpm run typecheck && pnpm run test && pnpm run build",
+    "counts:check": "node scripts/gen-test-counts.mjs",
+    "counts:update": "pnpm -r run test && node scripts/gen-test-counts.mjs --write",
+    "validate": "pnpm run lint && pnpm run format:check && pnpm run docs:check && pnpm run typecheck && pnpm run test && pnpm run counts:check && pnpm run build",
     "prepare": "husky"
   },
   "devDependencies": {

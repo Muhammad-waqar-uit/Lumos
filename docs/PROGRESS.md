@@ -4,6 +4,25 @@ Chronological record of what has been built. Newest entries first within each da
 
 ## 2026-10-26
 
+### Done - the counts gate, and the `tauri dev` failure explained
+- [x] **Test counts in the docs can no longer drift, because no one types them any more.** The
+  README and FEATURES carried counts that had already gone stale once (447 claimed when the suite
+  was 747). Comparing one document's number against another's would only prove they were edited
+  together, so the check now compares a document against what the suite actually ran: every
+  workspace's `pnpm test` writes a `vitest-report.json` (gitignored) beside its package, and
+  `scripts/gen-test-counts.mjs` reads those reports into `docs/TESTING.md`. `pnpm validate` runs
+  `counts:check` right after the tests and fails when the committed table no longer matches, with
+  `pnpm counts:update` as the one command that regenerates it. The claims in README, FEATURES and
+  mcp.md now link to the table; given up: the numbers are only as fresh as the last run someone
+  made, so a fresh clone regenerates them from its own run rather than trusting the committed one
+- [x] **The `tauri dev` failure was the shell, not the repo.** The Rust build script failed at
+  `link.exe` with `link: missing operand after '@...linker-arguments'` - the invoked linker was
+  GNU coreutils `link` from the app shell's bundled Git (`.../resources/git/usr/bin/link.exe`),
+  shadowing MSVC's. The build tools are installed (VS 18 Build Tools, MSVC 14.51), and
+  `vcvars64.bat && cargo build` finished green in 1m 13s, so the fix is environmental: run
+  `tauri dev` from a plain terminal. The remedy is written into the Tauri item under **Needs your
+  testing** in [TODO.md](TODO.md); opening the window remains a person's check
+
 ### Done - the vault as an MCP server
 - [x] **The vault is now something an agent can use, not something you copy into a prompt.** Obsidian
   users wire their vault into Claude Code with an MCP server; Lumos had no such door. `apps/mcp` is

@@ -48,7 +48,7 @@ history. If you fork and send a pull request instead, the same gate runs on it. 
 | ------------ | -------------------------------------------------------------------- |
 | `pre-commit` | `lint-staged` on the staged files (oxlint --fix + prettier)          |
 | `commit-msg` | `commitlint` — enforces `<type>(<scope>): <description>`             |
-| `pre-push`   | `pnpm validate` — lint + format:check + docs:check + typecheck + test + build     |
+| `pre-push`   | `pnpm validate` — lint + format:check + docs:check + typecheck + test + counts:check + build     |
 
 Run the same gate yourself whenever you like:
 
@@ -58,7 +58,7 @@ pnpm format        # prettier --write .
 pnpm typecheck     # tsc --noEmit in every workspace
 pnpm test          # vitest run in every workspace that has a suite
 pnpm test:e2e      # Playwright smoke suite against the built app (needs Chromium)
-pnpm validate      # lint + format:check + docs:check + typecheck + test + build
+pnpm validate      # lint + format:check + docs:check + typecheck + test + counts:check + build
 ```
 
 Tests live next to the code they cover (`*.test.ts`) and run through vitest; anything touching the

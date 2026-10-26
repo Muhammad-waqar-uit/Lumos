@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Test counts in the documentation can no longer drift. Every `pnpm test` writes a JSON report
+  beside its workspace, [docs/TESTING.md](docs/TESTING.md) is generated from those reports
+  (`pnpm counts:update`), and `pnpm validate` now fails when the committed table no longer matches
+  what the suite ran. The per-workspace counts that used to be restated in the README and the
+  feature matrix link to that table instead.
 - An MCP server over the vault (`apps/mcp`), so Claude Code, Claude Desktop and any other MCP client
   can work on the notes themselves: twelve tools over stdio - list folders and notes, search, read,
   create, update, rename, move, delete to the trash, list the trash, restore, and make a folder. Notes

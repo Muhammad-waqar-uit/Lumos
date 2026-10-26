@@ -150,7 +150,8 @@ bargain the editor already makes against Obsidian, and it is written down in
 
 ## Tests
 
-48 tests, run by `pnpm test` from the root:
+Tests, run by `pnpm test` from the root - the count lives in [TESTING.md](TESTING.md), generated
+from the runs themselves:
 
 - `tools.test.ts` — the operations against a temporary vault: what a created note looks like on
   disk, every refusal, a rename that carries its backlinks, a delete and a restore round trip.

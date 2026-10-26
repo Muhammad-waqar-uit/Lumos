@@ -18,7 +18,7 @@ file for how to point a client at it.
    commit so a change can be reverted on its own.
 2. **Never bypass the hooks.** `git commit --no-verify` and `git push --no-verify` are not options.
    Pre-commit runs lint-staged, commit-msg runs commitlint, pre-push runs `pnpm validate`.
-3. **`pnpm validate` must be green** (lint + format:check + docs:check + typecheck + test + build) before you finish.
+3. **`pnpm validate` must be green** (lint + format:check + docs:check + typecheck + test + counts:check + build) before you finish.
    Never finish on red, and never make it green by disabling a rule.
 4. **No suppressions to pass a check.** No `@ts-ignore` / `@ts-expect-error` without a written
    reason, no `eslint-disable`/`oxlint-disable` to hide a real problem, no `any`, no deleted or
@@ -61,7 +61,7 @@ file for how to point a client at it.
 
 ```bash
 pnpm install                       # bootstrap
-pnpm validate                      # the gate: lint + format:check + docs:check + typecheck + test + build
+pnpm validate                      # the gate: lint + format:check + docs:check + typecheck + test + counts:check + build
 pnpm test:e2e                      # Playwright smoke suite against the built app (needs Chromium)
 pnpm --filter daemon dev           # daemon (LUMOS_DISABLE_WHATSAPP=1 for headless)
 pnpm --filter mcp start            # MCP server over the vault (stdio, for Claude Code)
