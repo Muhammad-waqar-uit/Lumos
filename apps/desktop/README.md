@@ -8,7 +8,8 @@ The Lumos Desktop app is a Tauri-based desktop client for browsing, searching, a
 
 While the daemon handles capture via WhatsApp, the desktop app is designed to help you:
 - Browse notes organized by folders (Inbox, Ideas, Interviews, Goals, Reading)
-- Search the vault from the keyboard: `Cmd/Ctrl+K` opens a palette that ranks titles, tags and previews with `fuse.js`, and adds the daemon's body matches when it is running (those rows are marked "in the body"); with nothing typed it lists the notes you opened this session
+- Search the vault from the keyboard: `Cmd/Ctrl+K` opens a palette that ranks titles, tags and previews with `fuse.js`, and adds the daemon's body matches when it is running (those rows are marked "in the body"); with nothing typed it lists the notes you opened this session, then the commands it can run itself — **New note**, **New folder** (named in the palette), **Open the graph**, **Open the trash**
+- See the WhatsApp link and act on it: the chip at the right of the status bar names the link's state (`WhatsApp linked`, `Pair WhatsApp`, `WhatsApp unlinked`, `WhatsApp off`) and opens a panel with the sentence, the pairing code drawn in the app, when a message was last answered, and **Connect**/**Disconnect** — disconnecting keeps the phone linked, so connecting again needs no code
 - View notes with their Markdown rendered, including syntax-highlighted code in a fence that names its language
 - Play a link or read the page it points at without leaving the app — a YouTube or Vimeo link plays in place, an Instagram reel or post and a Facebook video or post render through the host's own embed with their caption beside them, an image link shows the image, any other page is read as text
 - Edit the open note's tags and status in the strip under its header — remove a chip, type a tag, pick a status; a tag is written the way the graph reads it, and the list, folder counts and graph are re-read after a change
@@ -104,6 +105,8 @@ possible future path (see [docs/desktop.md](../../docs/desktop.md)); it does not
 - [x] Graph view (link graph from the daemon, canvas force layout, per-folder hues, filters, local depth)
 - [x] Syntax-highlighted code blocks (37 common languages; only a fence that names one is highlighted)
 - [x] Recent notes in the palette (the five opened this session, newest first)
+- [x] Commands in the palette (new note, new folder named in the palette itself, the graph and the trash)
+- [x] The WhatsApp link in the app (state, pairing code, connect and disconnect from the status bar chip)
 - [x] Resizable list column (drag the separator, double-click to reset, or use the arrow keys)
 - [x] Frontmatter warnings (a note with a broken frontmatter block is still listed and readable, with the reasons above its body and a marker in the list)
 - [x] Links in place (a YouTube or Vimeo link plays in the note viewer, an Instagram reel/post and a Facebook video/post render through their own embeds with the caption the daemon reads, an image link shows the image, any other page is scraped and read as text, and a scraped page is kept for the session)

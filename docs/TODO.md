@@ -42,9 +42,10 @@ else on this page can close them.
 
 ### Phase 7 - Editing & enrichment (P2) - open items
 
-- [x] The WhatsApp link in the app - `GET /whatsapp` reports the state, when it began and why it is
-  down; `POST /whatsapp/connect` and `/whatsapp/disconnect` drive it, and the pairing code is drawn
-  in the panel instead of a browser tab. The state lives in `bridge.ts` between the socket and the
+- [x] The WhatsApp link in the app - `GET /whatsapp` reports the state, when it began, when a
+  message was last answered (`lastAt`, the only field that says the loop ran) and why it is down;
+  `POST /whatsapp/connect` and `/whatsapp/disconnect` drive it, and the pairing code is drawn in the
+  panel instead of a browser tab. The state lives in `bridge.ts` between the socket and the
   routes, so `connected` means a socket is up rather than "a message once arrived". Disconnect keeps
   the phone linked - unlinking stays on the phone, which is the one thing nothing here can do - and
   the app is told `logged-out` when it happens

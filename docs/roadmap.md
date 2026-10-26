@@ -32,6 +32,9 @@ folder, so progress is always visible.
 - `/plan today|tomorrow` backed by a local Ollama model. ✅ (the vault's 20 newest notes become the prompt; a missing Ollama or model answers with one sentence instead)
 - Tag extraction and auto-tagging. ✅ (`#hashtags` in a message become the note's frontmatter tags, using the graph's own rules)
 - Settings from a config file, with the environment overriding it. ✅ (`lumos.config.json`, see [daemon.md](daemon.md))
+- The capture link, reported and controlled from the app. ✅ (`GET /whatsapp`, `POST
+  /whatsapp/connect` and `/whatsapp/disconnect`; the status-bar chip and panel carry the state, the
+  pairing code and when a message last arrived. Unlinking stays on the phone, which the app says)
 
 ## M4 - Dark UI foundation (Phase 4) — mostly done
 
@@ -61,6 +64,8 @@ text, and reading a PDF or plain HTML file - are still open under **Plan** in
 - Full-text search with `fuse.js`. ✅ (ranked over titles, tags and previews, and usable offline)
 - `Cmd/Ctrl+K` search modal. ✅ (arrows, `Enter`, `Esc`; body matches come from `GET /notes/search`)
 - Recent notes. ✅ (an empty palette lists what was opened this session; a reload starts empty)
+- Commands in the palette. ✅ (new note, new folder named in the palette itself, the graph and the
+  trash; an empty field lists them under the recent notes, a matched query puts them first)
 
 ## M7 - Editing + polish (Phases 7-8) — partly done
 
