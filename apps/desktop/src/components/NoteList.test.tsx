@@ -33,6 +33,8 @@ function renderList(overrides: Partial<Parameters<typeof NoteList>[0]> = {}): vo
       loading={false}
       width={320}
       onCreate={async () => madeNote()}
+      composing={false}
+      onComposing={() => {}}
       canCreate={true}
       activeFolder="All"
       folders={DEFAULT_FOLDERS}

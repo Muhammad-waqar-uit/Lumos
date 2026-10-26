@@ -30,7 +30,8 @@ import {
   updateNote,
   updateNoteMeta,
 } from "@lumos/vault-utils";
-import type { LinkCard } from "@lumos/shared";
+import type { LinkCard, WhatsAppStatus } from "@lumos/shared";
+import { DISABLED_BRIDGE, DISABLED_SENTENCE, type BridgeControl } from "./bridge.js";
 import { LinkFetchError, fetchLinkCard } from "./fetch-link.js";
 import { handleMessage } from "./handler.js";
 import type { PlanOptions } from "./plan.js";
@@ -72,6 +73,11 @@ export interface AppOptions {
   plan?: PlanOptions;
   /** The pairing code `GET /qrcode` shows. The socket sets it; tests inject one. */
   qr?: () => string | null;
+  /**
+   * The WhatsApp link, as the routes report and drive it. Absent means capture is switched off, so
+   * the app is told that rather than shown a Connect button that would do nothing.
+   */
+  bridge?: BridgeControl;
 }
 
 /** Escape the few characters that matter inside the pairing page's HTML. */
@@ -118,6 +124,7 @@ export async function createApp({
   fetchLink = fetchLinkCard,
   plan,
   qr = pendingQr,
+  bridge = DISABLED_BRIDGE,
 }: AppOptions): Promise<FastifyInstance> {
   const app = Fastify({ logger });
 
@@ -182,6 +189,55 @@ export async function createApp({
         qrToText(code),
       )}</pre>`,
     );
+  });
+
+  /**
+   * The WhatsApp link, as one answer: its state, when that state began, why it is down - and the
+   * pairing code while a phone still needs to scan one.
+   *
+   * The code is a session secret, so it is handed to the loopback caller that asked and never
+   * logged, and it is absent in every state but `waiting`: an expired code is worse than none,
+   * because it scans and does nothing.
+   */
+  const whatsappNow = (): WhatsAppStatus => {
+    const report = bridge.status();
+    const code = report.state === "waiting" ? qr() : null;
+    return { ...report, qr: code ? qrToText(code) : null };
+  };
+
+  app.get("/whatsapp", async () => ({ whatsapp: whatsappNow() }));
+
+  /**
+   * Start the link, or say why it cannot be started.
+   *
+   * Capture is either on for this daemon or it is not - a request cannot overrule the setting the
+   * process was started with - so asking for a disabled bridge is a `409` with the setting named.
+   * A link that fails to come up answers the state it reached, which carries the reason.
+   */
+  app.post("/whatsapp/connect", async (req, reply) => {
+    if (!bridge.status().enabled) return reply.code(409).send({ error: DISABLED_SENTENCE });
+    try {
+      await bridge.connect();
+    } catch (err: unknown) {
+      req.log.error(
+        { name: err instanceof Error ? err.name : "unknown" },
+        "whatsapp connect failed",
+      );
+      return reply.code(502).send({ error: "WhatsApp could not be started." });
+    }
+    return { whatsapp: whatsappNow() };
+  });
+
+  /**
+   * Stop answering messages, keeping the phone linked.
+   *
+   * This is not an unlink: the pairing lives on the phone and in `auth_info`, and a person who
+   * wants the device gone does that from WhatsApp itself. What this stops is the daemon writing
+   * notes, which is what someone would reach for when the link is misbehaving.
+   */
+  app.post("/whatsapp/disconnect", async () => {
+    await bridge.disconnect();
+    return { whatsapp: whatsappNow() };
   });
 
   app.post<{ Body: { text?: string } }>("/message", async (req, reply) => {

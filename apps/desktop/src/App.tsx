@@ -1,12 +1,15 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearch } from "@tanstack/react-router";
-import type { Folder, Note, VaultEntry } from "@lumos/shared";
+import type { Folder, Note, VaultEntry, WhatsAppStatus } from "@lumos/shared";
 import {
+  connectWhatsApp,
   createFolder,
   createNote,
   deleteNote,
+  disconnectWhatsApp,
   getNote,
   getTrash,
+  getWhatsApp,
   moveNote,
   removeFolder,
   renameFolder,
@@ -32,6 +35,7 @@ import { SearchModal } from "./components/SearchModal";
 import { Sidebar, type ShellView } from "./components/Sidebar";
 import { StatusBar } from "./components/StatusBar";
 import { TrashPanel } from "./components/TrashPanel";
+import { WhatsAppPanel, type WhatsAppRead } from "./components/WhatsAppPanel";
 
 // The graph renderer is a 184 kB chunk that only its own tab needs, so it loads with the tab.
 const GraphView = lazy(() =>
@@ -79,6 +83,13 @@ export default function App() {
   const navigate = useNavigate({ from: "/" });
   const [fetched, setFetched] = useState<{ key: string; note: Note } | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
+  // The composer is opened from two places - the list's New button and the command palette - so
+  // whether it is open belongs to the shell rather than to the list.
+  const [composer, setComposer] = useState<{ folder: Folder | null } | null>(null);
+  // The WhatsApp link is the daemon's own; the app only reports what it is told.
+  const [whatsapp, setWhatsapp] = useState<WhatsAppStatus | null>(null);
+  const [whatsappRead, setWhatsappRead] = useState<WhatsAppRead>("loading");
+  const [whatsappOpen, setWhatsappOpen] = useState(false);
   // The notes chosen for a bulk action, by the same key the list knows them by.
   const [selection, setSelection] = useState<ReadonlySet<string>>(new Set());
   // Keys of the notes opened this session, for the palette's empty state. A reload starts empty.
@@ -97,6 +108,51 @@ export default function App() {
   useEffect(() => {
     void loadVault();
   }, [loadVault]);
+
+  /**
+   * Read the WhatsApp link's state, now and then.
+   *
+   * The socket lives in the daemon, so this is the only way the app can tell whether capture is
+   * linked. The read is cheap - loopback, nothing on disk - and is repeated more often while the
+   * panel is open, because the pairing code rotates and an expired one scans and does nothing. A
+   * read that fails is not hidden: the panel says the last check failed rather than showing a state
+   * that may no longer be true.
+   */
+  useEffect(() => {
+    if (connection !== "daemon") return;
+
+    let alive = true;
+    const read = async (): Promise<void> => {
+      try {
+        const next = await getWhatsApp();
+        if (!alive) return;
+        setWhatsapp(next);
+        setWhatsappRead("ok");
+      } catch {
+        // The failure is not dropped: the panel says the last check failed.
+        if (alive) setWhatsappRead("error");
+      }
+    };
+
+    void read();
+    const timer = window.setInterval(() => void read(), whatsappOpen ? 3000 : 15000);
+    return () => {
+      alive = false;
+      window.clearInterval(timer);
+    };
+  }, [connection, whatsappOpen]);
+
+  /** Start answering WhatsApp messages again, and take the daemon's word for the new state. */
+  const startWhatsAppLink = useCallback(async (): Promise<void> => {
+    setWhatsapp(await connectWhatsApp());
+    setWhatsappRead("ok");
+  }, []);
+
+  /** Stop answering messages, keeping the phone linked. */
+  const stopWhatsAppLink = useCallback(async (): Promise<void> => {
+    setWhatsapp(await disconnectWhatsApp());
+    setWhatsappRead("ok");
+  }, []);
 
   // Leaving the notes pane drops the selection: a bulk action must not be one pane-switch away
   // from notes the person was no longer looking at.
@@ -520,6 +576,12 @@ export default function App() {
     [openNote],
   );
 
+  // Writing from the palette: the notes pane comes back, with the composer open above the list.
+  const composeFromPalette = useCallback((): void => {
+    setComposer({ folder: null });
+    setView("notes");
+  }, [setView]);
+
   // Resolved against the live listing, so a note that left the vault is not offered again.
   const recentNotes = useMemo(() => recentEntries(recent, notes), [recent, notes]);
 
@@ -605,6 +667,9 @@ export default function App() {
               loading={loading}
               width={listWidth}
               onCreate={createNoteAndOpen}
+              composing={composer !== null}
+              composeFolder={composer?.folder ?? null}
+              onComposing={(open) => setComposer(open ? { folder: null } : null)}
               canCreate={connection === "daemon"}
               activeFolder={activeFolder}
               folders={folderNames}
@@ -658,7 +723,18 @@ export default function App() {
               }
             : null
         }
+        whatsapp={connection === "daemon" ? whatsapp : null}
+        onWhatsApp={() => setWhatsappOpen(true)}
       />
+      {whatsappOpen && connection === "daemon" ? (
+        <WhatsAppPanel
+          status={whatsapp}
+          read={whatsappRead}
+          onConnect={startWhatsAppLink}
+          onDisconnect={stopWhatsAppLink}
+          onClose={() => setWhatsappOpen(false)}
+        />
+      ) : null}
       {searchOpen ? (
         <SearchModal
           entries={notes}
@@ -666,6 +742,10 @@ export default function App() {
           connection={connection}
           onOpen={openFromSearch}
           onClose={closeSearch}
+          // The commands that write are only offered while the daemon can take the write.
+          onNewNote={connection === "daemon" ? composeFromPalette : undefined}
+          onCreateFolder={connection === "daemon" ? createFolderAndOpen : undefined}
+          onOpenView={setView}
         />
       ) : null}
     </div>

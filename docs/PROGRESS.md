@@ -2,6 +2,43 @@
 
 Chronological record of what has been built. Newest entries first within each date.
 
+## 2026-10-26
+
+### Done - the WhatsApp link is in the app, and the palette can create
+- [x] Capture was the one part of the product with no face: whether a phone was linked could only be
+  learned from the terminal the daemon was started in, or by messaging it and waiting. The status
+  bar now carries a chip with the link's own state and a panel behind it - the sentence, the pairing
+  code, and one button. `GET /whatsapp` answers `{ enabled, state, since, error, qr }`;
+  `POST /whatsapp/connect` and `POST /whatsapp/disconnect` drive it
+- [x] **Two dots, two facts.** The footer's left-hand dot was already the daemon: can notes be read
+  right now. A second green dot for WhatsApp would have said the two things were one, so the chip
+  carries its own word (`WhatsApp linked`, `Pair WhatsApp`, `WhatsApp unlinked`) and only turns green
+  while messages are actually being filed
+- [x] **The state is a module, not a socket query.** `bridge.ts` holds off / starting / waiting /
+  connected / disconnected / logged-out / error, and the moment each began. A code rotating every few
+  seconds re-states `waiting`, and `since` deliberately does not move with it - "waiting since"
+  should mean since pairing began, not since the last code. `whatsapp.ts` became
+  `createWhatsAppBridge()`, which returns the controller the routes call and keeps a pause flag so a
+  deliberate stop does not trip the auto-reconnect
+- [x] **The code comes from the daemon, drawn.** No QR library entered the desktop: the route answers
+  the same half-block text the pairing page draws, and the panel renders it in a dark `<pre>` whose
+  line height is exactly two character widths. It is absent in every state but `waiting`, because a
+  code that has expired is worse than none - it scans and does nothing
+- [x] **Disconnect is not an unlink, and the panel says so.** The pairing lives in `auth_info` and on
+  the phone; nothing in this process can take a device off an account a person holds. Disconnect
+  stops the notes, Connect needs no code, and an unlink from the phone is noticed and reported as
+  `logged-out`. That limit is written down in [LIMITATIONS.md](LIMITATIONS.md)
+- [x] **The palette can now create.** `Cmd/Ctrl+K` offers **New note**, **New folder**, **Open the
+  graph** and **Open the trash** under the recent notes - and first once the query matches a command,
+  so `new folder` is reachable without leaving the field. Choosing New folder turns the field into a
+  name field: `Enter` makes it and the list looks at it, `Esc` steps back out, and a refusal keeps the
+  name typed with the daemon's sentence. The composer's open state moved from the list to the shell,
+  because the palette opens it too
+- [x] Verified against a running daemon, not only the units: `GET /whatsapp` answered
+  `{"enabled":false,"state":"off","since":null,"error":null,"qr":null}` on a daemon started with
+  `LUMOS_DISABLE_WHATSAPP=1`, `POST /whatsapp/connect` answered `409` with the setting named, and
+  `POST /whatsapp/disconnect` and `GET /qrcode` still answered `200`
+
 ## 2026-10-25
 
 ### Done — a folder can be renamed or removed

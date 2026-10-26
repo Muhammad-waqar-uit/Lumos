@@ -22,10 +22,12 @@ else on this page can close them.
   verified in Chromium, which is the engine's family but not the engine.
 - [!] **The graph's "Show notes" button** (P2) - selecting a tag node on the canvas needs a real
   pointer hit, so the wiring is typechecked but has never been pressed.
-- [!] **Scanning the pairing page** (P2) - `GET /qrcode` is tested for what it draws (half-block text,
-  no colour codes, equal line widths) but not for whether a phone camera reads it. The polarity is the
-  risky part: `qrcode-terminal` draws light modules as blocks, so the page is light-on-dark. Scan it
-  once with a real phone before trusting it over the terminal's own QR.
+- [!] **Scanning the pairing code** (P2) - `GET /qrcode` and the desktop panel are tested for what
+  they draw (half-block text, no colour codes, equal line widths) but not for whether a phone camera
+  reads it. The polarity is the risky part: `qrcode-terminal` draws light modules as blocks, so both
+  surfaces are light-on-dark. Scan it once from the panel with a real phone, then press **Disconnect**
+  and **Connect** and check the link comes back without a code - the pause is unit-tested through an
+  injected bridge, but the socket it pauses is not.
 
 ## Plan
 
@@ -39,6 +41,16 @@ else on this page can close them.
   component (`store.test.ts`)
 
 ### Phase 7 - Editing & enrichment (P2) - open items
+
+- [x] The WhatsApp link in the app - `GET /whatsapp` reports the state, when it began and why it is
+  down; `POST /whatsapp/connect` and `/whatsapp/disconnect` drive it, and the pairing code is drawn
+  in the panel instead of a browser tab. The state lives in `bridge.ts` between the socket and the
+  routes, so `connected` means a socket is up rather than "a message once arrived". Disconnect keeps
+  the phone linked - unlinking stays on the phone, which is the one thing nothing here can do - and
+  the app is told `logged-out` when it happens
+- [x] Commands in the palette - New note, New folder (named in the palette itself), Open the graph,
+  Open the trash. The composer's open state moved from the list to the shell for it, because two
+  places can now open it
 
 - [x] Bulk operations (move, tag, archive) - checkboxes in the list choose notes, a bulk bar offers
   move/tag/archive/clear, and every write is settled on its own so one refusal never abandons the

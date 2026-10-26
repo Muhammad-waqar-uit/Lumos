@@ -69,6 +69,16 @@ vi.mock("./lib/api", () => ({
   moveNote,
   updateNoteMeta,
   getTrash: vi.fn(async () => []),
+  // The status bar reads the WhatsApp link as soon as the shell mounts, so it answers here too.
+  getWhatsApp: vi.fn(async () => ({
+    enabled: true,
+    state: "connected" as const,
+    since: null,
+    error: null,
+    qr: null,
+  })),
+  connectWhatsApp: vi.fn(),
+  disconnectWhatsApp: vi.fn(),
   createNote: vi.fn(),
   deleteNote: vi.fn(),
   renameNote: vi.fn(),

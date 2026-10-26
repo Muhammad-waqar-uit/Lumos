@@ -7,7 +7,7 @@
  */
 import { createApp } from "./app.js";
 import { type Config, ConfigError, loadConfig } from "./config.js";
-import { startWhatsApp } from "./whatsapp.js";
+import { createWhatsAppBridge } from "./whatsapp.js";
 
 /**
  * A setting that cannot be used is the one failure worth printing as a sentence: the message already
@@ -28,12 +28,18 @@ const config = await readSettings();
 
 const plan = { url: config.ollamaUrl, model: config.ollamaModel };
 
-const app = await createApp({ vault: config.vault, logger: true, plan });
+// The bridge is handed to the routes, so the app can report and stop the link. When capture is
+// switched off there is none, and the routes answer with the setting instead of a dead Connect.
+const bridge = config.whatsapp
+  ? createWhatsAppBridge(config.vault, config.allowedNumbers, plan)
+  : undefined;
+
+const app = await createApp({ vault: config.vault, logger: true, plan, bridge });
 
 await app.listen({ host: "127.0.0.1", port: config.port });
 
-if (config.whatsapp) {
-  startWhatsApp(config.vault, config.allowedNumbers, plan).catch((err) => app.log.error(err));
+if (bridge) {
+  bridge.connect().catch((err) => app.log.error(err));
 } else {
   app.log.info("WhatsApp bridge disabled (LUMOS_DISABLE_WHATSAPP=1 or whatsapp: false)");
 }

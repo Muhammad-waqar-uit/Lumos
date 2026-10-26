@@ -155,3 +155,87 @@ describe("SearchModal - typing", () => {
     expect(screen.getByText("Alpha note")).toBeDefined();
   });
 });
+
+describe("SearchModal - the commands", () => {
+  const commands = () => ({
+    onNewNote: vi.fn(),
+    onCreateFolder: vi.fn(async (name: string) => name),
+    onOpenView: vi.fn(),
+  });
+
+  it("lists what the palette can do under the recent notes, not over them", () => {
+    renderModal({ recent: [BETA], ...commands() });
+
+    const rows = Array.from(document.querySelectorAll("li button")).map((b) => b.textContent ?? "");
+    // Searching is what the palette is open for, so the notes it knows are first and the commands
+    // are where a glance finds them: at the end of the list.
+    expect(rows[0]).toContain("Beta note");
+    const tail = rows.slice(1).join(" | ");
+    expect(tail).toContain("New note");
+    expect(tail).toContain("New folder");
+  });
+
+  it("opens the composer from the palette, and gets out of its way", () => {
+    const onClose = vi.fn();
+    const props = commands();
+    renderModal({ onClose, ...props });
+
+    fireEvent.click(screen.getByRole("button", { name: /New note/ }));
+
+    expect(props.onNewNote).toHaveBeenCalledTimes(1);
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it("makes a folder from a name typed into the palette itself", async () => {
+    stubBodySearch([]);
+    const onClose = vi.fn();
+    const props = commands();
+    renderModal({ onClose, ...props });
+
+    // Typing the command's own words finds it, so the keyboard never has to leave the field.
+    type("new folder");
+    fireEvent.keyDown(field(), { key: "Enter" });
+
+    const name = screen.getByRole("searchbox", { name: "Name the new folder" });
+    fireEvent.change(name, { target: { value: "Movies" } });
+    fireEvent.keyDown(name, { key: "Enter" });
+
+    await waitFor(() => expect(props.onCreateFolder).toHaveBeenCalledWith("Movies"));
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps a refused folder name typed, with the daemon's reason", async () => {
+    stubBodySearch([]);
+    const onCreateFolder = vi.fn(async () => {
+      throw new Error("A folder called Movies already exists.");
+    });
+    renderModal({ onCreateFolder });
+
+    type("new folder");
+    fireEvent.keyDown(field(), { key: "Enter" });
+    const name = screen.getByRole("searchbox", { name: "Name the new folder" });
+    fireEvent.change(name, { target: { value: "Movies" } });
+    fireEvent.keyDown(name, { key: "Enter" });
+
+    expect(await screen.findByText("A folder called Movies already exists.")).toBeDefined();
+    expect((name as HTMLInputElement).value).toBe("Movies");
+  });
+
+  it("runs a command it finds by its words, and hands the pane over to the shell", () => {
+    stubBodySearch([]);
+    const onClose = vi.fn();
+    const props = commands();
+    renderModal({ onClose, ...props });
+
+    type("graph");
+    fireEvent.keyDown(field(), { key: "Enter" });
+
+    expect(props.onOpenView).toHaveBeenCalledWith("graph");
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it("offers no commands while the demo vault is what is shown", () => {
+    renderModal({ connection: "demo" });
+    expect(screen.queryByText("New note")).toBeNull();
+  });
+});

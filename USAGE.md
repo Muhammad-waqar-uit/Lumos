@@ -107,7 +107,9 @@ hiding the note. Pointing Obsidian at the vault is the intended way to browse it
 - **`Cmd/Ctrl+K`** opens the palette: fuzzy ranking over titles, tags and previews, plus a body
   search from the daemon for words that appear nowhere in the preview - those rows are marked *in
   the body*, as the last row is here. Arrow keys move, `Enter` opens, `Esc` closes. Empty, it lists
-  the notes you opened this session.
+  the notes you opened this session and then four commands: **New note**, **New folder**, **Open the
+  graph**, **Open the trash**. Typing puts whichever command's words match first, so `new folder` +
+  `Enter` turns the field into a name field - `Enter` makes the folder and the list looks at it.
 
   ![The search palette over a vault, with one result marked as matching only inside the note body](docs/images/search.png)
 - **`j` / `k`** move down and up the list without leaving the viewer.
@@ -139,6 +141,16 @@ button.
   takes two presses because it is the one action with no undo.
 
 A notice in the status bar is dismissed by clicking it.
+
+### Is WhatsApp connected?
+
+The chip at the right of the status bar is the capture link, with its own dot and word -
+`WhatsApp linked`, `Pair WhatsApp` when a phone needs to scan one, `WhatsApp disconnected`,
+`WhatsApp unlinked`, `WhatsApp off`. It opens the panel: the state in a sentence, the pairing code
+drawn right there, and one button. **Disconnect** stops the daemon answering messages and keeps the
+phone linked, so **Connect** needs no code. Taking the device off the account is WhatsApp's own
+**Linked devices > Log out** - that stays on the phone, and the panel says `WhatsApp unlinked` when it
+happens.
 
 ### Doing something to several notes
 
@@ -242,7 +254,8 @@ A missing file means the defaults; a bad one stops the daemon with one sentence 
 | A note row says *! frontmatter* | The note's YAML block does not parse. The note is still readable and editable; the viewer lists what is wrong |
 | *409* on a rename or a restore | Another note already holds that name. Nothing was replaced - choose another title |
 | `400 unknown folder` | The route was asked to file into a folder the vault does not have. Nothing was written - make it with `/newfolder` or **+ New folder**, or check the spelling |
-| The QR code never appears | `LUMOS_DISABLE_WHATSAPP=1` is set, or `whatsapp: false` in the config file. `http://127.0.0.1:3001/qrcode` says which |
+| The QR code never appears | `LUMOS_DISABLE_WHATSAPP=1` is set, or `whatsapp: false` in the config file. The WhatsApp chip in the status bar says `WhatsApp off`, and `http://127.0.0.1:3001/qrcode` says the same |
+| The chip says `WhatsApp disconnected` | The link is down but the phone is still paired. Open the panel and press **Connect** - no code needed. If it says `WhatsApp unlinked`, the device was logged out on the phone: scan a new code |
 | `/plan` replies *"… is not answering for Ollama"* | Start Ollama (`ollama serve`); `ollama list` should show the model named by `ollamaModel` |
 | The port is already in use | Another daemon is running. Stop it, or set `PORT` |
 

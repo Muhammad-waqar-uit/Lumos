@@ -20,6 +20,14 @@ interface Props {
   width: number;
   /** Creates a note and answers it; the shell refreshes and opens it. */
   onCreate: (folder: Folder, text: string) => Promise<Note>;
+  /**
+   * Whether the composer is open. The shell owns this, because the command palette opens it too -
+   * a composer that only the list could open would leave the palette with nowhere to write.
+   */
+  composing: boolean;
+  onComposing: (open: boolean) => void;
+  /** The folder a new note starts in, when something other than the list asked to write one. */
+  composeFolder?: Folder | null;
   /** False while the demo vault is shown, because there is nothing behind it to write to. */
   canCreate: boolean;
   /** Where the list is looking, so a new note starts in the folder you are already in. */
@@ -62,6 +70,9 @@ export function NoteList({
   loading,
   width,
   onCreate,
+  composing,
+  onComposing,
+  composeFolder,
   canCreate,
   activeFolder,
   folders,
@@ -72,8 +83,6 @@ export function NoteList({
   onBulkTag,
   onBulkArchive,
 }: Props) {
-  // Writing a note is done in the list's own pane, so a new note is where you were looking.
-  const [composing, setComposing] = useState(false);
   // The tag to add to the selected notes, kept here so the bar types without a round trip.
   const [tagDraft, setTagDraft] = useState("");
   const selectedCount = selection?.size ?? 0;
@@ -182,7 +191,7 @@ export function NoteList({
           />
           <button
             type="button"
-            onClick={() => setComposing((open) => !open)}
+            onClick={() => onComposing(!composing)}
             disabled={!canCreate}
             title={canCreate ? undefined : "Creating a note needs the daemon"}
             className="shrink-0 rounded-md border border-border px-2 py-1.5 text-[11px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-50"
@@ -218,11 +227,11 @@ export function NoteList({
       {composing ? (
         <NoteComposer
           // "All notes" is not a folder anything can be filed into, so a new note starts in Inbox.
-          initialFolder={activeFolder === "All" ? "Inbox" : activeFolder}
+          initialFolder={composeFolder ?? (activeFolder === "All" ? "Inbox" : activeFolder)}
           folders={folders}
           onCreate={onCreate}
-          onCreated={() => setComposing(false)}
-          onCancel={() => setComposing(false)}
+          onCreated={() => onComposing(false)}
+          onCancel={() => onComposing(false)}
         />
       ) : null}
       {selectedCount > 0 && onBulkMove && onBulkTag && onBulkArchive && onClearSelection ? (

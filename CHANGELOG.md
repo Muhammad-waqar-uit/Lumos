@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- The WhatsApp link, in the app. The status bar carries a chip with the link's own state -
+  `WhatsApp linked`, `Pair WhatsApp`, `WhatsApp disconnected`, `WhatsApp unlinked`, `WhatsApp off` -
+  and opens a panel that says why in a sentence, draws the pairing code in the app rather than in a
+  browser tab, and offers the one button the state allows. **Disconnect** stops the daemon answering
+  messages while keeping the phone linked, so **Connect** needs no code. `GET /whatsapp` is the
+  report and `POST /whatsapp/connect`/`disconnect` are the two actions; unlinking a device stays on
+  the phone, and the daemon reports `logged-out` when that happens.
+- Commands in the `Cmd/Ctrl+K` palette: **New note** (the composer, in the Notes view), **New folder**
+  (name it in the palette, `Enter` makes it and the list looks at it), **Open the graph** and
+  **Open the trash**. With nothing typed they sit under the recent notes; typing puts any command
+  whose words matched first. They are only offered while the daemon answers.
 - Folder rename and removal. `/renamefolder <from>|<to>` and `/delfolder <name>` on WhatsApp,
   `PATCH /folder` and `DELETE /folder` on the API, and **Rename**/**Delete** on every folder row in
   the desktop sidebar. The rename is one directory rename on disk - every note inside keeps its

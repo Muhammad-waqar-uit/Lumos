@@ -124,6 +124,17 @@ play it — neither page can be read or copied.
   **Needs your testing** in [TODO.md](TODO.md).
 - **Messages during a disconnect are lost.** Reconnection backs off and retries the socket, but there
   is no queue and no replay, so a message sent while the daemon is down is simply not captured.
+- **The app can stop the link but not unlink the phone.** **Disconnect** closes the socket and keeps
+  the pairing in `apps/daemon/auth_info/`, so **Connect** needs no code; taking the device off the
+  account is WhatsApp's own **Linked devices > Log out**, and nothing running here can do it on a
+  person's behalf. The daemon notices the unlink and reports `logged-out`, and the panel says so.
+- **The link's state is polled, not pushed.** The status bar reads `GET /whatsapp` every 15s and the
+  panel every 3s, so a drop shows up a few seconds late, and a pairing code on screen can be a few
+  seconds old - `waiting` is re-read often enough that it rotates with the code, but a panel left open
+  on a paused daemon still ages. There is no server-sent event and no websocket for it.
+- **Capture being switched off is a startup setting.** A daemon started with `LUMOS_DISABLE_WHATSAPP=1`
+  or `whatsapp: false` reports `off` and refuses `POST /whatsapp/connect` with a `409`; the app cannot
+  switch capture on for a process that was started without it.
 - **The allowlist is an exact number match.** There is no per-chat or per-command permission, and an
   empty `ALLOWED_NUMBERS` blocks everything (a deliberate default).
 - **A URL in a plain message is stored, not fetched.** Link expansion happens when the desktop opens
@@ -144,6 +155,10 @@ play it — neither page can be read or copied.
   caught. The graph canvas is the one component with no test at all, because it draws through the
   graph library and jsdom cannot render it. An E2E runner is tracked under **Plan** in
   [TODO.md](TODO.md).
+- **The palette runs four commands, and only while the daemon answers.** Writing a note, making a
+  folder, the graph and the trash. It does not yet offer "new note in *this* folder" per folder, a
+  move or a tag of the open note, or a command history; a palette that listed everything would be a
+  menu with a text box on top, so the set stays the ones there is nothing else for.
 - **Only the fields a control owns can be edited.** A body, tags, status, the filename and the folder
   each have something in the app that writes them. `created`, `url`, `source` and any key another
   tool put in the block do not: there is no form for the frontmatter as a whole, and nothing here

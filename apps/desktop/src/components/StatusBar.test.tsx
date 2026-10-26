@@ -40,4 +40,22 @@ describe("StatusBar", () => {
     fireEvent.click(screen.getByRole("button", { name: /Saved, but/ }));
     expect(onDismissNotice).toHaveBeenCalledTimes(1);
   });
+
+  it("names the WhatsApp link's state, and opens the panel that explains it", () => {
+    const onWhatsApp = vi.fn();
+    renderBar({
+      whatsapp: { enabled: true, state: "waiting", since: null, error: null, qr: null },
+      onWhatsApp,
+    });
+
+    // The link is not the daemon connection: being able to read notes says nothing about whether
+    // a message would be filed, so it gets its own word rather than a second green dot.
+    fireEvent.click(screen.getByRole("button", { name: "WhatsApp: Pair WhatsApp" }));
+    expect(onWhatsApp).toHaveBeenCalledTimes(1);
+  });
+
+  it("says nothing about the link when there is no daemon to ask", () => {
+    renderBar({ whatsapp: null, onWhatsApp: () => {} });
+    expect(screen.queryByRole("button", { name: /WhatsApp/ })).toBeNull();
+  });
 });

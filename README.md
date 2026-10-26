@@ -110,15 +110,17 @@ cd apps/daemon
 pnpm dev
 ```
 
-On first run, a QR code appears in your terminal and at `http://127.0.0.1:3001/qrcode`, which is
-the page the desktop's **Pair** button opens.
+On first run, a QR code appears in your terminal, in the desktop's WhatsApp panel (the chip in the
+status bar opens it), and at `http://127.0.0.1:3001/qrcode` as a page of its own. The chip also says
+whether the link is up: `WhatsApp linked`, `Pair WhatsApp`, `WhatsApp unlinked`, `WhatsApp off`.
 
 ### Linking WhatsApp
 
 1. Open WhatsApp on the phone number you want to use as **Lumos** (the receiving number)
 2. Go to **Settings > Linked Devices > Link a Device**
-3. Scan the QR code from your terminal, or from the pairing page the daemon serves
-4. You'll see `WhatsApp connected.` in the logs
+3. Scan the QR code from your terminal, from the desktop's WhatsApp panel, or from the pairing page
+   the daemon serves
+4. The panel turns to `WhatsApp linked`, and `WhatsApp connected.` appears in the logs
 
 The session is saved in `apps/daemon/auth_info/` - you only need to scan once. This folder is git-ignored for security.
 

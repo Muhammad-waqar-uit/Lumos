@@ -40,10 +40,12 @@ WhatsApp ──► Daemon ──► vault/*.md ◄── Desktop (Tauri UI)
   - `config.ts` - read `lumos.config.json` and the environment into one `Config`, refusing a setting it cannot use.
   - `handler.ts` - route a parsed command to a reply; the vault directory arrives as an argument.
   - `app.ts` - `createApp()`, which builds the Fastify app (CORS + routes) over a given vault, so the routes can be tested without binding a port.
-  - `server.ts` - entry point: build the app, listen on loopback, start WhatsApp.
+  - `server.ts` - entry point: build the app, listen on loopback, then start the WhatsApp bridge and hand it to the routes.
   - `fetch-link.ts` - fetch one link for the desktop, with the guards and caps `GET /link` returns as refusals; a PDF response is handed to
   - `read-pdf.ts` - the daemon's one parser dependency: a PDF's bytes become the same readable text a page produces (`unpdf`), or a refusal with a fixed sentence
-  - `whatsapp.ts` - Baileys connection, allowlist, message handling.
+  - `whatsapp.ts` - `createWhatsAppBridge()`: the Baileys connection, allowlist and message loop, as a controller the routes can report on, start and stop.
+  - `bridge.ts` - the link's state (off, starting, waiting, connected, disconnected, logged out, error) shared between the socket and the routes. State only: no socket, no timers.
+  - `qr.ts` - the pairing code between the socket and `GET /qrcode`, and its half-block rendering for the page and the app's panel.
 
 Tests sit beside the modules they cover (`commands.test.ts`, `handler.test.ts`, `app.test.ts`,
 `fetch-link.test.ts`). Each passes a fresh temporary directory in as the vault, so the real vault is
@@ -54,7 +56,7 @@ injected, so no port is bound and no network request is made.
 
 - **Shell**: Tauri 2.x (Rust backend) hosting a Vite/React frontend.
 - **UI**: Tailwind CSS + shadcn/ui, dark minimal theme.
-- **Access to the vault**: the daemon HTTP API today - the read routes plus `POST /folders`, `PATCH /folder`, `DELETE /folder`, `PUT /note`, `POST /notes`, `PATCH /note`, `POST /note/move` and `DELETE /note` to write; Tauri filesystem commands are a possible future path so it can run without the daemon. Folders are read, never assumed: the sidebar, the composer, both move menus and the graph legend all draw from one `GET /folders` list held in the store.
+- **Access to the vault**: the daemon HTTP API today - the read routes plus `POST /folders`, `PATCH /folder`, `DELETE /folder`, `PUT /note`, `POST /notes`, `PATCH /note`, `POST /note/move` and `DELETE /note` to write; `GET /whatsapp` and `POST /whatsapp/connect`/`disconnect` are how it reports and drives the capture link, which lives in the daemon's process and nowhere else; Tauri filesystem commands are a possible future path so it can run without the daemon. Folders are read, never assumed: the sidebar, the composer, both move menus and the graph legend all draw from one `GET /folders` list held in the store.
 - **Panes**: the notes list + viewer, or the link graph, sharing the folder sidebar. The list column is resizable through `PaneSplitter`, and the width lives in the shell rather than in the pane. The graph renderer loads lazily with its tab, so the notes path stays light.
 - **Link pane**: a note's link is shown in the viewer - a player, an image, or the scraped page - instead of only linking out. It reads through `src/lib/api.ts` like every other pane and has its own loading, error and retry states.
 

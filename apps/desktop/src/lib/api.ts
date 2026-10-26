@@ -1,4 +1,4 @@
-import type { Folder, GraphData, LinkCard, Note, VaultEntry } from "@lumos/shared";
+import type { Folder, GraphData, LinkCard, Note, VaultEntry, WhatsAppStatus } from "@lumos/shared";
 
 /** Where the desktop is getting its data from. */
 export type Connection = "connecting" | "daemon" | "demo" | "qrcode";
@@ -135,6 +135,46 @@ export async function getLink(url: string): Promise<LinkCard> {
   if (!res.ok) throw new Error(body && "error" in body ? body.error : `GET /link -> ${res.status}`);
   if (!body || !("link" in body)) throw new Error("GET /link returned an unexpected body");
   return body.link;
+}
+
+/**
+ * How the WhatsApp link stands, with the code a phone should scan while there is one.
+ *
+ * The daemon is the only thing that knows: the socket lives in the daemon's process, and this is
+ * the one way the app can say whether capture is linked without guessing from a message arriving.
+ */
+export async function getWhatsApp(): Promise<WhatsAppStatus> {
+  const { whatsapp } = await getJson<{ whatsapp: WhatsAppStatus }>("/whatsapp");
+  return whatsapp;
+}
+
+/** Start the link, or refuse with the daemon's sentence (capture switched off). */
+async function whatsappWrite(path: string): Promise<WhatsAppStatus> {
+  const res = await fetch(`${BASE}${path}`, {
+    method: "POST",
+    headers: { accept: "application/json" },
+  });
+  const body = (await res.json().catch(() => null)) as
+    { whatsapp: WhatsAppStatus } | { error: string } | null;
+  if (!res.ok)
+    throw new Error(body && "error" in body ? body.error : `POST ${path} -> ${res.status}`);
+  if (!body || !("whatsapp" in body)) throw new Error(`POST ${path} returned an unexpected body`);
+  return body.whatsapp;
+}
+
+/** Start answering WhatsApp messages again, and answer the state it reached. */
+export function connectWhatsApp(): Promise<WhatsAppStatus> {
+  return whatsappWrite("/whatsapp/connect");
+}
+
+/** Stop answering messages, keeping the phone linked: connecting again needs no code. */
+export function disconnectWhatsApp(): Promise<WhatsAppStatus> {
+  return whatsappWrite("/whatsapp/disconnect");
+}
+
+/** The daemon's own pairing page, for a browser tab rather than this app's panel. */
+export function pairingUrl(): string {
+  return `${BASE}/qrcode`;
 }
 
 /** Read a single note by folder + filename. */

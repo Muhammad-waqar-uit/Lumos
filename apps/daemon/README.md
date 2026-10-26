@@ -72,6 +72,27 @@ The WhatsApp pairing page: HTML, `no-store`, refreshing itself because the code 
 the code the socket is waiting for, or says that there is nothing to pair (already linked, or
 capture switched off). The code is answered to the loopback caller and never logged.
 
+### GET /whatsapp
+
+The capture link's state:
+```json
+{ "whatsapp": { "enabled": true, "state": "waiting", "since": "2026-10-26T09:12:00.000Z", "error": null, "qr": "█▀█ …" } }
+```
+`state` is `off`, `starting`, `waiting`, `connected`, `disconnected`, `logged-out` or `error`. `qr`
+is the pairing code as half-block text and only while the state is `waiting`; `error` is the sentence
+the socket had, never the auth directory's path.
+
+### POST /whatsapp/connect
+
+Starts or resumes the link and answers the state it reached. A daemon started with capture switched
+off answers `409` naming the setting; a link that fails to come up answers `502`, with the reason in
+`GET /whatsapp`'s `error`.
+
+### POST /whatsapp/disconnect
+
+Stops answering messages and keeps the phone linked, so connecting again needs no code. This is not
+an unlink: that stays on the phone.
+
 ### GET /health
 
 Health check endpoint.
@@ -196,10 +217,15 @@ The daemon can run headless with `LUMOS_DISABLE_WHATSAPP=1` when you only need t
 
 ## WhatsApp Authentication
 
-On first run the daemon generates a QR code for linking. It is printed to the terminal and served at
-`GET /qrcode` as a page a phone can scan - that page is what the desktop's **Pair** button opens. The
-authentication state is persisted in `auth_info/` directory in the daemon folder. This directory
-contains sensitive session data - **never commit it** (it's git-ignored).
+On first run the daemon generates a QR code for linking. It is printed to the terminal, served at
+`GET /qrcode` as a page a phone can scan, and drawn in the desktop's WhatsApp panel from the same
+`GET /whatsapp` answer. The authentication state is persisted in `auth_info/` directory in the daemon
+folder. This directory contains sensitive session data - **never commit it** (it's git-ignored).
+
+The link is a controller (`createWhatsAppBridge()` in `src/whatsapp.ts`) rather than a fire-and-forget
+connection: `POST /whatsapp/disconnect` closes the socket while keeping the pairing, so
+`POST /whatsapp/connect` resumes without a code; an unlink from the phone is reported as `logged-out`.
+Nothing here unlinks a device - that is WhatsApp's own **Linked devices > Log out**.
 
 If you get logged out, delete `auth_info/` and restart to scan a new QR code.
 

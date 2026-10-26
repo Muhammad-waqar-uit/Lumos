@@ -4,7 +4,8 @@ import path from "node:path";
 import type { FastifyInstance } from "fastify";
 import { afterAll, describe, expect, it, vi } from "vitest";
 import { saveNote } from "@lumos/vault-utils";
-import type { LinkCard, NoteInput } from "@lumos/shared";
+import type { LinkCard, NoteInput, WhatsAppState } from "@lumos/shared";
+import type { BridgeControl } from "./bridge";
 import { LinkFetchError } from "./fetch-link";
 import type { PlanOptions } from "./plan";
 import { createApp } from "./app";
@@ -31,6 +32,7 @@ async function makeApp(
     fetchLink?: (url: string) => Promise<LinkCard>;
     plan?: PlanOptions;
     qr?: () => string | null;
+    bridge?: BridgeControl;
   } = {},
 ): Promise<{ vault: string; app: FastifyInstance }> {
   const vault = await mkdtemp(path.join(tmpdir(), "lumos-routes-"));
@@ -1485,5 +1487,91 @@ describe("CORS", () => {
     });
     expect(res.statusCode).toBe(200);
     expect(res.headers["access-control-allow-origin"]).toBeUndefined();
+  });
+});
+
+/** A link in a fixed state, for the routes that only report or drive one. */
+function fakeBridge(state: WhatsAppState): BridgeControl {
+  return {
+    status: () => ({ enabled: true, state, since: "2026-10-25T10:00:00.000Z", error: null }),
+    connect: () => Promise.resolve(),
+    disconnect: () => Promise.resolve(),
+  };
+}
+
+describe("the WhatsApp link", () => {
+  it("says capture is off, rather than offering a Connect that would do nothing", async () => {
+    const { app } = await makeApp();
+    const res = await app.inject({ method: "GET", url: "/whatsapp" });
+
+    expect(res.statusCode).toBe(200);
+    // No bridge was handed over, which is what a daemon started with capture switched off has.
+    expect(res.json()).toEqual({
+      whatsapp: { enabled: false, state: "off", since: null, error: null, qr: null },
+    });
+  });
+
+  it("hands over the pairing code as text while a phone still has to scan one", async () => {
+    const { app } = await makeApp([], { bridge: fakeBridge("waiting"), qr: () => "2@abc" });
+    const { whatsapp } = (await app.inject({ method: "GET", url: "/whatsapp" })).json();
+
+    expect(whatsapp.state).toBe("waiting");
+    // The same half blocks the pairing page draws, so the panel needs no QR library of its own.
+    expect(whatsapp.qr).toMatch(/[\u2580\u2584\u2588]/);
+    expect(whatsapp.qr).not.toContain("\u001b[");
+  });
+
+  it("never offers a code once the phone is linked", async () => {
+    const { app } = await makeApp([], { bridge: fakeBridge("connected"), qr: () => "2@abc" });
+    const { whatsapp } = (await app.inject({ method: "GET", url: "/whatsapp" })).json();
+
+    // A code left in the answer would be a session secret served for no reason.
+    expect(whatsapp.state).toBe("connected");
+    expect(whatsapp.qr).toBeNull();
+  });
+
+  it("refuses to connect a bridge that is switched off, naming the setting", async () => {
+    const { app } = await makeApp();
+    const res = await app.inject({ method: "POST", url: "/whatsapp/connect" });
+
+    // A request cannot overrule how the process was started, and a generic 500 would not say why.
+    expect(res.statusCode).toBe(409);
+    expect(res.json().error).toContain("LUMOS_DISABLE_WHATSAPP");
+  });
+
+  it("starts and stops the link through the bridge it was given", async () => {
+    const calls: string[] = [];
+    const bridge: BridgeControl = {
+      status: () => ({ enabled: true, state: "disconnected", since: null, error: null }),
+      connect: async () => {
+        calls.push("connect");
+      },
+      disconnect: async () => {
+        calls.push("disconnect");
+      },
+    };
+    const { app } = await makeApp([], { bridge });
+
+    const started = await app.inject({ method: "POST", url: "/whatsapp/connect" });
+    const stopped = await app.inject({ method: "POST", url: "/whatsapp/disconnect" });
+
+    expect(started.statusCode).toBe(200);
+    expect(stopped.json().whatsapp.state).toBe("disconnected");
+    expect(calls).toEqual(["connect", "disconnect"]);
+  });
+
+  it("answers a link that could not be started, without its stack", async () => {
+    const bridge: BridgeControl = {
+      status: () => ({ enabled: true, state: "error", since: null, error: "It failed." }),
+      connect: () => Promise.reject(new Error("/home/someone/auth_info is unreadable")),
+      disconnect: () => Promise.resolve(),
+    };
+    const { app } = await makeApp([], { bridge });
+
+    const res = await app.inject({ method: "POST", url: "/whatsapp/connect" });
+
+    expect(res.statusCode).toBe(502);
+    // A failure to read the credentials names the auth directory, and that path stays out of both.
+    expect(res.json()).toEqual({ error: "WhatsApp could not be started." });
   });
 });

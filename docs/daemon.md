@@ -21,8 +21,9 @@ Markdown notes to the vault. It lives in [`apps/daemon`](../apps/daemon).
 | `src/handler.ts` | `handleMessage()` - routes a parsed command to a reply string. The vault directory is an argument, so the caller decides where a note lands.
 | `src/app.ts` | `createApp()` - builds the Fastify app (CORS + every route) over a vault directory, so a test can drive it without binding a port.
 | `src/server.ts` | Entry point: builds the app, listens on loopback, boots the WhatsApp connection.| `src/fetch-link.ts` | Fetches one link for the desktop, with the guards `GET /link` relies on.
-| `src/plan.ts` | `buildPlan()` - the vault's newest notes become one prompt for the local Ollama model; every failure arrives as a sentence a person can act on, never as the socket's own words. | `src/whatsapp.ts` | Baileys connection, QR auth, allowlist, message loop. |
-| `src/qr.ts` | The pairing code the socket emits, held between the socket and `GET /qrcode`, plus its half-block rendering for the page. |
+| `src/plan.ts` | `buildPlan()` - the vault's newest notes become one prompt for the local Ollama model; every failure arrives as a sentence a person can act on, never as the socket's own words. | `src/whatsapp.ts` | `createWhatsAppBridge()` - the Baileys connection, QR auth, allowlist and message loop, as a controller the routes can start and stop. The link outlives one socket: a drop is retried, and a stop is not. |
+| `src/bridge.ts` | The link's state (off, starting, waiting, connected, disconnected, logged out, error) held between the socket and the routes, plus the report shape and the switched-off bridge the routes fall back to. State only: no socket and no timers. |
+| `src/qr.ts` | The pairing code the socket emits, held between the socket and `GET /qrcode`, plus its half-block rendering for the page and for the app's panel. |
 
 ## Commands
 
@@ -52,6 +53,29 @@ rotates. It draws the code the socket is waiting for, so a phone can be paired f
 of from the terminal the daemon was started in. With nothing to pair - already linked, or capture
 off - it is still a `200`, with the sentence that says which. The code is a session secret: it is
 answered to the loopback caller that asked and never logged.
+
+### `GET /whatsapp`
+How the capture link stands: `{ "whatsapp": { enabled, state, since, error, qr } }`.
+
+`enabled` is false when the daemon was started with capture switched off, so the app can say that
+rather than offer a Connect that would do nothing. `state` is one of `off`, `starting`, `waiting`,
+`connected`, `disconnected`, `logged-out` or `error`; `since` is when that state began (a code
+rotating does not move it), and `error` is the sentence the socket had for a failure - it never
+carries the auth directory's path. `qr` is the pairing code drawn as half-block text, and only while
+the state is `waiting`: the code is a session secret, so it is never served for a link that is up.
+
+### `POST /whatsapp/connect`
+Starts the link, or resumes one that was stopped, and answers the state it reached.
+
+Capture is either on for this daemon or it is not - a request cannot overrule how the process was
+started - so asking for a disabled bridge is a `409` whose message names the setting. A link that
+fails to come up is a `502`, and the reason stays in `GET /whatsapp`'s `state` and `error`.
+
+### `POST /whatsapp/disconnect`
+Stops answering messages, keeping the phone linked: the pairing lives in `apps/daemon/auth_info/`,
+so connecting again needs no code. This is not an unlink, which is the phone's own business
+(WhatsApp > Linked devices > Log out); the daemon notices when that happens and reports
+`logged-out`. Answers the state it reached, which is `disconnected` unless closing the socket failed.
 
 ### `POST /message`
 ```json
@@ -367,10 +391,16 @@ than listened on: a random port is one the desktop cannot find.
 
 ## WhatsApp authentication
 
-On first run a QR code is printed to the terminal and served at `GET /qrcode`, which is the page
-the desktop's **Pair** button opens. Scan it from the Lumos number's **Settings > Linked Devices >
-Link a Device**. The session is stored in `apps/daemon/auth_info/`, which is git-ignored and must
-never be shared. Delete it to force a fresh pairing.
+On first run a QR code is printed to the terminal, drawn in the desktop's WhatsApp panel (the chip
+in the status bar opens it), and served as a page at `GET /qrcode`. Scan it from the Lumos number's
+**Settings > Linked Devices > Link a Device**. The session is stored in `apps/daemon/auth_info/`,
+which is git-ignored and must never be shared. Delete it to force a fresh pairing.
+
+Once linked, the panel reports what the socket is doing - `connected`, `waiting` while a code needs
+scanning, `disconnected` when the link is down or was stopped from the app, `logged-out` when the
+phone unlinked this device, and `error` with the sentence the socket gave. **Disconnect** stops the
+daemon answering messages without unlinking anything, so **Connect** needs no code. Unlinking the
+device stays on the phone: nothing running here can take a device off an account the person holds.
 
 ## Shared packages
 
@@ -402,7 +432,13 @@ write). Keeping this logic in packages lets the desktop app reuse it.
   there, `DELETE /note` removing one and reading `404` for a file it cannot find, the graph's nodes,
   edges and unresolved links, `/link`'s refusals and its status codes with the fetcher injected, the
   plain `500` for a route that throws unexpectedly (built over a vault path that is a file, so the
-  failure is real), and the CORS allow-list with the preflights a `PUT`, `PATCH` and `DELETE` need.
+  failure is real), the WhatsApp routes against an injected bridge (the code drawn while waiting and
+  absent once linked, the `409` for a switched-off capture, and a connect that failed answering a
+  `502` without the credentials path), and the CORS allow-list with the preflights a `PUT`, `PATCH`
+  and `DELETE` need.
+- `src/bridge.test.ts` - the link's state on its own: the switched-off default, the moment a state
+  began being held while a rotating code re-states `waiting`, and the reason riding with the state
+  and being dropped when the next state has none. The socket itself is never started here.
 - `src/fetch-link.test.ts` - the link fetcher with `fetch` and DNS injected, so the suite stays
   offline: which addresses and hostnames are refused (including a redirect into the local network),
   the redirect limit, the byte cap, a missing content type, and the fact that a network error never
@@ -412,7 +448,9 @@ write). Keeping this logic in packages lets the desktop app reuse it.
   request, and every failure sentence - nothing listening, a timeout, a missing model, a bad
   status, an unreadable answer - with the socket's own words kept out of the reply.
 
-Not covered yet: the WhatsApp session itself, which needs a real linked device, and the Tauri shell.
+Not covered yet: the WhatsApp session itself, which needs a real linked device (the routes are
+covered through an injected bridge, but a socket that actually connects is a manual check), and the
+Tauri shell.
 The routes are covered without a port, and the graph builder by the `@lumos/vault-utils` suite, both
 against a temporary vault.
 

@@ -222,6 +222,32 @@ export interface LinkCard {
   finalUrl?: string;
 }
 
+/**
+ * Where the WhatsApp capture link stands, as the daemon reports it.
+ *
+ * `off` is capture switched off by configuration, `waiting` is a code a phone can scan,
+ * `disconnected` is a link that is down but still paired, and `logged-out` is a phone that unlinked
+ * this device - which is the one state that needs a new code before it can come back.
+ */
+export type WhatsAppState =
+  "off" | "starting" | "waiting" | "connected" | "disconnected" | "logged-out" | "error";
+
+/** The daemon's answer to `GET /whatsapp`: the state, and the code to scan while there is one. */
+export interface WhatsAppStatus {
+  /** False when the daemon runs with capture switched off, so Connect has nothing to start. */
+  enabled: boolean;
+  state: WhatsAppState;
+  /** When the current state began, ISO; null before anything has happened. */
+  since: string | null;
+  /** A sentence when something went wrong, so the app can say why. Never a stack trace. */
+  error: string | null;
+  /**
+   * The pairing code drawn as half-block text, while a phone needs to scan one. It is a session
+   * secret, so it is only ever handed to the loopback caller and is null in every other state.
+   */
+  qr: string | null;
+}
+
 /** A lightweight vault listing entry. */
 export interface VaultEntry {
   title: string;
