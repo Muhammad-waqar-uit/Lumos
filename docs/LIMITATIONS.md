@@ -235,6 +235,13 @@ the only signal it has: there is no server-sent event, and the daemon does not w
   embeds and the PDF parser belong to the daemon and the app, not to this server.
 - **Search is a substring match**, the same one `/find` and the palette's body search use - no
   ranking, no fuzzy matching, no stemming.
+- **A listing has no pagination.** `list_notes` answers every note, newest first, so a large vault
+  arrives in one reply; `folder` narrows it and `search_notes` is the targeted way in, but there is
+  no `limit` or `offset`. Given up: a cursor a model could walk - added only if a real vault makes
+  the whole listing too big to be useful.
+- **Tools only.** No MCP resources and no prompts: the vault is reachable through calls, not as
+  attachable documents, and there is no server-provided prompt for a client to offer. That is a
+  deliberate small surface, not an oversight - it is also why nothing here is a subscription.
 - **One vault, one process.** A client that needs two vaults runs two servers; there is no switching
   a vault mid-session and no route to list the others.
 - **No authentication, by design.** The transport is stdio: there is no port and no token because
