@@ -1493,7 +1493,13 @@ describe("CORS", () => {
 /** A link in a fixed state, for the routes that only report or drive one. */
 function fakeBridge(state: WhatsAppState): BridgeControl {
   return {
-    status: () => ({ enabled: true, state, since: "2026-10-25T10:00:00.000Z", error: null }),
+    status: () => ({
+      enabled: true,
+      state,
+      since: "2026-10-25T10:00:00.000Z",
+      error: null,
+      lastAt: null,
+    }),
     connect: () => Promise.resolve(),
     disconnect: () => Promise.resolve(),
   };
@@ -1507,7 +1513,14 @@ describe("the WhatsApp link", () => {
     expect(res.statusCode).toBe(200);
     // No bridge was handed over, which is what a daemon started with capture switched off has.
     expect(res.json()).toEqual({
-      whatsapp: { enabled: false, state: "off", since: null, error: null, qr: null },
+      whatsapp: {
+        enabled: false,
+        state: "off",
+        since: null,
+        error: null,
+        lastAt: null,
+        qr: null,
+      },
     });
   });
 
@@ -1542,7 +1555,13 @@ describe("the WhatsApp link", () => {
   it("starts and stops the link through the bridge it was given", async () => {
     const calls: string[] = [];
     const bridge: BridgeControl = {
-      status: () => ({ enabled: true, state: "disconnected", since: null, error: null }),
+      status: () => ({
+        enabled: true,
+        state: "disconnected",
+        since: null,
+        error: null,
+        lastAt: null,
+      }),
       connect: async () => {
         calls.push("connect");
       },
@@ -1562,7 +1581,13 @@ describe("the WhatsApp link", () => {
 
   it("answers a link that could not be started, without its stack", async () => {
     const bridge: BridgeControl = {
-      status: () => ({ enabled: true, state: "error", since: null, error: "It failed." }),
+      status: () => ({
+        enabled: true,
+        state: "error",
+        since: null,
+        error: "It failed.",
+        lastAt: null,
+      }),
       connect: () => Promise.reject(new Error("/home/someone/auth_info is unreadable")),
       disconnect: () => Promise.resolve(),
     };

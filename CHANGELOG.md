@@ -13,7 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   browser tab, and offers the one button the state allows. **Disconnect** stops the daemon answering
   messages while keeping the phone linked, so **Connect** needs no code. `GET /whatsapp` is the
   report and `POST /whatsapp/connect`/`disconnect` are the two actions; unlinking a device stays on
-  the phone, and the daemon reports `logged-out` when that happens.
+  the phone, and the daemon reports `logged-out` when that happens. The report also carries `lastAt`,
+  when a message was last answered, so the panel can show a link that is up and idle rather than
+  leaving "connected" to mean both things.
 - Commands in the `Cmd/Ctrl+K` palette: **New note** (the composer, in the Notes view), **New folder**
   (name it in the palette, `Enter` makes it and the list looks at it), **Open the graph** and
   **Open the trash**. With nothing typed they sit under the recent notes; typing puts any command

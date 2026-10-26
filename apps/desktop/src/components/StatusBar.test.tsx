@@ -44,7 +44,14 @@ describe("StatusBar", () => {
   it("names the WhatsApp link's state, and opens the panel that explains it", () => {
     const onWhatsApp = vi.fn();
     renderBar({
-      whatsapp: { enabled: true, state: "waiting", since: null, error: null, qr: null },
+      whatsapp: {
+        enabled: true,
+        state: "waiting",
+        since: null,
+        error: null,
+        lastAt: null,
+        qr: null,
+      },
       onWhatsApp,
     });
 

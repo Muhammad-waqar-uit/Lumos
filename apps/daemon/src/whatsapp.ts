@@ -7,7 +7,13 @@ import makeWASocket, {
 import qrcode from "qrcode-terminal";
 import pino from "pino";
 import path from "node:path";
-import { bridgeEnabled, bridgeReport, bridgeState, type BridgeControl } from "./bridge.js";
+import {
+  bridgeAnswered,
+  bridgeEnabled,
+  bridgeReport,
+  bridgeState,
+  type BridgeControl,
+} from "./bridge.js";
 import { handleMessage } from "./handler.js";
 import type { PlanOptions } from "./plan.js";
 import { clearQr, setQr } from "./qr.js";
@@ -155,6 +161,8 @@ export function createWhatsAppBridge(
           try {
             const reply = await handleMessage(text, vault, { plan });
             await sock.sendMessage(jid, { text: reply });
+            // The reply landed, so the loop ran: that is what the app reports as activity.
+            bridgeAnswered();
           } catch (err) {
             console.error(err);
             await sock.sendMessage(jid, { text: "Something went wrong saving that." });

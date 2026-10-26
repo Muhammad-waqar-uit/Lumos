@@ -76,11 +76,12 @@ capture switched off). The code is answered to the loopback caller and never log
 
 The capture link's state:
 ```json
-{ "whatsapp": { "enabled": true, "state": "waiting", "since": "2026-10-26T09:12:00.000Z", "error": null, "qr": "█▀█ …" } }
+{ "whatsapp": { "enabled": true, "state": "waiting", "since": "2026-10-26T09:12:00.000Z", "lastAt": null, "error": null, "qr": "█▀█ …" } }
 ```
-`state` is `off`, `starting`, `waiting`, `connected`, `disconnected`, `logged-out` or `error`. `qr`
-is the pairing code as half-block text and only while the state is `waiting`; `error` is the sentence
-the socket had, never the auth directory's path.
+`state` is `off`, `starting`, `waiting`, `connected`, `disconnected`, `logged-out` or `error`.
+`lastAt` is when a message was last answered - the only field that says the loop actually ran, since
+`connected` only says a socket is open. `qr` is the pairing code as half-block text and only while
+the state is `waiting`; `error` is the sentence the socket had, never the auth directory's path.
 
 ### POST /whatsapp/connect
 

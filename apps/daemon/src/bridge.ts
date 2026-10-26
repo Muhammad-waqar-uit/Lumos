@@ -14,6 +14,8 @@ export interface BridgeReport {
   state: WhatsAppState;
   since: string | null;
   error: string | null;
+  /** When a message was last answered, ISO; null until one has been. */
+  lastAt: string | null;
 }
 
 /**
@@ -28,7 +30,7 @@ export interface BridgeControl {
 
 /** Capture off by configuration: there is no socket, and nothing Connect could start. */
 export const DISABLED_BRIDGE: BridgeControl = {
-  status: () => ({ enabled: false, state: "off", since: null, error: null }),
+  status: () => ({ enabled: false, state: "off", since: null, error: null, lastAt: null }),
   connect: () => Promise.resolve(),
   disconnect: () => Promise.resolve(),
 };
@@ -37,7 +39,13 @@ export const DISABLED_BRIDGE: BridgeControl = {
 export const DISABLED_SENTENCE =
   "WhatsApp capture is switched off for this daemon (LUMOS_DISABLE_WHATSAPP=1 or whatsapp: false).";
 
-let report: BridgeReport = { enabled: false, state: "off", since: null, error: null };
+let report: BridgeReport = {
+  enabled: false,
+  state: "off",
+  since: null,
+  error: null,
+  lastAt: null,
+};
 
 /** What the socket is doing right now. */
 export function bridgeReport(): BridgeReport {
@@ -72,7 +80,18 @@ export function bridgeState(
   return report;
 }
 
+/**
+ * A message was answered: this is the one proof the link does more than hold a socket open.
+ *
+ * It is deliberately not part of the state: answering a message does not change whether the link is
+ * up, and a `since` that moved every time a note was filed would say nothing about the connection.
+ */
+export function bridgeAnswered(now: Date = new Date()): BridgeReport {
+  report = { ...report, lastAt: now.toISOString() };
+  return report;
+}
+
 /** Back to the beginning, for the tests that import this module once and use it many times. */
 export function resetBridge(): void {
-  report = { enabled: false, state: "off", since: null, error: null };
+  report = { enabled: false, state: "off", since: null, error: null, lastAt: null };
 }

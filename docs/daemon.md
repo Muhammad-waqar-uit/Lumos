@@ -60,9 +60,12 @@ How the capture link stands: `{ "whatsapp": { enabled, state, since, error, qr }
 `enabled` is false when the daemon was started with capture switched off, so the app can say that
 rather than offer a Connect that would do nothing. `state` is one of `off`, `starting`, `waiting`,
 `connected`, `disconnected`, `logged-out` or `error`; `since` is when that state began (a code
-rotating does not move it), and `error` is the sentence the socket had for a failure - it never
-carries the auth directory's path. `qr` is the pairing code drawn as half-block text, and only while
-the state is `waiting`: the code is a session secret, so it is never served for a link that is up.
+rotating does not move it), `lastAt` is when a message was last answered (null until one has been),
+and `error` is the sentence the socket had for a failure - it never carries the auth directory's
+path. `lastAt` is deliberately separate from the state: a socket can be open all day without a
+message, and "linked" and "linked and working" are different answers. `qr` is the pairing code drawn
+as half-block text, and only while the state is `waiting`: the code is a session secret, so it is
+never served for a link that is up.
 
 ### `POST /whatsapp/connect`
 Starts the link, or resumes one that was stopped, and answers the state it reached.

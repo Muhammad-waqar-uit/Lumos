@@ -4,6 +4,7 @@ import { pairingUrl } from "../lib/api";
 import {
   WHATSAPP_DOT,
   WHATSAPP_LABEL,
+  lastMessage,
   sinceWhen,
   whatsappAction,
   whatsappSentence,
@@ -56,6 +57,7 @@ export function WhatsAppPanel({ status, read, onConnect, onDisconnect, onClose }
 
   const action = status ? whatsappAction(status) : null;
   const since = status ? sinceWhen(status.since) : "";
+  const answered = status ? lastMessage(status) : "";
 
   return (
     <div
@@ -103,6 +105,7 @@ export function WhatsAppPanel({ status, read, onConnect, onDisconnect, onClose }
             <p className="text-xs leading-relaxed text-muted-foreground">
               <span className="text-foreground">{WHATSAPP_LABEL[status.state]}</span>
               {since ? <span className="opacity-70"> · since {since}</span> : null}
+              {answered ? <span className="opacity-70"> · {answered}</span> : null}
             </p>
             <p className="text-xs leading-relaxed text-muted-foreground">
               {whatsappSentence(status)}

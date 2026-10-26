@@ -75,6 +75,7 @@ vi.mock("./lib/api", () => ({
     state: "connected" as const,
     since: null,
     error: null,
+    lastAt: null,
     qr: null,
   })),
   connectWhatsApp: vi.fn(),

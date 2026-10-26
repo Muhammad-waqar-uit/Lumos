@@ -60,6 +60,18 @@ export function whatsappSentence(status: WhatsAppStatus): string {
   }
 }
 
+/**
+ * When the last message was answered, for the panel's line under the state.
+ *
+ * The link can be up and idle - a phone that is linked but has not been messaged all day - so this
+ * says how long the loop has been quiet rather than making "connected" carry both meanings.
+ */
+export function lastMessage(status: WhatsAppStatus, now: Date = new Date()): string {
+  if (!status.lastAt) return "";
+  const when = sinceWhen(status.lastAt, now);
+  return when ? `last message ${when}` : "";
+}
+
 /** Whether the panel should offer Connect, Disconnect, or neither. */
 export function whatsappAction(status: WhatsAppStatus): "connect" | "disconnect" | null {
   if (!status.enabled) return null;

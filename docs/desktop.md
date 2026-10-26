@@ -27,7 +27,7 @@ daemon (falling back to demo data when the daemon is offline):
 - `src/components/PaneBoundary.tsx` - error boundary around the lazily loaded graph pane
 - `src/components/SearchModal.tsx` - the `Cmd/Ctrl+K` palette: ranked matches, keyboard selection, body matches from the daemon, and the four commands the palette can run itself - new note, new folder, and the graph and the trash panes
 - `src/components/StatusBar.tsx` - connection state, the search shortcut, the note count, a notice the app needs to say (a save whose refresh failed), and a chip for the WhatsApp link that opens the panel below. The chip is offered while the daemon answers, and it says the link's own state - being able to read notes says nothing about whether a message would be filed
-- `src/components/WhatsAppPanel.tsx` - the WhatsApp link in the app: the state in a sentence, the pairing code drawn in a dark `<pre>` while a phone needs one, and the single button the state allows (Connect or Disconnect). A failure stays on the panel in the daemon's words; escape or a click outside closes it, and the link is left as it was
+- `src/components/WhatsAppPanel.tsx` - the WhatsApp link in the app: the state in a sentence with when it began and when a message was last answered, the pairing code drawn in a dark `<pre>` while a phone needs one, and the single button the state allows (Connect or Disconnect). A failure stays on the panel in the daemon's words; escape or a click outside closes it, and the link is left as it was
 - `src/lib/whatsapp.ts` - the words and colours for each state, the sentence a state deserves, which button it can use, and "since 14:32" formatting. Pure, so the status bar and the panel cannot disagree about what `disconnected` means
 - `src/lib/list-nav.ts` - the arithmetic behind `j`/`k` in the note list, plus the rule for when a key belongs to a field
 - `src/lib/api.ts` - daemon client (`/notes`, `/notes/search`, `/folders` for reading and creating folders, `/folder` for renaming and removing one, `/note` for reading, saving, renaming and deleting, `/note/move`, `/trash` for listing, emptying and restoring, `/graph`, `/link`)
@@ -377,6 +377,10 @@ The panel is the only place that acts. **Disconnect** stops the daemon answering
 the phone linked, so **Connect** needs no code; unlinking stays on the phone, where the account is.
 A read that fails while the daemon still answers is not hidden: the panel says the last check failed
 rather than showing a state that may no longer be true.
+
+The panel also says when a message was last answered, because `connected` alone cannot tell a link
+that is working from one that is up and idle - the socket can be open all day with nothing sent to
+it, and that is exactly the case where someone would wonder whether capture still works.
 
 ## Access to the vault
 

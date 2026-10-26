@@ -242,6 +242,13 @@ export interface WhatsAppStatus {
   /** A sentence when something went wrong, so the app can say why. Never a stack trace. */
   error: string | null;
   /**
+   * When a message was last answered, ISO, or null if none has been since the daemon started.
+   *
+   * `connected` says a socket is open; this is the only field that says the loop actually ran, so
+   * the difference between "linked" and "linked and working" is visible without sending a probe.
+   */
+  lastAt: string | null;
+  /**
    * The pairing code drawn as half-block text, while a phone needs to scan one. It is a session
    * secret, so it is only ever handed to the loopback caller and is null in every other state.
    */

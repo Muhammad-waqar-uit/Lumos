@@ -12,6 +12,7 @@ function status(overrides: Partial<WhatsAppStatus> = {}): WhatsAppStatus {
     state: "connected",
     since: "2026-10-25T10:00:00.000Z",
     error: null,
+    lastAt: null,
     qr: null,
     ...overrides,
   };
@@ -39,6 +40,12 @@ describe("WhatsAppPanel", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Disconnect" }));
     await waitFor(() => expect(onDisconnect).toHaveBeenCalledTimes(1));
+  });
+
+  it("says when a message was last answered, so an idle link is not a silent one", () => {
+    renderPanel({ status: status({ lastAt: "2026-10-25T14:31:00.000Z" }) });
+
+    expect(screen.getByText(/last message/)).toBeDefined();
   });
 
   it("shows the pairing code while a phone has to scan one", () => {

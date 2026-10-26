@@ -34,6 +34,11 @@ Chronological record of what has been built. Newest entries first within each da
   name field: `Enter` makes it and the list looks at it, `Esc` steps back out, and a refusal keeps the
   name typed with the daemon's sentence. The composer's open state moved from the list to the shell,
   because the palette opens it too
+- [x] **"Linked" and "linked and working" are different answers.** A socket can be open all day
+  with nothing sent to it, so the report grew `lastAt` - when a message was last answered - and the
+  panel says `last message 14:31` beside the state. It is deliberately not part of the state
+  machine: answering a message does not change whether the link is up, and a `since` that moved on
+  every note would say nothing about the connection
 - [x] Verified against a running daemon, not only the units: `GET /whatsapp` answered
   `{"enabled":false,"state":"off","since":null,"error":null,"qr":null}` on a daemon started with
   `LUMOS_DISABLE_WHATSAPP=1`, `POST /whatsapp/connect` answered `409` with the setting named, and

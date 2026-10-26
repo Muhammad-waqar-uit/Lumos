@@ -4,6 +4,7 @@ import type { WhatsAppStatus } from "@lumos/shared";
 import {
   WHATSAPP_DOT,
   WHATSAPP_LABEL,
+  lastMessage,
   sinceWhen,
   whatsappAction,
   whatsappSentence,
@@ -15,6 +16,7 @@ function status(overrides: Partial<WhatsAppStatus> = {}): WhatsAppStatus {
     state: "connected",
     since: null,
     error: null,
+    lastAt: null,
     qr: null,
     ...overrides,
   };
@@ -57,6 +59,26 @@ describe("what the app says about the WhatsApp link", () => {
     // Starting is already in progress: a second press would only add a second socket.
     expect(whatsappAction(status({ state: "starting" }))).toBeNull();
     expect(whatsappAction(status({ state: "off", enabled: false }))).toBeNull();
+  });
+});
+
+describe("how long the loop has been quiet", () => {
+  it("says nothing before a message has been answered", () => {
+    expect(lastMessage(status({ lastAt: null }))).toBe("");
+  });
+
+  it("names the last message, so a linked link is not mistaken for a working one", () => {
+    const now = new Date("2026-10-25T15:00:00.000Z");
+    // The clock format is the platform's (12- or 24-hour), so the expectation is built the same way
+    // rather than pinning a locale the test machine may not be in.
+    const when = new Date("2026-10-25T14:31:00.000Z").toLocaleTimeString(undefined, {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
+    expect(lastMessage(status({ lastAt: "2026-10-25T14:31:00.000Z" }), now)).toBe(
+      `last message ${when}`,
+    );
   });
 });
 
