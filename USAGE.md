@@ -296,6 +296,7 @@ Nothing in the daemon logs a message body, a note's contents, a token or the vau
 
 ## Where to read more
 
+- [WALKTHROUGH.md](WALKTHROUGH.md) - a fresh install, start to finish, including what to say if you are showing someone
 - [docs/daemon.md](docs/daemon.md) - the daemon, every command, every route, config precedence
 - [docs/desktop.md](docs/desktop.md) - the app's structure, state and theming
 - [docs/vault.md](docs/vault.md) - the vault format and conventions
