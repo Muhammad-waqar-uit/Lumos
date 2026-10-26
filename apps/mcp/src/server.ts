@@ -103,8 +103,8 @@ export function createServer({ vault = resolveVault() }: { vault?: string } = {}
     {
       title: "List notes",
       description:
-        "The notes in the vault, newest first, as keys with titles, tags and a short excerpt - " +
-        "enough to choose a note without reading it. Pass a folder to narrow it.",
+        "The notes in the vault, newest first, as keys with titles, tags and dates - enough to " +
+        "choose a note without reading it. Pass a folder to narrow it.",
       inputSchema: {
         folder: FOLDER.optional().describe("Only the notes in this folder."),
       },
@@ -119,13 +119,14 @@ export function createServer({ vault = resolveVault() }: { vault?: string } = {}
       title: "Search notes",
       description:
         "Case-insensitive search across every note's title, tags and body. Answers the same keys " +
-        "`list_notes` does. Read a note with `read_note` to see why it matched.",
+        "`list_notes` does, with the start of each body so it is clear why a note matched.",
       inputSchema: {
         query: z.string().describe("What to look for. A phrase, a word, or part of one."),
       },
       annotations: { readOnlyHint: true },
     },
-    ({ query }) => answer(async () => entryLines(await searchNotes(vault, query))),
+    ({ query }) =>
+      answer(async () => entryLines(await searchNotes(vault, query), { withExcerpt: true })),
   );
 
   server.registerTool(

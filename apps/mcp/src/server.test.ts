@@ -124,6 +124,23 @@ describe("calling the tools", () => {
     expect(notes).toMatch(/Ideas\/\d{4}-\d{2}-\d{2}-a-desk-lamp\.md/);
   });
 
+  it("shows why a search matched, and keeps a browse to one line a note", async () => {
+    await client.callTool({ name: "create_folder", arguments: { name: "Ideas" } });
+    await client.callTool({
+      name: "create_note",
+      arguments: { folder: "Ideas", text: "A desk lamp\n\nlook at the brass finish" },
+    });
+
+    const found = textOf(
+      await client.callTool({ name: "search_notes", arguments: { query: "brass" } }),
+    );
+    expect(found).toContain("brass finish");
+
+    const listed = textOf(await client.callTool({ name: "list_notes", arguments: {} }));
+    expect(listed).toContain("A desk lamp");
+    expect(listed).not.toContain("brass finish");
+  });
+
   it("answers a refusal as a readable tool error rather than a broken session", async () => {
     const refused = await client.callTool({ name: "read_note", arguments: { key: "nothing.md" } });
     expect(refused.isError).toBe(true);

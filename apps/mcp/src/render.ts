@@ -9,13 +9,24 @@ import type { Note } from "@lumos/shared";
 import type { TrashedNote } from "@lumos/vault-utils";
 import type { FolderSummary, NoteSummary } from "./tools.js";
 
-/** One line per note: the key, the title, the tags and the day. */
-export function entryLines(entries: NoteSummary[]): string {
+/**
+ * One line per note: the key, the title, the tags and the day.
+ *
+ * A search also gets the start of the body, because "why did this one match" is the immediate next
+ * question and the alternative is a read per candidate. A browse does not: a vault of several
+ * hundred notes answered with every excerpt is a wall of text, and the title and tags are what
+ * someone choosing from a list is actually looking at.
+ */
+export function entryLines(entries: NoteSummary[], { withExcerpt = false } = {}): string {
   if (entries.length === 0) return "no notes match.";
   return entries
     .map((entry) => {
       const tags = entry.tags.length > 0 ? ` · #${entry.tags.join(" #")}` : "";
-      return `${entry.key} · ${entry.title}${tags} · ${entry.created.slice(0, 10)}`;
+      const line = `${entry.key} · ${entry.title}${tags} · ${entry.created.slice(0, 10)}`;
+      // The excerpt is the body's first characters, so it carries the note's own line breaks; a
+      // listing is one line a note, and a blank line inside an entry would read as a separate note.
+      const excerpt = entry.excerpt.replace(/\s+/g, " ").trim();
+      return withExcerpt && excerpt ? `${line}\n  ${excerpt}` : line;
     })
     .join("\n");
 }
