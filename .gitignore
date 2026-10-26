@@ -59,5 +59,8 @@ idea/
 # Local preview artifacts
 .preview-vault
 
+# Machine-readable test reports: written by every `pnpm test`, read by the counts gate
+**/vitest-report.json
+
 # A walkthrough for demoing Lumos, written for the person presenting it - local, never committed
 DEMO-GUIDE.md

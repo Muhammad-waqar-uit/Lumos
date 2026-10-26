@@ -12,7 +12,7 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run --reporter=default --reporter=json --outputFile=./vitest-report.json"
   },
   "dependencies": {
     "@lumos/shared": "workspace:*",
