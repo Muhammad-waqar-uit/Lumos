@@ -36,10 +36,12 @@ Chronological record of what has been built. Newest entries first within each da
   currently get separate explanations. What it was built for - before/after of a code change - is out
   of scope, because Lumos stores notes and not diffs. Shape, cost and the deciding spike are in
   [explainers.md](explainers.md), with the work under Phase 10 in TODO.md
-- [x] **44 tests, and a real process.** The operations run against a temporary vault, the key format
+- [x] **48 tests, and a real process.** The operations run against a temporary vault, the key format
   against every way out of it, and the server against the real protocol through the SDK's in-memory
-  transport. The stdio entry point was then driven by hand - a spawned process, `initialize`, twelve
-  tools, a note written and found, exit 0 when stdin closed
+  transport. What was a hand check became `stdio.test.ts`: the entry point spawned over a real pipe,
+  `initialize`, twelve tools, a note written into the vault it was told to serve, exit 0 when stdin
+  closes - and every stdout line asserted to be JSON-RPC, which is the failure a client would hit
+  first. Injecting one `console.log` into `index.ts` fails exactly that test
 
 ### Done - the WhatsApp link is in the app, and the palette can create
 - [x] Capture was the one part of the product with no face: whether a phone was linked could only be

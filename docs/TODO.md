@@ -30,10 +30,11 @@ end to end, and because nothing else on this page can close them.
   injected bridge, but the socket it pauses is not.
 - [!] **A real Claude Code session with the MCP server** (P1) - `claude mcp add --scope user lumos
   -- pnpm --dir <repo>/apps/mcp start`, then `claude mcp list` shows it connected, `/mcp` lists the
-  twelve tools, and a request in your own words lands in the vault. The protocol is covered over the SDK's in-memory transport, and the stdio entry
-  point was driven by hand with a spawned process (initialize, twelve tools, a note written and
-  found, exit 0 on stdin close), but nothing signs the server into a client and lets an agent choose
-  the tools itself. Check too that the client sees the vault you meant when `LUMOS_VAULT` is set.
+  twelve tools, and a request in your own words lands in the vault. The protocol is covered over the
+  SDK's in-memory transport and the entry point is spawned over a real stdio pipe, but nothing signs
+  the server into a client and lets an agent choose the tools itself - which is the part worth
+  watching, because a tool description that reads well to a person can still lead a model to the
+  wrong call. Check too that the client sees the vault you meant when `LUMOS_VAULT` is set.
 
 ## Plan
 
@@ -404,5 +405,7 @@ Nothing in flight. The next item to pick up is the first one under **Plan**.
 - [x] The connection guide - [mcp.md](mcp.md): running it, `claude mcp add` (with and without
   `LUMOS_VAULT`), the Claude Desktop JSON, the tool table, what the server refuses to do, and the
   trade-offs; linked from the root README, USAGE, ARCHITECTURE, AGENTS and CLAUDE.md
-- [x] The MCP suite - 44 tests: the twelve operations against a temporary vault, the vault root and
-  the key format, and the real server over the real protocol through the SDK's in-memory transport
+- [x] The MCP suite - 48 tests: the twelve operations against a temporary vault, the vault root and
+  the key format, the real server over the real protocol through the SDK's in-memory transport, and
+  the entry point spawned over a real stdio pipe with stdout asserted to be protocol-only (a stray
+  `console.log` was injected to prove that assertion fails, then reverted)

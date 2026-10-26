@@ -27,4 +27,6 @@ src/index.ts    the stdio entry point
 
 Tests sit beside the modules they cover. `server.test.ts` drives the real server over the real
 protocol through the SDK's in-memory transport, so the tool list and the answers are asserted
-without spawning anything.
+without spawning anything; `stdio.test.ts` spawns the entry point the way a client does, so the
+framing, the handshake and a clean exit on stdin close are covered too - and stdout is asserted to
+carry nothing but JSON-RPC.

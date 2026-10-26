@@ -56,7 +56,7 @@ lists its tools.
 
 The server also survives being shut down the way the client does it: Claude Code closes a stdio
 server's stdin and waits 300 ms before ending the process tree on Windows (SIGINT on macOS and
-Linux), and this server exits as soon as stdin closes — checked by hand, exit 0.
+Linux), and this server exits as soon as stdin closes — asserted by `stdio.test.ts`, exit 0.
 
 The launcher is the package manager rather than `node`, deliberately: `tsx` resolves through this
 workspace's install, so there is no build step before the first run. `pnpm --dir … start` writes its
@@ -150,7 +150,7 @@ bargain the editor already makes against Obsidian, and it is written down in
 
 ## Tests
 
-44 tests, run by `pnpm test` from the root:
+48 tests, run by `pnpm test` from the root:
 
 - `tools.test.ts` — the operations against a temporary vault: what a created note looks like on
   disk, every refusal, a rename that carries its backlinks, a delete and a restore round trip.
@@ -160,10 +160,12 @@ bargain the editor already makes against Obsidian, and it is written down in
   the tool list a client sees, the annotations that mark the read-only ones, a refusal that leaves
   the session working, a search that shows why it matched where a browse stays one line a note, and
   a delete/restore driven entirely by the text the tools answered.
-
-The stdio entry point was checked by hand as well — a spawned process, a real `initialize`, twelve
-tools, a note written and found — but no automated test spawns it, because the transport is the only
-part that differs and it is the SDK's.
+- `stdio.test.ts` — the entry point, spawned the way a client launches it: a real pipe, a real
+  `initialize` and `tools/list`, a note written into the vault the process was told to serve, an
+  exit code of 0 when stdin closes, and **every line of stdout asserted to be JSON-RPC**. That last
+  one is the point of the file: a stray log line on stdout is read as a malformed message and ends a
+  session, and this is the only test that would notice. Injecting one `console.log` into `index.ts`
+  fails exactly that test (checked, then reverted).
 
 **Not tested: a real Claude Code session.** Signing the server into a client, and an agent choosing
 the tools on its own, needs a person at a keyboard; it is listed under **Needs your testing** in
