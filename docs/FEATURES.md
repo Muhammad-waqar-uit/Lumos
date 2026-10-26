@@ -10,6 +10,13 @@ then what is in progress, then what is done.
 | Feature | Status | Notes |
 |---|---|---|
 | Link enrichment | idea | Summaries and key points from links |
+| Docs explainers | idea | Steppable SVG explanations rendered at build time into the docs - how a message becomes a note, what an MCP tool call touches - from a scene that also renders as text for an agent. Planned as Phase 10; the engine ([lantern](https://github.com/ivarvong/lantern), MIT, zero runtime dependencies) is not on npm, so it arrives pinned or vendored, and a spike measures its compiled size before anything is committed to it. Nothing enters an app bundle ([explainers.md](explainers.md)) |
+| A note's story, step by step | idea | An **Explain** panel walking through a note or a graph cluster: what it links to, what shares its tags, what it is not connected to - the narration the graph cannot give, and the same scene answerable as text over MCP. Gated on the docs slice, because it would put a second rendering model beside the canvas graph |
+| The vault format, taken apart | idea | A scene that decomposes `2026-10-26-plan-the-week.md` into date, slug and extension and then lights up the frontmatter fields - taught where people get it wrong, rendered into the docs |
+
+**Not planned:** before/after explainers of a code change, which is what lantern was built for.
+Lumos stores notes, not history, so there is no diff to explain; that is recorded in
+[explainers.md](explainers.md) so the idea is not re-opened from the library's title alone.
 
 ## In progress
 

@@ -102,6 +102,28 @@ What is left in this milestone is a person's check rather than code: signing the
 Claude Code session and letting an agent choose the tools itself. It is under **Needs your
 testing** in [`TODO.md`](TODO.md).
 
+## M9 - Explainers (Phase 10) — planned, nothing built
+
+Steppable explanations of how Lumos works, drawn from one scene that produces SVG frames for a
+person and a per-step text form for an agent. The line between the two is the point: the project
+explains itself twice today - prose and screenshots for a human, tool descriptions for a model - and
+this is the first thing that could explain both from one source.
+
+- Docs explainers, rendered at build time into committed SVG frames. **First slice**, because
+  nothing enters an app bundle: the engine is paid at build time, not on every launch.
+- An "Explain" panel in the app for a note or a graph cluster - the story of why these notes are
+  connected, one step at a time. Gated on the spike: it would put a second rendering model beside
+  the canvas force graph.
+- The vault format taken apart (`2026-10-26-plan-the-week.md` → date, slug, extension, frontmatter),
+  taught where people get it wrong.
+
+The engine under consideration is [lantern](https://github.com/ivarvong/lantern) - MIT, zero runtime
+dependencies, a port of manim's core - which is not on npm, so it would arrive as a pinned
+dependency or a vendored copy. What is deliberately **out** of scope is what lantern was built for:
+animated before/after explainers of a code change. Lumos stores notes, not history, and there is no
+diff to explain. The full shape, the cost and the one-afternoon spike that decides it are in
+[explainers.md](explainers.md); the work is under Phase 10 in [`TODO.md`](TODO.md).
+
 ## Beyond
 
 Ideas not yet committed: link enrichment summaries, statistics/insights, and optional

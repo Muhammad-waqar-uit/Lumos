@@ -65,6 +65,7 @@ with plain React state and a local filter:
 7. **Phase 7: Editing & Enrichment** - Note editor, link enrichment, bulk operations.
 8. **Phase 8: Polish & Docs** - UI polish, performance, tests, complete documentation.
 9. **Phase 9: Agent access (MCP)** - an MCP server over the vault (`apps/mcp`), so Claude Code and other agents read and write the notes themselves, plus the connection guide in `docs/mcp.md`.
+10. **Phase 10: Explainers** - steppable, animated explanations of how the vault and its processes work, rendered from one scene into SVG for a person and text for an agent. Docs first (build-time render, no runtime dependency); an in-app "Explain" panel only if the spike justifies a second rendering model in the desktop bundle. See [explainers.md](explainers.md).
 
 ## UI Design Direction
 
@@ -105,6 +106,7 @@ Root keeps only what convention demands: `README.md`, `CHANGELOG.md`, `CONTRIBUT
 - **M6** Search (Phase 6)
 - **M7** Editing + Polish (Phases 7-8)
 - **M8** Agent Access (Phase 9)
+- **M9** Explainers (Phase 10) - planned
 
 ## Decisions Log
 
@@ -128,7 +130,7 @@ Root keeps only what convention demands: `README.md`, `CHANGELOG.md`, `CONTRIBUT
 | Agent access | MCP server over stdio, one vault per process | The protocol is the client's, not ours: one small server beats an export or a plugin per client. Given up: agents work on the real files, so a careless one can edit what you wrote - which is why every write is recoverable and the trash stays |
 | MCP transport | `@modelcontextprotocol/sdk` (and `zod`, which it dedupes to) | Version negotiation, the transports and the tool schemas are the part worth not hand-rolling beside clients that keep moving. Given up: the first dependency in the workspace that is not the app's own - the server is ~350 lines, and the protocol is the rest |
 | MCP server's access | `@lumos/vault-utils` directly, not the daemon's HTTP API | An agent should be able to read a folder of Markdown without the capture service running, and a second hop would add no guard the shared library does not already carry. Given up: the routes' HTTP-level validation is not in this path - the same functions are, and the containment check is repeated where a read would otherwise reach any file |
-| Animated explainers ([lantern](https://github.com/ivarvong/lantern)) | Evaluated, not adopted | It is a zero-dependency TypeScript port of manim's core: steppable, animated SVG explainers of *code changes*, not on npm. Lumos has no surface that explains code, so vendoring a rendering engine would be weight without a use. Revisit if an "explain this diff" pane ever becomes real |
+| Animated explainers ([lantern](https://github.com/ivarvong/lantern)) | Planned, Phase 10 - spike first | MIT, a zero-dependency TypeScript port of manim's core, not on npm, so the integration is a pinned dependency or a vendored copy. Kept because one scene yields SVG frames for a person **and** a per-step text form for an agent: that is the one thing this project currently explains twice, once in prose and once in tool descriptions. The first slice is docs-only - rendered at build time, nothing in an app bundle - and the in-app "Explain" panel waits on the spike, which measures the compiled size and whether a frame is legible at document size. Code-change explainers are out of scope: Lumos stores notes, not diffs. Shape and cost: [explainers.md](explainers.md) |
 | Link scraping | Hand-written extraction in `@lumos/vault-utils/link`, no new dependency | `link-preview-js` and cheerio would add weight to a package that stays side-effect free and browser-safe; the subset needed (title, og tags, readable text) is a few pure functions the tests can pin. Given up: the edge cases a full HTML parser handles |
 
 ## Open Questions

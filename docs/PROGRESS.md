@@ -29,10 +29,13 @@ Chronological record of what has been built. Newest entries first within each da
   client's working directory and fails there; `pnpm --dir … start` works from anywhere and writes its
   banner to stderr, so stdout stays protocol-only. That is why the docs say pnpm and why the vault
   being served is printed once on stderr
-- [x] **`lantern` was evaluated and not adopted.** It is a zero-dependency TypeScript port of manim's
-  core: steppable, animated SVG explainers of code changes, unpublished, and a rendering model of its
-  own. Lumos has no surface that explains code, so it was recorded in the decisions log as a revisit
-  rather than vendored
+- [x] **`lantern` was evaluated, and kept as a planned phase rather than vendored on sight.** MIT,
+  zero runtime dependencies, a TypeScript port of manim's core - unpublished, so it arrives pinned or
+  vendored. The reason it is worth a phase is the one thing this project does twice: a scene renders
+  as SVG for a person **and** as text per step for an agent, which is exactly the two audiences that
+  currently get separate explanations. What it was built for - before/after of a code change - is out
+  of scope, because Lumos stores notes and not diffs. Shape, cost and the deciding spike are in
+  [explainers.md](explainers.md), with the work under Phase 10 in TODO.md
 - [x] **43 tests, and a real process.** The operations run against a temporary vault, the key format
   against every way out of it, and the server against the real protocol through the SDK's in-memory
   transport. The stdio entry point was then driven by hand - a spawned process, `initialize`, twelve

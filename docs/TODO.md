@@ -94,6 +94,31 @@ end to end, and because nothing else on this page can close them.
   reading, writing, bulk, graph, panes, keys), the HTTP API, settings, and a troubleshooting table
   of the messages the app and the daemon actually print
 
+### Phase 10 - Explainers (P3) - open items
+
+Steppable, animated explanations, from one scene to two audiences: SVG frames for a person, a
+per-step text form and trace for an agent. Shape, cost and the drop conditions are in
+[explainers.md](explainers.md); nothing below is built.
+
+- [ ] The spike, one afternoon - vendor [lantern](https://github.com/ivarvong/lantern) at a pinned
+  commit (MIT notice kept) or pin it as a git dependency, compile it with its own library build,
+  render the capture-pipeline scene to SVG in Node 24, and **measure** the compiled size, one
+  frame's size and the render time. Then read the frames at phone width and at desktop width. This
+  item exists to replace the guesses in [explainers.md](explainers.md) with numbers
+- [ ] The decision, after the spike - docs only (keep), in-app (start the panel), or drop it. Record
+  it in the PLAN decisions log and put the measured numbers in [explainers.md](explainers.md)
+- [ ] The first docs explainer - **a message becomes a note**: the message, the allowlist, the
+  parse, the folder, the file, the reply, one step each. Rendered at build time into committed SVG
+  under `docs/images/explainers/` and embedded in [ARCHITECTURE.md](ARCHITECTURE.md), so no
+  dependency reaches the desktop bundle
+- [ ] The second docs explainer - **what an MCP tool call touches**: client, server,
+  `@lumos/vault-utils`, the file, and the branch where a bad key is refused before any file is
+  opened. It is the safety claim in [mcp.md](mcp.md) drawn instead of asserted
+- [ ] An "Explain" panel in the app (P3) - a note or a graph cluster walked through one step at a
+  time: this note, what it links to, what it is not connected to, with the same scene answerable as
+  text over MCP. **Only after the spike**: it puts a second rendering model beside the canvas force
+  graph, which is a cost that has to be justified by the docs slice working first
+
 ## In progress
 
 Nothing in flight. The next item to pick up is the first one under **Plan**.
