@@ -90,6 +90,18 @@ text, and reading a PDF or plain HTML file - are still open under **Plan** in
 
 The work itself is listed under **Plan** in [`TODO.md`](TODO.md).
 
+## M8 - Agent access (Phase 9) ✅
+
+- An MCP server over the vault, on stdio, so Claude Code and other agents work on the notes rather
+  than on a copy of them. ✅ (`apps/mcp`: twelve tools, `LUMOS_VAULT` to choose the vault, the
+  operations through `@lumos/vault-utils` so there is no second writer; see [mcp.md](mcp.md))
+- Connecting a client documented end to end, for Claude Code and Claude Desktop. ✅ (the commands,
+  the JSON config, the tool list and the trade-offs are in [mcp.md](mcp.md))
+
+What is left in this milestone is a person's check rather than code: signing the server into a real
+Claude Code session and letting an agent choose the tools itself. It is under **Needs your
+testing** in [`TODO.md`](TODO.md).
+
 ## Beyond
 
 Ideas not yet committed: link enrichment summaries, statistics/insights, and optional

@@ -223,6 +223,30 @@ the only signal it has: there is no server-sent event, and the daemon does not w
   the link pane and the tag chips are reached with `Tab`; there is no `j`/`k` inside a note body, and
   no shortcut for the folder list or the tabs.
 
+## Agent access (MCP)
+
+- **`update_note` replaces the whole body.** There is no append or patch tool, so a model that sends
+  a fragment shortens the note. That is honest about what the write does, and the alternative - a
+  merge tool with its own rules - is not worth a second way to be wrong.
+- **No folder rename or delete over MCP.** Both exist in the app and both move files a person did not
+  name. An agent can create a folder and file notes into it; renaming or removing one stays a
+  sidebar decision.
+- **No link fetching.** A link in a note is text to an MCP client: the reader that scrapes a page, the
+  embeds and the PDF parser belong to the daemon and the app, not to this server.
+- **Search is a substring match**, the same one `/find` and the palette's body search use - no
+  ranking, no fuzzy matching, no stemming.
+- **One vault, one process.** A client that needs two vaults runs two servers; there is no switching
+  a vault mid-session and no route to list the others.
+- **No authentication, by design.** The transport is stdio: there is no port and no token because
+  there is no network surface. The trust boundary is "whoever can start the process can read the
+  vault", which is the same boundary as the desktop app.
+- **A conflict is the last write.** The daemon, the app, an editor and an agent can all write one
+  file. Each write is atomic (a temporary file renamed over the target) so nothing is truncated, but
+  nothing detects that someone else wrote first. Same bargain as the editor against Obsidian.
+- **Nothing notifies an open app.** A note an agent writes appears in the desktop on the next read
+  the app makes for itself; the live-capture notice is driven by the WhatsApp link, not by the
+  filesystem.
+
 ## Vault and data
 
 - **One vault, one machine.** `VAULT_PATH` points at a single directory. There is no multi-vault

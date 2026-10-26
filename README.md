@@ -28,6 +28,7 @@ Lumos transforms WhatsApp into an effortless capture tool for your second brain.
 - **Readable notes**: Markdown with tables, task lists and syntax-highlighted code, and a link plays or reads in place instead of sending you to a browser
 - **Folders you make**: a folder is a directory, so `/newfolder Movies` is all it takes - `/movies <link>` files into it, and the desktop picks it up everywhere folders are offered
 - **A command menu on demand**: send `/` and the bot replies with the commands your vault actually has, which is as close to autocomplete as a chat gets
+- **Coding agents can read the vault**: an [MCP](https://modelcontextprotocol.io) server (`apps/mcp`) gives Claude Code, Claude Desktop or any other MCP client twelve tools over the same notes - list, search, read, create, edit, rename, move, delete, restore - so an agent works on what you actually wrote instead of what you pasted into a prompt
 
 ## Architecture
 
@@ -35,6 +36,7 @@ Lumos consists of two main applications:
 
 - **[apps/daemon](apps/daemon/README.md)** - A Node.js service that connects to WhatsApp via Baileys, exposes an HTTP API, parses commands, and writes notes to the vault
 - **[apps/desktop](apps/desktop/README.md)** - A Tauri desktop app (React + TypeScript) for browsing, searching, and managing your second brain
+- **[apps/mcp](apps/mcp/README.md)** - An MCP server over the same vault, for Claude Code and other agents ([docs/mcp.md](docs/mcp.md))
 - **[vault/](vault/)** - Local Markdown storage (generated at runtime)
 
 ## Tech Stack

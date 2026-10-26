@@ -64,6 +64,7 @@ with plain React state and a local filter:
 6. **Phase 6: Search & Discovery** - Full-text search, Cmd/Ctrl+K modal, tag filtering, recent notes.
 7. **Phase 7: Editing & Enrichment** - Note editor, link enrichment, bulk operations.
 8. **Phase 8: Polish & Docs** - UI polish, performance, tests, complete documentation.
+9. **Phase 9: Agent access (MCP)** - an MCP server over the vault (`apps/mcp`), so Claude Code and other agents read and write the notes themselves, plus the connection guide in `docs/mcp.md`.
 
 ## UI Design Direction
 
@@ -103,6 +104,7 @@ Root keeps only what convention demands: `README.md`, `CHANGELOG.md`, `CONTRIBUT
 - **M5** Vault Browser MVP (Phase 5)
 - **M6** Search (Phase 6)
 - **M7** Editing + Polish (Phases 7-8)
+- **M8** Agent Access (Phase 9)
 
 ## Decisions Log
 
@@ -123,6 +125,10 @@ Root keeps only what convention demands: `README.md`, `CHANGELOG.md`, `CONTRIBUT
 | Git hooks | Husky + lint-staged + commitlint | The standards are enforced, not aspirational |
 | Branching | One branch, `main`, one topic per commit | No merge to perform for a solo change; `git revert` is the way back. Given up: a review step in front of `main` |
 | TypeScript version | One version (`~6.0.3`) across all workspaces | Avoids cross-package type mismatches |
+| Agent access | MCP server over stdio, one vault per process | The protocol is the client's, not ours: one small server beats an export or a plugin per client. Given up: agents work on the real files, so a careless one can edit what you wrote - which is why every write is recoverable and the trash stays |
+| MCP transport | `@modelcontextprotocol/sdk` (and `zod`, which it dedupes to) | Version negotiation, the transports and the tool schemas are the part worth not hand-rolling beside clients that keep moving. Given up: the first dependency in the workspace that is not the app's own - the server is ~350 lines, and the protocol is the rest |
+| MCP server's access | `@lumos/vault-utils` directly, not the daemon's HTTP API | An agent should be able to read a folder of Markdown without the capture service running, and a second hop would add no guard the shared library does not already carry. Given up: the routes' HTTP-level validation is not in this path - the same functions are, and the containment check is repeated where a read would otherwise reach any file |
+| Animated explainers ([lantern](https://github.com/ivarvong/lantern)) | Evaluated, not adopted | It is a zero-dependency TypeScript port of manim's core: steppable, animated SVG explainers of *code changes*, not on npm. Lumos has no surface that explains code, so vendoring a rendering engine would be weight without a use. Revisit if an "explain this diff" pane ever becomes real |
 | Link scraping | Hand-written extraction in `@lumos/vault-utils/link`, no new dependency | `link-preview-js` and cheerio would add weight to a package that stays side-effect free and browser-safe; the subset needed (title, og tags, readable text) is a few pure functions the tests can pin. Given up: the edge cases a full HTML parser handles |
 
 ## Open Questions

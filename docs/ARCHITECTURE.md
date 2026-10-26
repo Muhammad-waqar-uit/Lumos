@@ -6,6 +6,7 @@ Lumos is a pnpm monorepo. Two applications share a common Markdown vault:
 
 - **`apps/daemon`** - capture service. Connects to WhatsApp, parses messages, writes Markdown notes.
 - **`apps/desktop`** - Tauri desktop UI. Browses, searches, and (later) edits the vault.
+- **`apps/mcp`** - MCP server over the same vault, on stdio, for Claude Code and other agents.
 - **`packages/*`** - shared TypeScript: `@lumos/shared` (types) and `@lumos/vault-utils` (vault read/list/search/write, rename/move/delete, trash listing and emptying, link/tag extraction, graph building, and link classification plus page metadata on browser-safe subpaths).
 - **`vault/`** - the user's notes as plain Markdown files (created at runtime, git-ignored).
 
@@ -14,7 +15,11 @@ Lumos is a pnpm monorepo. Two applications share a common Markdown vault:
 ```
 WhatsApp ──► Daemon ──► vault/*.md ◄── Desktop (Tauri UI)
                 │                          │
-                └── HTTP API (:3001) ◄─────┘  (optional integration)
+                │                          └── HTTP API (:3001), when the daemon is up
+                │
+                └── MCP server (stdio) ◄── Claude Code / any MCP client
+                        │
+                        └── reads and writes vault/*.md through @lumos/vault-utils
 ```
 
 ## Data Flow
@@ -29,6 +34,8 @@ WhatsApp ──► Daemon ──► vault/*.md ◄── Desktop (Tauri UI)
 8. Editing runs the other way: the view sends a new body to `PUT /note`, the daemon writes it with `updateNote()` and answers the note as it now reads, and the app re-reads the listing, the folder counts and the graph because a new heading, a new tag or a new link changes all three. The frontmatter block is not touched - the body is replaced inside the file, not the note re-serialized.
 9. Creating runs the same way with a different route: the composer posts a folder and text to `POST /notes`, the daemon runs it through the capture writer (`saveNote()`, stamped `source: desktop`) and answers the new note's key, and the app re-reads the same three views and opens what came back. There is no second write path - a note typed here is written exactly as a note captured on a phone would be.
 10. The file itself can change too: `PATCH /note` renames a note to a new title (the file and the body's first heading both follow, through `renameNote()`), `POST /note/move` moves it to another folder under the name it has (`moveNote()`), and `DELETE /note` moves it to the trash (`deleteNote()`, answered as the entry an undo needs). Each answers the note as it now reads; a name another note holds is a `409` rather than a replacement, and every path is checked against the vault root before a file is read, moved or removed. The trash is then its own pair: `GET /trash` lists those entries newest first and `DELETE /trash` removes every one, through `listTrash()` and `emptyTrash()`. Emptying is the one command with no undo, so it is deliberately not parameterised for a single entry - restoring is how one note leaves - and an entry whose note cannot be read is skipped rather than failing the whole listing. A rename also carries the links that pointed at the note: `linkResolver()` and `rewriteLinks()` from `@lumos/vault-utils/graph` find what each target resolves to before and after the rename and rewrite only the targets it strands, so the backlinks survive, and the route answers the edited files as `updated`. The app re-reads the listing, the counts and the graph afterwards, because a rename is a new key, a new heading and new link text.
+
+11. An agent reaches the same files a fourth way: the MCP client launches `apps/mcp`, and each tool call runs one `@lumos/vault-utils` function over the vault the server resolved at startup. Nothing is exported and nothing is indexed twice, so an edit from the app, Obsidian or an agent is what the next read of any of them sees. A note an agent creates is stamped `source: mcp`, the one thing that differs from a captured note.
 
 ## Daemon
 
@@ -60,6 +67,13 @@ injected, so no port is bound and no network request is made.
 - **Panes**: the notes list + viewer, or the link graph, sharing the folder sidebar. The list column is resizable through `PaneSplitter`, and the width lives in the shell rather than in the pane. The graph renderer loads lazily with its tab, so the notes path stays light.
 - **Link pane**: a note's link is shown in the viewer - a player, an image, or the scraped page - instead of only linking out. It reads through `src/lib/api.ts` like every other pane and has its own loading, error and retry states.
 
+## MCP
+
+- **Transport**: stdio only. The client owns the process; nothing binds a port, and there is no token because there is no network surface.
+- **Modules** in `apps/mcp/src`: `vault.ts` (which vault is served, and what a note key means), `tools.ts` (the twelve operations, as plain functions over a vault directory), `render.ts` (how a result is written for the model), `server.ts` (the tool schemas and descriptions), `index.ts` (the stdio entry point).
+- **Access to the vault**: `@lumos/vault-utils` directly, not the daemon's HTTP API - an agent should be able to read a folder of Markdown without the capture service running. `resolveNote()` repeats the containment check because a read is the one operation that would otherwise hand back any file on disk.
+- **Guidance**: the server's `instructions` tell a model what the tools cannot - that these are a person's notes, that a body is replaced rather than patched, and that a delete goes to the trash. A refusal the vault wrote is answered as a tool error with its own sentence; anything unexpected is thrown rather than turned into advice.
+
 ## Vault
 
 - Plain Markdown files with YAML frontmatter.
@@ -79,12 +93,14 @@ injected, so no port is bound and no network request is made.
 - **Portable vault**: files remain readable in Obsidian and any Markdown editor.
 - **Daemon is standalone**: it can run headless with just the HTTP API.
 - **Desktop is the primary UI** going forward; the HTTP API is an integration path, not the main one.
+- **Agents read the vault, not an export of it.** The MCP server goes through `@lumos/vault-utils` rather than the daemon's routes, so reading notes does not depend on the capture service being up. Given up: the HTTP routes' own validation is not in that path - the same functions and the same containment check are.
 
 ## Tests
 
 - **Runner**: vitest, run by `pnpm test` from the root (every workspace that has a suite).
 - **Location**: `*.test.ts` next to the module it covers - no separate `tests/` tree.
 - **Coverage today**: `@lumos/vault-utils` (slugify, frontmatter parsing, save/read/list/search, rename/move/delete, link and tag extraction, graph assembly and neighbourhoods, the link classifier's URL shapes and page metadata) and the daemon (the parser, the filing path, the link fetcher's guards and caps, and every HTTP route driven through `app.inject()` without binding a port). The desktop's pure logic is covered too: `src/lib/filter.ts` (the note-list filtering and tag counts) has its own suite behind the desktop workspace's vitest script, and the note viewer's rendering is asserted through SSR renders in `src/components/NoteViewer.test.tsx`. The desktop's components are covered too: `Sidebar`, `NoteList`, `SearchModal`, `LinkPane`, `NoteEditor`, `NoteComposer`, `NoteActions` and `TrashPanel` run in jsdom with Testing Library (`src/components/*.test.tsx`, each file declaring its own environment), so the pure-logic suites stay in Node. The graph canvas is the one component without a test; it needs a real renderer.
+- The MCP server's suite (`apps/mcp/src/*.test.ts`) covers the twelve operations against a temporary vault, the key format and every way a key can try to leave the vault, and the real server over the real protocol through the SDK's in-memory transport - so the tool list a client sees and the text it answers with are asserted without spawning a process. Nothing spawns the stdio entry point: the transport is the only part that differs and it is the SDK's.
 - The suites run inside `pnpm validate`, so a failing test blocks a push exactly like a failing build.
 
 ## Repository Layout
@@ -93,11 +109,12 @@ injected, so no port is bound and no network request is made.
 lumos/
 ├── apps/
 │   ├── daemon/       # WhatsApp capture service
-│   └── desktop/      # Tauri desktop UI
+│   ├── desktop/      # Tauri desktop UI
+│   └── mcp/          # MCP server over the vault (stdio)
 ├── packages/         # @lumos/shared (types) + @lumos/vault-utils (vault ops)
 ├── docs/             # plan + tracking + reference docs
 │   ├── PLAN.md TODO.md PROGRESS.md FEATURES.md ARCHITECTURE.md LIMITATIONS.md
-│   └── daemon.md desktop.md vault.md design.md roadmap.md
+│   └── daemon.md desktop.md vault.md mcp.md design.md roadmap.md
 ├── idea/             # original idea PDFs and notes
 ├── vault/            # user notes (git-ignored)
 ├── .husky/           # git hooks: pre-commit, commit-msg, pre-push

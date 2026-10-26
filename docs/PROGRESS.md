@@ -4,6 +4,40 @@ Chronological record of what has been built. Newest entries first within each da
 
 ## 2026-10-26
 
+### Done - the vault as an MCP server
+- [x] **The vault is now something an agent can use, not something you copy into a prompt.** Obsidian
+  users wire their vault into Claude Code with an MCP server; Lumos had no such door. `apps/mcp` is
+  one: twelve tools over stdio behind `pnpm --filter mcp start`, documented end to end in
+  [mcp.md](mcp.md) with the `claude mcp add` line for Claude Code and the JSON for Claude Desktop
+- [x] **Direct access, not through the daemon.** The obvious shape was a client for the daemon's HTTP
+  API, which would mean a coding agent cannot read a folder of Markdown unless WhatsApp capture is
+  running. Every tool calls `@lumos/vault-utils` instead - the same library the routes and the app
+  use - so there is still one writer's worth of behaviour and no second hop. Given up: the HTTP
+  routes' own validation is not in this path, which is why `resolveNote()` repeats the containment
+  check: a read is the operation that would otherwise hand back any file on disk
+- [x] **A key is the argument.** Every tool answers `Folder/name.md` and every tool takes it, so a
+  result can be passed back unchanged. A key that is not two segments, not `.md`, or that walks out
+  of the root is refused before a file is touched; a folder must already exist, because `saveNote`
+  would `mkdir` whatever path it was handed and a vault an agent can grow folders in is one someone
+  finds untidy a week later
+- [x] **A refusal is an answer.** A sentence the vault wrote comes back as a tool error, so the model
+  reads "there is no folder called "Movies" - the vault has Inbox, Ideas …" and can act on it; an
+  unexpected failure is thrown rather than turned into advice. The server's `instructions` carry what
+  no single tool can: these are a person's notes, read before editing, the body is replaced rather
+  than patched, and a delete goes to the trash
+- [x] **The launch command was measured, not guessed.** `node --import tsx …` resolves from the
+  client's working directory and fails there; `pnpm --dir … start` works from anywhere and writes its
+  banner to stderr, so stdout stays protocol-only. That is why the docs say pnpm and why the vault
+  being served is printed once on stderr
+- [x] **`lantern` was evaluated and not adopted.** It is a zero-dependency TypeScript port of manim's
+  core: steppable, animated SVG explainers of code changes, unpublished, and a rendering model of its
+  own. Lumos has no surface that explains code, so it was recorded in the decisions log as a revisit
+  rather than vendored
+- [x] **43 tests, and a real process.** The operations run against a temporary vault, the key format
+  against every way out of it, and the server against the real protocol through the SDK's in-memory
+  transport. The stdio entry point was then driven by hand - a spawned process, `initialize`, twelve
+  tools, a note written and found, exit 0 when stdin closed
+
 ### Done - the WhatsApp link is in the app, and the palette can create
 - [x] Capture was the one part of the product with no face: whether a phone was linked could only be
   learned from the terminal the daemon was started in, or by messaging it and waiting. The status

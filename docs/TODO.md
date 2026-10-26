@@ -9,9 +9,9 @@ Priority: P0 critical, P1 high, P2 medium, P3 low
 
 ## Needs your testing
 
-Five checks that no unit test can close: each needs a device, a real window or a pointer. They are
-first because they are the shortest path to knowing the app works end to end, and because nothing
-else on this page can close them.
+Six checks that no unit test can close: each needs a device, a real window, a pointer or a client
+that has to be signed in. They are first because they are the shortest path to knowing the app works
+end to end, and because nothing else on this page can close them.
 
 - [!] **The Tauri shell** (P1) - `pnpm --filter desktop tauri dev`: the window opens, the vault
   loads, the daemon URL is right, and the packaged bundle runs. The Rust side, the window
@@ -28,6 +28,12 @@ else on this page can close them.
   surfaces are light-on-dark. Scan it once from the panel with a real phone, then press **Disconnect**
   and **Connect** and check the link comes back without a code - the pause is unit-tested through an
   injected bridge, but the socket it pauses is not.
+- [!] **A real Claude Code session with the MCP server** (P1) - `claude mcp add lumos --scope user --
+  pnpm --dir <repo>/apps/mcp start`, then `/mcp` lists twelve tools and a request in your own words
+  lands in the vault. The protocol is covered over the SDK's in-memory transport, and the stdio entry
+  point was driven by hand with a spawned process (initialize, twelve tools, a note written and
+  found, exit 0 on stdin close), but nothing signs the server into a client and lets an agent choose
+  the tools itself. Check too that the client sees the vault you meant when `LUMOS_VAULT` is set.
 
 ## Plan
 
@@ -352,3 +358,26 @@ Nothing in flight. The next item to pick up is the first one under **Plan**.
   the vault arrives, not on every keystroke
 - [x] The docs are complete and match the code - every document exists, is cross-linked, and was
   audited against the repository
+
+### Phase 9: Agent access (P1)
+
+- [x] An MCP server over the vault - `apps/mcp`, twelve tools over stdio (`list_folders`,
+  `list_notes`, `search_notes`, `read_note`, `create_note`, `update_note`, `rename_note`, `move_note`,
+  `delete_note`, `list_trash`, `restore_note`, `create_folder`). Notes are addressed by the key every
+  tool answers (`Folder/name.md`), a refusal is a tool error carrying the vault's own sentence, and
+  every operation goes through `@lumos/vault-utils`, so there is no second writer and a note an agent
+  creates is stamped `source: mcp`
+- [x] The vault is chosen by `LUMOS_VAULT` and defaults to this repository's - resolved from the
+  source file rather than the client's working directory, because a client starts the process
+  wherever it likes. The vault being served is printed on stderr: stdout belongs to the protocol, and
+  that was measured (`pnpm --dir … start` writes its banner to stderr, so it is safe in front of
+  stdout) rather than assumed
+- [x] The containment check a read needs - `resolveNote()` splits a key, refuses anything that is not
+  two segments or does not end in `.md`, and proves the resolved path is inside the vault root before
+  a file is read, moved or removed. A folder a tool was given must already exist, so an agent cannot
+  grow a top-level folder by filing into it
+- [x] The connection guide - [mcp.md](mcp.md): running it, `claude mcp add` (with and without
+  `LUMOS_VAULT`), the Claude Desktop JSON, the tool table, what the server refuses to do, and the
+  trade-offs; linked from the root README, USAGE, ARCHITECTURE, AGENTS and CLAUDE.md
+- [x] The MCP suite - 43 tests: the twelve operations against a temporary vault, the vault root and
+  the key format, and the real server over the real protocol through the SDK's in-memory transport

@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- An MCP server over the vault (`apps/mcp`), so Claude Code, Claude Desktop and any other MCP client
+  can work on the notes themselves: twelve tools over stdio - list folders and notes, search, read,
+  create, update, rename, move, delete to the trash, list the trash, restore, and make a folder. Notes
+  are addressed by the key every tool answers (`Folder/name.md`), a refusal comes back as a tool error
+  carrying the vault's own sentence, and every operation runs through `@lumos/vault-utils`, so a note
+  an agent writes is an ordinary note stamped `source: mcp`. `LUMOS_VAULT` chooses the vault; the
+  default is this repository's. Connection, the tool list and the trade-offs are in
+  [docs/mcp.md](docs/mcp.md).
 - The WhatsApp link, in the app. The status bar carries a chip with the link's own state -
   `WhatsApp linked`, `Pair WhatsApp`, `WhatsApp disconnected`, `WhatsApp unlinked`, `WhatsApp off` -
   and opens a panel that says why in a sentence, draws the pairing code in the app rather than in a

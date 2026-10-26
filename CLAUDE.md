@@ -8,7 +8,9 @@ project. This file is the short version; where the three disagree, RULES.md wins
 
 Lumos — a local-first second brain. WhatsApp messages are captured by a Fastify daemon
 (`apps/daemon`) into a Markdown vault on disk, and a Tauri + React desktop app (`apps/desktop`)
-browses it. Shared code lives in `packages/shared` and `packages/vault-utils`. pnpm workspace only.
+browses it. Shared code lives in `packages/shared` and `packages/vault-utils`, and `apps/mcp` is
+an MCP server over the same vault — read [docs/mcp.md](docs/mcp.md) before changing it, and see that
+file for how to point a client at it.
 
 ## Hard rules
 
@@ -62,6 +64,7 @@ pnpm install                       # bootstrap
 pnpm validate                      # the gate: lint + format:check + typecheck + test + build
 pnpm test:e2e                      # Playwright smoke suite against the built app (needs Chromium)
 pnpm --filter daemon dev           # daemon (LUMOS_DISABLE_WHATSAPP=1 for headless)
+pnpm --filter mcp start            # MCP server over the vault (stdio, for Claude Code)
 pnpm --filter desktop dev          # Vite UI on :1420
 pnpm --filter desktop tauri dev    # full desktop window
 ```

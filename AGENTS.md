@@ -14,6 +14,7 @@ pnpm workspace (pnpm **only** — never npm or yarn):
 | ------------------------ | ----------------------------------------------------------------- |
 | `apps/daemon/`           | Fastify service: WhatsApp capture, message parsing, vault writes  |
 | `apps/desktop/`          | Tauri 2 + React 19 + Vite desktop UI — the primary interface      |
+| `apps/mcp/`              | MCP server over the vault, for Claude Code and other agents       |
 | `packages/shared/`       | `@lumos/shared` — types shared across every workspace             |
 | `packages/vault-utils/`  | `@lumos/vault-utils` — reading/writing the Markdown vault         |
 | `docs/`                  | All project documentation (plan, progress, references)            |
@@ -64,6 +65,7 @@ pnpm build            # build every workspace that has a build step
 pnpm validate         # lint + format:check + typecheck + test + build — run before every push
 
 pnpm --filter daemon dev        # WhatsApp capture service (tsx watch)
+pnpm --filter mcp start         # MCP server over the vault (stdio)
 pnpm --filter desktop dev       # Vite dev server for the UI (port 1420)
 pnpm --filter desktop tauri dev # full Tauri app window
 ```
@@ -129,6 +131,7 @@ touch the built app's runtime behaviour.
 | [CHANGELOG.md](CHANGELOG.md)            | any user-visible change, under `## [Unreleased]`         |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | modules, data flow or the repo layout change        |
 | [docs/daemon.md](docs/daemon.md)        | endpoints, commands, or env vars change                  |
+| [docs/mcp.md](docs/mcp.md)              | the MCP server's tools, its connection or its limits change |
 | [docs/desktop.md](docs/desktop.md)      | UI structure, state or theming changes                   |
 | [docs/roadmap.md](docs/roadmap.md)      | priorities or scope move                                 |
 | [docs/LIMITATIONS.md](docs/LIMITATIONS.md) | something is knowingly not possible, or a limit changes |

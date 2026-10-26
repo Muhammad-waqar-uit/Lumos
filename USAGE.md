@@ -224,6 +224,33 @@ you are most likely to reach for: `GET /notes`, `/notes/search`, `/note`, `/fold
 `/trash`; `POST /message`, `/notes`, `/folders`, `/note/move`, `/note/restore`; `PUT /note`;
 `PATCH /note`, `/note/meta` and `/folder`; `DELETE /note`, `/trash` and `/folder`.
 
+## Letting a coding agent read the vault
+
+An [MCP](https://modelcontextprotocol.io) server puts the vault in front of Claude Code, Claude
+Desktop or any other MCP client: twelve tools to list, search, read, write, rename, move and delete
+notes. No port is opened - the client starts the process and speaks to it over stdio - and the
+vault stays a folder of Markdown files throughout.
+
+```bash
+claude mcp add lumos --scope user -- pnpm --dir /absolute/path/to/lumos/apps/mcp start
+```
+
+If your vault lives somewhere other than this repository's `vault/`:
+
+```bash
+claude mcp add lumos --scope user \
+  -e LUMOS_VAULT=/absolute/path/to/notes \
+  -- pnpm --dir /absolute/path/to/lumos/apps/mcp start
+```
+
+`claude mcp list` says whether it starts, and `/mcp` in a session lists the tools. From there you
+can ask for things in your own words - *find the notes about the desk lamp and file the newest one
+under Ideas* - and the agent does it through the tools rather than by guessing at filenames.
+
+A delete from an agent goes to the vault's trash like any other, so it is recoverable; renaming a
+folder or emptying the trash stays in the app. [docs/mcp.md](docs/mcp.md) has the tool list, the
+Claude Desktop config and the trade-offs.
+
 ## Settings
 
 The daemon reads `lumos.config.json` from its working directory, and the environment overrides it.
@@ -272,5 +299,6 @@ Nothing in the daemon logs a message body, a note's contents, a token or the vau
 - [docs/daemon.md](docs/daemon.md) - the daemon, every command, every route, config precedence
 - [docs/desktop.md](docs/desktop.md) - the app's structure, state and theming
 - [docs/vault.md](docs/vault.md) - the vault format and conventions
+- [docs/mcp.md](docs/mcp.md) - connecting Claude Code (or any MCP client) to the vault
 - [docs/LIMITATIONS.md](docs/LIMITATIONS.md) - what Lumos does not do, and what each limit costs
 - [docs/roadmap.md](docs/roadmap.md) - what is next
