@@ -134,6 +134,7 @@ touch the built app's runtime behaviour.
 | [docs/mcp.md](docs/mcp.md)              | the MCP server's tools, its connection or its limits change |
 | [docs/desktop.md](docs/desktop.md)      | UI structure, state or theming changes                   |
 | [docs/roadmap.md](docs/roadmap.md)      | priorities or scope move                                 |
+| [docs/explainers.md](docs/explainers.md) | the explainer plan, its spike or its drop conditions change |
 | [docs/LIMITATIONS.md](docs/LIMITATIONS.md) | something is knowingly not possible, or a limit changes |
 
 Docs are cross-linked by relative path — after moving or renaming a file, re-run the link check so

@@ -7,12 +7,13 @@ app, and find things again. For installation and the enforced development standa
 Lumos is local-first. Notes are Markdown files in a vault folder on your own disk, the daemon reads
 and writes them over `127.0.0.1`, and nothing is uploaded anywhere.
 
-## The two halves
+## The pieces
 
 | Piece | What it does | Started with |
 |---|---|---|
 | **Daemon** | Connects to WhatsApp, parses what you send, writes the note files, and serves the HTTP API the desktop reads | `pnpm --filter daemon dev` |
 | **Desktop** | The app: folder sidebar, note list, viewer and editor, search palette, link graph, trash | `pnpm --filter desktop tauri dev` (the window) or `pnpm --filter desktop dev` (in a browser at `http://localhost:1420`) |
+| **MCP server** | Puts the same vault in front of Claude Code and other agents: twelve tools over stdio, no port | `pnpm --filter mcp start`, or the `claude mcp add` line in [Letting a coding agent read the vault](#letting-a-coding-agent-read-the-vault) |
 
 The desktop works with the daemon stopped - it falls back to demo notes and says so in the status
 bar - so you can look around before wiring up WhatsApp.

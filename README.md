@@ -21,7 +21,7 @@ Lumos transforms WhatsApp into an effortless capture tool for your second brain.
 - **Smart Parsing**: Automatically extracts URLs from messages and preserves them in frontmatter
 - **Auto-Reconnection**: Robust connection handling with automatic reconnection on disconnects
 - **Allowlist Security**: Only messages from whitelisted phone numbers are processed
-- **Monorepo Architecture**: Clean separation between daemon (capture) and desktop app (viewing)
+- **Monorepo Architecture**: One vault, three programs - the daemon captures, the desktop app browses, and an MCP server puts the notes in front of coding agents - all sharing one set of vault operations
 - **Links in place**: A YouTube or Vimeo link plays in the note viewer, an Instagram reel or post and a Facebook video or post render through the platform's own embed with their caption beside them, an image link shows the image, and any other page is scraped by the daemon and read as text without leaving the app (private hosts are refused)
 - **Keyboard search**: `Cmd/Ctrl+K` opens a palette over the vault - typo-tolerant matches on titles, tags and previews, plus body matches from the daemon - and `Enter` opens the note; with nothing typed it lists what you opened this session and the commands it can run itself: new note, new folder (named right in the palette), the graph, the trash
 - **The link in the app**: a chip in the status bar says whether WhatsApp is linked (`WhatsApp linked`, `Pair WhatsApp`, `WhatsApp unlinked`, `WhatsApp off`) and opens a panel with the pairing code, when a message was last answered, and **Connect**/**Disconnect** - so pairing never needs the terminal, and stopping capture does not unlink the phone. A note captured while the app is open appears by itself, with a notice that names it and an **Open** button
@@ -217,6 +217,9 @@ pnpm install
 # Run daemon in dev mode (from root)
 cd apps/daemon && pnpm dev
 
+# Run the MCP server over the vault (stdio, for Claude Code and other clients)
+pnpm --filter mcp start
+
 # Lint + format check + typecheck + test + build (the gate)
 pnpm validate
 
@@ -233,11 +236,12 @@ git checkout main && git pull
 ## Roadmap
 
 - [x] Link expansion for `/read` and `/interview` — the daemon fetches the page and the desktop plays a video, shows an image, or reads the text in place
-- [ ] Daily planner with `/plan today|tomorrow` (AI-assisted via Ollama)
+- [x] Daily planner with `/plan today|tomorrow` (AI-assisted via Ollama, over the newest notes in the vault)
 - [x] Full-text search with `/find <query>` (title, tags and body; up to five matches per reply)
 - [x] Tag extraction and auto-tagging — `#hashtags` in a captured message become the note's frontmatter tags
-- [~] Tauri desktop app UI for browsing/searching/editing vault - dark shell, folder sidebar, note list, Markdown-rendering viewer with syntax-highlighted code, link graph, tag filtering, a `Cmd/Ctrl+K` search palette, and a composer, an editor and a set of file operations that write notes back to the vault (rename, which carries the links pointing at the note, move and delete) are in place; routing remains
-- [x] Test coverage - 447 vitest tests run inside `pnpm validate`: 185 for `@lumos/vault-utils`, 125 for the daemon (every route through `app.inject()`, with the link fetcher and config injected) and 137 for the desktop (pure logic, SSR renders, and the sidebar, note list, palette, link pane, note editor, note composer and file-operations panel in jsdom). A 5-test Playwright smoke suite (`pnpm test:e2e`) drives the built app in a real browser. The graph canvas is the remaining gap, tracked in [docs/TODO.md](docs/TODO.md)
+- [x] Tauri desktop app UI for browsing/searching/editing vault - dark shell, folder sidebar, note list, Markdown-rendering viewer with syntax-highlighted code, link graph, tag filtering, a `Cmd/Ctrl+K` search palette, typed routing, the link pane, and a composer, an editor and a set of file operations that write notes back to the vault (rename, which carries the links pointing at the note, move and delete). What is left is polish, listed in [docs/TODO.md](docs/TODO.md)
+- [x] MCP server over the vault - Claude Code, Claude Desktop and any other MCP client get twelve tools (list, search, read, create, update, rename, move, delete, restore, folders) over stdio, through the same vault operations everything else uses ([docs/mcp.md](docs/mcp.md))
+- [x] Test coverage - 747 vitest tests run inside `pnpm validate`: 248 for `@lumos/vault-utils`, 217 for the daemon (every route through `app.inject()`, with the link fetcher and config injected), 234 for the desktop (pure logic, SSR renders, and the panels in jsdom) and 48 for the MCP server (the operations against a temp vault, the protocol over an in-memory transport, and the entry point spawned over a real stdio pipe). A 5-test Playwright smoke suite (`pnpm test:e2e`) drives the built app in a real browser. The graph canvas is the remaining gap, tracked in [docs/TODO.md](docs/TODO.md)
 - [ ] Enrichment: extract summaries, key points from links
 - [ ] Sync/backups, exports
 
@@ -247,7 +251,8 @@ All project docs live in [`docs/`](docs). They are the source of truth for what 
 
 Using it:
 
-- [USAGE.md](USAGE.md) - the standalone guide: capture from WhatsApp, the desktop app, settings, troubleshooting
+- [USAGE.md](USAGE.md) - the standalone guide: capture from WhatsApp, the desktop app, coding agents, settings, troubleshooting
+- [WALKTHROUGH.md](WALKTHROUGH.md) - a fresh install, start to finish, and a ten-minute demo script
 
 Tracking:
 
@@ -272,6 +277,8 @@ Reference:
 - [docs/vault.md](docs/vault.md) - vault format, frontmatter, conventions
 - [docs/design.md](docs/design.md) - design system, dark color tokens, spacing
 - [docs/roadmap.md](docs/roadmap.md) - milestones
+- [docs/mcp.md](docs/mcp.md) - the MCP server: connecting a client, the tools, the trade-offs
+- [docs/explainers.md](docs/explainers.md) - the planned explainers phase: what it would cost, and what would make us drop it
 - [docs/LIMITATIONS.md](docs/LIMITATIONS.md) - what Lumos does not do, or does partly, and what each limit gives up
 
 ## Contributing

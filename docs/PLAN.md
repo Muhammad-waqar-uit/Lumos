@@ -83,7 +83,7 @@ Layout: resizable panes - **Sidebar (folders) | Notes list | Note viewer** - wit
 
 Root keeps only what convention demands: `README.md`, `CHANGELOG.md`, `CONTRIBUTING.md`, `LICENSE`, plus the standards files `RULES.md`, `AGENTS.md` and `CLAUDE.md`.
 
-`docs/` holds everything else: `PLAN.md`, `TODO.md`, `PROGRESS.md`, `FEATURES.md`, `ARCHITECTURE.md`, `LIMITATIONS.md`, `daemon.md`, `desktop.md`, `vault.md`, `design.md`, `roadmap.md`. Docs are cross-linked by relative path and moved with `git mv` so history survives.
+`docs/` holds everything else: `PLAN.md`, `TODO.md`, `PROGRESS.md`, `FEATURES.md`, `ARCHITECTURE.md`, `LIMITATIONS.md`, `daemon.md`, `desktop.md`, `mcp.md`, `vault.md`, `design.md`, `roadmap.md`, `explainers.md`. Docs are cross-linked by relative path and moved with `git mv` so history survives.
 
 ## Tracking Conventions
 
