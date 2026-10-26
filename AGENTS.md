@@ -62,7 +62,7 @@ pnpm typecheck        # tsc --noEmit in every workspace
 pnpm test             # vitest run in every workspace that has a suite
 pnpm test:e2e         # Playwright smoke suite against the built app (needs Chromium)
 pnpm build            # build every workspace that has a build step
-pnpm validate         # lint + format:check + typecheck + test + build — run before every push
+pnpm validate         # lint + format:check + docs:check + typecheck + test + build — run before every push
 
 pnpm --filter daemon dev        # WhatsApp capture service (tsx watch)
 pnpm --filter mcp start         # MCP server over the vault (stdio)
@@ -143,7 +143,7 @@ no reference dangles.
 ## Checks before you finish
 
 ```bash
-pnpm validate      # lint + format:check + typecheck + test + build (also runs on push)
+pnpm validate      # lint + format:check + docs:check + typecheck + test + build (also runs on push)
 ```
 
 New behaviour gets a test beside the module it covers (`*.test.ts`). Anything that touches the vault

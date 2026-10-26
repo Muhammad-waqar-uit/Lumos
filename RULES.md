@@ -11,7 +11,7 @@ Git hooks are installed with **Husky** and **cannot be bypassed** — no `--no-v
 | ------------ | ---------------------------------------------------------------------- |
 | `pre-commit` | `lint-staged` on the staged files only (oxlint --fix + prettier)        |
 | `commit-msg` | `commitlint` validates the message format                              |
-| `pre-push`   | `pnpm validate` — lint + format:check + typecheck + test + build        |
+| `pre-push`   | `pnpm validate` — lint + format:check + docs:check + typecheck + test + build        |
 
 Root scripts:
 
@@ -210,7 +210,7 @@ the maintainer commits to `main` directly.
 
 A change is finished when **all** of these hold:
 
-- [ ] `pnpm validate` passes locally (lint + format:check + typecheck + test + build).
+- [ ] `pnpm validate` passes locally (lint + format:check + docs:check + typecheck + test + build).
 - [ ] Zero `any`, zero unjustified suppressions, zero `console.log` left behind.
 - [ ] New behaviour has a test beside the module (`*.test.ts`). If it genuinely cannot be tested —
       Rust/Tauri shell code, a live WhatsApp session — say so in the commit or PR body and write down

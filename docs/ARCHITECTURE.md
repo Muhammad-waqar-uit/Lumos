@@ -129,7 +129,7 @@ lumos/
 - **pnpm only** (pnpm workspace, `pnpm-lock.yaml` committed).
 - **Lint:** oxlint, kept in step with the TypeScript version. **Format:** prettier.
 - **Husky hooks** — `pre-commit` runs lint-staged on the staged files; `commit-msg` runs
-  commitlint; `pre-push` runs `pnpm validate` (lint + format:check + typecheck + test + build). None
+  commitlint; `pre-push` runs `pnpm validate` (lint + format:check + docs:check + typecheck + test + build). None
   of the hooks can be bypassed.
 - **One TypeScript version** (`~6.0.3`) across every workspace, each with a `typecheck` script.
 - **Workflow:** one branch, `main` — commits land there directly and are pushed there, one topic per

@@ -201,7 +201,7 @@ pnpm dev
 # Type-check just this workspace
 pnpm typecheck
 
-# The full gate (lint + format:check + typecheck + test + build) before you push
+# The full gate (lint + format:check + docs:check + typecheck + test + build) before you push
 pnpm -w validate
 ```
 
