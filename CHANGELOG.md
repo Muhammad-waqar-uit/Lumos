@@ -800,3 +800,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `CLAUDE.md`, `CONTRIBUTING.md`, `README.md`, `docs/ARCHITECTURE.md`, `docs/FEATURES.md`,
   `docs/PLAN.md` and `docs/roadmap.md` follow the same change, and the three branches that were
   still open were merged into `main` and deleted.
+
+### Fixed (continued 2)
+
+- The graph's counts line read "1 links" whenever exactly one link was showing: it singularized
+  "note" but not "link". It now reads "1 link", and the component test asserts the singular case.

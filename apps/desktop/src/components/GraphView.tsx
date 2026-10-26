@@ -546,8 +546,8 @@ export function GraphView({
 
         <div className="pointer-events-auto flex flex-col items-end gap-1 rounded-lg border border-border bg-card/70 px-3 py-2 text-[11px] text-muted-foreground backdrop-blur">
           <span className="tabular-nums">
-            {noteCount} {noteCount === 1 ? "note" : "notes"} · {visible.edges.length} links ·{" "}
-            {data.unresolved.length} unresolved
+            {noteCount} {noteCount === 1 ? "note" : "notes"} · {visible.edges.length}{" "}
+            {visible.edges.length === 1 ? "link" : "links"} · {data.unresolved.length} unresolved
           </span>
           <span className="flex flex-wrap items-center justify-end gap-x-2 gap-y-1">
             {folders.map((folder) => (

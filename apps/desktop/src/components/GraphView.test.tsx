@@ -234,8 +234,7 @@ describe("GraphView", () => {
 
     const ids = lastNodeIds(instance);
     expect(ids).not.toContain("#project");
-    // The count line has no singular rule for links - the component really says "1 links".
-    expect(screen.getByText("3 notes · 1 links · 1 unresolved")).toBeDefined();
+    expect(screen.getByText("3 notes · 1 link · 1 unresolved")).toBeDefined();
   });
 
   it("drops the unlinked notes when Unlinked is off", () => {
