@@ -298,8 +298,10 @@ theme entries: Tailwind prunes theme values it cannot see used in a class name, 
 referenced only from TypeScript would never reach the stylesheet.
 
 The pure parts are tested: the layout memory (`src/lib/graph-layout.test.ts`, 12 cases) and the
-neighbourhood and backlink rules in `@lumos/vault-utils`. The canvas itself has no test - it draws
-through the graph library and needs a real renderer, not jsdom - so a tab switch is checked by hand.
+neighbourhood and backlink rules in `@lumos/vault-utils`. The component runs in jsdom too
+(`src/components/GraphView.test.tsx`), with the renderer replaced by a recorded stand-in: what the
+view *tells* the canvas is asserted - the nodes each control hands over, the selection wiring, thencounts and the states around it - while the drawing itself needs a real renderer, so where the
+simulation puts a node is still checked by hand.
 
 ### Tag filtering
 

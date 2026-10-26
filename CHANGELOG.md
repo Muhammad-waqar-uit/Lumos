@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- The graph view's React layer is covered by component tests
+  (`apps/desktop/src/components/GraphView.test.tsx`, 9 tests): the Tags, Unlinked and depth
+  controls, selecting a note or a tag with **Open note**/**Show notes**, and the counts, legend,
+  loading and empty states. The canvas's own drawing still needs a real renderer and is not
+  asserted.
 - Test counts in the documentation can no longer drift. Every `pnpm test` writes a JSON report
   beside its workspace, [docs/TESTING.md](docs/TESTING.md) is generated from those reports
   (`pnpm counts:update`), and `pnpm validate` now fails when the committed table no longer matches

@@ -23,8 +23,10 @@ end to end, and because nothing else on this page can close them.
   the capture path is checked against the platform rather than against a parser and a stub.
 - [!] **The social embeds inside the packaged window** (P2) - a reel, a video and a post were
   verified in Chromium, which is the engine's family but not the engine.
-- [!] **The graph's "Show notes" button** (P2) - selecting a tag node on the canvas needs a real
-  pointer hit, so the wiring is typechecked but has never been pressed.
+- [!] **The graph's "Show notes" button** (P2) - the wiring is now tested end to end at the
+  component level (`GraphView.test.tsx` asserts that selecting a tag node offers **Show notes** and
+  passes the tag to the filter), but a real pointer still has to hit a node drawn on a canvas, and
+  no jsdom test can place that hit.
 - [!] **Scanning the pairing code** (P2) - `GET /qrcode` and the desktop panel are tested for what
   they draw (half-block text, no colour codes, equal line widths) but not for whether a phone camera
   reads it. The polarity is the risky part: `qrcode-terminal` draws light modules as blocks, so both
@@ -163,6 +165,13 @@ Nothing in flight. The next item to pick up is the first one under **Plan**.
   ranking, recent notes, the link cache, list movement, pane widths, graph layout memory, the
   viewer's code highlighting, and the sidebar, note list, search palette and link pane as
   components and composer), so 391 in `pnpm validate`
+- [x] The graph view's React layer is covered (2026-10-26) - `GraphView.test.tsx` renders the
+  component against a recorded stand-in for the renderer and asserts what the canvas is *told*:
+  the Tags and Unlinked controls and the depth slider decide the node ids handed over, a note node
+  selects and **Open note** carries its id, a tag node offers **Show notes** carrying the tag, and
+  the counts line, the folder legend, the loading and empty states and the live/demo/connecting
+  wording all render. The pixels are not asserted - force-graph draws them - so the pointer-hit
+  item under **Needs your testing** stays open
 - [x] Desktop component tests - jsdom + Testing Library (`@testing-library/react`, jsdom) over the
   six components that carry state, each file declaring its own `jsdom` environment so the pure-logic
   suites stay in Node. They assert behaviour rather than markup: the active folder and view, the

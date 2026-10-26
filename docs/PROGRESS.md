@@ -4,6 +4,22 @@ Chronological record of what has been built. Newest entries first within each da
 
 ## 2026-10-26
 
+### Done - the graph view's React layer is covered
+- [x] **The last untested component is no longer untested.** `GraphView.tsx` was the only component
+  in the app with no test at all - it draws through force-graph and jsdom renders no pixels - and
+  three documents said so. `GraphView.test.tsx` replaces the renderer with a recorded stand-in
+  (`vi.hoisted`, because `vi.mock` runs before any module-level declaration) and asserts what the
+  view *tells* the canvas: the Tags and Unlinked controls and the depth slider decide the node ids
+  handed over, a depth of 1 around an open note keeps exactly the one-hop neighbourhood, a note
+  node selects and **Open note** carries its id while a background click lets go, a tag node offers
+  **Show notes** carrying the tag to the filter, and the counts line, the folder legend, the
+  loading and empty overlays and the live/connecting/demo wording all render. Two things the test
+  run taught: the component prints "1 links" (it only singularizes "note"), and a callback that
+  changes state from inside the renderer has to be wrapped in `act()` the way a user event would
+  be. Given up: no pixel is asserted, so where the simulation places a node and whether a pointer
+  lands inside one remain the canvas's own business - which is why the pointer-hit item under
+  **Needs your testing** in [TODO.md](TODO.md) stays open. 9 tests; the desktop suite is 243
+
 ### Done - the counts gate, and the `tauri dev` failure explained
 - [x] **Test counts in the docs can no longer drift, because no one types them any more.** The
   README and FEATURES carried counts that had already gone stale once (447 claimed when the suite

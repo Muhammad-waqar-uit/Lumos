@@ -160,9 +160,11 @@ play it — neither page can be read or copied.
 - **No end-to-end test.** The sidebar, note list, search palette and link pane are now covered as
   components in jsdom, and the viewer through SSR renders, but nothing drives the built app in a
   real browser: a broken route, a chunk that fails to load or a bad Tauri bundle would not be
-  caught. The graph canvas is the one component with no test at all, because it draws through the
-  graph library and jsdom cannot render it. An E2E runner is tracked under **Plan** in
-  [TODO.md](TODO.md).
+  caught. The graph view is tested around its canvas - `GraphView.test.tsx` renders it against a
+  recorded stand-in for the renderer, so the controls, the selection wiring and every state around
+  the drawing are asserted - but force-graph's own pixels are not: what a node looks like, whether a
+  click lands inside one and where the simulation places it all need a real renderer or a person.
+  An E2E runner is tracked under **Plan** in [TODO.md](TODO.md).
 - **A capture is noticed by polling, so it can be up to 15s late.** The app reads the link's state
 every 15s (3s while the panel is open) and re-reads the vault when a message was answered. That is
 the only signal it has: there is no server-sent event, and the daemon does not watch the directory.
