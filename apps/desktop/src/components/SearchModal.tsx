@@ -14,6 +14,10 @@ import {
   searchVault,
   type SearchResult,
 } from "../lib/search";
+import type { ShellView } from "./Sidebar";
+
+/** The panes the palette can jump to: every view except the note list it was opened from. */
+type TargetView = Exclude<ShellView, "notes">;
 
 interface Props {
   /** Every loaded note, not the filtered list: the modal searches the whole vault. */
@@ -28,11 +32,11 @@ interface Props {
   /** Makes a folder and answers its name; a refusal throws with the daemon's sentence. */
   onCreateFolder?: (name: string) => Promise<string>;
   /** Opens another pane of the shell. Absent when there is nowhere to go. */
-  onOpenView?: (view: "graph" | "trash") => void;
+  onOpenView?: (view: TargetView) => void;
 }
 
 /** What the palette can do besides open a note. */
-type ActionId = "note" | "folder" | "graph" | "trash";
+type ActionId = "note" | "folder" | TargetView;
 
 interface Action {
   id: ActionId;
@@ -67,7 +71,7 @@ function matches(action: Action, query: string): boolean {
  * a note, make a folder, go to the graph or the trash.
  *
  * The commands are kept few and their words plain. A palette that lists everything is a menu with
- * a text box on top; these are the four things someone reaches for with the keyboard already open.
+ * a text box on top; these are the five things someone reaches for with the keyboard already open.
  */
 export function SearchModal({
   entries,
@@ -121,6 +125,7 @@ export function SearchModal({
     if (onOpenView) {
       list.push(
         { id: "graph", label: "Open the graph", detail: "links and tags" },
+        { id: "insights", label: "Open the stats", detail: "the vault counted" },
         { id: "trash", label: "Open the trash", detail: "deleted notes" },
       );
     }
@@ -231,6 +236,10 @@ export function SearchModal({
         return;
       case "graph":
         onOpenView?.("graph");
+        onClose();
+        return;
+      case "insights":
+        onOpenView?.("insights");
         onClose();
         return;
       case "trash":

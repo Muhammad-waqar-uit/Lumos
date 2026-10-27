@@ -108,8 +108,8 @@ hiding the note. Pointing Obsidian at the vault is the intended way to browse it
 - **`Cmd/Ctrl+K`** opens the palette: fuzzy ranking over titles, tags and previews, plus a body
   search from the daemon for words that appear nowhere in the preview - those rows are marked *in
   the body*, as the last row is here. Arrow keys move, `Enter` opens, `Esc` closes. Empty, it lists
-  the notes you opened this session and then four commands: **New note**, **New folder**, **Open the
-  graph**, **Open the trash**. Typing puts whichever command's words match first, so `new folder` +
+  the notes you opened this session and then five commands: **New note**, **New folder**, **Open the
+  graph**, **Open the stats**, **Open the trash**. Typing puts whichever command's words match first, so `new folder` +
   `Enter` turns the field into a name field - `Enter` makes the folder and the list looks at it.
 
   ![The search palette over a vault, with one result marked as matching only inside the note body](docs/images/search.png)

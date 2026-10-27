@@ -14,7 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the list with the same handler the chips use - and all of it is computed from the listing and the
   graph the window already has, so it costs no request and works with the daemon stopped. When the
   graph could not be read the link figures say so rather than printing zeros
-  (`src/lib/insights.ts`, `src/components/InsightsView.tsx`).
+  (`src/lib/insights.ts`, `src/components/InsightsView.tsx`). The palette opens it too - **Open the
+  stats** - so every pane in the sidebar is reachable from `Cmd/Ctrl+K`.
 - The graph view's React layer is covered by component tests
   (`apps/desktop/src/components/GraphView.test.tsx`, 9 tests): the Tags, Unlinked and depth
   controls, selecting a note or a tag with **Open note**/**Show notes**, and the counts, legend,

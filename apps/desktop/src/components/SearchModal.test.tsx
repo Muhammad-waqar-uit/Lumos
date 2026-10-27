@@ -173,6 +173,22 @@ describe("SearchModal - the commands", () => {
     const tail = rows.slice(1).join(" | ");
     expect(tail).toContain("New note");
     expect(tail).toContain("New folder");
+    // Every pane the sidebar has is reachable from here too, so a new pane cannot be added and
+    // left out of the one place the keyboard can reach.
+    expect(tail).toContain("Open the graph");
+    expect(tail).toContain("Open the stats");
+    expect(tail).toContain("Open the trash");
+  });
+
+  it("opens the stats pane from the palette", () => {
+    const onClose = vi.fn();
+    const props = commands();
+    renderModal({ onClose, ...props });
+
+    fireEvent.click(screen.getByRole("button", { name: /Open the stats/ }));
+
+    expect(props.onOpenView).toHaveBeenCalledWith("insights");
+    expect(onClose).toHaveBeenCalledTimes(1);
   });
 
   it("opens the composer from the palette, and gets out of its way", () => {

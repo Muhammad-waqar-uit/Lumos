@@ -26,7 +26,7 @@ daemon (falling back to demo data when the daemon is offline):
 - `src/components/LinkPane.tsx` - the note's link: video player, image, or scraped reader card
 - `src/components/GraphView.tsx` - canvas link graph (routes, controls, click-to-open)
 - `src/components/PaneBoundary.tsx` - error boundary around the lazily loaded graph pane
-- `src/components/SearchModal.tsx` - the `Cmd/Ctrl+K` palette: ranked matches, keyboard selection, body matches from the daemon, and the four commands the palette can run itself - new note, new folder, and the graph and the trash panes
+- `src/components/SearchModal.tsx` - the `Cmd/Ctrl+K` palette: ranked matches, keyboard selection, body matches from the daemon, and the five commands the palette can run itself - new note, new folder, and the graph, stats and trash panes
 - `src/components/StatusBar.tsx` - connection state, the search shortcut, the note count, a notice the app needs to say (a save whose refresh failed), and a chip for the WhatsApp link that opens the panel below. The chip is offered while the daemon answers, and it says the link's own state - being able to read notes says nothing about whether a message would be filed
 - `src/components/WhatsAppPanel.tsx` - the WhatsApp link in the app: the state in a sentence with when it began and when a message was last answered, the pairing code drawn in a dark `<pre>` while a phone needs one, and the single button the state allows (Connect or Disconnect). A failure stays on the panel in the daemon's words; escape or a click outside closes it, and the link is left as it was
 - `src/lib/whatsapp.ts` - the words and colours for each state, the sentence a state deserves, which button it can use, and "since 14:32" formatting. Pure, so the status bar and the panel cannot disagree about what `disconnected` means
@@ -478,14 +478,15 @@ than the filtered list. It narrows in two stages and says which one answered:
 
 ### The palette runs commands too
 
-Under the notes, and first once the query matches one, the palette offers four commands:
+Under the notes, and first once the query matches one, the palette offers five commands:
 
 - **New note** - the Notes view comes back with the composer open. The palette is where someone is
   already typing, so writing should not need a trip to the list's **New** button.
 - **New folder** - the field becomes a name field, `Enter` makes the folder and the list looks at it,
   `Esc` steps back out to searching. A refusal keeps the name typed with the daemon's sentence under
   it, the same as every other write.
-- **Open the graph**, **Open the trash** - the pane, without hunting for the sidebar tab.
+- **Open the graph**, **Open the stats**, **Open the trash** - the pane, without hunting for the
+  sidebar tab. Every pane has one, so a pane added to the sidebar cannot be left unreachable here.
 
 With nothing typed the commands sit under the recent notes rather than over them: searching is what
 the palette is open for, and a command is one keystroke from the end of the list. Typing puts any

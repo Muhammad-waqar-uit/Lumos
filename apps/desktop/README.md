@@ -110,7 +110,7 @@ possible future path (see [docs/desktop.md](../../docs/desktop.md)); it does not
 - [x] Graph view (link graph from the daemon, canvas force layout, per-folder hues, filters, local depth)
 - [x] Syntax-highlighted code blocks (37 common languages; only a fence that names one is highlighted)
 - [x] Recent notes in the palette (the five opened this session, newest first)
-- [x] Commands in the palette (new note, new folder named in the palette itself, the graph and the trash)
+- [x] Commands in the palette (new note, new folder named in the palette itself, and the graph, stats and trash panes)
 - [x] The WhatsApp link in the app (state, pairing code, connect and disconnect from the status bar chip)
 - [x] Resizable list column (drag the separator, double-click to reset, or use the arrow keys)
 - [x] Frontmatter warnings (a note with a broken frontmatter block is still listed and readable, with the reasons above its body and a marker in the list)
