@@ -157,6 +157,13 @@ play it — neither page can be read or copied.
   `cargo build` is green in about a minute. What is given up: the repo cannot make a launch command
   immune to the environment it is launched from, so this is a documented workaround rather than a
   fix - the same symptom from any other `PATH` shadowing behaves the same way.
+- **The three-pane layout has a minimum width, and only the window enforces it.** The sidebar is a
+  fixed 224px and the list starts at 240, so below roughly 800px the viewer is squeezed; the packaged
+  window declares `minWidth: 860` and `minHeight: 560` (`src-tauri/tauri.conf.json`), which is where
+  the layout was measured - no overflow, every pane usable. What is given up: a browser tab can be
+  dragged narrower than that, and then the panes clip rather than reflow into a phone layout, because
+  this is a desktop app with a fixed shell rather than a responsive one. `pnpm --filter desktop dev`
+  at a narrow width shows it; the packaged window cannot reach it.
 - **No end-to-end test.** The sidebar, note list, search palette and link pane are now covered as
   components in jsdom, and the viewer through SSR renders, but nothing drives the built app in a
   real browser: a broken route, a chunk that fails to load or a bad Tauri bundle would not be

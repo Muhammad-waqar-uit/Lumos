@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- The **Stats** pane's grids answer to the pane rather than to the window (`@container`): the
+  sidebar and the list take about 540px before it begins, so a `sm:` rule asked for three figures in
+  a 376px column. Measured at a 376px pane - two columns, single-column lists, no overflow - and at
+  the window's declared 860x560 minimum, where the pane is 636px and takes three.
+- Recorded the layout's real minimum in [LIMITATIONS.md](docs/LIMITATIONS.md): the packaged window
+  cannot go below 860x560, and a browser tab dragged narrower clips rather than reflowing.
+
 ### Added
 - An MCP tool that answers with the vault's own shape. `vault_health` counts notes, folders, tags,
   links and unresolved targets, what arrived this week and this month, the most-linked notes, the

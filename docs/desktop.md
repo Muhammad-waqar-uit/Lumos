@@ -209,6 +209,11 @@ and a short list of where it is thin.
   and the pane says the link figures and the two note lists are missing rather than printing a `0`
   that would read as "this vault has no links". A demo shell passes the demo graph, because there
   the notes and the graph are the same little vault.
+- The grids answer to the **pane**, not to the window (`@container` on the section, `@md:`/`@lg:`
+  on the grids): the sidebar and the list take about 540px before this pane begins, so a `sm:` rule
+  asked for three figures where a 376px column fits two. Measured at a 376px pane - two columns for
+  the figures, one for the lists, no overflow - and at the window's declared minimum of 860x560,
+  where the pane is 636px and takes three.
 - Growth is counted against the clock, so `vaultInsights()` takes `now` as an argument (defaulting to
   the real one) and its suite injects a fixed date; a note dated in the future or one whose `created`
   will not parse is not counted as recent.

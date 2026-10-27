@@ -98,7 +98,9 @@ export function InsightsView({
         : "Offline — demo vault";
 
   return (
-    <section aria-label="Vault insights" className="fade-in flex-1 overflow-y-auto">
+    // The grids below answer to the pane, not to the window: the sidebar and the list take ~540px
+    // before this pane starts, so a `sm:` rule would ask for three columns in a 300px column.
+    <section aria-label="Vault insights" className="fade-in @container flex-1 overflow-y-auto">
       <div className="mx-auto max-w-3xl px-6 py-6">
         <header className="mb-5 flex flex-wrap items-end justify-between gap-2">
           <div>
@@ -121,7 +123,7 @@ export function InsightsView({
           </p>
         ) : (
           <>
-            <dl className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+            <dl className="grid grid-cols-2 gap-2 @md:grid-cols-3">
               <Stat label="Notes" value={insights.notes} />
               <Stat label="Folders" value={insights.folders} />
               <Stat label="Tags" value={insights.tags} />
@@ -156,7 +158,7 @@ export function InsightsView({
               </p>
             )}
 
-            <div className="mt-5 grid gap-5 sm:grid-cols-2">
+            <div className="mt-5 grid gap-5 @lg:grid-cols-2">
               <div>
                 <h3 className="text-[11px] uppercase tracking-wide text-muted-foreground">
                   Most linked

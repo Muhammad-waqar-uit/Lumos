@@ -4,6 +4,19 @@ Chronological record of what has been built. Newest entries first within each da
 
 ## 2026-10-27
 
+### Done - the layout measured at the size it declares
+- [x] **The narrow-window question had an answer already, in the config.** A 291px preview pane looked
+  like a broken layout - the list overflowing, the viewer at zero width - and it is not a state a
+  person can reach: `tauri.conf.json` declares `minWidth: 860` and `minHeight: 560`. Measured at
+  exactly that: sidebar 224, list 320, viewer 308, no overflow on the document, the tablist or the
+  folder nav. So the fix was not a reflow but a record: [LIMITATIONS.md](LIMITATIONS.md) now says the
+  layout has a minimum, which pane forces it, and that a browser tab can still go under it.
+- [x] **One real bug came out of it: the Stats grids used viewport breakpoints.** The pane starts
+  about 540px into the window, so `sm:grid-cols-3` asked for three figures in a 376px column. The
+  section is a `@container` now and the grids use `@md:`/`@lg:`, which is the width they actually
+  have: 376px gives two columns and one for the lists, 636px gives three. jsdom has no layout, so
+  this is measured in the browser rather than asserted in a test - recorded as such.
+
 ### Done - the vault's health, answerable by an agent
 - [x] **The pane's arithmetic left the desktop so a model could ask the same question.** The first
   thing an agent is usually asked - "what should I tidy up?", "what is this vault about?" - needs
