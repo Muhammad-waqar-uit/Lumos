@@ -2,7 +2,17 @@ import { useMemo, useState } from "react";
 import type { VaultEntry } from "@lumos/shared";
 import { activityYears, vaultActivity } from "@lumos/vault-utils/profile";
 import type { Connection } from "../lib/api";
-import { BIO_MAX, NAME_MAX, PIN_LIMIT, profileInitial, useProfileStore } from "../lib/profile";
+import {
+  BIO_MAX,
+  NAME_MAX,
+  PIN_LIMIT,
+  README_MAX,
+  USERNAME_MAX,
+  normalizeUsername,
+  profileInitial,
+  useProfileStore,
+} from "../lib/profile";
+import { Markdown } from "./Markdown";
 
 /**
  * The profile: who this vault belongs to, what they pinned to the top of it, and when they wrote.
@@ -116,8 +126,11 @@ export function ProfileView({
 }) {
   const name = useProfileStore((state) => state.name);
   const bio = useProfileStore((state) => state.bio);
+  const username = useProfileStore((state) => state.username);
+  const readme = useProfileStore((state) => state.readme);
   const pins = useProfileStore((state) => state.pins);
   const save = useProfileStore((state) => state.save);
+  const saveReadme = useProfileStore((state) => state.saveReadme);
   const togglePin = useProfileStore((state) => state.togglePin);
 
   const [now] = useState(() => new Date());
@@ -126,6 +139,9 @@ export function ProfileView({
   const [editing, setEditing] = useState(false);
   const [draftName, setDraftName] = useState(name);
   const [draftBio, setDraftBio] = useState(bio);
+  const [draftUsername, setDraftUsername] = useState(username);
+  const [editingReadme, setEditingReadme] = useState(false);
+  const [draftReadme, setDraftReadme] = useState(readme);
   const [picking, setPicking] = useState(false);
 
   // A year picked from the profile outlives a vault that no longer lists it; fall back rather
@@ -146,12 +162,23 @@ export function ProfileView({
   const startEditing = (): void => {
     setDraftName(name);
     setDraftBio(bio);
+    setDraftUsername(username);
     setEditing(true);
   };
 
   const submit = (): void => {
-    save(draftName, draftBio);
+    save(draftName, draftBio, draftUsername);
     setEditing(false);
+  };
+
+  const startEditingReadme = (): void => {
+    setDraftReadme(readme);
+    setEditingReadme(true);
+  };
+
+  const submitReadme = (): void => {
+    saveReadme(draftReadme);
+    setEditingReadme(false);
   };
 
   const source =
@@ -187,6 +214,7 @@ export function ProfileView({
               <h2 className="truncate text-lg font-semibold text-foreground">
                 {name || "Your vault"}
               </h2>
+              {username ? <p className="text-[11px] text-muted-foreground">@{username}</p> : null}
               <p className="mt-0.5 max-w-lg text-xs text-muted-foreground">
                 {bio || "A second brain on your own disk. Nothing leaves the machine."}
               </p>
@@ -227,6 +255,29 @@ export function ProfileView({
               autoFocus
               className={FIELD}
             />
+            <label
+              htmlFor="profile-username"
+              className="mt-2 block text-[11px] text-muted-foreground"
+            >
+              Username (local display name)
+            </label>
+            <div className="flex items-center gap-1 rounded-md border border-input bg-background px-2 text-xs text-muted-foreground focus-within:border-ring">
+              <span aria-hidden>@</span>
+              <input
+                id="profile-username"
+                value={draftUsername}
+                onChange={(event) => setDraftUsername(normalizeUsername(event.currentTarget.value))}
+                onKeyDown={(event) => {
+                  if (event.key === "Escape") setEditing(false);
+                }}
+                maxLength={USERNAME_MAX}
+                placeholder="your-handle"
+                className="min-w-0 flex-1 bg-transparent py-1 text-foreground outline-none placeholder:text-muted-foreground"
+              />
+            </div>
+            <p className="mt-1 text-[10px] text-muted-foreground">
+              Only shown in this local profile; it is not an account or globally unique username.
+            </p>
             <label htmlFor="profile-bio" className="mt-2 block text-[11px] text-muted-foreground">
               One line about it
             </label>
@@ -243,6 +294,7 @@ export function ProfileView({
               className={`${FIELD} resize-none`}
             />
             <p className="mt-1 text-[10px] text-muted-foreground">
+              {" "}
               Kept on this machine, like the notes. {draftBio.length}/{BIO_MAX}
             </p>
             <div className="mt-2 flex gap-1.5">
@@ -259,6 +311,85 @@ export function ProfileView({
             </div>
           </form>
         ) : null}
+
+        <section
+          aria-label="Profile README"
+          className="mt-6 rounded-lg border border-border bg-card/30 p-3"
+        >
+          <div className="flex items-center justify-between gap-3">
+            <h3 className="text-sm font-semibold text-foreground">README</h3>
+            {editingReadme ? null : (
+              <button type="button" onClick={startEditingReadme} className={QUIET}>
+                {readme ? "Edit README" : "Write a README"}
+              </button>
+            )}
+          </div>
+          {editingReadme ? (
+            <form
+              className="mt-3"
+              onSubmit={(event) => {
+                event.preventDefault();
+                submitReadme();
+              }}
+            >
+              <div className="grid gap-3 @md:grid-cols-2">
+                <label className="text-[11px] text-muted-foreground">
+                  Markdown
+                  <textarea
+                    aria-label="Profile README Markdown"
+                    value={draftReadme}
+                    onChange={(event) => setDraftReadme(event.currentTarget.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Escape") setEditingReadme(false);
+                    }}
+                    maxLength={README_MAX}
+                    rows={10}
+                    placeholder="## About me — what you're learning, collecting, or working on."
+                    className={`${FIELD} mt-1 min-h-40 resize-y font-mono leading-relaxed`}
+                  />
+                  <span className="mt-1 block text-[10px]">
+                    {draftReadme.length}/{README_MAX}
+                  </span>
+                </label>
+                <div>
+                  <p className="text-[11px] text-muted-foreground">Preview</p>
+                  <div className="markdown mt-1 min-h-40 rounded-md border border-border bg-background p-3">
+                    {draftReadme.trim() ? (
+                      <Markdown source={draftReadme} />
+                    ) : (
+                      <p className="text-xs text-muted-foreground">Nothing to preview yet.</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <p className="mt-2 text-[10px] text-muted-foreground">
+                Saved on this machine with your profile. {README_MAX.toLocaleString()} character
+                limit.
+              </p>
+              <div className="mt-2 flex gap-1.5">
+                <button type="submit" className={QUIET}>
+                  Save README
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setEditingReadme(false)}
+                  className="rounded-md px-2 py-0.5 text-[11px] text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          ) : readme.trim() ? (
+            <div className="markdown mt-3 border-t border-border pt-3">
+              <Markdown source={readme} />
+            </div>
+          ) : (
+            <p className="mt-1 text-xs text-muted-foreground">
+              Add a short Markdown introduction, just like a profile README. It stays in this app on
+              this machine.
+            </p>
+          )}
+        </section>
 
         <div className="mt-6 flex items-baseline justify-between gap-2">
           <h3 className="text-sm font-semibold text-foreground">Pinned</h3>

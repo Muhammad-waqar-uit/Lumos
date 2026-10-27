@@ -13,19 +13,31 @@ import { create } from "zustand";
 /** How many notes a profile may pin, matching the row the cards are laid out in. */
 export const PIN_LIMIT = 6;
 
-/** Longest name and bio the form accepts, so a paste cannot push the pane's header apart. */
+/** Longest profile fields accepted by the editor. */
 export const NAME_MAX = 40;
 export const BIO_MAX = 160;
+export const USERNAME_MAX = 24;
+export const README_MAX = 12_000;
 
 export interface Profile {
   /** What the profile calls itself. Empty means "show the fallback", never a blank heading. */
   name: string;
   bio: string;
+  /** A local display handle, not an account name or globally unique username. */
+  username: string;
+  /** Optional Markdown front page for this local profile. */
+  readme: string;
   /** Vault ids (`Folder/name.md`), in the order they were pinned. */
   pins: string[];
 }
 
-export const DEFAULT_PROFILE: Profile = { name: "", bio: "", pins: [] };
+export const DEFAULT_PROFILE: Profile = {
+  name: "",
+  bio: "",
+  username: "",
+  readme: "",
+  pins: [],
+};
 
 const STORAGE_KEY = "lumos.profile.v1";
 
@@ -70,8 +82,23 @@ export function parseProfile(raw: string | null): Profile {
   return {
     name: text(record.name, NAME_MAX, ""),
     bio: text(record.bio, BIO_MAX, ""),
+    username: normalizeUsername(record.username),
+    readme: text(record.readme, README_MAX, ""),
     pins,
   };
+}
+
+/** A readable local handle; it is not a globally registered username. */
+export function normalizeUsername(value: unknown): string {
+  if (typeof value !== "string") return "";
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9-]+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-/, "")
+    .slice(0, USERNAME_MAX)
+    .replace(/-$/, "");
 }
 
 /** The letter the avatar shows: the first of the name, or the app's when there is none. */
@@ -90,8 +117,10 @@ export function withPin(profile: Profile, id: string): Profile {
 }
 
 interface ProfileState extends Profile {
-  /** Saves the name and the line under it; both are trimmed and capped here, not by the form. */
-  save: (name: string, bio: string) => void;
+  /** Saves the profile identity; fields are normalized here, not only by the form. */
+  save: (name: string, bio: string, username?: string) => void;
+  /** Saves the Markdown front page without changing the rest of the profile. */
+  saveReadme: (readme: string) => void;
   /** Pins or unpins one note. */
   togglePin: (id: string) => void;
 }
@@ -117,19 +146,29 @@ function persist(profile: Profile): void {
 export const useProfileStore = create<ProfileState>((set, get) => ({
   ...loadProfile(),
 
-  save: (name, bio) => {
+  save: (name, bio, username = get().username) => {
+    const { readme, pins } = get();
     const next: Profile = {
       name: name.trim().slice(0, NAME_MAX),
       bio: bio.trim().slice(0, BIO_MAX),
-      pins: get().pins,
+      username: normalizeUsername(username),
+      readme,
+      pins,
     };
     persist(next);
     set(next);
   },
 
+  saveReadme: (readme) => {
+    const { name, bio, username, pins } = get();
+    const next: Profile = { name, bio, username, readme: readme.trim().slice(0, README_MAX), pins };
+    persist(next);
+    set(next);
+  },
+
   togglePin: (id) => {
-    const { name, bio, pins } = get();
-    const next = withPin({ name, bio, pins }, id);
+    const { name, bio, username, readme, pins } = get();
+    const next = withPin({ name, bio, username, readme, pins }, id);
     // A full profile hands the same array back, so there is nothing to save or re-render.
     if (next.pins === pins) return;
     persist(next);

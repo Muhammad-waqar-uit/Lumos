@@ -2,6 +2,34 @@
 
 Chronological record of what has been built. Newest entries first within each date.
 
+## 2026-10-28
+
+### Done - a profile with a front page
+- [x] The profile now has a GitHub-inspired Markdown README, rendered live while editing and shown on
+  the profile when saved. It uses the note renderer, so external links follow the same safe path;
+  local profile storage is capped at 12,000 README characters. **Edit profile** also offers a
+  normalized local `@username` display handle. It is not an account, a globally unique name or a
+  public URL. Older saved profiles load with empty defaults for the new fields. A reminder for
+  possible future work (export/import or portable settings, configurable profile sections/themes,
+  and only later a privacy-reviewed public identity if sharing exists) is kept in
+  [FEATURES.md](FEATURES.md).
+- [x] `profile.test.ts` covers backward-compatible parsing, sanitization, bounds and persistence;
+  `ProfileView.test.tsx` exercises the handle and README editor/preview/save path.
+
+### Done - open the full page without leaving the note
+- [x] **A note's scraped preview was not the page.** The page body is useful when reading, but social
+  sites, JavaScript-rendered pages and pages that need a browser session still need a real webview.
+  The reader's full-page, host and image actions now open a separate Tauri webview while leaving the
+  note pane untouched; Vite preview uses a new browser tab. The Rust boundary validates again that
+  the URL is HTTP(S), has no embedded credentials, and keeps subsequent navigation HTTP(S). Its
+  generated window label has no capability, so remote sites cannot call Lumos's Tauri IPC. We chose
+  the system webview rather than bundling Chrome: WebView2 on Windows and WebKit on macOS/Linux; no
+  in-window address bar or history controls yet.
+- [x] **Proof at both boundaries.** Eight TypeScript tests cover URL acceptance/refusal and the
+  browser-preview fallback; LinkPane tests cover the new actions; two Rust unit tests exercise the
+  native URL policy. `cargo check --offline` and `cargo test --offline` passed; the packaged Tauri
+  window still needs a manual check.
+
 ## 2026-10-27
 
 ### Done - the layout measured at the size it declares

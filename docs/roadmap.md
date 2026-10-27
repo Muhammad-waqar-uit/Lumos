@@ -27,6 +27,7 @@ folder, so progress is always visible.
 ## M3 - Daemon enhanced (Phase 3) — mostly done
 
 - Link expansion for `/read` and `/interview` (title, description, image). ✅ (`GET /link`, and the desktop reads the page in place)
+- Open the full source link in an isolated in-app webview window, keeping Lumos on the note; the web preview opens a browser tab. ✅ (HTTP(S)-only navigation; system webview rather than bundled Chrome)
 - Instagram and Facebook links play in place through their own embeds, with the caption card the daemon reads. ✅
 - `/find <query>` over the vault. ✅ (title, tags and body; five matches per reply, the rest counted)
 - `/plan today|tomorrow` backed by a local Ollama model. ✅ (the vault's 20 newest notes become the prompt; a missing Ollama or model answers with one sentence instead)
@@ -56,15 +57,20 @@ folder, so progress is always visible.
   links to, the commonest tags, every folder's size - with each row opening a note or filtering the
   list. Computed from the listing and the graph the app already has, so it costs no request. ✅
   (`@lumos/vault-utils/insights`, `InsightsView.tsx`)
-- A **Profile** pane behind the sidebar's avatar: the pinned notes, the year's calendar square per
-  day, the streaks, and the name the vault gives itself. ✅ (preferences in `localStorage`, so the
-  vault stays plain Markdown; the calendar is `vaultActivity()` in `@lumos/vault-utils/profile`)
+- A **Profile** pane behind the sidebar's avatar: pinned notes, yearly activity calendar and
+  streaks, plus an editable name, bio and local `@username` handle and a GitHub-inspired Markdown
+  README with live preview. ✅ (profile preferences in `localStorage`, not the vault; the handle is
+  local rather than an account identity; the calendar is `vaultActivity()` in
+  `@lumos/vault-utils/profile`)
+- Future profile extension reminder: consider export/import or vault-portable preferences, optional
+  profile sections/themes, and account-backed public identity only if sharing or accounts are added;
+  those need explicit privacy and portability decisions (tracked in [FEATURES.md](FEATURES.md)).
 - The graph keeps its layout: node positions and a view you placed survive a tab switch, and a resized
   pane re-fits a view the app fitted itself. ✅
 
 That finishes the graph, code in a note is highlighted, and a scraped page is now kept for the
-session. The phase itself is not finished: two link-pane items - less site chrome in the reader's
-text, and reading a PDF or plain HTML file - are still open under **Plan** in
+session. The phase itself is not finished: reading a PDF or plain HTML file remains open under
+**Plan** in
 [`TODO.md`](TODO.md).
 
 ## M6 - Search (Phase 6) ✅

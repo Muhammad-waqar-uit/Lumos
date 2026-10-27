@@ -9,7 +9,7 @@ afterEach(cleanup);
 
 beforeEach(() => {
   localStorage.clear();
-  useProfileStore.setState({ name: "", bio: "", pins: [] });
+  useProfileStore.setState({ name: "", bio: "", username: "", readme: "", pins: [] });
 });
 
 /** A note `days` before today, at local noon, for the cases the clock is part of. */
@@ -51,7 +51,7 @@ describe("ProfileView", () => {
     ).toBeTruthy();
   });
 
-  it("saves a name and a bio, and shows the first letter in the avatar", () => {
+  it("saves a display name, local username and bio", () => {
     renderView(NOTES);
 
     fireEvent.click(screen.getByRole("button", { name: "Edit profile" }));
@@ -59,11 +59,28 @@ describe("ProfileView", () => {
     fireEvent.change(screen.getByLabelText("One line about it"), {
       target: { value: "notes on rust" },
     });
+    fireEvent.change(screen.getByLabelText("Username (local display name)"), {
+      target: { value: "Waqar Khan" },
+    });
     fireEvent.click(screen.getByRole("button", { name: "Save" }));
 
     expect(screen.getByRole("heading", { name: "Waqar" })).toBeTruthy();
     expect(screen.getByText("notes on rust")).toBeTruthy();
+    expect(screen.getByText("@waqar-khan")).toBeTruthy();
     expect(useProfileStore.getState().name).toBe("Waqar");
+    expect(useProfileStore.getState().username).toBe("waqar-khan");
+  });
+
+  it("edits and previews a GitHub-style Markdown profile README", () => {
+    renderView(NOTES);
+    fireEvent.click(screen.getByRole("button", { name: "Write a README" }));
+    fireEvent.change(screen.getByLabelText("Profile README Markdown"), {
+      target: { value: "## About\n\nLearning Rust." },
+    });
+    expect(screen.getByRole("heading", { level: 2, name: "About" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Save README" }));
+    expect(screen.getByText("Learning Rust.")).toBeTruthy();
+    expect(useProfileStore.getState().readme).toBe("## About\n\nLearning Rust.");
   });
 
   it("pins a note from the picker and unpins it from its card", () => {
@@ -85,7 +102,13 @@ describe("ProfileView", () => {
   });
 
   it("opens a pinned note through the shell's handler", () => {
-    useProfileStore.setState({ name: "", bio: "", pins: ["Inbox/Morning walk.md"] });
+    useProfileStore.setState({
+      name: "",
+      bio: "",
+      username: "",
+      readme: "",
+      pins: ["Inbox/Morning walk.md"],
+    });
     const onOpen = vi.fn();
     renderView(NOTES, onOpen);
 
@@ -94,7 +117,13 @@ describe("ProfileView", () => {
   });
 
   it("drops a pin whose note is gone instead of drawing a card that cannot open", () => {
-    useProfileStore.setState({ name: "", bio: "", pins: ["Inbox/Deleted.md"] });
+    useProfileStore.setState({
+      name: "",
+      bio: "",
+      username: "",
+      readme: "",
+      pins: ["Inbox/Deleted.md"],
+    });
     renderView(NOTES);
 
     expect(screen.queryByRole("button", { name: "Unpin Deleted" })).toBeNull();
@@ -131,6 +160,8 @@ describe("ProfileView", () => {
     useProfileStore.setState({
       name: "",
       bio: "",
+      username: "",
+      readme: "",
       pins: Array.from({ length: 6 }, (_, index) => `Ideas/n${index}.md`),
     });
     renderView([entry("2026-10-26", "Morning walk")]);

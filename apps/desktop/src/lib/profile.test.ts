@@ -5,6 +5,9 @@ import {
   DEFAULT_PROFILE,
   NAME_MAX,
   PIN_LIMIT,
+  README_MAX,
+  USERNAME_MAX,
+  normalizeUsername,
   parseProfile,
   profileInitial,
   useProfileStore,
@@ -13,7 +16,7 @@ import {
 
 beforeEach(() => {
   localStorage.clear();
-  useProfileStore.setState({ name: "", bio: "", pins: [] });
+  useProfileStore.setState({ name: "", bio: "", username: "", readme: "", pins: [] });
 });
 
 describe("parseProfile", () => {
@@ -27,7 +30,16 @@ describe("parseProfile", () => {
     const profile = parseProfile(
       JSON.stringify({ name: "  Waqar  ", bio: 42, pins: "Inbox/a.md", extra: true }),
     );
-    expect(profile).toEqual({ name: "Waqar", bio: "", pins: [] });
+    expect(profile).toEqual({ name: "Waqar", bio: "", username: "", readme: "", pins: [] });
+  });
+
+  it("loads a Markdown README and remains compatible with profiles saved before it existed", () => {
+    const oldProfile = parseProfile(JSON.stringify({ name: "Waqar", bio: "", pins: [] }));
+    expect(oldProfile.username).toBe("");
+    expect(oldProfile.readme).toBe("");
+    expect(
+      parseProfile(JSON.stringify({ readme: "  ## My vault\n\nNotes and ideas.  " })).readme,
+    ).toBe("## My vault\n\nNotes and ideas.");
   });
 
   it("trims, caps and de-duplicates the pins, and refuses more than the limit", () => {
@@ -44,10 +56,23 @@ describe("parseProfile", () => {
     expect(new Set(profile.pins).size).toBe(profile.pins.length);
   });
 
-  it("caps a stored name and bio rather than letting them push the pane apart", () => {
-    const profile = parseProfile(JSON.stringify({ name: "x".repeat(200), bio: "y".repeat(500) }));
+  it("caps a stored name, bio and README rather than accepting an unbounded profile", () => {
+    const profile = parseProfile(
+      JSON.stringify({ name: "x".repeat(200), bio: "y".repeat(500), readme: "z".repeat(20_000) }),
+    );
     expect(profile.name).toHaveLength(NAME_MAX);
     expect(profile.bio).toHaveLength(BIO_MAX);
+    expect(profile.readme).toHaveLength(README_MAX);
+    expect(profile.username).toBe("");
+  });
+});
+
+describe("normalizeUsername", () => {
+  it("normalizes a local handle and caps its length", () => {
+    expect(normalizeUsername("  Waqar Khan! ")).toBe("waqar-khan");
+    expect(normalizeUsername("--Lots---of--dashes--")).toBe("lots-of-dashes");
+    expect(normalizeUsername("x".repeat(40))).toHaveLength(USERNAME_MAX);
+    expect(normalizeUsername(42)).toBe("");
   });
 });
 
@@ -70,8 +95,30 @@ describe("the profile store", () => {
     useProfileStore.getState().save("  Waqar ", "  notes on rust ");
 
     const stored = JSON.parse(localStorage.getItem("lumos.profile.v1") ?? "{}");
-    expect(stored).toEqual({ name: "Waqar", bio: "notes on rust", pins: [] });
+    expect(stored).toEqual({
+      name: "Waqar",
+      bio: "notes on rust",
+      username: "",
+      readme: "",
+      pins: [],
+    });
     expect(useProfileStore.getState().name).toBe("Waqar");
+  });
+
+  it("saves the profile README without losing the identity or pins", () => {
+    useProfileStore.getState().save("Waqar", "notes on rust");
+    useProfileStore.getState().togglePin("Inbox/a.md");
+    useProfileStore.getState().saveReadme("## About\n\nLearning Rust.");
+
+    const stored = JSON.parse(localStorage.getItem("lumos.profile.v1") ?? "{}");
+    expect(stored).toEqual({
+      name: "Waqar",
+      bio: "notes on rust",
+      username: "",
+      readme: "## About\n\nLearning Rust.",
+      pins: ["Inbox/a.md"],
+    });
+    expect(useProfileStore.getState().readme).toBe("## About\n\nLearning Rust.");
   });
 
   it("keeps the pins when the name is saved, and the name when a pin changes", () => {
@@ -80,7 +127,13 @@ describe("the profile store", () => {
     useProfileStore.getState().save("Someone else", "");
 
     const stored = JSON.parse(localStorage.getItem("lumos.profile.v1") ?? "{}");
-    expect(stored).toEqual({ name: "Someone else", bio: "", pins: ["Inbox/a.md"] });
+    expect(stored).toEqual({
+      name: "Someone else",
+      bio: "",
+      username: "",
+      readme: "",
+      pins: ["Inbox/a.md"],
+    });
     expect(useProfileStore.getState().pins).toEqual(["Inbox/a.md"]);
   });
 

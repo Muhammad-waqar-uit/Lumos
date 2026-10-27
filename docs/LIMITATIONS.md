@@ -32,8 +32,14 @@ Each entry says what is given up. Where a limit is deliberate, the alternative i
 - **Text is capped at 6,000 characters.** Past that the pane says so and offers the real page. There
   is no "load the rest" path, and no way to raise the cap from the UI.
 - **JavaScript-rendered pages come back nearly empty.** Only the initial HTML is fetched — no browser,
-  no script execution — so a single-page app reads as a shell. Paywalled, login-only and interactive
-  pages are in the same place.
+  no script execution — so a single-page app reads as a shell. The full-page action opens the link in a
+  separate system-webview window, where the site can render normally. It is not bundled Chrome:
+  Windows uses WebView2, while macOS and Linux use WebKit. Paywalled and login-only pages depend on
+  the system webview's own cookies and are not shared with Chrome or another browser.
+- **The in-app webview has no browser chrome.** It is a separate window, but it has no address bar,
+  back/forward/reload controls or browser-profile settings. HTTP(S) navigation only is enforced;
+  other schemes (including `file:` and app protocols) are refused. Use the system browser for those
+  controls or for sites that require its existing signed-in session.
 - **A PDF is read as text, with the limits that follow from that.** The reader takes the text a
   PDF contains (up to 10 MiB, then capped like any page at 6,000 characters), so a scan with no
   text layer reads as "no readable text", an encrypted document is refused with its reason, and

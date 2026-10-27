@@ -25,7 +25,8 @@ daemon (falling back to demo data when the daemon is offline):
 - `src/components/InsightsView.tsx` - the vault counted: six figures, then the most-linked notes, the ones with no links or tags, the commonest tags and every folder's size, each row a way in
 - `src/components/ProfileView.tsx` - the profile: the name and the line the vault gives itself, up to six pinned notes as cards, the year's calendar square per day with the streaks beside it, and the form that edits the two
 - `src/lib/profile.ts` - the profile itself (name, bio, pins) with its validation and pinning rules, and the zustand store that keeps the sidebar's avatar and the pane in step
-- `src/components/LinkPane.tsx` - the note's link: video player, image, or scraped reader card
+- `src/components/LinkPane.tsx` - the note's link: video player, image, or scraped reader card; **Open in browser** actions open an isolated in-app webview on desktop
+- `src/lib/link-viewer.ts` - URL validation and the Tauri/native-webview vs browser-preview handoff
 - `src/components/GraphView.tsx` - canvas link graph (routes, controls, click-to-open)
 - `src/components/PaneBoundary.tsx` - error boundary around the lazily loaded graph pane
 - `src/components/SearchModal.tsx` - the `Cmd/Ctrl+K` palette: ranked matches, keyboard selection, body matches from the daemon, and the six commands the palette can run itself - new note, new folder, and the graph, stats, trash and profile panes
@@ -244,11 +245,18 @@ control a person looks for anyway.
 - **Current streak**, **longest**, **active days** and **busiest day** sit beside it, counted from
   the date each note was created. A streak is not broken by today being unfinished, and it counts
   across years - a run that starts on 30 December is still one run in January.
-- **Edit profile** gives the vault a name and one line under it; the avatar takes the name's first
-  letter the moment it is saved. The name, the line and the pins are in `localStorage`, not in the
-  vault: the vault is Markdown another editor has to be able to read, and a `profile.json` in it
-  would be a file every other tool must learn to ignore. What is given up: the profile does not
-  travel with the notes to another machine.
+- **Edit profile** gives the vault a name, a one-line bio and a local `@username` display handle.
+  The handle is normalized to lowercase letters, numbers and hyphens, but is not an account, globally
+  unique identity or sign-in. The avatar takes the name's first letter the moment it is saved.
+- **README** is a GitHub-inspired profile introduction: write Markdown, see the rendered preview
+  beside it, then save it as part of the local profile. It uses the same safe Markdown renderer as
+  notes, including the external-link handling; content is capped at 12,000 characters. Name, bio,
+  handle, README and pins live in `localStorage`, not the vault, so the vault stays plain Markdown.
+  What is given up: profile preferences do not travel with notes to another machine.
+- **Future extension to remember:** consider optional export/import or vault-portable profile data,
+  selectable profile themes/sections, and (only if Lumos later gains accounts or sharing) a
+  globally unique username and public profile page. Those need deliberate privacy and portability
+  decisions; this local README and handle are not a public profile.
 - Every figure is computed from the listing the shell already holds, so the pane opens instantly and
   works with the daemon stopped. Calendar arithmetic is `vaultActivity()` in
   `@lumos/vault-utils/profile` - pure, taking `now` as an argument so the suites can pin it, and
@@ -257,8 +265,8 @@ control a person looks for anyway.
 - Covered by `packages/vault-utils/src/profile.test.ts` (the grid's shape, the bands, the month
   labels, the streaks across the year boundary and through today, the unparseable date),
   `src/lib/profile.test.ts` (parsing untrusted stored JSON, the pin limit, persistence) and
-  `src/components/ProfileView.test.tsx` (the form, pinning and unpinning, a pin whose note is gone,
-  the grid and the figures, the empty vault).
+  `src/components/ProfileView.test.tsx` (the identity fields, README edit/preview/save, pinning and
+  unpinning, a pin whose note is gone, the grid and figures, the empty vault).
 
 ### The trash
 
@@ -309,6 +317,15 @@ shows that link in the viewer instead of only linking out.
 - States: a loading line while the page is read, the daemon's own refusal message with a **Retry**
   beside it (a private host, a non-page content type, a timeout), and — with the daemon down — a line
   saying the page cannot be read while the link itself stays clickable.
+
+The reader's **Open in browser**, **Open on [host]** and **Open the image** actions, as well as links
+inside Markdown and the note's frontmatter URL, open a separate Lumos webview window, so the note
+pane stays put. The native command accepts only credential-free HTTP(S) URLs and applies the same
+scheme check to later navigations. Its generated window label is not covered by the app's
+capabilities, leaving remote content without Tauri IPC access. In the Vite browser preview the same
+action opens a new browser tab. This is the platform webview, not a bundled Chrome: Windows uses
+WebView2 (Chromium-based), while macOS and Linux use WebKit. Browser back/forward controls are not
+provided yet.
 
 A page is read once per session. `src/lib/link-cache.ts` keeps the card by URL at module scope,
 because the pane unmounts whenever the note or the tab changes, and it hands a second caller the

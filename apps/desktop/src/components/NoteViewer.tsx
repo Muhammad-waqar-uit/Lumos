@@ -7,6 +7,7 @@ import { Markdown } from "./Markdown";
 import { NoteActions } from "./NoteActions";
 import { NoteEditor } from "./NoteEditor";
 import { NoteMeta } from "./NoteMeta";
+import { OpenLink } from "./OpenLink";
 
 function formatDate(iso: string): string {
   const d = new Date(iso);
@@ -73,6 +74,7 @@ export function NoteViewer({
   }
 
   const fm = note.frontmatter;
+  const frontmatterUrl = fm.url;
   const isEditing = editing === note.file;
 
   return (
@@ -84,15 +86,10 @@ export function NoteViewer({
             <span>{note.folder}</span>
             <span>{formatDate(fm.created)}</span>
             <span>source: {fm.source}</span>
-            {fm.url ? (
-              <a
-                href={fm.url}
-                target="_blank"
-                rel="noreferrer"
-                className="underline hover:text-foreground"
-              >
-                {fm.url}
-              </a>
+            {frontmatterUrl ? (
+              <OpenLink href={frontmatterUrl} className="underline hover:text-foreground">
+                {frontmatterUrl}
+              </OpenLink>
             ) : null}
           </p>
         </div>

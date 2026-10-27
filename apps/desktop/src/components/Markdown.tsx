@@ -1,15 +1,30 @@
 import ReactMarkdown, { type Components } from "react-markdown";
 import rehypeHighlight from "rehype-highlight";
 import remarkGfm from "remark-gfm";
+import { OpenLink } from "./OpenLink";
 
-/** Note links open outside the app window instead of navigating the UI away. */
+/** Note links open in Lumos's separate, capability-isolated webview. */
 const markdownComponents: Components = {
-  a: ({ href, title, children }) => (
-    <a href={href} title={title} target="_blank" rel="noreferrer">
-      {children}
-    </a>
-  ),
+  a: ({ href, title, children }) => {
+    const safeHref = href ? safeLinkHref(href) : undefined;
+    if (!safeHref) return <span title={title}>{children}</span>;
+
+    return (
+      <OpenLink href={safeHref} title={title} className="underline hover:text-foreground">
+        {children}
+      </OpenLink>
+    );
+  },
 };
+
+function safeLinkHref(href: string): string | null {
+  try {
+    const url = new URL(href);
+    return url.protocol === "http:" || url.protocol === "https:" ? url.href : null;
+  } catch {
+    return null;
+  }
+}
 
 interface Props {
   source: string;

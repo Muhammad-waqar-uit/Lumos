@@ -7,7 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- A **Profile** pane (the avatar at the top of the sidebar, `?view=profile`): the vault's calendar
+- A full-link action in the note reader opens a separate, isolated in-app webview window on desktop;
+  the web preview opens a browser tab. The native window accepts credential-free HTTP(S) URLs and
+  blocks navigation to other schemes. It uses the platform webview rather than bundling Chrome.
+- A **Profile** pane (the avatar at the top of the sidebar, `?view=profile`): editable local display
+  name, bio and `@username` handle (not an account or globally unique identity), plus a
+  GitHub-inspired Markdown README editor with a live preview. The README uses the same safe Markdown
+  renderer as notes and is capped at 12,000 characters. The vault's calendar
   and the front page for a few chosen notes. **Pinned**: up to six notes kept at the top as cards -
   folder, date, the opening lines and tags - each opening from the card, with **Customize your pins**
   to choose them from the listing (a full set offers no more rather than failing). **The year**: one
@@ -15,9 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   with a month ruler, a Less/More legend and a year picker over every year that holds a note. The
   bands are absolute rather than scaled to the year's busiest day, because scaling paints a vault of
   one-note days as brightly as a busy one. Beside it: the current streak, the longest, the active
-  days and the busiest day, counted from the date each note was created. **Edit profile** gives the
-  vault a name and a line, which the avatar in the sidebar then carries. The name, the line and the
-  pins live in `localStorage` - they are interface preferences, not notes, so the vault stays plain
+  days and the busiest day, counted from the date each note was created. The name, line, handle,
+  README and pins live in `localStorage` - they are interface preferences, not notes, so the vault stays plain
   Markdown - and every figure comes from the listing the shell already holds, so the pane opens with
   no request and works with the daemon stopped (`@lumos/vault-utils/profile`,
   `src/lib/profile.ts`, `src/components/ProfileView.tsx`)

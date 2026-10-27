@@ -21,8 +21,10 @@ end to end, and because nothing else on this page can close them.
   packaged bundle are still unexercised.
 - [!] **A live WhatsApp session** (P1) - pair a device with the QR code and send a real message, so
   the capture path is checked against the platform rather than against a parser and a stub.
-- [!] **The social embeds inside the packaged window** (P2) - a reel, a video and a post were
-  verified in Chromium, which is the engine's family but not the engine.
+- [!] **The social embeds and in-app link viewer inside the packaged window** (P2) - a reel, a video
+  and a post were verified in Chromium, which is not the packaged webview engine. Confirm that the
+  separate link window opens ordinary pages, follows redirects/links within HTTP(S), and refuses
+  navigation to other schemes in the Tauri shell.
 - [!] **The graph's "Show notes" button** (P2) - the wiring is now tested end to end at the
   component level (`GraphView.test.tsx` asserts that selecting a tag node offers **Show notes** and
   passes the tag to the filter), but a real pointer still has to hit a node drawn on a canvas, and
@@ -127,7 +129,10 @@ per-step text form and trace for an agent. Shape, cost and the drop conditions a
 
 ## In progress
 
-Nothing in flight. The next item to pick up is the first one under **Plan**.
+Nothing in flight. The next item to pick up is the first one under **Plan**. Future profile
+extensions to keep in view are recorded in [FEATURES.md](FEATURES.md): export/import or vault-portable
+preferences, optional sections/themes, and a privacy-reviewed account/public identity only if
+sharing is added. These are reminders, not commitments or requirements for the current profile.
 
 ## Done
 
@@ -340,6 +345,10 @@ Nothing in flight. The next item to pick up is the first one under **Plan**.
   is `vaultActivity()` in `@lumos/vault-utils/profile`, pure and clock-injected. The pane is the
   keyboard's too - **Open the profile** in the palette, since a pane added without a command would
   be the one place the keyboard cannot reach (`src/lib/profile.ts`, `ProfileView.tsx`; 20 tests)
+- [x] In-app link viewer: the page reader's full-page, host and image actions open a separate
+  capability-isolated Tauri webview on desktop. Only credential-free HTTP(S) URLs are accepted and
+  later navigations are kept to HTTP(S); the Vite preview opens a browser tab. This is a system
+  webview, not a bundled Chrome engine (`src/lib/link-viewer.ts`, `src-tauri/src/lib.rs`)
 - [x] Full-text search with fuse.js - the palette ranks titles, tags and previews over the loaded
   vault, tolerant of typos, and works with the daemon stopped (`src/lib/search.ts`, 10 unit tests)
 - [x] Cmd/Ctrl+K search modal - opens from anywhere, arrows move the selection, Enter opens the note

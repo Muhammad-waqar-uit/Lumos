@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { LinkCard, LinkFrame, LinkMedia, LinkMediaKind } from "@lumos/shared";
 import { parseLinkMedia } from "@lumos/vault-utils/link";
 import { type Connection } from "../lib/api";
 import { peekLink, readLinkOnce } from "../lib/link-cache";
+import { OpenLink } from "./OpenLink";
 
 /** What one fetch of a page came back with, and which request it answers. */
 type FetchOutcome =
@@ -57,19 +58,6 @@ function derivePage(
 }
 
 /** A small link that leaves the app for the real thing. */
-function OpenExternal({ href, children }: { href: string; children: ReactNode }) {
-  return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noreferrer"
-      className="text-xs text-muted-foreground underline hover:text-foreground"
-    >
-      {children}
-    </a>
-  );
-}
-
 /** The link's host, for a label that does not need a network call. */
 function hostOf(url: string): string {
   try {
@@ -177,7 +165,13 @@ export function LinkPane({ url, connection }: { url: string; connection: Connect
     <>
       {!withDaemon && FETCHED_KINDS.has(media.kind) ? (
         <p className="mt-3 text-xs text-muted-foreground">
-          {offlineText(media.kind)} <OpenExternal href={url}>Open in browser</OpenExternal>
+          {offlineText(media.kind)}{" "}
+          <OpenLink
+            href={url}
+            className="text-xs text-muted-foreground underline hover:text-foreground"
+          >
+            Open in browser
+          </OpenLink>
         </p>
       ) : null}
 
@@ -230,7 +224,12 @@ export function LinkPane({ url, connection }: { url: string; connection: Connect
         {status}
 
         <p className="mt-2">
-          <OpenExternal href={url}>Open on {hostOf(url)}</OpenExternal>
+          <OpenLink
+            href={url}
+            className="text-xs text-muted-foreground underline hover:text-foreground"
+          >
+            Open on {hostOf(url)}
+          </OpenLink>
         </p>
       </section>
     );
@@ -246,7 +245,12 @@ export function LinkPane({ url, connection }: { url: string; connection: Connect
           className="max-h-80 rounded-md border border-border object-contain"
         />
         <p className="mt-2">
-          <OpenExternal href={url}>Open the image</OpenExternal>
+          <OpenLink
+            href={url}
+            className="text-xs text-muted-foreground underline hover:text-foreground"
+          >
+            Open the image
+          </OpenLink>
         </p>
       </section>
     );
@@ -266,7 +270,13 @@ export function LinkPane({ url, connection }: { url: string; connection: Connect
             </p>
             {card.truncated ? (
               <p className="mt-2 text-xs text-muted-foreground">
-                The text was cut here. <OpenExternal href={url}>Open the whole page</OpenExternal>
+                The text was cut here.{" "}
+                <OpenLink
+                  href={url}
+                  className="text-xs text-muted-foreground underline hover:text-foreground"
+                >
+                  Open the whole page
+                </OpenLink>
               </p>
             ) : null}
           </div>
@@ -274,7 +284,13 @@ export function LinkPane({ url, connection }: { url: string; connection: Connect
 
         {card && !card.text ? (
           <p className="mt-3 border-t border-border pt-3 text-xs text-muted-foreground">
-            That page had no readable text. <OpenExternal href={url}>Open in browser</OpenExternal>
+            That page had no readable text.{" "}
+            <OpenLink
+              href={url}
+              className="text-xs text-muted-foreground underline hover:text-foreground"
+            >
+              Open in browser
+            </OpenLink>
           </p>
         ) : null}
       </div>

@@ -5,11 +5,15 @@ import type { LinkCard } from "@lumos/shared";
 import { clearLinkCache } from "../lib/link-cache";
 import { LinkPane } from "./LinkPane";
 
+const opened = vi.hoisted(() => ({ openLinkInApp: vi.fn(async () => {}) }));
+vi.mock("../lib/link-viewer", () => ({ openLinkInApp: opened.openLinkInApp }));
+
 beforeEach(clearLinkCache);
 
 afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();
+  opened.openLinkInApp.mockClear();
 });
 
 const PAGE_URL = "https://example.com/article-of-the-day";
@@ -59,6 +63,15 @@ describe("LinkPane - what plays without the daemon", () => {
     const image = screen.getByRole("img", { name: "cover.png" });
     expect(image.getAttribute("src")).toBe("https://example.com/pics/cover.png");
   });
+
+  it("opens a linked image in the in-app viewer", async () => {
+    render(<LinkPane url="https://example.com/pics/cover.png" connection="demo" />);
+    fireEvent.click(screen.getByRole("button", { name: "Open the image" }));
+
+    await waitFor(() =>
+      expect(opened.openLinkInApp).toHaveBeenCalledWith("https://example.com/pics/cover.png"),
+    );
+  });
 });
 
 describe("LinkPane - reading a page", () => {
@@ -70,6 +83,14 @@ describe("LinkPane - reading a page", () => {
     expect(await screen.findByText("Example page")).toBeDefined();
     expect(screen.getByText("A description")).toBeDefined();
     expect(screen.getByText("Readable body text.")).toBeDefined();
+  });
+
+  it("opens the source page from the text reader in the in-app viewer", async () => {
+    stubLink({ ...card(), truncated: true });
+    render(<LinkPane url={PAGE_URL} connection="daemon" />);
+    fireEvent.click(await screen.findByRole("button", { name: "Open the whole page" }));
+
+    expect(opened.openLinkInApp).toHaveBeenCalledWith(PAGE_URL);
   });
 
   it("says a page needs the daemon when it is not running, and asks nobody", () => {
