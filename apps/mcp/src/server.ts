@@ -27,8 +27,9 @@ import {
   restoreNote,
   searchNotes,
   updateNote,
+  vaultHealth,
 } from "./tools.js";
-import { entryLines, folderLines, noteText, trashLines } from "./render.js";
+import { entryLines, folderLines, healthLines, noteText, trashLines } from "./render.js";
 import { resolveVault } from "./vault.js";
 
 /** What the client shows a model before it calls anything. */
@@ -96,6 +97,23 @@ export function createServer({ vault = resolveVault() }: { vault?: string } = {}
       annotations: { readOnlyHint: true },
     },
     () => answer(async () => folderLines(await listFolders(vault))),
+  );
+
+  server.registerTool(
+    "vault_health",
+    {
+      title: "Vault health",
+      description:
+        "The vault counted, as one cheap read-only overview: how many notes, folders, tags and " +
+        "links it holds, how many links point at a note that does not exist yet, how many notes " +
+        "arrived in the last week and month, the notes with the most links pointing in, the ones " +
+        "with no links and no tags, the commonest tags and each folder's size. The note lists " +
+        "answer keys, so a key from here can be read straight away. Best first call when asked " +
+        "what to tidy up, what to write next, or what this vault is about.",
+      inputSchema: {},
+      annotations: { readOnlyHint: true },
+    },
+    () => answer(async () => healthLines(await vaultHealth(vault))),
   );
 
   server.registerTool(

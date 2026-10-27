@@ -115,7 +115,7 @@ describe("the stdio entry point", () => {
     expect(String(init.result?.instructions)).toContain("Notes are addressed by key");
   }, 20000);
 
-  it("lists the twelve tools over the pipe, and writes nothing but protocol to stdout", async () => {
+  it("lists the thirteen tools over the pipe, and writes nothing but protocol to stdout", async () => {
     await request("initialize", {
       protocolVersion: "2025-06-18",
       capabilities: {},
@@ -127,7 +127,7 @@ describe("the stdio entry point", () => {
 
     const listed = await request("tools/list");
     const tools = (listed.result?.tools ?? []) as { name: string }[];
-    expect(tools).toHaveLength(12);
+    expect(tools).toHaveLength(13);
     expect(tools.map((tool) => tool.name)).toContain("create_note");
 
     // The vault path is a diagnostic and belongs on stderr; one log line on stdout would be read

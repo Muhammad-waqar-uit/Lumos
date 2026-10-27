@@ -55,7 +55,7 @@ folder, so progress is always visible.
   unresolved targets, notes added this week and this month, the most-linked notes, the notes nothing
   links to, the commonest tags, every folder's size - with each row opening a note or filtering the
   list. Computed from the listing and the graph the app already has, so it costs no request. ✅
-  (`src/lib/insights.ts`, `InsightsView.tsx`)
+  (`@lumos/vault-utils/insights`, `InsightsView.tsx`)
 - The graph keeps its layout: node positions and a view you placed survive a tab switch, and a resized
   pane re-fits a view the app fitted itself. ✅
 

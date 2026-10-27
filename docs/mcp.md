@@ -88,6 +88,7 @@ accepts, so a key from one call is an argument to the next unchanged.
 
 | Tool | What it does | Reads |
 |---|---|---|
+| `vault_health` | The vault counted: notes, folders, tags, links and unresolved targets, what arrived this week and month, the most-linked notes, the notes with no links or tags, the commonest tags and each folder's size. Answers note keys, so a key from here is an argument to `read_note` | yes |
 | `list_folders` | Every folder with how many notes it holds | yes |
 | `list_notes` | Notes newest first, optionally one folder, with titles, tags and dates | yes |
 | `search_notes` | Case-insensitive search across title, tags and body, with the start of each body so the match is visible | yes |
@@ -100,6 +101,11 @@ accepts, so a key from one call is an argument to the next unchanged.
 | `list_trash` | What a delete kept, newest first | yes |
 | `restore_note` | Puts a deleted note back where it came from | no |
 | `create_folder` | Adds a folder | no |
+
+`vault_health` is the one tool that answers about the vault rather than about a note, and it exists
+because the question an agent is usually asked first — "what should I tidy up?" or "what is this
+vault about?" — needs the shape of the notes, not their text. It is computed by the same arithmetic
+the desktop's **Stats** pane shows (`@lumos/vault-utils/insights`), so the two cannot disagree.
 
 A refusal the vault wrote — a key that is not a key, a folder that is not there, a name another
 note holds — comes back as a **tool error carrying the sentence a person would read**, so the model

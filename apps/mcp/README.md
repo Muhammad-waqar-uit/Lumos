@@ -1,6 +1,6 @@
 # Lumos MCP server
 
-A [Model Context Protocol](https://modelcontextprotocol.io) server over the Lumos vault: twelve
+A [Model Context Protocol](https://modelcontextprotocol.io) server over the Lumos vault: thirteen
 tools that let a coding agent list, search, read, write, file and delete notes, the way an Obsidian
 user wires the vault into Claude Code.
 

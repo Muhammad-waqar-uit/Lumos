@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import type { GraphData, VaultEntry } from "@lumos/shared";
+import { INSIGHT_ROWS, vaultInsights } from "@lumos/vault-utils/insights";
 import type { Connection } from "../lib/api";
-import { INSIGHT_ROWS, vaultInsights } from "../lib/insights";
 
 interface Props {
   notes: VaultEntry[];

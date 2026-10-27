@@ -4,11 +4,27 @@ Chronological record of what has been built. Newest entries first within each da
 
 ## 2026-10-27
 
+### Done - the vault's health, answerable by an agent
+- [x] **The pane's arithmetic left the desktop so a model could ask the same question.** The first
+  thing an agent is usually asked - "what should I tidy up?", "what is this vault about?" - needs
+  the shape of the notes rather than their text, which is exactly what the Stats pane computes. The
+  module moved to `@lumos/vault-utils/insights` with its 12 tests, the pane imports it (deleting its
+  local copy), and the MCP server gained a thirteenth tool: `vault_health`. It reads the listing
+  and `buildVaultGraph(vault)`, the same two things the daemon's `/graph` answers with, and renders
+  one line of figures, the most-linked notes and the ones with no links or tags - with their **keys**,
+  so the next call can be `read_note` instead of a search. Given up: the tag and folder lines are
+  counts only, because no tool acts on a tag and a folder is already a `list_notes` argument.
+- [x] **Three tests, three levels.** `tools.test.ts` drives `vaultHealth()` against a temporary vault
+  (three notes, one link, one orphan; an empty vault answers zeroes rather than refusing),
+  `server.test.ts` calls the tool over the real protocol and asserts the key it answers, and the
+  tool-list assertions in `server.test.ts` and `stdio.test.ts` moved from twelve to thirteen - which
+  is the only reason those numbers are trustworthy. 51 tests in `apps/mcp`.
+
 ### Done - the vault counted, in a pane of its own
 - [x] **The plan's last unbuilt idea that needed no dependency, built.** The roadmap had one thing
   left in "Beyond": statistics/insights, recorded as an idea and never costed. It turned out to
   need no new data - `App.tsx` already loads the listing and the graph on mount - so the feature is
-  arithmetic over two things the window holds. `src/lib/insights.ts` counts notes, folders, distinct
+  arithmetic over two things the window holds. `@lumos/vault-utils/insights` counts notes, folders, distinct
   tags, resolved links, unresolved targets, how many notes arrived in the last 7 and 30 days, the
   notes with the most links pointing in, the notes with no links and no tags, the commonest tags and
   the size of each folder. `InsightsView.tsx` is the pane: a **Stats** tab beside Notes, Graph and
@@ -27,7 +43,7 @@ Chronological record of what has been built. Newest entries first within each da
   moment the boundary fell on the wrong side of the run: the window is now built with `daysAgo(n)`
   in the test, and the pure suite injects its own `now` (`vaultInsights(notes, graph, now)`), so
   neither depends on the day the suite runs.
-- [x] **Two suites, 22 tests.** `src/lib/insights.test.ts` (12) covers the counts, the ordering and
+- [x] **Two suites, 22 tests.** `packages/vault-utils/src/insights.test.ts` (12, moved there when the MCP server needed the same answer) covers the counts, the ordering and
   ties, the row cap with the total still counted, growth windows including a future date and an
   unparseable one, and the empty vault; `src/components/InsightsView.test.tsx` (10) covers the
   figures and where they came from, opening a note, filtering by a tag without the graph's hash,

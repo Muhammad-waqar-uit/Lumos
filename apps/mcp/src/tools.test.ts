@@ -16,6 +16,7 @@ import {
   restoreNote,
   searchNotes,
   updateNote,
+  vaultHealth,
 } from "./tools";
 
 let vault = "";
@@ -291,5 +292,35 @@ describe("the note file on disk", () => {
     expect(raw).toContain("source: mcp");
     expect(raw).toContain("tags:\n  - weekly");
     expect(path.dirname(note.file)).toBe(path.join(vault, "Inbox"));
+  });
+});
+
+describe("vaultHealth", () => {
+  it("counts the vault and names the notes worth opening", async () => {
+    await createNote(vault, { folder: "Inbox", text: "Learn Rust" });
+    await createNote(vault, { folder: "Ideas", text: "Pairs with [[Learn Rust]]" });
+    await createNote(vault, { folder: "Inbox", text: "A loose thought" });
+
+    const health = await vaultHealth(vault);
+
+    expect(health.notes).toBe(3);
+    expect(health.links).toBe(1);
+    expect(health.mostLinked[0]).toEqual({
+      id: expect.stringMatching(/^Inbox\/.*learn-rust\.md$/),
+      label: "Learn Rust",
+      count: 1,
+    });
+    // The note nothing links to and that links nowhere is the one worth naming.
+    expect(health.orphanCount).toBe(1);
+    expect(health.orphans[0]?.label).toBe("A loose thought");
+  });
+
+  it("counts an empty vault as zeroes rather than refusing", async () => {
+    const health = await vaultHealth(vault);
+
+    expect(health.notes).toBe(0);
+    expect(health.links).toBe(0);
+    expect(health.mostLinked).toEqual([]);
+    expect(health.perFolder.every((folder) => folder.count === 0)).toBe(true);
   });
 });

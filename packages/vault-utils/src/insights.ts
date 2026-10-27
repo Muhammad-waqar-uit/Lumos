@@ -3,14 +3,15 @@ import type { GraphData, VaultEntry } from "@lumos/shared";
 /**
  * The vault, counted.
  *
- * A second brain is only as useful as its connections, and neither the list nor the graph says
- * how connected it actually is: the list shows one folder at a time, and the canvas shows the
- * shape without any numbers on it. This is the arithmetic behind the Insights pane - how many
- * notes, how much links them, which notes carry the most, and which have not been woven in yet.
+ * A second brain is only as useful as its connections, and neither a listing nor a graph says how
+ * connected it actually is: the list shows one folder at a time, and a canvas shows the shape
+ * without any numbers on it. This is the arithmetic behind the desktop's insights pane and behind
+ * the MCP server's `vault_health` tool - how many notes, how much links them, which notes carry the
+ * most, and which have not been woven in yet.
  *
- * It reads the two things the app already holds (`GET /notes` and `GET /graph`), so it costs no
- * request and works with the daemon stopped. Nothing here touches the filesystem: the vault is
- * only ever what the caller hands over.
+ * It is pure: the vault is only ever what the caller hands over (the listing and the graph), so the
+ * desktop can count what it already holds and the server can count what it just read, from one
+ * implementation. Nothing here touches the filesystem.
  */
 
 /** How many rows each list shows; a total is always printed beside it, so nothing is hidden. */

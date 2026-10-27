@@ -64,6 +64,7 @@ describe("what a client sees", () => {
       "restore_note",
       "search_notes",
       "update_note",
+      "vault_health",
     ]);
     for (const tool of tools) expect(tool.description?.length ?? 0).toBeGreaterThan(40);
   });
@@ -80,6 +81,7 @@ describe("what a client sees", () => {
       "list_trash",
       "read_note",
       "search_notes",
+      "vault_health",
     ]);
   });
 
@@ -122,6 +124,25 @@ describe("calling the tools", () => {
     const notes = textOf(await client.callTool({ name: "list_notes", arguments: {} }));
     expect(notes).toContain("A desk lamp");
     expect(notes).toMatch(/Ideas\/\d{4}-\d{2}-\d{2}-a-desk-lamp\.md/);
+  });
+
+  it("counts the vault, and answers keys an agent can read next", async () => {
+    await client.callTool({ name: "create_folder", arguments: { name: "Goals" } });
+    await client.callTool({
+      name: "create_note",
+      arguments: { folder: "Goals", text: "Learn Rust" },
+    });
+    await client.callTool({
+      name: "create_note",
+      arguments: { folder: "Goals", text: "Pairs with [[Learn Rust]]" },
+    });
+
+    const health = textOf(await client.callTool({ name: "vault_health", arguments: {} }));
+
+    expect(health).toContain("2 notes");
+    expect(health).toContain("1 links");
+    // The key of the most-linked note is answered as text, so the next call can be `read_note`.
+    expect(health).toMatch(/Goals\/\d{4}-\d{2}-\d{2}-learn-rust\.md · Learn Rust · 1 in/);
   });
 
   it("shows why a search matched, and keeps a browse to one line a note", async () => {

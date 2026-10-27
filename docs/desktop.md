@@ -203,7 +203,7 @@ and a short list of where it is thin.
 - Every row acts. A note row opens it, a tag row narrows the list to that tag through the same
   handler the chips use, and a folder row looks at that folder the way the sidebar does - so the
   pane is a way into the vault, not a report about it.
-- Nothing is requested: `src/lib/insights.ts` counts the listing and the graph that `App.tsx` has
+- Nothing is requested: `vaultInsights()` counts the listing and the graph that `App.tsx` has
   already loaded, which is why the pane opens instantly and works with the daemon stopped.
 - A graph that did not answer is not counted as zero. `linksKnown` is false when `GET /graph` failed,
   and the pane says the link figures and the two note lists are missing rather than printing a `0`
@@ -212,7 +212,7 @@ and a short list of where it is thin.
 - Growth is counted against the clock, so `vaultInsights()` takes `now` as an argument (defaulting to
   the real one) and its suite injects a fixed date; a note dated in the future or one whose `created`
   will not parse is not counted as recent.
-- Covered by `src/lib/insights.test.ts` (the counts, ordering and ties, the row caps with the totals
+- Covered by `packages/vault-utils/src/insights.test.ts` (the counts, ordering and ties, the row caps with the totals
   still counted, the growth windows, the empty vault) and `src/components/InsightsView.test.tsx` (the
   figures and their source, opening a note, filtering by a tag, the orphan cap and its "and N more",
   the loading and empty states, the unreadable graph); `App.routing.test.tsx` proves the tab writes
@@ -331,7 +331,8 @@ referenced only from TypeScript would never reach the stylesheet.
 The pure parts are tested: the layout memory (`src/lib/graph-layout.test.ts`, 12 cases) and the
 neighbourhood and backlink rules in `@lumos/vault-utils`. The component runs in jsdom too
 (`src/components/GraphView.test.tsx`), with the renderer replaced by a recorded stand-in: what the
-view *tells* the canvas is asserted - the nodes each control hands over, the selection wiring, thencounts and the states around it - while the drawing itself needs a real renderer, so where the
+view *tells* the canvas is asserted - the nodes each control hands over, the selection wiring, the
+ncounts and the states around it - while the drawing itself needs a real renderer, so where the
 simulation puts a node is still checked by hand.
 
 ### Tag filtering

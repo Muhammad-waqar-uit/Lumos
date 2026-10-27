@@ -7,6 +7,7 @@
  */
 import type { Note } from "@lumos/shared";
 import type { TrashedNote } from "@lumos/vault-utils";
+import type { VaultInsights } from "@lumos/vault-utils/insights";
 import type { FolderSummary, NoteSummary } from "./tools.js";
 
 /**
@@ -52,6 +53,50 @@ export function noteText(key: string, note: Note): string {
   if (note.frontmatter.url) lines.push(`url: ${note.frontmatter.url}`);
   if (note.problems.length > 0) lines.push(`frontmatter problems: ${note.problems.join("; ")}`);
   lines.push("", note.content);
+  return lines.join("\n");
+}
+
+/**
+ * The vault counted: a line of figures, then the two lists that name notes.
+ *
+ * The note lists carry keys, so the next call can be `read_note` on one of them rather than a
+ * search; the tag and folder lines are counts only, because there is no tool that acts on a tag
+ * and a folder is already a `list_notes` argument.
+ */
+export function healthLines(insights: VaultInsights): string {
+  const lines = [
+    `${insights.notes} notes · ${insights.folders} folders · ${insights.tags} tags · ` +
+      `${insights.links} links · ${insights.unresolved} unresolved`,
+    `${insights.thisWeek} added this week · ${insights.thisMonth} this month · ` +
+      `${insights.orphanCount} with no links or tags`,
+  ];
+
+  if (insights.mostLinked.length > 0) {
+    lines.push("", "most linked:");
+    for (const row of insights.mostLinked) {
+      lines.push(`  ${row.id} · ${row.label} · ${row.count} in`);
+    }
+  }
+
+  if (insights.orphans.length > 0) {
+    lines.push("", "not connected yet:");
+    for (const row of insights.orphans) lines.push(`  ${row.id} · ${row.label}`);
+    if (insights.orphanCount > insights.orphans.length) {
+      lines.push(`  and ${insights.orphanCount - insights.orphans.length} more`);
+    }
+  }
+
+  if (insights.topTags.length > 0) {
+    lines.push(
+      "",
+      `tags: ${insights.topTags.map((tag) => `${tag.label} ${tag.count}`).join(", ")}`,
+    );
+  }
+
+  lines.push(
+    "",
+    `folders: ${insights.perFolder.map((folder) => `${folder.label} ${folder.count}`).join(", ")}`,
+  );
   return lines.join("\n");
 }
 

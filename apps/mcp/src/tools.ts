@@ -13,6 +13,7 @@
  */
 import path from "node:path";
 import {
+  buildVaultGraph,
   createFolder as createVaultFolder,
   deleteNote as trashNote,
   listFolderNames,
@@ -29,6 +30,7 @@ import {
   updateNoteMeta,
   type TrashedNote,
 } from "@lumos/vault-utils";
+import { vaultInsights, type VaultInsights } from "@lumos/vault-utils/insights";
 import type { Note, VaultEntry } from "@lumos/shared";
 import { keyOf, resolveNote } from "./vault.js";
 
@@ -252,4 +254,18 @@ export async function listTrash(vault: string): Promise<TrashedNote[]> {
 /** Create a folder. The name is checked by the vault, which is the only place that should decide. */
 export async function createFolder(vault: string, name: string): Promise<{ folder: string }> {
   return { folder: await createVaultFolder(vault, name) };
+}
+
+/**
+ * The vault, counted - the same arithmetic the desktop's insights pane shows.
+ *
+ * It reads the listing and the graph, because those two are what the count is over, and it answers
+ * the shape of the vault rather than its contents: what is well linked, what is not linked at all,
+ * and what arrived lately. That is what makes it a useful first call for an agent asked to tidy a
+ * vault up or to suggest what to write next - it names the notes worth opening instead of making a
+ * model paginate through every one.
+ */
+export async function vaultHealth(vault: string): Promise<VaultInsights> {
+  const [entries, graph] = await Promise.all([listVaultNotes(vault), buildVaultGraph(vault)]);
+  return vaultInsights(entries, graph);
 }
