@@ -164,14 +164,15 @@ play it — neither page can be read or copied.
   dragged narrower than that, and then the panes clip rather than reflow into a phone layout, because
   this is a desktop app with a fixed shell rather than a responsive one. `pnpm --filter desktop dev`
   at a narrow width shows it; the packaged window cannot reach it.
-- **No end-to-end test.** The sidebar, note list, search palette and link pane are now covered as
-  components in jsdom, and the viewer through SSR renders, but nothing drives the built app in a
-  real browser: a broken route, a chunk that fails to load or a bad Tauri bundle would not be
-  caught. The graph view is tested around its canvas - `GraphView.test.tsx` renders it against a
+- **The browser is covered; the Tauri window is not.** `pnpm test:e2e` drives the built bundle in a
+  real Chromium against a daemon on the fixture vault, and `e2e/layout.spec.ts` asserts the two
+  things no jsdom test can: the shell fits the window's 860x560 minimum, and the insights grids
+  answer their pane rather than the viewport. It runs the web build, so a bad Tauri bundle or a
+  broken Rust command is still only caught by the manual `tauri dev` check above. The graph view is
+  tested around its canvas - `GraphView.test.tsx` renders it against a
   recorded stand-in for the renderer, so the controls, the selection wiring and every state around
   the drawing are asserted - but force-graph's own pixels are not: what a node looks like, whether a
   click lands inside one and where the simulation places it all need a real renderer or a person.
-  An E2E runner is tracked under **Plan** in [TODO.md](TODO.md).
 - **A capture is noticed by polling, so it can be up to 15s late.** The app reads the link's state
 every 15s (3s while the panel is open) and re-reads the vault when a message was answered. That is
 the only signal it has: there is no server-sent event, and the daemon does not watch the directory.

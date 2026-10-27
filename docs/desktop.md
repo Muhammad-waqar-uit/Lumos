@@ -213,7 +213,8 @@ and a short list of where it is thin.
   on the grids): the sidebar and the list take about 540px before this pane begins, so a `sm:` rule
   asked for three figures where a 376px column fits two. Measured at a 376px pane - two columns for
   the figures, one for the lists, no overflow - and at the window's declared minimum of 860x560,
-  where the pane is 636px and takes three.
+  where the pane is 636px and takes three. `e2e/layout.spec.ts` now asserts both widths in a real
+  browser, so swapping `@md:` back to `sm:` fails the suite rather than only looking wrong.
 - Growth is counted against the clock, so `vaultInsights()` takes `now` as an argument (defaulting to
   the real one) and its suite injects a fixed date; a note dated in the future or one whose `created`
   will not parse is not counted as recent.

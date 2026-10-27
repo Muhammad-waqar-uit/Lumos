@@ -185,7 +185,10 @@ Nothing in flight. The next item to pick up is the first one under **Plan**.
   `VITE_DAEMON_URL` pointing at it and served by `vite preview`. 5 tests in `e2e/smoke.spec.ts`
   drive the **built** bundle - vault loads through the daemon, a note opens with its Markdown and a
   highlighted fence, a backlink is followed, a tag chip filters, `Ctrl+K`/`Enter` finds a body
-  match - and every test fails on an uncaught page error. `pnpm test:e2e` runs it; CI runs it as a
+  match - and every test fails on an uncaught page error. `e2e/layout.spec.ts` adds the two
+  measurements jsdom cannot make: no overflow and a usable viewer at the window's 860x560 minimum,
+  and the insights grids taking two columns in a 436px pane where a viewport rule would ask for
+  three. `pnpm test:e2e` runs it; CI runs it as a
   second job in `.github/workflows/validate.yml`. It is not in `pre-push`, so a contributor is never
   blocked on a browser download
 - [x] Schema validation for note frontmatter - `validateFrontmatter()` in `@lumos/vault-utils`

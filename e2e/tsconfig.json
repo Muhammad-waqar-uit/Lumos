@@ -3,7 +3,9 @@
     "target": "ES2022",
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "lib": ["ES2022"],
+    // DOM too: `page.evaluate` callbacks are shipped into the browser and compiled here, so
+    // `document` has to be a known name even though the tests themselves run under Node.
+    "lib": ["ES2022", "DOM"],
     "types": ["node"],
     "strict": true,
     "noEmit": true,
