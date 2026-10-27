@@ -128,6 +128,23 @@ describe("the shell's address", () => {
     expect(screen.queryByPlaceholderText("Search notes")).toBeNull();
   });
 
+  it("opens the profile from its avatar, and never the list beside it", async () => {
+    const router = renderAt("/");
+    await screen.findByPlaceholderText("Search notes");
+
+    fireEvent.click(screen.getByRole("button", { name: "Profile" }));
+
+    expect(router.state.location.search.view).toBe("profile");
+    expect(await screen.findByRole("region", { name: "Profile" })).toBeTruthy();
+    expect(screen.queryByPlaceholderText("Search notes")).toBeNull();
+  });
+
+  it("opens the profile from a deep link", async () => {
+    const router = renderAt("/?view=profile");
+    expect(await screen.findByRole("region", { name: "Profile" })).toBeTruthy();
+    expect(router.state.location.search.view).toBe("profile");
+  });
+
   it("refuses a view the app does not have, and falls back to the notes", async () => {
     renderAt("/?view=cosmos");
     // The pane the address asked for does not exist, so the notes view is what opens - never a

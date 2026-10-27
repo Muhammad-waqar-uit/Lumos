@@ -180,8 +180,9 @@ the only signal it has: there is no server-sent event, and the daemon does not w
   Obsidian, another agent or a shell script is on disk but invisible until the next read, because the
   trigger is the link's activity rather than the filesystem. With the daemon stopped the app is in
   its demo mode and polls nothing, so a capture that happened meanwhile appears on the next load.
-- **The palette runs five commands, and only while the daemon answers.** Writing a note, making a
-  folder, and the graph, stats and trash panes. It does not yet offer "new note in *this* folder" per folder, a
+- **The palette runs six commands, and the two that write only while the daemon answers.** Writing
+  a note, making a folder, and the graph, stats, trash and profile panes - the panes are always
+  offered, because opening one is free. The palette does not yet offer "new note in *this* folder" per folder, a
   move or a tag of the open note, or a command history; a palette that listed everything would be a
   menu with a text box on top, so the set stays the ones there is nothing else for.
 - **Only the fields a control owns can be edited.** A body, tags, status, the filename and the folder

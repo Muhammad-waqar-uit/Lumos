@@ -6,6 +6,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- A **Profile** pane (the avatar at the top of the sidebar, `?view=profile`): the vault's calendar
+  and the front page for a few chosen notes. **Pinned**: up to six notes kept at the top as cards -
+  folder, date, the opening lines and tags - each opening from the card, with **Customize your pins**
+  to choose them from the listing (a full set offers no more rather than failing). **The year**: one
+  square per day, amber steps for one, two, three or four, and five or more notes written that day,
+  with a month ruler, a Less/More legend and a year picker over every year that holds a note. The
+  bands are absolute rather than scaled to the year's busiest day, because scaling paints a vault of
+  one-note days as brightly as a busy one. Beside it: the current streak, the longest, the active
+  days and the busiest day, counted from the date each note was created. **Edit profile** gives the
+  vault a name and a line, which the avatar in the sidebar then carries. The name, the line and the
+  pins live in `localStorage` - they are interface preferences, not notes, so the vault stays plain
+  Markdown - and every figure comes from the listing the shell already holds, so the pane opens with
+  no request and works with the daemon stopped (`@lumos/vault-utils/profile`,
+  `src/lib/profile.ts`, `src/components/ProfileView.tsx`)
+
 ### Changed
 - The **Stats** pane's grids answer to the pane rather than to the window (`@container`): the
   sidebar and the list take about 540px before it begins, so a `sm:` rule asked for three figures in

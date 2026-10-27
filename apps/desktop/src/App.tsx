@@ -32,6 +32,7 @@ import { InsightsView } from "./components/InsightsView";
 import { NoteList, keyOf } from "./components/NoteList";
 import { NoteViewer } from "./components/NoteViewer";
 import { PaneBoundary } from "./components/PaneBoundary";
+import { ProfileView } from "./components/ProfileView";
 import { PaneSplitter } from "./components/PaneSplitter";
 import { SearchModal } from "./components/SearchModal";
 import { Sidebar, type ShellView } from "./components/Sidebar";
@@ -719,6 +720,15 @@ export default function App() {
               onOpen={openNote}
               onFilterTag={filterByTag}
               onFilterFolder={filterByFolder}
+            />
+          </PaneBoundary>
+        ) : view === "profile" ? (
+          <PaneBoundary title="The profile">
+            <ProfileView
+              notes={notes}
+              connection={connection}
+              loading={loading}
+              onOpen={openNote}
             />
           </PaneBoundary>
         ) : view === "trash" ? (

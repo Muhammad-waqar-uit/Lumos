@@ -1,10 +1,11 @@
 import { useState } from "react";
 import type { FolderCount } from "../lib/api";
 import type { FolderFilter } from "../lib/filter";
+import { profileInitial, useProfileStore } from "../lib/profile";
 import { LumosMark } from "./LumosMark";
 
 export type { FolderFilter } from "../lib/filter";
-export type ShellView = "notes" | "graph" | "insights" | "trash";
+export type ShellView = "notes" | "graph" | "insights" | "trash" | "profile";
 
 // Four tabs share a 224px sidebar, so the labels are the short word for each pane: the pane
 // itself says "Vault insights" at the top.
@@ -57,6 +58,9 @@ export function Sidebar({
   const [renaming, setRenaming] = useState(false);
   const [renameTo, setRenameTo] = useState("");
   const [confirming, setConfirming] = useState(false);
+  // The avatar carries the name the profile was given, so it is read here rather than passed in:
+  // every pane that can rename it already goes through the same store.
+  const profileName = useProfileStore((state) => state.name);
 
   const items: { key: FolderFilter; label: string; count: number }[] = [
     { key: "All", label: "All notes", count: total },
@@ -133,10 +137,30 @@ export function Sidebar({
     <aside className="flex w-56 shrink-0 flex-col border-r border-border bg-card/40">
       <div className="flex items-center gap-2.5 px-4 py-3.5">
         <LumosMark className="size-6 shrink-0 text-brand" />
-        <div>
+        <div className="min-w-0 flex-1">
           <h1 className="text-sm font-semibold tracking-wide">Lumos</h1>
           <p className="mt-0.5 text-xs text-muted-foreground">Second brain</p>
         </div>
+        {/*
+          The profile rides here rather than in the tablist: four tabs already share 224px, and a
+          fifth would truncate every label. The avatar is the one control a person looks for
+          anyway, and it carries the name they chose.
+        */}
+        <button
+          type="button"
+          onClick={() => onView("profile")}
+          aria-label="Profile"
+          aria-current={view === "profile" ? "page" : undefined}
+          title="Your profile - pins, the year in notes, and your name"
+          className={
+            "grid size-7 shrink-0 place-items-center rounded-full border text-[11px] font-semibold transition-colors " +
+            (view === "profile"
+              ? "border-brand/60 bg-accent text-brand"
+              : "border-border text-muted-foreground hover:bg-accent hover:text-foreground")
+          }
+        >
+          {profileInitial(profileName)}
+        </button>
       </div>
       <div className="px-3 pb-3">
         <div

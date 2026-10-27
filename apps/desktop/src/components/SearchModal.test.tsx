@@ -178,6 +178,18 @@ describe("SearchModal - the commands", () => {
     expect(tail).toContain("Open the graph");
     expect(tail).toContain("Open the stats");
     expect(tail).toContain("Open the trash");
+    expect(tail).toContain("Open the profile");
+  });
+
+  it("opens the profile pane from the palette", () => {
+    const onClose = vi.fn();
+    const props = commands();
+    renderModal({ onClose, ...props });
+
+    fireEvent.click(screen.getByRole("button", { name: /Open the profile/ }));
+
+    expect(props.onOpenView).toHaveBeenCalledWith("profile");
+    expect(onClose).toHaveBeenCalledTimes(1);
   });
 
   it("opens the stats pane from the palette", () => {

@@ -12,7 +12,7 @@ daemon (falling back to demo data when the daemon is offline):
 - `src/router.tsx` - the TanStack Router factory: one route at `/` whose typed search parameters carry `view` and `note`, validated so a hand-edited address cannot smuggle a pane in
 - `src/lib/store.ts` - the vault store (zustand): the daemon read with its demo fallback, the re-read after every change, and the list's filters
 - `src/lib/bulk.ts` - the bulk helper: one write over many notes with every refusal kept, and the one sentence the status bar shows for it
-- `src/components/Sidebar.tsx` - the brand row (mark + wordmark), the Notes/Graph/Stats/Trash view switch (four tabs share 224px, so the insights tab carries the short word), folders with note counts, and **+ New folder**: a name, a `POST /folders`, and the new folder becomes what the list is looking at. A refusal (a name already taken, or one the vault cannot make) keeps the form open with the daemon's sentence. Every folder row also carries **Rename** and **Delete**: rename is an inline field that sends `PATCH /folder` and the row follows the notes to the new name; delete asks first ("Remove Movies? The 12 notes inside move to Inbox."), sends `DELETE /folder`, and the Inbox becomes what the list is looking at. Both are offered only while the daemon answers, because both are daemon writes; with the daemon down the rows are read-only and the app is showing demo data
+- `src/components/Sidebar.tsx` - the brand row (mark + wordmark + the avatar button that opens the profile), the Notes/Graph/Stats/Trash view switch (four tabs share 224px, so the insights tab carries the short word), folders with note counts, and **+ New folder**: a name, a `POST /folders`, and the new folder becomes what the list is looking at. A refusal (a name already taken, or one the vault cannot make) keeps the form open with the daemon's sentence. Every folder row also carries **Rename** and **Delete**: rename is an inline field that sends `PATCH /folder` and the row follows the notes to the new name; delete asks first ("Remove Movies? The 12 notes inside move to Inbox."), sends `DELETE /folder`, and the Inbox becomes what the list is looking at. Both are offered only while the daemon answers, because both are daemon writes; with the daemon down the rows are read-only and the app is showing demo data
 - `src/components/LumosMark.tsx` - the mark itself, drawn inline in `currentColor` so it takes `--color-brand` from the theme
 - `src/components/NoteList.tsx` - searchable note list (title, date, preview, tags), the **New** button that opens the composer, the selection checkboxes with the bulk bar (move, add-tag, archive, clear) they raise, and a windowed row list above 50 notes so a large vault keeps a small DOM
 - `src/components/NoteComposer.tsx` - a new note: a folder picker, a textarea, Create, Cancel, and a failure that keeps the draft
@@ -23,10 +23,12 @@ daemon (falling back to demo data when the daemon is offline):
 - `src/components/NoteActions.tsx` - rename, move and delete for the open note: a menu, a rename field, a folder picker, a delete that asks first, and a failure that keeps the panel open
 - `src/components/TrashPanel.tsx` - what a delete kept: every trashed note with its folder and when, a Restore per entry, and an Empty that asks first
 - `src/components/InsightsView.tsx` - the vault counted: six figures, then the most-linked notes, the ones with no links or tags, the commonest tags and every folder's size, each row a way in
+- `src/components/ProfileView.tsx` - the profile: the name and the line the vault gives itself, up to six pinned notes as cards, the year's calendar square per day with the streaks beside it, and the form that edits the two
+- `src/lib/profile.ts` - the profile itself (name, bio, pins) with its validation and pinning rules, and the zustand store that keeps the sidebar's avatar and the pane in step
 - `src/components/LinkPane.tsx` - the note's link: video player, image, or scraped reader card
 - `src/components/GraphView.tsx` - canvas link graph (routes, controls, click-to-open)
 - `src/components/PaneBoundary.tsx` - error boundary around the lazily loaded graph pane
-- `src/components/SearchModal.tsx` - the `Cmd/Ctrl+K` palette: ranked matches, keyboard selection, body matches from the daemon, and the five commands the palette can run itself - new note, new folder, and the graph, stats and trash panes
+- `src/components/SearchModal.tsx` - the `Cmd/Ctrl+K` palette: ranked matches, keyboard selection, body matches from the daemon, and the six commands the palette can run itself - new note, new folder, and the graph, stats, trash and profile panes
 - `src/components/StatusBar.tsx` - connection state, the search shortcut, the note count, a notice the app needs to say (a save whose refresh failed), and a chip for the WhatsApp link that opens the panel below. The chip is offered while the daemon answers, and it says the link's own state - being able to read notes says nothing about whether a message would be filed
 - `src/components/WhatsAppPanel.tsx` - the WhatsApp link in the app: the state in a sentence with when it began and when a message was last answered, the pairing code drawn in a dark `<pre>` while a phone needs one, and the single button the state allows (Connect or Disconnect). A failure stays on the panel in the daemon's words; escape or a click outside closes it, and the link is left as it was
 - `src/lib/whatsapp.ts` - the words and colours for each state, the sentence a state deserves, which button it can use, and "since 14:32" formatting. Pure, so the status bar and the panel cannot disagree about what `disconnected` means
@@ -223,6 +225,40 @@ and a short list of where it is thin.
   figures and their source, opening a note, filtering by a tag, the orphan cap and its "and N more",
   the loading and empty states, the unreadable graph); `App.routing.test.tsx` proves the tab writes
   `?view=insights` into the address.
+
+### The profile
+
+The avatar at the top of the sidebar opens the **Profile** pane (`?view=profile`). It is not a fifth
+tab: four tabs already share 224px and a fifth would truncate every label, and the avatar is the
+control a person looks for anyway.
+
+- **Pinned**, up to six notes, each a card carrying its folder, date, opening lines and tags. The
+  card opens the note; **Unpin** beside the title takes it off. **Customize your pins** lists the
+  listing under it - newest first, up to fifty - with one **Pin**/**Unpin** per row; once the sixth
+  is in the remaining rows are disabled rather than refused on click. A pin whose note was renamed
+  or deleted is not drawn, so there is no card that cannot open.
+- **The year**, one square per day with a month ruler, a Mon/Wed/Fri row label and a Less/More
+  legend. The bands are absolute - one note is the lightest step, five or more the deepest - because
+  scaling to the year's busiest day paints a vault of one-note days as brightly as a busy one. A
+  year picker offers every year that holds a note, plus this one.
+- **Current streak**, **longest**, **active days** and **busiest day** sit beside it, counted from
+  the date each note was created. A streak is not broken by today being unfinished, and it counts
+  across years - a run that starts on 30 December is still one run in January.
+- **Edit profile** gives the vault a name and one line under it; the avatar takes the name's first
+  letter the moment it is saved. The name, the line and the pins are in `localStorage`, not in the
+  vault: the vault is Markdown another editor has to be able to read, and a `profile.json` in it
+  would be a file every other tool must learn to ignore. What is given up: the profile does not
+  travel with the notes to another machine.
+- Every figure is computed from the listing the shell already holds, so the pane opens instantly and
+  works with the daemon stopped. Calendar arithmetic is `vaultActivity()` in
+  `@lumos/vault-utils/profile` - pure, taking `now` as an argument so the suites can pin it, and
+  stepping the days through the date constructor rather than by milliseconds so a daylight-saving
+  week still has seven squares.
+- Covered by `packages/vault-utils/src/profile.test.ts` (the grid's shape, the bands, the month
+  labels, the streaks across the year boundary and through today, the unparseable date),
+  `src/lib/profile.test.ts` (parsing untrusted stored JSON, the pin limit, persistence) and
+  `src/components/ProfileView.test.tsx` (the form, pinning and unpinning, a pin whose note is gone,
+  the grid and the figures, the empty vault).
 
 ### The trash
 
@@ -486,15 +522,16 @@ than the filtered list. It narrows in two stages and says which one answered:
 
 ### The palette runs commands too
 
-Under the notes, and first once the query matches one, the palette offers five commands:
+Under the notes, and first once the query matches one, the palette offers six commands:
 
 - **New note** - the Notes view comes back with the composer open. The palette is where someone is
   already typing, so writing should not need a trip to the list's **New** button.
 - **New folder** - the field becomes a name field, `Enter` makes the folder and the list looks at it,
   `Esc` steps back out to searching. A refusal keeps the name typed with the daemon's sentence under
   it, the same as every other write.
-- **Open the graph**, **Open the stats**, **Open the trash** - the pane, without hunting for the
-  sidebar tab. Every pane has one, so a pane added to the sidebar cannot be left unreachable here.
+- **Open the graph**, **Open the stats**, **Open the trash**, **Open the profile** - the pane,
+  without hunting for the sidebar tab or its avatar. Every pane has one, so a pane added to the
+  sidebar cannot be left unreachable here.
 
 With nothing typed the commands sit under the recent notes rather than over them: searching is what
 the palette is open for, and a command is one keystroke from the end of the list. Typing puts any

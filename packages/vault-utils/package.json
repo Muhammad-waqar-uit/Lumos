@@ -9,7 +9,8 @@
     ".": "./src/index.ts",
     "./graph": "./src/graph.ts",
     "./link": "./src/link.ts",
-    "./insights": "./src/insights.ts"
+    "./insights": "./src/insights.ts",
+    "./profile": "./src/profile.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

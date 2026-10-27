@@ -20,7 +20,7 @@ export interface AppSearch {
   note?: string;
 }
 
-const VIEWS: ShellView[] = ["notes", "graph", "insights", "trash"];
+const VIEWS: ShellView[] = ["notes", "graph", "insights", "trash", "profile"];
 
 /**
  * Only known values survive into the app, so a hand-edited address cannot smuggle a pane in,

@@ -108,8 +108,8 @@ hiding the note. Pointing Obsidian at the vault is the intended way to browse it
 - **`Cmd/Ctrl+K`** opens the palette: fuzzy ranking over titles, tags and previews, plus a body
   search from the daemon for words that appear nowhere in the preview - those rows are marked *in
   the body*, as the last row is here. Arrow keys move, `Enter` opens, `Esc` closes. Empty, it lists
-  the notes you opened this session and then five commands: **New note**, **New folder**, **Open the
-  graph**, **Open the stats**, **Open the trash**. Typing puts whichever command's words match first, so `new folder` +
+  the notes you opened this session and then six commands: **New note**, **New folder**, **Open the
+  graph**, **Open the stats**, **Open the trash** and **Open the profile**. Typing puts whichever command's words match first, so `new folder` +
   `Enter` turns the field into a name field - `Enter` makes the folder and the list looks at it.
 
   ![The search palette over a vault, with one result marked as matching only inside the note body](docs/images/search.png)
@@ -145,6 +145,11 @@ button.
   has, so it opens with no request and works with the daemon stopped.
 - **Trash** in the sidebar lists what a delete kept, each with **Restore**; **Empty the trash**
   takes two presses because it is the one action with no undo.
+- **Profile** — the avatar at the top of the sidebar. It holds a name and one line for the vault
+  (**Edit profile**), up to six pinned notes as cards, and the year: one square per day with the
+  current streak, the longest run, the active days and the busiest day, counted from when each note
+  was created. Pins are chosen with **Customize your pins**, and the name and pins are kept on this
+  machine rather than in the vault.
 
 A notice in the status bar is dismissed by clicking it.
 

@@ -64,6 +64,37 @@
   --color-code-meta: hsl(0 0% 60%);
   --color-code-added: hsl(140 50% 68%);
   --color-code-removed: hsl(0 65% 70%);
+
+  /*
+   * Activity heat, one step per band of notes written that day. Drawn from the lamp's amber rather
+   * than borrowed green: the profile is this app's, and the palette's accent is already amber.
+   * Element classes for the same reason as the graph hues - the step is a number chosen in code,
+   * so it cannot be a utility class.
+   */
+  --color-heat-empty: hsl(0 0% 13%);
+  --color-heat-1: hsl(40 100% 65% / 0.22);
+  --color-heat-2: hsl(40 100% 65% / 0.45);
+  --color-heat-3: hsl(40 100% 65% / 0.72);
+  --color-heat-4: hsl(40 100% 65%);
+}
+
+.heat-cell {
+  background-color: var(--color-heat-empty);
+}
+.heat-0 {
+  background-color: var(--color-heat-empty);
+}
+.heat-1 {
+  background-color: var(--color-heat-1);
+}
+.heat-2 {
+  background-color: var(--color-heat-2);
+}
+.heat-3 {
+  background-color: var(--color-heat-3);
+}
+.heat-4 {
+  background-color: var(--color-heat-4);
 }
 
 html,

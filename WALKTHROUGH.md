@@ -167,8 +167,8 @@ looked at. The status bar says *Daemon offline - showing demo notes* when it doe
 
 **Find.** `Cmd/Ctrl+K` opens the palette: it ranks titles, tags and previews locally, and asks the
 daemon for body matches (those rows say *in the body*). Arrow keys, `Enter`, `Esc`. With nothing
-typed it lists what you opened this session - and, under that, five commands: **New note**, **New
-folder**, **Open the graph**, **Open the stats**, **Open the trash**.
+typed it lists what you opened this session - and, under that, six commands: **New note**, **New
+folder**, **Open the graph**, **Open the stats**, **Open the trash** and **Open the profile**.
 
 **Write, without leaving the keyboard.** `Cmd/Ctrl+K`, type `new folder`, `Enter`, type `Clients`,
 `Enter` - the folder exists, the sidebar shows it, and the list is already looking at it. The same

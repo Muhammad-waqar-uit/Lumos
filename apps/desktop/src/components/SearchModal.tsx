@@ -127,6 +127,7 @@ export function SearchModal({
         { id: "graph", label: "Open the graph", detail: "links and tags" },
         { id: "insights", label: "Open the stats", detail: "the vault counted" },
         { id: "trash", label: "Open the trash", detail: "deleted notes" },
+        { id: "profile", label: "Open the profile", detail: "pins and the year in notes" },
       );
     }
     return list;
@@ -244,6 +245,10 @@ export function SearchModal({
         return;
       case "trash":
         onOpenView?.("trash");
+        onClose();
+        return;
+      case "profile":
+        onOpenView?.("profile");
         onClose();
     }
   };

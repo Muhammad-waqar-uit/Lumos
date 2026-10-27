@@ -56,6 +56,9 @@ folder, so progress is always visible.
   links to, the commonest tags, every folder's size - with each row opening a note or filtering the
   list. Computed from the listing and the graph the app already has, so it costs no request. ✅
   (`@lumos/vault-utils/insights`, `InsightsView.tsx`)
+- A **Profile** pane behind the sidebar's avatar: the pinned notes, the year's calendar square per
+  day, the streaks, and the name the vault gives itself. ✅ (preferences in `localStorage`, so the
+  vault stays plain Markdown; the calendar is `vaultActivity()` in `@lumos/vault-utils/profile`)
 - The graph keeps its layout: node positions and a view you placed survive a tab switch, and a resized
   pane re-fits a view the app fitted itself. ✅
 
@@ -69,8 +72,9 @@ text, and reading a PDF or plain HTML file - are still open under **Plan** in
 - Full-text search with `fuse.js`. ✅ (ranked over titles, tags and previews, and usable offline)
 - `Cmd/Ctrl+K` search modal. ✅ (arrows, `Enter`, `Esc`; body matches come from `GET /notes/search`)
 - Recent notes. ✅ (an empty palette lists what was opened this session; a reload starts empty)
-- Commands in the palette. ✅ (new note, new folder named in the palette itself, the graph and the
-  trash; an empty field lists them under the recent notes, a matched query puts them first)
+- Commands in the palette. ✅ (new note, new folder named in the palette itself, and the graph,
+  stats, trash and profile; an empty field lists them under the recent notes, a matched query puts
+  them first)
 
 ## M7 - Editing + polish (Phases 7-8) — partly done
 

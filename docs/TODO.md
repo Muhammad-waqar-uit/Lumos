@@ -330,6 +330,16 @@ Nothing in flight. The next item to pick up is the first one under **Plan**.
   nothing behind it. Computed from what the window holds, so it opens with no request and works
   offline; a graph that did not answer is said to be missing instead of counted as zero
   (`@lumos/vault-utils/insights`, `InsightsView.tsx`, `?view=insights`; the MCP server reuses it as `vault_health` and the daemon as `GET /stats`)
+- [x] A **Profile** pane (the avatar at the top of the sidebar, `?view=profile`) - up to six pinned
+  notes as cards, a year calendar of one square per day with absolute amber bands (one note is the
+  lightest step; scaling to the busiest day would paint a quiet vault as brightly as a busy one), a
+  year picker over every year holding a note, and the current streak, longest run, active days and
+  busiest day, counted across years and not broken by today being unfinished. The name and one line
+  the vault gives itself travel to the avatar in the sidebar. Preferences live in `localStorage`
+  rather than in the vault, which stays plain Markdown any editor can read; the calendar arithmetic
+  is `vaultActivity()` in `@lumos/vault-utils/profile`, pure and clock-injected. The pane is the
+  keyboard's too - **Open the profile** in the palette, since a pane added without a command would
+  be the one place the keyboard cannot reach (`src/lib/profile.ts`, `ProfileView.tsx`; 20 tests)
 - [x] Full-text search with fuse.js - the palette ranks titles, tags and previews over the loaded
   vault, tolerant of typos, and works with the daemon stopped (`src/lib/search.ts`, 10 unit tests)
 - [x] Cmd/Ctrl+K search modal - opens from anywhere, arrows move the selection, Enter opens the note
