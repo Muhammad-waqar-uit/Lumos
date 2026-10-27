@@ -13,7 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   keys, so the key it names is an argument to `read_note`. It is the arithmetic the desktop's
   **Stats** pane shows, moved to `@lumos/vault-utils/insights` so the pane and the server cannot
   disagree, and it is the cheapest first call for "what should I tidy up?". MCP now offers thirteen
-  tools.
+  tools. The same figures are at `GET /stats` on the daemon, for a script or another client that is
+  not speaking MCP.
 - A **Stats** pane in the desktop (the sidebar tab, `?view=insights`) that counts the vault and shows
   where it is thin: notes, folders, tags, resolved and unresolved links, how many notes arrived this
   week and this month, the notes with the most links pointing in, the notes with no links and no tags,

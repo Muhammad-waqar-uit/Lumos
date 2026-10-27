@@ -331,6 +331,17 @@ links) and tag references are edges. A note's `inDegree` counts the notes pointi
 `unresolved` instead of being invented as nodes. Built by `buildVaultGraph()` from
 `@lumos/vault-utils`, which reads every note body.
 
+### `GET /stats`
+The vault counted: `{ "stats": VaultInsights }` - notes, folders, distinct tags, resolved links and
+unresolved targets, what arrived in the last seven and thirty days, the notes with the most links
+pointing in, the notes with no links or tags, the commonest tags and each folder's size. Computed by
+`vaultInsights()` from `@lumos/vault-utils/insights`, which is the same function behind the
+desktop's **Stats** pane and the MCP server's `vault_health` tool, so all three cannot disagree.
+
+It reads the listing and the graph, which is what the count is over, so the two routes' work is done
+once rather than per figure. Nothing in it comes from the request, so there is nothing to validate.
+`linksKnown` is always true here: the route reads the graph itself, and only fails if the vault does.
+
 CORS is enabled for local development origins (`localhost`, `127.0.0.1`, `tauri://`) since the
 server binds to `127.0.0.1` only, and for the methods the routes actually serve: `GET`, `POST`,
 `PUT`, `PATCH` and `DELETE`. The plugin's default is `GET,HEAD,POST`, which let `curl` save a note

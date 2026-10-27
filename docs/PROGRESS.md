@@ -19,6 +19,10 @@ Chronological record of what has been built. Newest entries first within each da
   `server.test.ts` calls the tool over the real protocol and asserts the key it answers, and the
   tool-list assertions in `server.test.ts` and `stdio.test.ts` moved from twelve to thirteen - which
   is the only reason those numbers are trustworthy. 51 tests in `apps/mcp`.
+- [x] **And over HTTP, for anything that is not an MCP client.** `GET /stats` answers the same
+  `VaultInsights` object, computed from the listing and `buildVaultGraph()`. It is two route tests
+  (`app.inject()`, no port), and nothing in it comes from the request, so there is nothing to guard
+  - the only way it fails is a vault that cannot be read, which is the daemon's one error handler.
 
 ### Done - the vault counted, in a pane of its own
 - [x] **The plan's last unbuilt idea that needed no dependency, built.** The roadmap had one thing

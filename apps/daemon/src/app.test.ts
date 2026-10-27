@@ -1304,6 +1304,49 @@ describe("GET /graph", () => {
   });
 });
 
+describe("GET /stats", () => {
+  it("counts the vault the same way the app and the MCP server do", async () => {
+    const { app } = await makeApp([NOTE, { folder: "Goals", text: "learn rust" }]);
+    const res = await app.inject({ method: "GET", url: "/stats" });
+
+    expect(res.statusCode).toBe(200);
+    const { stats } = res.json<{
+      stats: {
+        notes: number;
+        folders: number;
+        tags: number;
+        links: number;
+        unresolved: number;
+        linksKnown: boolean;
+        topTags: { label: string; count: number }[];
+        perFolder: { label: string; count: number }[];
+      };
+    }>();
+
+    expect(stats.notes).toBe(2);
+    expect(stats.folders).toBe(2);
+    // The graph answered, so links are counted rather than reported as unknown.
+    expect(stats.linksKnown).toBe(true);
+    expect(stats.unresolved).toBeGreaterThan(0);
+    expect(stats.topTags.map((tag) => tag.label)).toContain("ideas");
+    expect(stats.perFolder.map((folder) => folder.label).sort()).toEqual(["Goals", "Ideas"]);
+    expect(stats.tags).toBeGreaterThan(0);
+  });
+
+  it("answers an empty vault with zeroes", async () => {
+    const { app } = await makeApp();
+    const res = await app.inject({ method: "GET", url: "/stats" });
+
+    expect(res.statusCode).toBe(200);
+    const { stats } = res.json<{
+      stats: { notes: number; links: number; mostLinked: unknown[] };
+    }>();
+    expect(stats.notes).toBe(0);
+    expect(stats.links).toBe(0);
+    expect(stats.mostLinked).toEqual([]);
+  });
+});
+
 describe("GET /link", () => {
   // These use the real fetcher: each one is refused before a socket is opened, which is
   // exactly why they can be tested here instead of with curl.

@@ -30,6 +30,7 @@ import {
   updateNote,
   updateNoteMeta,
 } from "@lumos/vault-utils";
+import { vaultInsights } from "@lumos/vault-utils/insights";
 import type { LinkCard, WhatsAppStatus } from "@lumos/shared";
 import { DISABLED_BRIDGE, DISABLED_SENTENCE, type BridgeControl } from "./bridge.js";
 import { LinkFetchError, fetchLinkCard } from "./fetch-link.js";
@@ -278,6 +279,18 @@ export async function createApp({
 
   /** The vault's link graph: notes, internal links, tags, and links with no target yet. */
   app.get("/graph", async () => ({ graph: await buildVaultGraph(vault) }));
+
+  /**
+   * The vault counted: the same figures the desktop's Stats pane and the MCP `vault_health` tool
+   * answer with, from one implementation in `@lumos/vault-utils/insights`.
+   *
+   * It reads the listing and the graph, which is what the count is over - nothing here is walked
+   * twice, and no path comes from the request, so there is nothing to guard.
+   */
+  app.get("/stats", async () => {
+    const [entries, graph] = await Promise.all([listNotes(vault), buildVaultGraph(vault)]);
+    return { stats: vaultInsights(entries, graph) };
+  });
 
   /** Note counts per vault folder, including the folders that are still empty. */
   app.get("/folders", async () => {
