@@ -645,6 +645,14 @@ export default function App() {
     setView("notes");
   };
 
+  /** Look at one folder from the insights pane, exactly as the sidebar's folder rows do. */
+  const filterByFolder = (folder: string): void => {
+    setActiveFolder(folder);
+    setTag(null);
+    setQuery("");
+    setView("notes");
+  };
+
   /**
    * The one button a notice can offer: undo a delete, or open the note that just arrived.
    *
@@ -710,6 +718,7 @@ export default function App() {
               loading={loading}
               onOpen={openNote}
               onFilterTag={filterByTag}
+              onFilterFolder={filterByFolder}
             />
           </PaneBoundary>
         ) : view === "trash" ? (

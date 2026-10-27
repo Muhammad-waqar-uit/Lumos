@@ -201,7 +201,8 @@ and a short list of where it is thin.
   them, and **Folders** by size. Each is capped at five rows with the total still printed, so a list
   never silently truncates.
 - Every row acts. A note row opens it, a tag row narrows the list to that tag through the same
-  handler the chips use - so the pane is a way into the vault, not a report about it.
+  handler the chips use, and a folder row looks at that folder the way the sidebar does - so the
+  pane is a way into the vault, not a report about it.
 - Nothing is requested: `src/lib/insights.ts` counts the listing and the graph that `App.tsx` has
   already loaded, which is why the pane opens instantly and works with the daemon stopped.
 - A graph that did not answer is not counted as zero. `linksKnown` is false when `GET /graph` failed,

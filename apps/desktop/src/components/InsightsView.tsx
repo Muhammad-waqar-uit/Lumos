@@ -16,6 +16,8 @@ interface Props {
   onOpen: (id: string) => void;
   /** Narrows the list to a tag, the same handler the chips use. */
   onFilterTag: (tag: string) => void;
+  /** Looks at one folder, the same way the sidebar's folder rows do. */
+  onFilterFolder: (folder: string) => void;
 }
 
 const BUTTON =
@@ -77,7 +79,15 @@ function NoteRows({
  * Every figure is a way in: a note row opens it, a tag row filters the list to it. A count nobody
  * can act on is trivia, and the point of this pane is the next note to write.
  */
-export function InsightsView({ notes, graph, connection, loading, onOpen, onFilterTag }: Props) {
+export function InsightsView({
+  notes,
+  graph,
+  connection,
+  loading,
+  onOpen,
+  onFilterTag,
+  onFilterFolder,
+}: Props) {
   const insights = useMemo(() => vaultInsights(notes, graph), [notes, graph]);
 
   const source =
@@ -216,14 +226,17 @@ export function InsightsView({ notes, graph, connection, loading, onOpen, onFilt
                 </h3>
                 <ul className="mt-2 space-y-1">
                   {insights.perFolder.map((folder) => (
-                    <li
-                      key={folder.id}
-                      className="flex items-baseline justify-between gap-3 text-xs"
-                    >
-                      <span className="min-w-0 truncate text-foreground">{folder.label}</span>
-                      <span className="shrink-0 tabular-nums text-muted-foreground">
-                        {folder.count}
-                      </span>
+                    <li key={folder.id}>
+                      <button
+                        type="button"
+                        onClick={() => onFilterFolder(folder.id)}
+                        className="flex w-full items-baseline justify-between gap-3 rounded px-1 py-0.5 text-left text-xs transition-colors hover:bg-accent/50"
+                      >
+                        <span className="min-w-0 truncate text-foreground">{folder.label} </span>
+                        <span className="shrink-0 tabular-nums text-muted-foreground">
+                          {folder.count}
+                        </span>
+                      </button>
                     </li>
                   ))}
                 </ul>

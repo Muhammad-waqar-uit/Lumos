@@ -73,6 +73,7 @@ const GRAPH: GraphData = {
 function renderInsights(overrides: Partial<Parameters<typeof InsightsView>[0]> = {}) {
   const onOpen = vi.fn();
   const onFilterTag = vi.fn();
+  const onFilterFolder = vi.fn();
   render(
     <InsightsView
       notes={NOTES}
@@ -81,10 +82,11 @@ function renderInsights(overrides: Partial<Parameters<typeof InsightsView>[0]> =
       loading={false}
       onOpen={onOpen}
       onFilterTag={onFilterTag}
+      onFilterFolder={onFilterFolder}
       {...overrides}
     />,
   );
-  return { onOpen, onFilterTag };
+  return { onOpen, onFilterTag, onFilterFolder };
 }
 
 /** The figure beside a label, read out of the panel's own definition list. */
@@ -156,6 +158,14 @@ describe("InsightsView - the lists", () => {
     fireEvent.click(screen.getByRole("button", { name: "rust 2" }));
 
     expect(onFilterTag).toHaveBeenCalledWith("rust");
+  });
+
+  it("looks at a folder from its row, so no row is decoration", () => {
+    const { onFilterFolder } = renderInsights();
+
+    fireEvent.click(screen.getByRole("button", { name: /^Inbox\s*3$/ }));
+
+    expect(onFilterFolder).toHaveBeenCalledWith("Inbox");
   });
 
   it("counts every orphan but lists only a row's worth", () => {

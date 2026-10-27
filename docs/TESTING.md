@@ -16,7 +16,7 @@ from `pnpm validate`.
 | Workspace | Tests | Test files |
 | --- | ---: | ---: |
 | `daemon` | 217 | 8 |
-| `desktop` | 267 | 31 |
+| `desktop` | 268 | 31 |
 | `mcp` | 48 | 4 |
 | `@lumos/vault-utils` | 248 | 4 |
-| **Total** | **780** | **47** |
+| **Total** | **781** | **47** |

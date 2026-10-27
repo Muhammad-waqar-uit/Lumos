@@ -38,7 +38,7 @@ Lumos is three programs over one vault:
 - **[apps/daemon](apps/daemon/README.md)** - A Node.js service that connects to WhatsApp via Baileys, exposes an HTTP API, parses commands, and writes notes to the vault
 - **[apps/desktop](apps/desktop/README.md)** - A Tauri desktop app (React + TypeScript) for browsing, searching, and managing your second brain
 - **[apps/mcp](apps/mcp/README.md)** - An MCP server over the same vault, for Claude Code and other agents ([docs/mcp.md](docs/mcp.md))
-- **[vault/](vault/)** - Local Markdown storage (generated at runtime)
+- **`vault/`** - Local Markdown storage (generated at runtime, so it is not in a fresh checkout)
 
 ## Tech Stack
 
