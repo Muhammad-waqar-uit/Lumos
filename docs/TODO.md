@@ -320,6 +320,13 @@ Nothing in flight. The next item to pick up is the first one under **Plan**.
 
 ### Phase 6: Search & Discovery (P1)
 
+- [x] Vault insights (the **Stats** tab) - the one "Beyond" idea that needed no new data, since the
+  shell already loads the listing and the graph: notes, folders, tags, resolved and unresolved
+  links, notes added this week and this month, the most-linked notes, the notes with no links or
+  tags, the commonest tags and the size of each folder, each row a way in rather than a number with
+  nothing behind it. Computed from what the window holds, so it opens with no request and works
+  offline; a graph that did not answer is said to be missing instead of counted as zero
+  (`src/lib/insights.ts`, `InsightsView.tsx`, `?view=insights`, 22 tests)
 - [x] Full-text search with fuse.js - the palette ranks titles, tags and previews over the loaded
   vault, tolerant of typos, and works with the daemon stopped (`src/lib/search.ts`, 10 unit tests)
 - [x] Cmd/Ctrl+K search modal - opens from anywhere, arrows move the selection, Enter opens the note

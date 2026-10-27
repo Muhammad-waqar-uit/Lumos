@@ -2,6 +2,39 @@
 
 Chronological record of what has been built. Newest entries first within each date.
 
+## 2026-10-27
+
+### Done - the vault counted, in a pane of its own
+- [x] **The plan's last unbuilt idea that needed no dependency, built.** The roadmap had one thing
+  left in "Beyond": statistics/insights, recorded as an idea and never costed. It turned out to
+  need no new data - `App.tsx` already loads the listing and the graph on mount - so the feature is
+  arithmetic over two things the window holds. `src/lib/insights.ts` counts notes, folders, distinct
+  tags, resolved links, unresolved targets, how many notes arrived in the last 7 and 30 days, the
+  notes with the most links pointing in, the notes with no links and no tags, the commonest tags and
+  the size of each folder. `InsightsView.tsx` is the pane: a **Stats** tab beside Notes, Graph and
+  Trash (`?view=insights`, validated by the same router guard as the other views), six figures, then
+  four lists where every row is a way in - a note row opens it, a tag row filters the list through
+  the handler the chips already use. Given up: it is a view, not an exporter - no CSV or image out,
+  and no series over time, because nothing stores what the vault looked like last month; growth here
+  is what the notes' own dates can answer.
+- [x] **A failed graph read leaves the link figures out rather than printing zeros.** `linksKnown`
+  is false when `GET /graph` never answered, and the pane says the link figures and the two note
+  lists are not counted instead of showing `0 links`, which would read as "this vault has no
+  links" - the same rule the status bar follows for an unknown link state. A demo shell passes the
+  demo graph, because there the notes and the graph are the same little vault.
+- [x] **The growth figures are counted against a clock, so their test cannot be.** The first
+  component test asserted "1 this week" against fixture dates written in October and failed the
+  moment the boundary fell on the wrong side of the run: the window is now built with `daysAgo(n)`
+  in the test, and the pure suite injects its own `now` (`vaultInsights(notes, graph, now)`), so
+  neither depends on the day the suite runs.
+- [x] **Two suites, 22 tests.** `src/lib/insights.test.ts` (12) covers the counts, the ordering and
+  ties, the row cap with the total still counted, growth windows including a future date and an
+  unparseable one, and the empty vault; `src/components/InsightsView.test.tsx` (10) covers the
+  figures and where they came from, opening a note, filtering by a tag without the graph's hash,
+  the orphan row cap and its "and N more", the empty and loading states, and the graph that could
+  not be read. One more test in `App.routing.test.tsx` proves the Stats tab writes `view=insights`
+  into the address and the list pane leaves. The desktop suite is 266.
+
 ## 2026-10-26
 
 ### Done - the graph view's React layer is covered

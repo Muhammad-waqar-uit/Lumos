@@ -4,11 +4,14 @@ import type { FolderFilter } from "../lib/filter";
 import { LumosMark } from "./LumosMark";
 
 export type { FolderFilter } from "../lib/filter";
-export type ShellView = "notes" | "graph" | "trash";
+export type ShellView = "notes" | "graph" | "insights" | "trash";
 
+// Four tabs share a 224px sidebar, so the labels are the short word for each pane: the pane
+// itself says "Vault insights" at the top.
 const VIEWS: { key: ShellView; label: string }[] = [
   { key: "notes", label: "Notes" },
   { key: "graph", label: "Graph" },
+  { key: "insights", label: "Stats" },
   { key: "trash", label: "Trash" },
 ];
 

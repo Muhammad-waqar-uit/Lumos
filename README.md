@@ -26,6 +26,7 @@ Lumos transforms WhatsApp into an effortless capture tool for your second brain.
 - **Keyboard search**: `Cmd/Ctrl+K` opens a palette over the vault - typo-tolerant matches on titles, tags and previews, plus body matches from the daemon - and `Enter` opens the note; with nothing typed it lists what you opened this session and the commands it can run itself: new note, new folder (named right in the palette), the graph, the trash
 - **The link in the app**: a chip in the status bar says whether WhatsApp is linked (`WhatsApp linked`, `Pair WhatsApp`, `WhatsApp unlinked`, `WhatsApp off`) and opens a panel with the pairing code, when a message was last answered, and **Connect**/**Disconnect** - so pairing never needs the terminal, and stopping capture does not unlink the phone. A note captured while the app is open appears by itself, with a notice that names it and an **Open** button
 - **Readable notes**: Markdown with tables, task lists and syntax-highlighted code, and a link plays or reads in place instead of sending you to a browser
+- **A vault that reports on itself**: the **Stats** tab counts notes, folders, tags and links (including targets that do not exist yet), names the notes with the most links pointing in and the ones nothing links to, says what arrived this week, and sizes every folder - each row opening a note or filtering the list, counted from what the window already holds, so it needs no daemon
 - **Folders you make**: a folder is a directory, so `/newfolder Movies` is all it takes - `/movies <link>` files into it, and the desktop picks it up everywhere folders are offered
 - **A command menu on demand**: send `/` and the bot replies with the commands your vault actually has, which is as close to autocomplete as a chat gets
 - **Coding agents can read the vault**: an [MCP](https://modelcontextprotocol.io) server (`apps/mcp`) gives Claude Code, Claude Desktop or any other MCP client twelve tools over the same notes - list, search, read, create, edit, rename, move, delete, restore - so an agent works on what you actually wrote instead of what you pasted into a prompt
@@ -60,7 +61,7 @@ Lumos is three programs over one vault:
 | `/<folder> <text or link>` | Save into any folder you have - `/movies` into `Movies`, `/to-read` into `To Read` | that folder |
 | `/newfolder <name>` | Make a folder, then `/<name>` files into it | - |
 | `/` | Show the menu, built from your folders | - |
-| `/plan today\|tomorrow` | Plan command - answers that it is not built yet | - |
+| `/plan today\|tomorrow` | Plan the day from the vault's 20 newest notes, through the local Ollama model | - |
 | `/find <query>` | Search the vault (title, tags, body; five matches per reply) | - |
 | `/help` | Show available commands | - |
 | *(plain text)* | Quick capture | `vault/Inbox/` |

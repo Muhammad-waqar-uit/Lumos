@@ -12,7 +12,7 @@ daemon (falling back to demo data when the daemon is offline):
 - `src/router.tsx` - the TanStack Router factory: one route at `/` whose typed search parameters carry `view` and `note`, validated so a hand-edited address cannot smuggle a pane in
 - `src/lib/store.ts` - the vault store (zustand): the daemon read with its demo fallback, the re-read after every change, and the list's filters
 - `src/lib/bulk.ts` - the bulk helper: one write over many notes with every refusal kept, and the one sentence the status bar shows for it
-- `src/components/Sidebar.tsx` - the brand row (mark + wordmark), the Notes/Graph/Trash view switch, folders with note counts, and **+ New folder**: a name, a `POST /folders`, and the new folder becomes what the list is looking at. A refusal (a name already taken, or one the vault cannot make) keeps the form open with the daemon's sentence. Every folder row also carries **Rename** and **Delete**: rename is an inline field that sends `PATCH /folder` and the row follows the notes to the new name; delete asks first ("Remove Movies? The 12 notes inside move to Inbox."), sends `DELETE /folder`, and the Inbox becomes what the list is looking at. Both are offered only while the daemon answers, because both are daemon writes; with the daemon down the rows are read-only and the app is showing demo data
+- `src/components/Sidebar.tsx` - the brand row (mark + wordmark), the Notes/Graph/Stats/Trash view switch (four tabs share 224px, so the insights tab carries the short word), folders with note counts, and **+ New folder**: a name, a `POST /folders`, and the new folder becomes what the list is looking at. A refusal (a name already taken, or one the vault cannot make) keeps the form open with the daemon's sentence. Every folder row also carries **Rename** and **Delete**: rename is an inline field that sends `PATCH /folder` and the row follows the notes to the new name; delete asks first ("Remove Movies? The 12 notes inside move to Inbox."), sends `DELETE /folder`, and the Inbox becomes what the list is looking at. Both are offered only while the daemon answers, because both are daemon writes; with the daemon down the rows are read-only and the app is showing demo data
 - `src/components/LumosMark.tsx` - the mark itself, drawn inline in `currentColor` so it takes `--color-brand` from the theme
 - `src/components/NoteList.tsx` - searchable note list (title, date, preview, tags), the **New** button that opens the composer, the selection checkboxes with the bulk bar (move, add-tag, archive, clear) they raise, and a windowed row list above 50 notes so a large vault keeps a small DOM
 - `src/components/NoteComposer.tsx` - a new note: a folder picker, a textarea, Create, Cancel, and a failure that keeps the draft
@@ -22,6 +22,7 @@ daemon (falling back to demo data when the daemon is offline):
 - `src/components/Markdown.tsx` - the one Markdown renderer, used by the reader and by the editor's preview
 - `src/components/NoteActions.tsx` - rename, move and delete for the open note: a menu, a rename field, a folder picker, a delete that asks first, and a failure that keeps the panel open
 - `src/components/TrashPanel.tsx` - what a delete kept: every trashed note with its folder and when, a Restore per entry, and an Empty that asks first
+- `src/components/InsightsView.tsx` - the vault counted: six figures, then the most-linked notes, the ones with no links or tags, the commonest tags and every folder's size, each row a way in
 - `src/components/LinkPane.tsx` - the note's link: video player, image, or scraped reader card
 - `src/components/GraphView.tsx` - canvas link graph (routes, controls, click-to-open)
 - `src/components/PaneBoundary.tsx` - error boundary around the lazily loaded graph pane
@@ -186,6 +187,35 @@ wrong folder or named badly no longer means leaving the app.
 - Covered by `src/components/NoteActions.test.tsx` (the menu, the rename and its refusal, the link
   warning, one rename at a time, the folder list, and the delete that asks) and by the SSR renders in
   `src/components/NoteViewer.test.tsx` for the button being offered only while the daemon answers.
+
+### Vault insights
+
+The list shows one folder and the graph shows the shape without numbers, so neither answers "is
+this vault actually connected?". The **Stats** tab is that answer: a count of what the vault holds
+and a short list of where it is thin.
+
+- Six figures - notes, folders, distinct tags, links (with the unresolved targets beneath), notes
+  added this week (with the month beneath), and notes with no links and no tags.
+- Four lists follow: **Most linked** (by links pointing in), **Not connected yet** (the graph's own
+  `orphan` - nothing links in or out and the note carries no tags), **Tags** by how many notes carry
+  them, and **Folders** by size. Each is capped at five rows with the total still printed, so a list
+  never silently truncates.
+- Every row acts. A note row opens it, a tag row narrows the list to that tag through the same
+  handler the chips use - so the pane is a way into the vault, not a report about it.
+- Nothing is requested: `src/lib/insights.ts` counts the listing and the graph that `App.tsx` has
+  already loaded, which is why the pane opens instantly and works with the daemon stopped.
+- A graph that did not answer is not counted as zero. `linksKnown` is false when `GET /graph` failed,
+  and the pane says the link figures and the two note lists are missing rather than printing a `0`
+  that would read as "this vault has no links". A demo shell passes the demo graph, because there
+  the notes and the graph are the same little vault.
+- Growth is counted against the clock, so `vaultInsights()` takes `now` as an argument (defaulting to
+  the real one) and its suite injects a fixed date; a note dated in the future or one whose `created`
+  will not parse is not counted as recent.
+- Covered by `src/lib/insights.test.ts` (the counts, ordering and ties, the row caps with the totals
+  still counted, the growth windows, the empty vault) and `src/components/InsightsView.test.tsx` (the
+  figures and their source, opening a note, filtering by a tag, the orphan cap and its "and N more",
+  the loading and empty states, the unreadable graph); `App.routing.test.tsx` proves the tab writes
+  `?view=insights` into the address.
 
 ### The trash
 

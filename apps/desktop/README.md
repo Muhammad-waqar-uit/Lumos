@@ -24,9 +24,13 @@ While the daemon handles capture via WhatsApp, the desktop app is designed to he
   rewrites the links in other notes that pointed at the old title so the backlinks survive; a move
   changes the folder and keeps the filename; a delete asks first, moves the file to the vault's
   `.trash`, and leaves **Undo** in the status bar
-- The **Trash** tab beside Notes and Graph lists what those deletes kept — each entry with its
-  folder and when it went — with a **Restore** per note and an **Empty the trash** that asks first,
-  because emptying is the one action in the app with nothing to undo afterwards
+- The **Stats** tab counts the vault and shows where it is thin: links and the targets that do not
+  exist yet, notes added this week, the notes with the most links pointing in, the ones with no
+  links or tags, the commonest tags and every folder's size. Each row opens a note or filters the
+  list, and it is counted from the listing and graph the window already has, so it works offline
+- The **Trash** tab beside Notes, Graph and Stats lists what those deletes kept — each entry with
+  its folder and when it went — with a **Restore** per note and an **Empty the trash** that asks
+  first, because emptying is the one action in the app with nothing to undo afterwards
 
 The vault is served by the daemon: with it stopped the app shows `src/lib/demo.ts` instead and
 editing, renaming, moving and deleting are disabled. Set `VITE_DAEMON_URL` to point the app at a daemon on another port. What is known to be

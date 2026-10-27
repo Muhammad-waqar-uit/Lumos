@@ -138,6 +138,11 @@ button.
   filename and the first heading together, and carries the links in other notes that pointed at
   the old title. Move keeps the filename. Delete moves the file to the vault's trash and leaves
   **Undo** in the status bar until the notice is dismissed or replaced.
+- **Stats** in the sidebar counts the vault: notes, folders, tags, links and how many point at a
+  note that does not exist yet, what arrived this week and this month, the notes with the most links
+  pointing in, the ones nothing links to, the commonest tags and every folder's size. Each row opens
+  a note or filters the list to a tag, and the whole pane is counted from what the window already
+  has, so it opens with no request and works with the daemon stopped.
 - **Trash** in the sidebar lists what a delete kept, each with **Restore**; **Empty the trash**
   takes two presses because it is the one action with no undo.
 

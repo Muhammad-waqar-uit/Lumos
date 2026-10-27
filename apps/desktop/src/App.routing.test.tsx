@@ -117,6 +117,17 @@ describe("the shell's address", () => {
     expect(router.state.location.search.view).toBe("trash");
   });
 
+  it("opens the insights pane from its tab, and never the list beside it", async () => {
+    const router = renderAt("/");
+    await screen.findByPlaceholderText("Search notes");
+
+    fireEvent.click(screen.getByRole("tab", { name: "Stats" }));
+
+    expect(router.state.location.search.view).toBe("insights");
+    expect(await screen.findByRole("region", { name: "Vault insights" })).toBeTruthy();
+    expect(screen.queryByPlaceholderText("Search notes")).toBeNull();
+  });
+
   it("refuses a view the app does not have, and falls back to the notes", async () => {
     renderAt("/?view=cosmos");
     // The pane the address asked for does not exist, so the notes view is what opens - never a

@@ -51,6 +51,11 @@ folder, so progress is always visible.
 - Link graph: notes and tags as nodes, links and tag references as edges, filters and local depth. ✅
 - Tag filtering: the tags in the current folder and query become chips with counts, a chip or a note's own tag narrows the list, and a tag node offers **Show notes** with the same filter. ✅
 - Backlinks in the note viewer: the notes that link to the open one, from the same graph, each one a button that opens it. ✅
+- Vault insights: a **Stats** tab that counts what the vault holds and where it is thin - links,
+  unresolved targets, notes added this week and this month, the most-linked notes, the notes nothing
+  links to, the commonest tags, every folder's size - with each row opening a note or filtering the
+  list. Computed from the listing and the graph the app already has, so it costs no request. ✅
+  (`src/lib/insights.ts`, `InsightsView.tsx`)
 - The graph keeps its layout: node positions and a view you placed survive a tab switch, and a resized
   pane re-fits a view the app fitted itself. ✅
 
@@ -126,7 +131,7 @@ diff to explain. The full shape, the cost and the one-afternoon spike that decid
 
 ## Beyond
 
-Ideas not yet committed: link enrichment summaries, statistics/insights, and optional
-sync/backups. These are recorded in [`FEATURES.md`](FEATURES.md) as `idea`. The graph view left this
+Ideas not yet committed: link enrichment summaries and optional sync/backups. Statistics left this
+list on 2026-10-27 and shipped as the **Stats** tab. These are recorded in [`FEATURES.md`](FEATURES.md) as `idea`. The graph view left this
 list and shipped in M5, together with the backlinks panel and the tag nodes; what is left of it
 sits under **Plan** in [`TODO.md`](TODO.md).

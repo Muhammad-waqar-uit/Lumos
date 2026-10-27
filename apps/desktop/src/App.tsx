@@ -28,6 +28,7 @@ import { countTags, filterEntries, nodeTag } from "./lib/filter";
 import { isTypingTarget, stepForKey, stepIndex } from "./lib/list-nav";
 import { PANE_DEFAULT, clampPaneWidth } from "./lib/pane-size";
 import { recentEntries, rememberRecent } from "./lib/recent";
+import { InsightsView } from "./components/InsightsView";
 import { NoteList, keyOf } from "./components/NoteList";
 import { NoteViewer } from "./components/NoteViewer";
 import { PaneBoundary } from "./components/PaneBoundary";
@@ -697,6 +698,19 @@ export default function App() {
                 folders={folderNames}
               />
             </Suspense>
+          </PaneBoundary>
+        ) : view === "insights" ? (
+          <PaneBoundary title="Vault insights">
+            <InsightsView
+              notes={notes}
+              // A demo shell has a whole demo vault, graph included; a live graph that failed to
+              // read stays null, so the pane says the link figures are unknown instead of zero.
+              graph={graph ?? (connection === "demo" ? DEMO_GRAPH : null)}
+              connection={connection}
+              loading={loading}
+              onOpen={openNote}
+              onFilterTag={filterByTag}
+            />
           </PaneBoundary>
         ) : view === "trash" ? (
           <PaneBoundary title="The trash">

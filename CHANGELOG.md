@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- A **Stats** pane in the desktop (the sidebar tab, `?view=insights`) that counts the vault and shows
+  where it is thin: notes, folders, tags, resolved and unresolved links, how many notes arrived this
+  week and this month, the notes with the most links pointing in, the notes with no links and no tags,
+  the commonest tags and the size of every folder. Each row is a way in - a note opens, a tag filters
+  the list with the same handler the chips use - and all of it is computed from the listing and the
+  graph the window already has, so it costs no request and works with the daemon stopped. When the
+  graph could not be read the link figures say so rather than printing zeros
+  (`src/lib/insights.ts`, `src/components/InsightsView.tsx`).
 - The graph view's React layer is covered by component tests
   (`apps/desktop/src/components/GraphView.test.tsx`, 9 tests): the Tags, Unlinked and depth
   controls, selecting a note or a tag with **Open note**/**Show notes**, and the counts, legend,
