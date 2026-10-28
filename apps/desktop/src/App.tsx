@@ -94,28 +94,8 @@ export default function App() {
   const [whatsapp, setWhatsapp] = useState<WhatsAppStatus | null>(null);
   const [whatsappRead, setWhatsappRead] = useState<WhatsAppRead>("loading");
   const [whatsappOpen, setWhatsappOpen] = useState(false);
+  const [pairingPrompted, setPairingPrompted] = useState(false);
 
-  // Theme toggle state
-  const [theme] = useState(() => {
-    const saved = localStorage.getItem("lumos.theme");
-    if (saved === "light") return "light";
-    if (saved === "dark") return "dark";
-    return "dark";
-  });
-  // Save theme to localStorage on change
-  useEffect(() => {
-    const stringified = JSON.stringify(theme);
-    localStorage.setItem("lumos.theme", stringified);
-  }, [theme]);
-  // Apply theme class to root element
-  useEffect(() => {
-    const root = document.documentElement;
-    if (theme === "dark") {
-      root.classList.remove("lumos-theme-light");
-    } else {
-      root.classList.add("lumos-theme-light");
-    }
-  }, [theme]);
   // The notes chosen for a bulk action, by the same key the list knows them by.
   const [selection, setSelection] = useState<ReadonlySet<string>>(new Set());
   // Keys of the notes opened this session, for the palette's empty state. A reload starts empty.
@@ -191,6 +171,10 @@ export default function App() {
         if (!alive) return;
         setWhatsapp(next);
         setWhatsappRead("ok");
+        if (next.state === "waiting" && next.qr && !pairingPrompted) {
+          setWhatsappOpen(true);
+          setPairingPrompted(true);
+        }
         // `lastAt` moving means the daemon answered a message. The first read only records where it
         // started, so opening the app does not announce everything captured earlier today - but a
         // capture that arrives afterwards is noticed even when nothing had been answered before.
@@ -212,7 +196,7 @@ export default function App() {
       alive = false;
       window.clearInterval(timer);
     };
-  }, [connection, whatsappOpen, pullArrivals]);
+  }, [connection, whatsappOpen, pairingPrompted, pullArrivals]);
 
   /** Start answering WhatsApp messages again, and take the daemon's word for the new state. */
   const startWhatsAppLink = useCallback(async (): Promise<void> => {
@@ -634,6 +618,7 @@ export default function App() {
     const onKey = (event: KeyboardEvent): void => {
       if (!(event.metaKey || event.ctrlKey) || event.key.toLowerCase() !== "k") return;
       event.preventDefault();
+      setWhatsappOpen(false);
       setSearchOpen((open) => !open);
     };
     window.addEventListener("keydown", onKey);

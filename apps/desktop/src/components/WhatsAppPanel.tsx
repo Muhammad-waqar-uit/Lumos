@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import type { WhatsAppStatus } from "@lumos/shared";
-import { pairingUrl } from "../lib/api";
 import {
   WHATSAPP_DOT,
   WHATSAPP_LABEL,
@@ -152,16 +151,7 @@ export function WhatsAppPanel({ status, read, onConnect, onDisconnect, onClose }
 
         <p className="border-t border-border pt-2 text-[11px] leading-relaxed text-muted-foreground">
           Disconnecting keeps the phone linked, so Connect needs no code. To unlink this device, use
-          WhatsApp → Linked devices → Log out, or{" "}
-          <a
-            href={pairingUrl()}
-            target="_blank"
-            rel="noreferrer"
-            className="underline hover:text-foreground"
-          >
-            open the pairing page
-          </a>
-          .
+          WhatsApp → Linked devices → Log out.
         </p>
       </div>
     </div>

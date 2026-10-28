@@ -23,8 +23,9 @@ Lumos transforms WhatsApp into an effortless capture tool for your second brain.
 - **Allowlist Security**: Only messages from whitelisted phone numbers are processed
 - **Monorepo Architecture**: One vault, three programs - the daemon captures, the desktop app browses, and an MCP server puts the notes in front of coding agents - all sharing one set of vault operations
 - **Links in place**: A YouTube or Vimeo link plays in the note viewer, an Instagram reel or post and a Facebook video or post render through the platform's own embed with their caption beside them, an image link shows the image, and any other page is scraped by the daemon and read as text without leaving the app (private hosts are refused)
-- **Keyboard search**: `Cmd/Ctrl+K` opens a palette over the vault - typo-tolerant matches on titles, tags and previews, plus body matches from the daemon - and `Enter` opens the note; with nothing typed it lists what you opened this session and the commands it can run itself: new note, new folder (named right in the palette), the graph, the stats, the trash and the profile
-- **The link in the app**: a chip in the status bar says whether WhatsApp is linked (`WhatsApp linked`, `Pair WhatsApp`, `WhatsApp unlinked`, `WhatsApp off`) and opens a panel with the pairing code, when a message was last answered, and **Connect**/**Disconnect** - so pairing never needs the terminal, and stopping capture does not unlink the phone. A note captured while the app is open appears by itself, with a notice that names it and an **Open** button
+- **Keyboard search**: `Cmd/Ctrl+K` opens a palette over the vault—even while a text field is focused—with typo-tolerant matches on titles, tags and previews, plus body matches from the daemon; `Enter` opens the note, and an empty palette lists recent notes and commands
+- **Light and dark themes**: the Moon/Sun control switches the whole app palette and remembers your choice on this device
+- **The link in the app**: when WhatsApp first needs pairing, Lumos opens its in-app QR panel automatically; no terminal or pairing-page route. The status-bar chip reports the link and opens that same panel, with **Connect**/**Disconnect** and the last capture time
 - **Readable notes**: Markdown with tables, task lists and syntax-highlighted code, and a link plays or reads in place instead of sending you to a browser
 - **A vault that reports on itself**: the **Stats** tab counts notes, folders, tags and links (including targets that do not exist yet), names the notes with the most links pointing in and the ones nothing links to, says what arrived this week, and sizes every folder - each row opening a note or filtering the list, counted from what the window already holds, so it needs no daemon
 - **A profile for it**: the avatar at the top of the sidebar holds a name and one line for the vault, up to six pinned notes as cards, and a year of one square per day with the current streak, the longest run and the busiest day - counted from when each note was created, no daemon needed
@@ -115,16 +116,17 @@ cd apps/daemon
 pnpm dev
 ```
 
-On first run, a QR code appears in your terminal, in the desktop's WhatsApp panel (the chip in the
-status bar opens it), and at `http://127.0.0.1:3001/qrcode` as a page of its own. The chip also says
-whether the link is up: `WhatsApp linked`, `Pair WhatsApp`, `WhatsApp unlinked`, `WhatsApp off`.
+In the installed Windows app, Lumos opens its WhatsApp panel automatically when the pairing QR is
+ready; pairing stays inside the app. When running the daemon separately for development, its QR is
+also printed in the terminal and available at `http://127.0.0.1:3001/qrcode`. The app's status-bar
+chip reports the link state and reopens the in-app panel.
 
 ### Linking WhatsApp
 
 1. Open WhatsApp on the phone number you want to use as **Lumos** (the receiving number)
 2. Go to **Settings > Linked Devices > Link a Device**
-3. Scan the QR code from your terminal, from the desktop's WhatsApp panel, or from the pairing page
-   the daemon serves
+3. Scan the QR code shown in Lumos (automatically opened in the installed app); in development,
+   use the app's WhatsApp panel or the daemon's terminal output
 4. The panel turns to `WhatsApp linked`, and `WhatsApp connected.` appears in the logs
 
 The session is saved in `apps/daemon/auth_info/` - you only need to scan once. This folder is git-ignored for security.

@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- `Cmd/Ctrl+K` now opens the vault search palette even when a field has focus. The light/dark
+  toggle now applies the app-wide token palette and persists a plain `light`/`dark` preference
+  (while still reading values saved by the earlier theme implementation). When WhatsApp first
+  needs pairing, its QR dialog now opens inside Lumos; no terminal or daemon page is needed.
+
+
 ### Added
 - A full-link action in the note reader opens a separate, isolated in-app webview window on desktop;
   the web preview opens a browser tab. The native window accepts credential-free HTTP(S) URLs and

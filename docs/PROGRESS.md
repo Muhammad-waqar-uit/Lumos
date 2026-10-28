@@ -4,6 +4,16 @@ Chronological record of what has been built. Newest entries first within each da
 
 ## 2026-10-28
 
+### Fixed - search, theme and WhatsApp pairing stay in the app
+- [x] `Cmd/Ctrl+K` is handled at the shell level, including while an input has focus. The theme
+  toggle now applies the shared light/dark tokens across the app and persists the preference, while
+  continuing to read legacy JSON-quoted values. When the daemon first reports a waiting WhatsApp QR,
+  Lumos opens its own pairing dialog; the off-app pairing-page link is gone.
+- [x] `App.routing.test.tsx` covers the focused-input shortcut, both theme directions and persistence,
+  and automatic pairing-dialog display. The focused shell test file and documentation link check
+  pass. A review of the latest 15 commits found most already had docs; this repair also corrects the
+  theme behavior left broken after its feature commit and records the shell interactions clearly.
+
 ### Done - a profile with a front page
 - [x] The profile now has a GitHub-inspired Markdown README, rendered live while editing and shown on
   the profile when saved. It uses the note renderer, so external links follow the same safe path;

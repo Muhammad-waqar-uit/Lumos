@@ -105,12 +105,15 @@ hiding the note. Pointing Obsidian at the vault is the intended way to browse it
 - **Search over the list** narrows the current folder as you type.
 - **Tag chips** above the list show the tags in what you are looking at, with counts. Pick one to
   narrow; pick it again to clear. A tag on a note row does the same thing.
-- **`Cmd/Ctrl+K`** opens the palette: fuzzy ranking over titles, tags and previews, plus a body
-  search from the daemon for words that appear nowhere in the preview - those rows are marked *in
+- **`Cmd/Ctrl+K`** opens the palette from anywhere, even while a field has focus: fuzzy ranking over
+  titles, tags and previews, plus a body search from the daemon for words that appear nowhere in the
+  preview - those rows are marked *in
   the body*, as the last row is here. Arrow keys move, `Enter` opens, `Esc` closes. Empty, it lists
   the notes you opened this session and then six commands: **New note**, **New folder**, **Open the
   graph**, **Open the stats**, **Open the trash** and **Open the profile**. Typing puts whichever command's words match first, so `new folder` +
   `Enter` turns the field into a name field - `Enter` makes the folder and the list looks at it.
+- **Moon/Sun toggle** switches the full app between dark and light palettes; the choice is saved on
+  this machine.
 
   ![The search palette over a vault, with one result marked as matching only inside the note body](docs/images/search.png)
 - **`j` / `k`** move down and up the list without leaving the viewer.
@@ -158,8 +161,10 @@ A notice in the status bar is dismissed by clicking it.
 The chip at the right of the status bar is the capture link, with its own dot and word -
 `WhatsApp linked`, `Pair WhatsApp` when a phone needs to scan one, `WhatsApp disconnected`,
 `WhatsApp unlinked`, `WhatsApp off`. It opens the panel: the state in a sentence, the pairing code
-drawn right there, and one button. **Disconnect** stops the daemon answering messages and keeps the
-phone linked, so **Connect** needs no code. Taking the device off the account is WhatsApp's own
+drawn right there, and one button. On first launch, the panel opens automatically when a pairing QR
+arrives, so setup never requires the terminal or a separate page in the installed app.
+**Disconnect** stops the daemon answering messages and keeps the phone linked, so **Connect** needs
+no code. Taking the device off the account is WhatsApp's own
 **Linked devices > Log out** - that stays on the phone, and the panel says `WhatsApp unlinked` when it
 happens.
 

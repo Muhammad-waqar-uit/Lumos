@@ -1,23 +1,21 @@
 import { useEffect, useState } from "react";
 
-/**
- * ThemeToggle - A button that toggles between light and dark theme.
- *
- * The theme is stored in localStorage so it persists across sessions.
- * The CSS uses `color-scheme: dark` in the root and the `theme` class
- * toggles between light and dark.
- */
-export function ThemeToggle() {
-  // @ts-ignore
-  const [theme, setTheme] = useState(() => {
-    const saved = localStorage.getItem("lumos.theme");
-    if (saved === "light") return "light";
-    if (saved === "dark") return "dark";
-    return "dark";
-  });
+type Theme = "dark" | "light";
 
-  // Save theme to localStorage on change
+function savedTheme(): Theme {
+  const saved = localStorage.getItem("lumos.theme");
+  // The app previously stored JSON-quoted values; accept those once while writing plain values now.
+  const normalized = saved?.replace(/^"|"$/g, "");
+  return normalized === "light" ? "light" : "dark";
+}
+
+/** A theme toggle that applies and persists the palette used by the whole app. */
+export function ThemeToggle() {
+  const [theme, setTheme] = useState<Theme>(savedTheme);
+
   useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    document.documentElement.style.colorScheme = theme;
     localStorage.setItem("lumos.theme", theme);
   }, [theme]);
 
@@ -48,7 +46,7 @@ export function ThemeToggle() {
           <path d="M10 2a1 1 0 011 1h4a1 1 0 110 2h-4a1 1 0 01-1-1zm0 6a1 1 0 011 1h2a1 1 0 110 2h-2a1 1 0 01-1-1zm0 6a1 1 0 011 1h4a1 1 0 110 2h-4a1 1 0 01-1-1zm-7-10a1 1 0 011-1h2a1 1 0 110 2h-2a1 1 0 01-1-1zm0 6a1 1 0 011 1h4a1 1 0 110 2h-4a1 1 0 01-1-1zm0 6a1 1 0 011 1h2a1 1 0 110 2h-2a1 1 0 01-1-1z" />
         </svg>
       )}
-      <span className="hidden sm:inline">Moon</span>
+      <span className="hidden sm:inline">{theme === "dark" ? "Moon" : "Sun"}</span>
     </button>
   );
 }

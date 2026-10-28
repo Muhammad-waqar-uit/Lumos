@@ -5,8 +5,9 @@ the Markdown vault. It lives in [`apps/desktop`](../apps/desktop).
 
 ## Status
 
-The dark shell is built. The app renders a three-pane layout and loads the vault from the running
-daemon (falling back to demo data when the daemon is offline):
+The shell supports dark and light themes. Its `Cmd/Ctrl+K` handler runs at the window level, even
+when a text field has focus, and WhatsApp pairing opens inside Lumos when the first QR arrives. The app renders a three-pane layout and loads the vault from the daemon (falling
+back to demo data when the daemon is offline):
 
 - `src/App.tsx` - the shell: wires the store, the router and the components together; *where you are* (the pane and the open note) comes from the address, not from local state
 - `src/router.tsx` - the TanStack Router factory: one route at `/` whose typed search parameters carry `view` and `note`, validated so a hand-edited address cannot smuggle a pane in
@@ -29,9 +30,10 @@ daemon (falling back to demo data when the daemon is offline):
 - `src/lib/link-viewer.ts` - URL validation and the Tauri/native-webview vs browser-preview handoff
 - `src/components/GraphView.tsx` - canvas link graph (routes, controls, click-to-open)
 - `src/components/PaneBoundary.tsx` - error boundary around the lazily loaded graph pane
-- `src/components/SearchModal.tsx` - the `Cmd/Ctrl+K` palette: ranked matches, keyboard selection, body matches from the daemon, and the six commands the palette can run itself - new note, new folder, and the graph, stats, trash and profile panes
+- `src/components/SearchModal.tsx` - the `Cmd/Ctrl+K` palette: ranked matches, keyboard selection, body matches from the daemon, and the six commands the palette can run itself - new note, new folder, and the graph, stats, trash and profile panes. The shell owns the shortcut so it works even while a field has focus
 - `src/components/StatusBar.tsx` - connection state, the search shortcut, the note count, a notice the app needs to say (a save whose refresh failed), and a chip for the WhatsApp link that opens the panel below. The chip is offered while the daemon answers, and it says the link's own state - being able to read notes says nothing about whether a message would be filed
-- `src/components/WhatsAppPanel.tsx` - the WhatsApp link in the app: the state in a sentence with when it began and when a message was last answered, the pairing code drawn in a dark `<pre>` while a phone needs one, and the single button the state allows (Connect or Disconnect). A failure stays on the panel in the daemon's words; escape or a click outside closes it, and the link is left as it was
+- `src/components/ThemeToggle.tsx` - switches the full shared palette through `data-theme`, persisting plain `light`/`dark` in `localStorage` and reading legacy JSON-quoted values
+- `src/components/WhatsAppPanel.tsx` - the WhatsApp link in the app: the state in a sentence with when it began and when a message was last answered, the pairing code drawn in a dark `<pre>` while a phone needs one, and the single button the state allows (Connect or Disconnect). On first QR availability the shell opens this dialog automatically; no terminal or pairing-page route is needed. A failure stays on the panel in the daemon's words; escape or a click outside closes it, and the link is left as it was
 - `src/lib/whatsapp.ts` - the words and colours for each state, the sentence a state deserves, which button it can use, and "since 14:32" formatting. Pure, so the status bar and the panel cannot disagree about what `disconnected` means
 - `src/lib/capture.ts` - what arrived while the window was open: the notes that were not in the list before, and the one sentence the status bar says about them (`src/lib/capture.test.ts`)
 - `src/lib/list-nav.ts` - the arithmetic behind `j`/`k` in the note list, plus the rule for when a key belongs to a field
@@ -417,8 +419,8 @@ simulation puts a node is still checked by hand.
 ## Planned structure
 
 - **Shell**: Tauri 2.x (Rust backend) hosting a Vite + React frontend.
-- **UI**: Tailwind CSS + shadcn/ui, with a dark-minimal theme and a theme toggle (see [`design.md`](design.md)).
-- **Theme toggle**: A button in the status bar toggles between light and dark mode; the preference is persisted in `localStorage`.
+- **UI**: Tailwind CSS + shadcn/ui, with shared dark and light palettes (see [`design.md`](design.md)).
+- **Theme toggle**: The status-bar button changes the document's `data-theme`, applying the same token palette to the full app, and persists plain `light`/`dark` values in `localStorage`. It accepts the earlier JSON-quoted values as well.
 - **Routing**: TanStack Router ✅ - one route at `/`; the panes ride on search parameters (`src/router.tsx`).
 - **State**: zustand ✅ - the vault index and the list's filters live in `src/lib/store.ts`; the pane and the open note stay in the address, and session-only UI state stays in the component.
 - **Rendering**: `react-markdown` + `remark-gfm` for notes, `force-graph` for the link graph and
@@ -468,7 +470,9 @@ kept apart on purpose:
 - The footer's left-hand dot is the **daemon** - can notes be read right now.
 - The chip beside the note count is the **link** - would a message be filed right now.
 
-The panel is the only place that acts. **Disconnect** stops the daemon answering messages and keeps
+The panel is the only place that acts. It opens automatically the first time the shell sees a
+pairing QR, so setup stays inside Lumos; it is never necessary to open the daemon's
+pairing page. **Disconnect** stops the daemon answering messages and keeps
 the phone linked, so **Connect** needs no code; unlinking stays on the phone, where the account is.
 A read that fails while the daemon still answers is not hidden: the panel says the last check failed
 rather than showing a state that may no longer be true.
@@ -561,7 +565,7 @@ vault would be offering nothing.
 
 Wired today:
 
-- `Cmd/Ctrl+K` - open or close the search palette.
+- `Cmd/Ctrl+K` - open or close the search palette, including while a text field has focus.
 - `Esc` - close the palette.
 - `↑` `↓` `Enter` - move through the palette and open the selection.
 - `j` / `k` - move down and up the note list, in the Notes view only. It stops at both ends rather

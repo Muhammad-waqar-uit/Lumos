@@ -6,10 +6,13 @@ The Lumos Desktop app is a Tauri-based desktop client for browsing, searching, a
 
 ## Overview
 
+In the running app, `Cmd/Ctrl+K` works even in a focused field, the status-bar Moon/Sun button changes the full palette, and Lumos opens its pairing QR panel automatically when a new device needs to scan.
+
 While the daemon handles capture via WhatsApp, the desktop app is designed to help you:
 - Browse notes organized by folders (Inbox, Ideas, Interviews, Goals, Reading)
-- Search the vault from the keyboard: `Cmd/Ctrl+K` opens a palette that ranks titles, tags and previews with `fuse.js`, and adds the daemon's body matches when it is running (those rows are marked "in the body"); with nothing typed it lists the notes you opened this session, then the commands it can run itself — **New note**, **New folder** (named in the palette), **Open the graph**, **Open the trash**
-- See the WhatsApp link and act on it: the chip at the right of the status bar names the link's state (`WhatsApp linked`, `Pair WhatsApp`, `WhatsApp unlinked`, `WhatsApp off`) and opens a panel with the sentence, the pairing code drawn in the app, when a message was last answered, and **Connect**/**Disconnect** — disconnecting keeps the phone linked, so connecting again needs no code
+- Search the vault from the keyboard: `Cmd/Ctrl+K` opens a palette from anywhere, including while a field has focus; it ranks titles, tags and previews with `fuse.js`, and adds the daemon's body matches when it is running (those rows are marked "in the body"). With nothing typed it lists recent notes and the palette's commands
+- Switch the whole app between dark and light palettes with the Moon/Sun control; the choice persists on this device
+- See the WhatsApp link and act on it: the chip at the right of the status bar names the link's state (`WhatsApp linked`, `Pair WhatsApp`, `WhatsApp unlinked`, `WhatsApp off`) and opens the in-app panel; the shell opens it automatically when the pairing code first arrives. It shows the pairing code and offers **Connect**/**Disconnect** — disconnecting keeps the phone linked, so connecting again needs no code
 - See a capture arrive: a note written by WhatsApp while the window is open shows up within one poll, with a status-bar notice naming it and an **Open** button (or a count and **Open newest** when several land together)
 - View notes with their Markdown rendered, including syntax-highlighted code in a fence that names its language
 - Play a link or read the page it points at without leaving the app — a YouTube or Vimeo link plays in place, an Instagram reel or post and a Facebook video or post render through the host's own embed with their caption beside them, an image link shows the image, any other page is read as text
@@ -103,21 +106,21 @@ possible future path (see [docs/desktop.md](../../docs/desktop.md)); it does not
 
 ## Roadmap
 
-- [~] Vault browser with folder navigation (dark shell, folder sidebar, note list and viewer built)
+- [~] Vault browser with folder navigation (dark-first shell with a light theme, folder sidebar, note list and viewer built)
 - [x] Full-text search (`Cmd/Ctrl+K` palette: `fuse.js` ranking over titles, tags and previews, plus the daemon's body matches)
 - [~] Note editor (the body is edited as text and saved back to the vault, and a new note can be written from the list; a live Markdown preview beside the textarea is still to come)
 - [x] Tag filtering (chips with counts, a note's own tag as a filter, tag nodes offering **Show notes**); bulk tag management is still to come
 - [x] Graph view (link graph from the daemon, canvas force layout, per-folder hues, filters, local depth)
 - [x] Syntax-highlighted code blocks (37 common languages; only a fence that names one is highlighted)
 - [x] Recent notes in the palette (the five opened this session, newest first)
-- [x] Commands in the palette (new note, new folder named in the palette itself, and the graph, stats and trash panes)
-- [x] The WhatsApp link in the app (state, pairing code, connect and disconnect from the status bar chip)
+- [x] Commands in the palette (new note, new folder named in the palette itself, and the graph, stats, trash and profile panes; Ctrl/Cmd+K is handled by the shell, including when a field has focus)
+- [x] The WhatsApp link in the app (state, pairing code, connect and disconnect from the status bar chip; automatically opens the in-app pairing dialog when a QR arrives)
 - [x] Resizable list column (drag the separator, double-click to reset, or use the arrow keys)
 - [x] Frontmatter warnings (a note with a broken frontmatter block is still listed and readable, with the reasons above its body and a marker in the list)
 - [x] Links in place (a YouTube or Vimeo link plays in the note viewer, an Instagram reel/post and a Facebook video/post render through their own embeds with the caption the daemon reads, an image link shows the image, any other page is scraped and read as text, and a scraped page is kept for the session)
 - [ ] Link reader polish (less site chrome in the extracted text) — see [docs/LIMITATIONS.md](../../docs/LIMITATIONS.md)
 - [ ] Daily notes view
-- [ ] Statistics and insights
+- [x] Statistics and insights
 
 ## Related
 

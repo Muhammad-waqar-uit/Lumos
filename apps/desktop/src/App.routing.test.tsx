@@ -2,7 +2,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { RouterProvider, createMemoryHistory } from "@tanstack/react-router";
-import type { GraphData, Note, VaultEntry } from "@lumos/shared";
+import type { GraphData, Note, VaultEntry, WhatsAppStatus } from "@lumos/shared";
+import { getWhatsApp } from "./lib/api";
 import { createAppRouter } from "./router";
 import { useVaultStore } from "./lib/store";
 
@@ -80,6 +81,14 @@ afterEach(cleanup);
 // The store is a module-level singleton, so it starts fresh for every case - a note opened in
 // one test must not still be in the vault of the next.
 beforeEach(() => {
+  vi.mocked(getWhatsApp).mockResolvedValue({
+    enabled: true,
+    state: "connected",
+    since: null,
+    error: null,
+    lastAt: null,
+    qr: null,
+  });
   useVaultStore.setState({
     connection: "connecting",
     loading: true,
@@ -170,6 +179,51 @@ describe("the shell's address", () => {
     expect(router.state.location.search.note).toBe("Ideas/morning-walk.md");
     router.history.back();
     await waitFor(() => expect(router.state.location.search.note).toBeUndefined());
+  });
+
+  it("opens the search palette with Ctrl+K while a field has focus", async () => {
+    renderAt("/");
+    const listSearch = await screen.findByPlaceholderText("Search notes");
+
+    fireEvent.keyDown(listSearch, { key: "k", ctrlKey: true });
+
+    expect(await screen.findByRole("searchbox", { name: "Search the vault" })).toBeTruthy();
+  });
+
+  it("applies the theme toggle to the whole app and persists it", async () => {
+    localStorage.setItem("lumos.theme", "dark");
+    renderAt("/");
+    await screen.findByPlaceholderText("Search notes");
+    const toggle = screen.getByRole("button", { name: "Toggle theme" });
+
+    fireEvent.click(toggle);
+
+    await waitFor(() => expect(document.documentElement.dataset.theme).toBe("light"));
+    expect(document.documentElement.style.colorScheme).toBe("light");
+    expect(localStorage.getItem("lumos.theme")).toBe("light");
+
+    fireEvent.click(toggle);
+
+    await waitFor(() => expect(document.documentElement.dataset.theme).toBe("dark"));
+    expect(document.documentElement.style.colorScheme).toBe("dark");
+    expect(localStorage.getItem("lumos.theme")).toBe("dark");
+  });
+
+  it("opens the in-app WhatsApp pairing dialog automatically when a QR is ready", async () => {
+    vi.mocked(getWhatsApp).mockResolvedValue({
+      enabled: true,
+      state: "waiting",
+      since: null,
+      error: null,
+      lastAt: null,
+      qr: "█▀█\n▀▀▀",
+    } satisfies WhatsAppStatus);
+
+    renderAt("/");
+
+    const dialog = await screen.findByRole("dialog", { name: "WhatsApp" });
+    expect(dialog.textContent).toContain("█▀█\n▀▀▀");
+    expect(screen.queryByRole("link", { name: "open the pairing page" })).toBeNull();
   });
 
   it("opens the note a deep link points at", async () => {

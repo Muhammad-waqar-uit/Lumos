@@ -1,7 +1,9 @@
 # Design System
 
-Lumos uses a dark, minimal interface in the spirit of shadcn/ui: near-black surfaces, thin borders,
-high-contrast text, and a restrained accent. No gradients, no heavy shadows, no vibrant color.
+Lumos uses a dark-first, minimal interface in the spirit of shadcn/ui: near-black surfaces, thin borders,
+high-contrast text, and a restrained accent. The status-bar Moon/Sun control switches the whole app
+between the dark defaults and a coordinated light palette; the choice persists locally. No gradients,
+no heavy shadows, no vibrant color.
 
 ## Principles
 
@@ -11,6 +13,10 @@ high-contrast text, and a restrained accent. No gradients, no heavy shadows, no 
 4. **Legible type** - generous line-height, clear hierarchy.
 
 ## Color tokens (dark)
+
+The dark values below are the defaults. `src/index.css` also defines light counterparts for the
+surface, text, border, input, accent and control tokens; `[data-theme="light"]` overrides the same
+CSS variables consumed by Tailwind utilities, so components do not need theme-specific classes.
 
 The tokens live in one place, `apps/desktop/src/index.css`, under Tailwind v4's `@theme`, which
 turns each one into a custom property *and* a utility class. Values are complete `hsl()` colours
@@ -119,4 +125,4 @@ Three-pane shell, with the list column resizable (see [`desktop.md`](desktop.md)
 
 - Maintain WCAG AA contrast (the tokens above are chosen for this).
 - Never rely on color alone to convey state; pair with text or icons.
-- Full keyboard navigation, including the `Cmd/Ctrl+K` search modal and `j`/`k` through the note list.
+- Full keyboard navigation, including the window-level `Cmd/Ctrl+K` search modal (also works while a field has focus) and `j`/`k` through the note list.

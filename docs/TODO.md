@@ -59,10 +59,13 @@ end to end, and because nothing else on this page can close them.
 - [x] The WhatsApp link in the app - `GET /whatsapp` reports the state, when it began, when a
   message was last answered (`lastAt`, the only field that says the loop ran) and why it is down;
   `POST /whatsapp/connect` and `/whatsapp/disconnect` drive it, and the pairing code is drawn in the
-  panel instead of a browser tab. The state lives in `bridge.ts` between the socket and the
-  routes, so `connected` means a socket is up rather than "a message once arrived". Disconnect keeps
-  the phone linked - unlinking stays on the phone, which is the one thing nothing here can do - and
-  the app is told `logged-out` when it happens
+  panel instead of a browser tab. The shell opens the panel automatically when a pairing QR first
+  arrives, and `Cmd/Ctrl+K` and the light/dark toggle are covered at the whole-shell level.
+  The state lives in `bridge.ts` between the socket and the routes, so `connected` means a socket is
+  up rather than "a message once arrived". Disconnect keeps the phone linked - unlinking stays on
+  the phone, which is the one thing nothing here can do - and the app is told `logged-out` when it
+  happens
+
 - [x] Commands in the palette - New note, New folder (named in the palette itself), Open the graph,
   Open the trash. The composer's open state moved from the list to the shell for it, because two
   places can now open it
@@ -351,9 +354,13 @@ sharing is added. These are reminders, not commitments or requirements for the c
   webview, not a bundled Chrome engine (`src/lib/link-viewer.ts`, `src-tauri/src/lib.rs`)
 - [x] Full-text search with fuse.js - the palette ranks titles, tags and previews over the loaded
   vault, tolerant of typos, and works with the daemon stopped (`src/lib/search.ts`, 10 unit tests)
-- [x] Cmd/Ctrl+K search modal - opens from anywhere, arrows move the selection, Enter opens the note
-  in the Notes view, Esc closes and focus goes back; the status bar carries a Search button with the
-  shortcut beside it, so the key is discoverable without knowing it
+- [x] Cmd/Ctrl+K search modal - opens from anywhere, including while a text input has focus; arrows
+  move the selection, Enter opens the note in the Notes view, Esc closes and focus goes back. The
+  status bar carries a Search button with the shortcut beside it, so the key is discoverable too
+- [x] Light/dark theme toggle - the Moon/Sun control changes the shared token palette across the
+  app, saves `light`/`dark` locally and accepts legacy JSON-quoted preferences (`ThemeToggle.tsx`,
+  `index.css`; both directions and persistence covered by the shell test)
+
 - [x] Recent notes quick access - an empty palette lists the notes opened this session, newest
   first, up to five, with `↑`/`↓`/`Enter` working on them; the keys resolve against the live
   listing, so a deleted note disappears instead of leaving a dead row (`src/lib/recent.ts`, 10 unit

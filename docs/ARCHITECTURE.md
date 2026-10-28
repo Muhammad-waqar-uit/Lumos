@@ -62,7 +62,7 @@ injected, so no port is bound and no network request is made.
 ## Desktop
 
 - **Shell**: Tauri 2.x (Rust backend) hosting a Vite/React frontend.
-- **UI**: Tailwind CSS + shadcn/ui, dark minimal theme.
+- **UI**: Tailwind CSS + shadcn/ui, dark-first theme with a light counterpart; the status-bar toggle changes shared CSS tokens on the document root and saves the preference locally.
 - **Access to the vault**: the daemon HTTP API today - the read routes plus `POST /folders`, `PATCH /folder`, `DELETE /folder`, `PUT /note`, `POST /notes`, `PATCH /note`, `POST /note/move` and `DELETE /note` to write; `GET /whatsapp` and `POST /whatsapp/connect`/`disconnect` are how it reports and drives the capture link, which lives in the daemon's process and nowhere else; Tauri filesystem commands are a possible future path so it can run without the daemon. Folders are read, never assumed: the sidebar, the composer, both move menus and the graph legend all draw from one `GET /folders` list held in the store.
 - **Panes**: the notes list + viewer, or the link graph, sharing the folder sidebar. The list column is resizable through `PaneSplitter`, and the width lives in the shell rather than in the pane. The graph renderer loads lazily with its tab, so the notes path stays light.
 - **Link pane**: a note's link is shown in the viewer - a player, an image, or the scraped page - instead of only linking out. It reads through `src/lib/api.ts` like every other pane and has its own loading, error and retry states. Full-page actions call the narrow `open_link_viewer` Rust command to create a capability-isolated webview; the browser-preview fallback opens a tab.
@@ -81,11 +81,11 @@ injected, so no port is bound and no network request is made.
 - Folders: a directory each, so the set is whatever the vault holds. `Inbox`, `Ideas`, `Interviews`, `Goals` and `Reading` are the seed a new vault starts with; `/newfolder <name>` (or `POST /folders`) adds more, `/renamefolder <from>\|<to>` (or `PATCH /folder`) renames one carrying its notes and the links that named it, `/delfolder <name>` (or `DELETE /folder`) moves its notes to Inbox, and `listFolderNames()` in `@lumos/vault-utils` is the one place the set is read.
 - Filenames: `YYYY-MM-DD-slug.md`. See [vault.md](vault.md).
 
-## UI Theme (Dark Minimal)
+## UI Theme (Dark-first, light toggle)
 
-- Background near-black (`hsl(0 0% 3.9%)`).
-- Subtle surfaces and thin, low-opacity borders.
-- High-contrast text; restrained accent.
+- Dark default: near-black background (`hsl(0 0% 3.9%)`), subtle surfaces and thin borders.
+- The status-bar toggle switches the shared CSS token palette to light values and persists the choice in `localStorage`.
+- High-contrast text and restrained accent in both palettes; see [design.md](design.md).
 - No gradients, no heavy shadows. See [design.md](design.md).
 
 ## Tech Decisions
