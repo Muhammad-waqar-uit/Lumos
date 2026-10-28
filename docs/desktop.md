@@ -417,7 +417,8 @@ simulation puts a node is still checked by hand.
 ## Planned structure
 
 - **Shell**: Tauri 2.x (Rust backend) hosting a Vite + React frontend.
-- **UI**: Tailwind CSS + shadcn/ui, dark minimal theme (see [`design.md`](design.md)).
+- **UI**: Tailwind CSS + shadcn/ui, with a dark-minimal theme and a theme toggle (see [`design.md`](design.md)).
+- **Theme toggle**: A button in the status bar toggles between light and dark mode; the preference is persisted in `localStorage`.
 - **Routing**: TanStack Router ✅ - one route at `/`; the panes ride on search parameters (`src/router.tsx`).
 - **State**: zustand ✅ - the vault index and the list's filters live in `src/lib/store.ts`; the pane and the open note stay in the address, and session-only UI state stays in the component.
 - **Rendering**: `react-markdown` + `remark-gfm` for notes, `force-graph` for the link graph and

@@ -22,7 +22,16 @@ beforeEach(() => {
 describe("parseProfile", () => {
   it("falls back to the default for anything that is not a profile", () => {
     for (const raw of [null, "", "{", "[]", '"a string"', "null"]) {
-      expect(parseProfile(raw)).toEqual(DEFAULT_PROFILE);
+      expect(parseProfile(raw)).toEqual(
+        expect.objectContaining({
+          name: "",
+          bio: "",
+          username: "",
+          readme: "",
+          pins: [],
+          lastModified: expect.any(String),
+        }),
+      );
     }
   });
 
@@ -30,7 +39,14 @@ describe("parseProfile", () => {
     const profile = parseProfile(
       JSON.stringify({ name: "  Waqar  ", bio: 42, pins: "Inbox/a.md", extra: true }),
     );
-    expect(profile).toEqual({ name: "Waqar", bio: "", username: "", readme: "", pins: [] });
+    expect(profile).toEqual({
+      name: "Waqar",
+      bio: "",
+      username: "",
+      readme: "",
+      pins: [],
+      lastModified: expect.any(String),
+    });
   });
 
   it("loads a Markdown README and remains compatible with profiles saved before it existed", () => {
@@ -101,6 +117,7 @@ describe("the profile store", () => {
       username: "",
       readme: "",
       pins: [],
+      lastModified: expect.any(String),
     });
     expect(useProfileStore.getState().name).toBe("Waqar");
   });
@@ -117,6 +134,7 @@ describe("the profile store", () => {
       username: "",
       readme: "## About\n\nLearning Rust.",
       pins: ["Inbox/a.md"],
+      lastModified: expect.any(String),
     });
     expect(useProfileStore.getState().readme).toBe("## About\n\nLearning Rust.");
   });
@@ -133,6 +151,7 @@ describe("the profile store", () => {
       username: "",
       readme: "",
       pins: ["Inbox/a.md"],
+      lastModified: expect.any(String),
     });
     expect(useProfileStore.getState().pins).toEqual(["Inbox/a.md"]);
   });

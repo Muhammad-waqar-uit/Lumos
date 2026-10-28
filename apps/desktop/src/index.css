@@ -78,6 +78,16 @@
   --color-heat-4: hsl(40 100% 65%);
 }
 
+[data-theme="light"] {
+  --color-background: hsl(0 0% 98%);
+  --color-foreground: hsl(0 0% 3.9%);
+  --color-card: hsl(0 0% 100%);
+  --color-card-foreground: hsl(0 0% 3.9%);
+  --color-muted: hsl(0 0% 14.9%);
+  --color-muted-foreground: hsl(0 0% 63.9%);
+  --color-brand: hsl(40 100% 65%);
+}
+
 .heat-cell {
   background-color: var(--color-heat-empty);
 }

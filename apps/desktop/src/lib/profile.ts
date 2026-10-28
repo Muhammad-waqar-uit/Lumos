@@ -19,6 +19,9 @@ export const BIO_MAX = 160;
 export const USERNAME_MAX = 24;
 export const README_MAX = 12_000;
 
+/** Last-modified timestamp of the profile (ISO string). */
+export const PROFILE_LAST_MODIFIED = "lumos.profile.lastModified";
+
 export interface Profile {
   /** What the profile calls itself. Empty means "show the fallback", never a blank heading. */
   name: string;
@@ -29,6 +32,8 @@ export interface Profile {
   readme: string;
   /** Vault ids (`Folder/name.md`), in the order they were pinned. */
   pins: string[];
+  /** ISO timestamp of when the profile was last saved. */
+  lastModified: string;
 }
 
 export const DEFAULT_PROFILE: Profile = {
@@ -37,6 +42,7 @@ export const DEFAULT_PROFILE: Profile = {
   username: "",
   readme: "",
   pins: [],
+  lastModified: new Date().toISOString(),
 };
 
 const STORAGE_KEY = "lumos.profile.v1";
@@ -58,8 +64,7 @@ function text(value: unknown, max: number, fallback: string): string {
   return value.trim().slice(0, max);
 }
 
-/**
- * Whatever was stored, as a profile.
+/** Whatever was stored, as a profile.
  *
  * The value is untrusted - it was written by an older version of this app, or by hand - so every
  * field is checked and anything unusable falls back instead of throwing on load.
@@ -79,12 +84,17 @@ export function parseProfile(raw: string | null): Profile {
         ...new Set(record.pins.filter((pin): pin is string => typeof pin === "string" && !!pin)),
       ].slice(0, PIN_LIMIT)
     : [];
+
+  const lastModified =
+    typeof record.lastModified === "string" ? record.lastModified : new Date().toISOString();
+
   return {
     name: text(record.name, NAME_MAX, ""),
     bio: text(record.bio, BIO_MAX, ""),
     username: normalizeUsername(record.username),
     readme: text(record.readme, README_MAX, ""),
     pins,
+    lastModified,
   };
 }
 
@@ -154,6 +164,7 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
       username: normalizeUsername(username),
       readme,
       pins,
+      lastModified: new Date().toISOString(),
     };
     persist(next);
     set(next);
@@ -161,14 +172,21 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
 
   saveReadme: (readme) => {
     const { name, bio, username, pins } = get();
-    const next: Profile = { name, bio, username, readme: readme.trim().slice(0, README_MAX), pins };
+    const next: Profile = {
+      name,
+      bio,
+      username,
+      readme: readme.trim().slice(0, README_MAX),
+      pins,
+      lastModified: new Date().toISOString(),
+    };
     persist(next);
     set(next);
   },
 
   togglePin: (id) => {
-    const { name, bio, username, readme, pins } = get();
-    const next = withPin({ name, bio, username, readme, pins }, id);
+    const { name, bio, username, readme, pins, lastModified } = get();
+    const next = withPin({ name, bio, username, readme, pins, lastModified }, id);
     // A full profile hands the same array back, so there is nothing to save or re-render.
     if (next.pins === pins) return;
     persist(next);

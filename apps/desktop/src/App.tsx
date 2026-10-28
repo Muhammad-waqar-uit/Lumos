@@ -1,4 +1,5 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ThemeToggle } from "./components/ThemeToggle";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import type { Folder, Note, VaultEntry, WhatsAppStatus } from "@lumos/shared";
 import {
@@ -93,6 +94,28 @@ export default function App() {
   const [whatsapp, setWhatsapp] = useState<WhatsAppStatus | null>(null);
   const [whatsappRead, setWhatsappRead] = useState<WhatsAppRead>("loading");
   const [whatsappOpen, setWhatsappOpen] = useState(false);
+
+  // Theme toggle state
+  const [theme] = useState(() => {
+    const saved = localStorage.getItem("lumos.theme");
+    if (saved === "light") return "light";
+    if (saved === "dark") return "dark";
+    return "dark";
+  });
+  // Save theme to localStorage on change
+  useEffect(() => {
+    const stringified = JSON.stringify(theme);
+    localStorage.setItem("lumos.theme", stringified);
+  }, [theme]);
+  // Apply theme class to root element
+  useEffect(() => {
+    const root = document.documentElement;
+    if (theme === "dark") {
+      root.classList.remove("lumos-theme-light");
+    } else {
+      root.classList.add("lumos-theme-light");
+    }
+  }, [theme]);
   // The notes chosen for a bulk action, by the same key the list knows them by.
   const [selection, setSelection] = useState<ReadonlySet<string>>(new Set());
   // Keys of the notes opened this session, for the palette's empty state. A reload starts empty.
@@ -815,6 +838,7 @@ export default function App() {
         whatsapp={connection === "daemon" ? whatsapp : null}
         onWhatsApp={() => setWhatsappOpen(true)}
       />
+      <ThemeToggle />
       {whatsappOpen && connection === "daemon" ? (
         <WhatsAppPanel
           status={whatsapp}
