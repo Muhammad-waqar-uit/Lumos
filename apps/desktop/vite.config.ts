@@ -26,5 +26,6 @@ export default defineConfig(() => ({
     watch: {
       ignored: ["**/src-tauri/**"],
     },
+    chunkSizeWarningLimit: 2048,
   },
 }));
