@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "package:daemon": "pnpm --filter daemon package:desktop",
     "test": "vitest run --reporter=default --reporter=json --outputFile=./vitest-report.json",
     "typecheck": "tsc --noEmit",
     "preview": "vite preview",

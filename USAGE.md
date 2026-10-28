@@ -11,12 +11,12 @@ and writes them over `127.0.0.1`, and nothing is uploaded anywhere.
 
 | Piece | What it does | Started with |
 |---|---|---|
-| **Daemon** | Connects to WhatsApp, parses what you send, writes the note files, and serves the HTTP API the desktop reads | `pnpm --filter daemon dev` |
-| **Desktop** | The app: folder sidebar, note list, viewer and editor, search palette, link graph, trash | `pnpm --filter desktop tauri dev` (the window) or `pnpm --filter desktop dev` (in a browser at `http://localhost:1420`) |
+| **Installed desktop app** | One Windows app: it starts its bundled Node daemon and WhatsApp capture automatically | Install `lumos_0.1.0_x64-setup.exe` and open Lumos from Start |
+| **Daemon (development)** | Connects to WhatsApp, parses what you send, writes the note files, and serves the HTTP API | `pnpm --filter daemon dev` |
+| **Desktop (development)** | The app: folder sidebar, note list, viewer and editor, search palette, link graph, trash | `pnpm --filter desktop tauri dev` (the window) or `pnpm --filter desktop dev` (in a browser at `http://localhost:1420`) |
 | **MCP server** | Puts the same vault in front of Claude Code and other agents: twelve tools over stdio, no port | `pnpm --filter mcp start`, or the `claude mcp add` line in [Letting a coding agent read the vault](#letting-a-coding-agent-read-the-vault) |
 
-The desktop works with the daemon stopped - it falls back to demo notes and says so in the status
-bar - so you can look around before wiring up WhatsApp.
+The installed Windows app starts both parts for you: Tauri launches its bundled Node daemon when the app opens and stops it when the app exits. The daemon is still a separate process internally, but there is only one installer and one click to run Lumos. The developer `tauri dev` and browser preview do not start the daemon.
 
 ## Capture from WhatsApp
 
@@ -274,6 +274,12 @@ Claude Desktop config and the trade-offs.
 The daemon reads `lumos.config.json` from its working directory, and the environment overrides it.
 A missing file means the defaults; a bad one stops the daemon with one sentence naming the setting.
 
+In the installed Windows app, create `%APPDATA%\\com.khan6.lumos\\lumos.config.json` to set WhatsApp's
+`allowedNumbers` (country code + number, digits only) and other settings. The app creates the vault
+beside that file and keeps WhatsApp's paired-device credentials in `%APPDATA%\\com.khan6.lumos\\auth_info`.
+These folders persist across app updates; do not share `auth_info`. The bundled app starts WhatsApp
+capture by default, but an empty allowlist intentionally ignores every sender until you add your number.
+
 ```json
 {
   "vaultPath": "../../vault",
@@ -301,11 +307,11 @@ A missing file means the defaults; a bad one stops the daemon with one sentence 
 
 | What you see | What it means |
 |---|---|
-| *Daemon offline - showing demo notes* in the status bar | The desktop could not reach `127.0.0.1:3001`. Start the daemon, or carry on looking around: the demo vault is a full copy of the interface |
+| *Daemon offline - showing demo notes* in the status bar | In a packaged app the bundled daemon did not start; restart Lumos. In a browser or `tauri dev`, start the daemon manually. |
 | A note row says *! frontmatter* | The note's YAML block does not parse. The note is still readable and editable; the viewer lists what is wrong |
 | *409* on a rename or a restore | Another note already holds that name. Nothing was replaced - choose another title |
 | `400 unknown folder` | The route was asked to file into a folder the vault does not have. Nothing was written - make it with `/newfolder` or **+ New folder**, or check the spelling |
-| The QR code never appears | `LUMOS_DISABLE_WHATSAPP=1` is set, or `whatsapp: false` in the config file. The WhatsApp chip in the status bar says `WhatsApp off`, and `http://127.0.0.1:3001/qrcode` says the same |
+| The QR code never appears | Check that WhatsApp is enabled and `LUMOS_DISABLE_WHATSAPP` is unset. In the installed app, the in-app panel opens when the QR arrives; during development, use the status-bar chip or check `http://127.0.0.1:3001/qrcode`. |
 | The chip says `WhatsApp disconnected` | The link is down but the phone is still paired. Open the panel and press **Connect** - no code needed. If it says `WhatsApp unlinked`, the device was logged out on the phone: scan a new code |
 | `/plan` replies *"… is not answering for Ollama"* | Start Ollama (`ollama serve`); `ollama list` should show the model named by `ollamaModel` |
 | The port is already in use | Another daemon is running. Stop it, or set `PORT` |

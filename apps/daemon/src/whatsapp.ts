@@ -18,7 +18,7 @@ import { handleMessage } from "./handler.js";
 import type { PlanOptions } from "./plan.js";
 import { clearQr, setQr } from "./qr.js";
 
-const AUTH_DIR = path.resolve(process.cwd(), "auth_info");
+const AUTH_DIR = path.resolve(process.env.LUMOS_AUTH_DIR ?? path.join(process.cwd(), "auth_info"));
 
 /** How long to wait before trying again after the link drops or will not start. */
 const RETRY_MS = 3000;

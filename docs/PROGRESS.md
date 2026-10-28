@@ -4,6 +4,22 @@ Chronological record of what has been built. Newest entries first within each da
 
 ## 2026-10-28
 
+### Done - one installer that runs the whole app
+- [x] **The installed Windows app no longer needs a second terminal.** `pnpm --filter desktop tauri
+  build` now runs `package:desktop` before bundling: `pnpm deploy` copies the daemon and its
+  production dependencies into a scratch directory, the developer's `auth_info`, tests, README and
+  tsconfig are stripped so no linked-device session ships, and the running `node.exe` is copied in
+  beside them. Tauri embeds that directory as the `daemon-runtime` resource (~40 MB installer). The
+  new `daemon.rs` starts the bundled runtime with `tsx`'s loader over `src/server.ts`, points
+  `VAULT_PATH`, `LUMOS_CONFIG` and `LUMOS_AUTH_DIR` at `%APPDATA%\\com.khan6.lumos`, waits up to 30s
+  for `127.0.0.1:3001` to answer, and kills its own child on exit - so the vault, the WhatsApp session
+  and `lumos.config.json` survive app updates. `LUMOS_AUTH_DIR` is a new daemon env var for that
+  redirection. In debug builds an already-running daemon is reused instead, so `tauri dev` is
+  unchanged.
+- [x] Docs for it: the front page, [USAGE.md](../USAGE.md), [desktop.md](desktop.md),
+  [ARCHITECTURE.md](ARCHITECTURE.md), the desktop README and the changelog all say what the
+  installer starts, where the data lives, and that dev preview does not autostart the daemon.
+
 ### Fixed - search, theme and WhatsApp pairing stay in the app
 - [x] `Cmd/Ctrl+K` is handled at the shell level, including while an input has focus. The theme
   toggle now applies the shared light/dark tokens across the app and persists the preference, while

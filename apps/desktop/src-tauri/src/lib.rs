@@ -1,4 +1,6 @@
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
+mod daemon;
+
 use std::sync::atomic::{AtomicU64, Ordering};
 use tauri::{WebviewUrl, WebviewWindowBuilder};
 use url::Url;
@@ -45,9 +47,20 @@ fn open_link_viewer(app: tauri::AppHandle, url: String) -> Result<(), String> {
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .setup(|app| {
+            daemon::start(app.handle()).map_err(std::io::Error::other)?;
+            Ok(())
+        })
         .invoke_handler(tauri::generate_handler![greet, open_link_viewer])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(|app, event| match event {
+            tauri::RunEvent::ExitRequested { code: None, .. } => {
+                daemon::stop_on_exit(app);
+            }
+            tauri::RunEvent::Exit => daemon::stop_on_exit(app),
+            _ => {}
+        });
 }
 
 #[cfg(test)]

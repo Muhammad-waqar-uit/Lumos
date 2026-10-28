@@ -12,6 +12,8 @@ Lumos transforms WhatsApp into an effortless capture tool for your second brain.
 
 ![The Lumos desktop app: folders and tag chips, the note list, and the open note with its tags, status and backlinks](docs/images/notes.png)
 
+The installed Windows app is one installer and one click: it starts its bundled daemon and WhatsApp capture automatically. Development commands below remain separate by design.
+
 ## Features
 
 - **WhatsApp Integration**: Link a dedicated WhatsApp number using Baileys (multi-device) - no third-party WhatsApp API keys required

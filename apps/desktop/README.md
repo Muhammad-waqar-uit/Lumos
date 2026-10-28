@@ -6,7 +6,7 @@ The Lumos Desktop app is a Tauri-based desktop client for browsing, searching, a
 
 ## Overview
 
-In the running app, `Cmd/Ctrl+K` works even in a focused field, the status-bar Moon/Sun button changes the full palette, and Lumos opens its pairing QR panel automatically when a new device needs to scan.
+The installed Windows app is a single setup and launch: it starts the bundled daemon and WhatsApp capture. In the running app, `Cmd/Ctrl+K` works even in a focused field, the status-bar Moon/Sun button changes the full palette, and Lumos opens its pairing QR panel automatically when a new device needs to scan. Development previews do not start the daemon.
 
 While the daemon handles capture via WhatsApp, the desktop app is designed to help you:
 - Browse notes organized by folders (Inbox, Ideas, Interviews, Goals, Reading)

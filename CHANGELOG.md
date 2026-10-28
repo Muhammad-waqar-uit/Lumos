@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (while still reading values saved by the earlier theme implementation). When WhatsApp first
   needs pairing, its QR dialog now opens inside Lumos; no terminal or daemon page is needed.
 
+### Changed
+- The installed Windows app is now one-click: the Tauri executable bundles its own Node runtime and
+  daemon, starts WhatsApp capture automatically and stops the daemon when the app exits. The vault,
+  WhatsApp login and settings live in the user's app-data folder and survive app updates; add
+  `allowedNumbers` to `lumos.config.json` there before sending messages.
 
 ### Added
 - A full-link action in the note reader opens a separate, isolated in-app webview window on desktop;

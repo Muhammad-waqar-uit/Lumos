@@ -6,7 +6,12 @@ the Markdown vault. It lives in [`apps/desktop`](../apps/desktop).
 ## Status
 
 The shell supports dark and light themes. Its `Cmd/Ctrl+K` handler runs at the window level, even
-when a text field has focus, and WhatsApp pairing opens inside Lumos when the first QR arrives. The app renders a three-pane layout and loads the vault from the daemon (falling
+when a text field has focus, and WhatsApp pairing opens inside Lumos when the first QR arrives. The
+installed Windows app bundles a private Node runtime and the production
+daemon, starts that daemon with WhatsApp capture on app launch, and stops it on app exit. Its
+vault, WhatsApp pairing and `lumos.config.json` live in `%APPDATA%\\com.khan6.lumos`; one installer
+and one click start the whole app. `tauri dev` and browser preview remain development-only and do
+not start the daemon. The app renders a three-pane layout and loads the vault from the daemon (falling
 back to demo data when the daemon is offline):
 
 - `src/App.tsx` - the shell: wires the store, the router and the components together; *where you are* (the pane and the open note) comes from the address, not from local state
@@ -462,7 +467,9 @@ back through them, which is why the legend labels each colour rather than relyin
 
 ### The WhatsApp link
 
-The capture link is the daemon's, so the app only reports what it is told. `App` reads
+The capture link is the daemon's, so the app only reports what it is told. In the installed Windows
+app the shell starts the daemon automatically, so this is the same WhatsApp process the bundled
+Node runtime started when Lumos opened. `App` reads
 `GET /whatsapp` once at load and then every 15s, and every 3s while the panel is open - the pairing
 code rotates, and a code shown a minute late is a code that scans and does nothing. Both words are
 kept apart on purpose:
@@ -471,9 +478,9 @@ kept apart on purpose:
 - The chip beside the note count is the **link** - would a message be filed right now.
 
 The panel is the only place that acts. It opens automatically the first time the shell sees a
-pairing QR, so setup stays inside Lumos; it is never necessary to open the daemon's
-pairing page. **Disconnect** stops the daemon answering messages and keeps
-the phone linked, so **Connect** needs no code; unlinking stays on the phone, where the account is.
+pairing QR, so the installed-app setup stays inside Lumos; it is never necessary to open the daemon's
+pairing page. **Disconnect** stops the daemon answering messages and keeps the phone linked, so
+**Connect** needs no code; unlinking stays on the phone, where the account is.
 A read that fails while the daemon still answers is not hidden: the panel says the last check failed
 rather than showing a state that may no longer be true.
 
@@ -493,6 +500,18 @@ hands is worse than one that waits to be asked.
 A message that wrote no note (`/find`, `/plan`) costs one re-read and says nothing, because the
 diff comes up empty. The cost is the same read the app does after its own writes; the extra
 `/notes` traffic only happens when the link reports activity.
+
+## Packaged Windows app
+
+`pnpm --filter desktop tauri build` builds the Vite frontend, runs `pnpm --filter desktop package:daemon`,
+then bundles the generated `.lumos-daemon-runtime/` resources into the installer. The bundle includes
+the Node runtime, TypeScript loader, daemon source and production dependencies, but excludes test files,
+local configuration and WhatsApp credentials. On first launch Tauri creates `%APPDATA%\\com.khan6.lumos\\vault`
+and `auth_info`, starts the daemon on loopback with WhatsApp enabled, and checks that its port stays
+open before showing the window. The `lumos.config.json` file in that app-data folder is where a person
+sets `allowedNumbers`; paired credentials remain outside the install directory so upgrades keep the
+link. The Tauri process stops only the daemon child it started when Lumos exits. If the default port
+is already occupied, the app assumes an existing daemon is serving that endpoint instead.
 
 ## Access to the vault
 

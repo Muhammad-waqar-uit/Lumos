@@ -13,12 +13,10 @@ Six checks that no unit test can close: each needs a device, a real window, a po
 that has to be signed in. They are first because they are the shortest path to knowing the app works
 end to end, and because nothing else on this page can close them.
 
-- [!] **The Tauri shell** (P1) - `pnpm --filter desktop tauri dev`: the window opens, the vault
-  loads, the daemon URL is right, and the packaged bundle runs. The Rust side now compiles and
-  links (`cargo build` green, 2026-10-26) - the failure seen that day was the app shell's bundled
-  Git putting its own `link.exe` ahead of MSVC's, so run `tauri dev` from a plain terminal (or
-  after `vcvars64.bat`), not from a shell the app prepared. The window configuration and the
-  packaged bundle are still unexercised.
+- [!] **The Tauri shell and one-click Windows package** (P1) - install the generated NSIS setup,
+  launch Lumos from Start, confirm the daemon comes online and WhatsApp shows a pairing code, pair
+  the phone, send a message, then exit and confirm the daemon child stops. `cargo check` passes in
+  debug and release; live packaging and a linked WhatsApp session still need a Windows manual check.
 - [!] **A live WhatsApp session** (P1) - pair a device with the QR code and send a real message, so
   the capture path is checked against the platform rather than against a parser and a stub.
 - [!] **The social embeds and in-app link viewer inside the packaged window** (P2) - a reel, a video

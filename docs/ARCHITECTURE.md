@@ -61,7 +61,8 @@ injected, so no port is bound and no network request is made.
 
 ## Desktop
 
-- **Shell**: Tauri 2.x (Rust backend) hosting a Vite/React frontend.
+- **Shell**: Tauri 2.x (Rust backend) hosting a Vite/React frontend. The Windows release embeds a private Node runtime and the daemon as Tauri resources; Rust starts the bundled daemon on app launch and stops its owned child on exit. The installer contains no user vault or WhatsApp session.
+- **Windows app data**: the daemon uses `%APPDATA%\\com.khan6.lumos\\vault`, `auth_info` and `lumos.config.json`, keeping data through app upgrades; `allowedNumbers` is configured there. The desktop's local-development dev server does not launch a daemon.
 - **UI**: Tailwind CSS + shadcn/ui, dark-first theme with a light counterpart; the status-bar toggle changes shared CSS tokens on the document root and saves the preference locally.
 - **Access to the vault**: the daemon HTTP API today - the read routes plus `POST /folders`, `PATCH /folder`, `DELETE /folder`, `PUT /note`, `POST /notes`, `PATCH /note`, `POST /note/move` and `DELETE /note` to write; `GET /whatsapp` and `POST /whatsapp/connect`/`disconnect` are how it reports and drives the capture link, which lives in the daemon's process and nowhere else; Tauri filesystem commands are a possible future path so it can run without the daemon. Folders are read, never assumed: the sidebar, the composer, both move menus and the graph legend all draw from one `GET /folders` list held in the store.
 - **Panes**: the notes list + viewer, or the link graph, sharing the folder sidebar. The list column is resizable through `PaneSplitter`, and the width lives in the shell rather than in the pane. The graph renderer loads lazily with its tab, so the notes path stays light.
@@ -92,7 +93,8 @@ injected, so no port is bound and no network request is made.
 
 - **Local-first**: no cloud service is required for core functionality.
 - **Portable vault**: files remain readable in Obsidian and any Markdown editor.
-- **Daemon is standalone**: it can run headless with just the HTTP API.
+- **Daemon is standalone**: it can run headless with just the HTTP API, and remains independently startable for development.
+- **The installed Windows app owns its daemon process**: its Tauri shell bundles Node, the daemon and production dependencies, starts WhatsApp capture on launch and stops its child on exit; vault/config/session files live in app data, not in the installer. Development preview does not autostart the service.
 - **Desktop is the primary UI** going forward; the HTTP API is an integration path, not the main one.
 - **Agents read the vault, not an export of it.** The MCP server goes through `@lumos/vault-utils` rather than the daemon's routes, so reading notes does not depend on the capture service being up. Given up: the HTTP routes' own validation is not in that path - the same functions and the same containment check are.
 
