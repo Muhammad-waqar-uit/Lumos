@@ -509,6 +509,10 @@ the Node runtime, TypeScript loader, daemon source and production dependencies, 
 local configuration and WhatsApp credentials. On first launch Tauri creates `%APPDATA%\\com.khan6.lumos\\vault`
 and `auth_info` and starts the daemon on loopback with WhatsApp enabled.
 
+The window is served from `http://tauri.localhost` on Windows, so that origin has to be in the
+daemon's CORS allow-list - otherwise every response is thrown away by the webview and the shell
+reports a working daemon as offline (see [`daemon.md`](daemon.md)).
+
 The daemon is started **beside** the window, never in front of it: `daemon.rs` spawns it on its own
 thread, so the window opens immediately and a daemon that is slow or broken cannot freeze it. The
 entry point and `tsx` loader are passed *relative* to the runtime directory, with that directory as

@@ -342,11 +342,16 @@ It reads the listing and the graph, which is what the count is over, so the two 
 once rather than per figure. Nothing in it comes from the request, so there is nothing to validate.
 `linksKnown` is always true here: the route reads the graph itself, and only fails if the vault does.
 
-CORS is enabled for local development origins (`localhost`, `127.0.0.1`, `tauri://`) since the
-server binds to `127.0.0.1` only, and for the methods the routes actually serve: `GET`, `POST`,
+CORS is enabled for local origins (`localhost`, `127.0.0.1`, `tauri.localhost`, `tauri://`) since
+the server binds to `127.0.0.1` only, and for the methods the routes actually serve: `GET`, `POST`,
 `PUT`, `PATCH` and `DELETE`. The plugin's default is `GET,HEAD,POST`, which let `curl` save a note
 while the app's own `PUT` was stopped in the browser's preflight — so the list is written out rather
 than inherited, and every method a route adds has to be added here too.
+
+`tauri.localhost` is not a duplicate of `tauri://`: a Tauri window on Windows serves the frontend
+from `http://tauri.localhost`, while macOS and Linux use the `tauri://` scheme. Leaving it out is
+invisible to `curl` — the daemon answers `200` and logs every request — while the browser throws
+every response away, so the installed app reports a running daemon as offline.
 
 ### When a route fails
 

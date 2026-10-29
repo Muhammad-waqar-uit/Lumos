@@ -4,6 +4,22 @@ Chronological record of what has been built. Newest entries first within each da
 
 ## 2026-10-29
 
+### Fixed - the packaged app said offline beside a working daemon
+- [x] **Found by running the installed copy, not the build.** With the launch fixed the app stayed
+  open and its daemon answered, yet the status bar still read *Daemon offline - showing demo
+  notes*. The daemon log told the story: `/folders`, `/notes` and `/graph` answered `200` in a tight
+  two-second loop - the offline retry - which means the browser was rejecting responses it had
+  already received.
+- [x] **Why.** A Tauri window on Windows serves the frontend from `http://tauri.localhost`. The CORS
+  allow-list carried `tauri://localhost` (the macOS/Linux scheme), `localhost` and `127.0.0.1`, so
+  the packaged origin was never granted an `Access-Control-Allow-Origin` and every `fetch` failed in
+  the webview while the server saw a perfectly good request. Development never sees it: the Vite
+  origin is `localhost:1420`, which was allowed.
+- [x] **Fixed and proven.** `app.ts` allows `http(s)://tauri.localhost`; `app.test.ts` asks for
+  `/notes` with that origin and requires the header. Verified end to end with the installed app: the
+  reads dropped from one retry round every two seconds (29 and climbing) to a single read that then
+  stopped, which is the shell settling on `connection: daemon`.
+
 ### Fixed - the packaged app opened and then quit
 - [x] **Why it quit.** `daemon.rs` passed the resolved absolute paths
   (`C:\...\daemon-runtime\node_modules\tsx\dist\loader.mjs` and `src/server.ts`) as arguments to

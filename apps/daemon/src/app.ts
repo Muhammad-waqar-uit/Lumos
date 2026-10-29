@@ -131,11 +131,21 @@ export async function createApp({
 
   // Local-only dev origins (Vite dev server + Tauri). The server binds to 127.0.0.1.
   //
+  // `tauri.localhost` is not decoration: on Windows a Tauri window serves the frontend from
+  // `http://tauri.localhost`, not from the `tauri://` scheme macOS and Linux use. Without it every
+  // read in the installed app is refused by the browser's CORS check while the daemon happily
+  // answers 200, so the shell sits on "daemon offline" with a daemon running beside it.
+  //
   // The methods are listed because the plugin's default is `GET,HEAD,POST`: a browser asks in a
   // preflight, is told PUT is not allowed, and the save fails in the app with only "Failed to fetch"
   // to show for it. Only what the routes actually offer is allowed.
   await app.register(cors, {
-    origin: [/^https?:\/\/localhost(:\d+)?$/, /^https?:\/\/127\.0\.0\.1(:\d+)?$/, /^tauri:\/\//],
+    origin: [
+      /^https?:\/\/localhost(:\d+)?$/,
+      /^https?:\/\/127\.0\.0\.1(:\d+)?$/,
+      /^https?:\/\/tauri\.localhost$/,
+      /^tauri:\/\//,
+    ],
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
   });
 

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- The installed Windows app now finds its running daemon. A Tauri window on Windows serves the
+  frontend from `http://tauri.localhost`, which was not in the daemon's CORS allow-list, so every
+  read was answered `200` and then discarded by the browser: the status bar said *Daemon offline -
+  showing demo notes* beside a daemon that was serving requests. The allow-list now covers it.
 - The installed Windows app no longer freezes on launch and then closes itself. The bundled daemon
   was being started with absolute Windows paths, which Node refuses for an ES module argument, so it
   died as it was spawned while the window waited on it. The daemon now starts beside the window on

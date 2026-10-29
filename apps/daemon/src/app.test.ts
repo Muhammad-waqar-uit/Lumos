@@ -1479,6 +1479,17 @@ describe("CORS", () => {
     }
   });
 
+  // The installed Windows app is served from `http://tauri.localhost`, not `tauri://localhost`.
+  // Missing it made the packaged app report its working daemon as offline.
+  it("allows the origin a packaged Windows window is served from", async () => {
+    const { app } = await makeApp();
+    for (const origin of ["http://tauri.localhost", "https://tauri.localhost"]) {
+      const res = await app.inject({ method: "GET", url: "/notes", headers: { origin } });
+      expect(res.statusCode).toBe(200);
+      expect(res.headers["access-control-allow-origin"], origin).toBe(origin);
+    }
+  });
+
   it("lets the desktop's own origin send a PUT in a preflight", async () => {
     const { app } = await makeApp();
     // A JSON PUT is not a simple request, so the browser asks first and only sends the save if the
