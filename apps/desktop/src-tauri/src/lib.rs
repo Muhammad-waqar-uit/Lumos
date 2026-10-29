@@ -48,7 +48,9 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .setup(|app| {
-            daemon::start(app.handle()).map_err(std::io::Error::other)?;
+            // Started beside the window, never in front of it: a daemon that cannot start is said
+            // in the offline panes and in daemon.log, not by quitting the app on launch.
+            daemon::start(app.handle());
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![greet, open_link_viewer])

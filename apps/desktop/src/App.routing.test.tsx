@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { RouterProvider, createMemoryHistory } from "@tanstack/react-router";
 import type { GraphData, Note, VaultEntry, WhatsAppStatus } from "@lumos/shared";
-import { getWhatsApp } from "./lib/api";
+import { getNotes, getWhatsApp } from "./lib/api";
 import { createAppRouter } from "./router";
 import { useVaultStore } from "./lib/store";
 
@@ -207,6 +207,30 @@ describe("the shell's address", () => {
     await waitFor(() => expect(document.documentElement.dataset.theme).toBe("dark"));
     expect(document.documentElement.style.colorScheme).toBe("dark");
     expect(localStorage.getItem("lumos.theme")).toBe("dark");
+  });
+
+  // The daemon now starts beside the window rather than before it, so the shell's first read can
+  // beat the port. One failed read must not leave demo data on screen for the whole session.
+  it("asks an absent daemon again, and shows the vault once it answers", async () => {
+    vi.useFakeTimers();
+    try {
+      vi.mocked(getNotes).mockRejectedValueOnce(new Error("ECONNREFUSED 127.0.0.1:3001"));
+
+      renderAt("/");
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(0);
+      });
+      expect(useVaultStore.getState().connection).toBe("demo");
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(2000);
+      });
+
+      expect(useVaultStore.getState().connection).toBe("daemon");
+      expect(useVaultStore.getState().notes).toHaveLength(fixtures.notes.length);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("opens the in-app WhatsApp pairing dialog automatically when a QR is ready", async () => {

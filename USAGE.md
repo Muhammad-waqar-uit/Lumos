@@ -307,7 +307,7 @@ capture by default, but an empty allowlist intentionally ignores every sender un
 
 | What you see | What it means |
 |---|---|
-| *Daemon offline - showing demo notes* in the status bar | In a packaged app the bundled daemon did not start; restart Lumos. In a browser or `tauri dev`, start the daemon manually. |
+| *Daemon offline - showing demo notes* in the status bar | In a packaged app the bundled daemon did not start; the reason is in `%APPDATA%\com.khan6.lumos\daemon.log`, and the app retries on its own every two seconds. In a browser or `tauri dev`, start the daemon manually. |
 | A note row says *! frontmatter* | The note's YAML block does not parse. The note is still readable and editable; the viewer lists what is wrong |
 | *409* on a rename or a restore | Another note already holds that name. Nothing was replaced - choose another title |
 | `400 unknown folder` | The route was asked to file into a folder the vault does not have. Nothing was written - make it with `/newfolder` or **+ New folder**, or check the spelling |

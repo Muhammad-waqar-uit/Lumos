@@ -507,11 +507,26 @@ diff comes up empty. The cost is the same read the app does after its own writes
 then bundles the generated `.lumos-daemon-runtime/` resources into the installer. The bundle includes
 the Node runtime, TypeScript loader, daemon source and production dependencies, but excludes test files,
 local configuration and WhatsApp credentials. On first launch Tauri creates `%APPDATA%\\com.khan6.lumos\\vault`
-and `auth_info`, starts the daemon on loopback with WhatsApp enabled, and checks that its port stays
-open before showing the window. The `lumos.config.json` file in that app-data folder is where a person
+and `auth_info` and starts the daemon on loopback with WhatsApp enabled.
+
+The daemon is started **beside** the window, never in front of it: `daemon.rs` spawns it on its own
+thread, so the window opens immediately and a daemon that is slow or broken cannot freeze it. The
+entry point and `tsx` loader are passed *relative* to the runtime directory, with that directory as
+the child's working directory - Node rejects an absolute Windows path as an ES module argument
+(`absolute paths must be valid file:// URLs`), which is what stopped the first packaged build from
+every starting its daemon. The child's stdout and stderr go to `%APPDATA%\\com.khan6.lumos\\daemon.log`,
+appended across launches, so a daemon that dies on startup leaves something to read.
+
+A daemon that will not start no longer closes the app: the panes show their offline state and the
+reason is written to that log. While the shell has no daemon it asks again every two seconds
+(`RECONNECT_MS` in `src/App.tsx`), so the vault appears as soon as the port answers instead of
+staying on demo data for the session.
+
+The `lumos.config.json` file in that app-data folder is where a person
 sets `allowedNumbers`; paired credentials remain outside the install directory so upgrades keep the
 link. The Tauri process stops only the daemon child it started when Lumos exits. If the default port
-is already occupied, the app assumes an existing daemon is serving that endpoint instead.
+is already occupied, the app assumes an existing daemon is serving that endpoint instead - in every
+build, not only in development.
 
 ## Access to the vault
 

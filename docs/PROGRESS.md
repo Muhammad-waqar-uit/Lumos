@@ -2,6 +2,24 @@
 
 Chronological record of what has been built. Newest entries first within each date.
 
+## 2026-10-29
+
+### Fixed - the packaged app opened and then quit
+- [x] **Why it quit.** `daemon.rs` passed the resolved absolute paths
+  (`C:\...\daemon-runtime\node_modules\tsx\dist\loader.mjs` and `src/server.ts`) as arguments to
+  Node, and Node refuses an absolute Windows path as an ES module argument - `ERR_UNSUPPORTED_ESM_URL_SCHEME`,
+  "absolute paths must be valid file:// URLs". The child died on spawn, the readiness loop burned its
+  30 seconds on the UI thread, and `setup` returned the error, which closes the app.
+- [x] **Reproduced, then fixed.** Running the packaged runtime with relative arguments starts the
+  daemon in about a second; the absolute form fails with that exact error. `daemon.rs` now passes
+  `./node_modules/tsx/dist/loader.mjs` and `src/server.ts` with the runtime directory as the child's
+  working directory, and a Rust unit test keeps the arguments relative.
+- [x] **Three faults made one bug fatal, so all three are gone.** The daemon starts on a background
+  thread, so the window never waits on it; a failure no longer ends the setup hook, so the app stays
+  open in its offline state; and the child's stdout/stderr go to `daemon.log` in the app-data folder
+  instead of being discarded. The shell retries its first read every two seconds while it has no
+  daemon, so demo data is replaced by the vault the moment the port answers.
+
 ## 2026-10-28
 
 ### Done - one installer that runs the whole app

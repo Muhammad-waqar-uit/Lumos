@@ -46,6 +46,9 @@ const GraphView = lazy(() =>
   import("./components/GraphView").then((module) => ({ default: module.GraphView })),
 );
 
+/** How long the shell waits before asking an absent daemon again, in milliseconds. */
+const RECONNECT_MS = 2000;
+
 /** The filename at the end of a note's absolute path, which is the key the list knows it by. */
 function nameOf(file: string): string {
   return file.split(/[\\/]/).pop() ?? "";
@@ -123,6 +126,15 @@ export default function App() {
   useEffect(() => {
     void loadVault();
   }, [loadVault]);
+
+  // The daemon starts beside the window rather than before it, so the first read can arrive before
+  // its port is open and the shell would sit on demo data for the rest of the session. Asking again
+  // is one loopback request, and it also recovers when the daemon is restarted underneath the app.
+  useEffect(() => {
+    if (connection !== "demo") return;
+    const timer = window.setInterval(() => void loadVault(), RECONNECT_MS);
+    return () => window.clearInterval(timer);
+  }, [connection, loadVault]);
 
   // A ref mirror of what the list holds, for the capture diff below: the poll reads it without
   // being torn down and rebuilt every time a note arrives.

@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- The installed Windows app no longer freezes on launch and then closes itself. The bundled daemon
+  was being started with absolute Windows paths, which Node refuses for an ES module argument, so it
+  died as it was spawned while the window waited on it. The daemon now starts beside the window on
+  its own thread with relative entry-point paths, its output is kept in `daemon.log` in the app-data
+  folder, a daemon that cannot start leaves the app open in its offline state instead of quitting it,
+  and the shell asks again every two seconds until the vault answers.
 - `Cmd/Ctrl+K` now opens the vault search palette even when a field has focus. The light/dark
   toggle now applies the app-wide token palette and persists a plain `light`/`dark` preference
   (while still reading values saved by the earlier theme implementation). When WhatsApp first
