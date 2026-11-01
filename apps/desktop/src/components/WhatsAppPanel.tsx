@@ -58,6 +58,9 @@ export function WhatsAppPanel({ status, read, onConnect, onDisconnect, onClose }
   const action = status ? whatsappAction(status) : null;
   const since = status ? sinceWhen(status.since) : "";
   const answered = status ? lastMessage(status) : "";
+  // Counted once: the drawing is sized from these numbers, and the same code is not cheap to scan
+  // three times a render while the code rotates.
+  const cells = status?.qr ? qrCells(status.qr) : null;
 
   return (
     <div
@@ -111,7 +114,7 @@ export function WhatsAppPanel({ status, read, onConnect, onDisconnect, onClose }
               {whatsappSentence(status)}
             </p>
 
-            {status.qr ? (
+            {status.qr && cells ? (
               // The same polarity the daemon's page draws: light modules on dark. Each character
               // covers one module across and two down, so the line height is exactly two character
               // widths - a module that is not square is a module a camera may not read. The size is
@@ -119,8 +122,8 @@ export function WhatsAppPanel({ status, read, onConnect, onDisconnect, onClose }
               // wider than this card, and the bar became a scrollbar instead of a pairing code.
               <pre
                 aria-hidden="true"
-                data-qr-cells={`${qrCells(status.qr).columns}x${qrCells(status.qr).rows}`}
-                style={{ fontSize: qrFontSizeCss(qrCells(status.qr)) }}
+                data-qr-cells={`${cells.columns}x${cells.rows}`}
+                style={{ fontSize: qrFontSizeCss(cells) }}
                 className="overflow-hidden rounded bg-black p-3 font-mono leading-[2ch] text-white"
               >
                 {status.qr}
