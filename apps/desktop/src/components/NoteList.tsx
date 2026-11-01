@@ -2,6 +2,7 @@ import { useRef, useState, type ReactNode } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import type { Folder, Note, VaultEntry } from "@lumos/shared";
 import type { FolderFilter, TagCount } from "../lib/filter";
+import { SORT_LABEL, SORT_ORDER, type SortOrder } from "../lib/sort";
 import { NoteComposer } from "./NoteComposer";
 
 interface Props {
@@ -15,6 +16,9 @@ interface Props {
   onTag: (tag: string | null) => void;
   /** Tags available in the current folder and query, with how many notes carry each. */
   tagCounts: TagCount[];
+  /** How the list is ordered. Omitted, with `onSort`, when the shell offers no choice. */
+  sort?: SortOrder;
+  onSort?: (order: SortOrder) => void;
   loading: boolean;
   /** Width in pixels, owned by the shell so the splitter and the pane cannot disagree. */
   width: number;
@@ -67,6 +71,8 @@ export function NoteList({
   tag,
   onTag,
   tagCounts,
+  sort,
+  onSort,
   loading,
   width,
   onCreate,
@@ -199,6 +205,30 @@ export function NoteList({
             {composing ? "Close" : "New"}
           </button>
         </div>
+        {onSort ? (
+          <div className="mt-2 flex items-center gap-2 text-[11px] text-muted-foreground">
+            <label htmlFor="note-sort" className="sr-only">
+              Sort notes
+            </label>
+            <select
+              id="note-sort"
+              aria-label="Sort notes"
+              value={sort ?? "newest"}
+              onChange={(e) => {
+                // The value is a string from the DOM; only a known order is sent on.
+                const next = SORT_ORDER.find((order) => order === e.currentTarget.value);
+                if (next) onSort?.(next);
+              }}
+              className="rounded-md border border-border bg-background px-1.5 py-0.5 text-[11px] text-muted-foreground outline-none focus:border-ring"
+            >
+              {SORT_ORDER.map((order) => (
+                <option key={order} value={order}>
+                  {SORT_LABEL[order]}
+                </option>
+              ))}
+            </select>
+          </div>
+        ) : null}
         {chips.length > 0 ? (
           <div role="group" aria-label="Filter by tag" className="mt-2 flex flex-wrap gap-1">
             {chips.map(({ tag: name, count }) => {

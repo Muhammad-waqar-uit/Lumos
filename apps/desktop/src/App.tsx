@@ -29,6 +29,7 @@ import { countTags, filterEntries, nodeTag } from "./lib/filter";
 import { isTypingTarget, stepForKey, stepIndex } from "./lib/list-nav";
 import { PANE_DEFAULT, clampPaneWidth } from "./lib/pane-size";
 import { recentEntries, rememberRecent } from "./lib/recent";
+import { sortEntries } from "./lib/sort";
 import { InsightsView } from "./components/InsightsView";
 import { NoteList, keyOf } from "./components/NoteList";
 import { NoteViewer } from "./components/NoteViewer";
@@ -83,6 +84,8 @@ export default function App() {
   const setActiveFolder = useVaultStore((s) => s.setActiveFolder);
   const setQuery = useVaultStore((s) => s.setQuery);
   const setTag = useVaultStore((s) => s.setTag);
+  const sort = useVaultStore((s) => s.sort);
+  const setSort = useVaultStore((s) => s.setSort);
   const loadVault = useVaultStore((s) => s.loadVault);
   const refreshVault = useVaultStore((s) => s.refreshVault);
   // Where you are - the pane and the open note - is the address, so a reload, the back button and
@@ -266,8 +269,8 @@ export default function App() {
   );
 
   const visible = useMemo(
-    () => filterEntries(scoped, { folder: "All", query: "", tag }),
-    [scoped, tag],
+    () => sortEntries(filterEntries(scoped, { folder: "All", query: "", tag }), sort),
+    [scoped, tag, sort],
   );
 
   const tagCounts = useMemo(() => countTags(scoped), [scoped]);
@@ -781,6 +784,8 @@ export default function App() {
               onSelect={chooseNote}
               tag={tag}
               onTag={setTag}
+              sort={sort}
+              onSort={setSort}
               tagCounts={tagCounts}
               loading={loading}
               width={listWidth}

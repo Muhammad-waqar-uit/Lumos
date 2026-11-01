@@ -4,6 +4,20 @@ Chronological record of what has been built. Newest entries first within each da
 
 ## 2026-10-29
 
+### Added - the note list can be ordered
+- [x] **Why.** The list only ever showed newest first, which is right for capture and wrong for
+  everything else: finding a note by name in a growing vault meant reading it backwards. The
+  order is now chosen from a control under the search field and remembered for the next launch.
+- [x] **Kept apart from filtering on purpose.** `sortEntries()` in `src/lib/sort.ts` takes the
+  already-filtered list, so narrowing by a folder or tag cannot reorder what is left, and the
+  order survives a folder change the way the tag filter does not. A note whose `created` does not
+  parse sorts last under either date order rather than pretending to be the oldest; titles compare
+  case-insensitively, and ties break on the path so a re-render cannot move two identical rows.
+- [x] **Proven.** 11 unit tests over the three orders, the unreadable date, the tie-break, the
+  input not being mutated, and reading/writing the stored value including a storage that throws;
+  three component tests that the control is absent when the shell offers no order, reports what was
+  chosen, and ignores a value that is not an order.
+
 ### Added - the offline state names its cause
 - [x] **Why add it.** The CORS bug was found by reading the daemon's log, not by the app. From
   inside the webview a stopped daemon, a daemon on a held port and a daemon that refuses this

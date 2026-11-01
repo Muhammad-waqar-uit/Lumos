@@ -4,6 +4,7 @@ import { getFolders, getGraph, getNotes, type Connection, type FolderCount } fro
 import { DEMO_FOLDERS, DEMO_NOTES } from "./demo";
 import { diagnoseDaemon, type DaemonDiagnosis } from "./diagnostics";
 import type { FolderFilter } from "./filter";
+import { localStore, readSort, writeSort, type SortOrder } from "./sort";
 
 /**
  * The vault and where the list is looking: everything the shell reads from the daemon and
@@ -27,6 +28,8 @@ interface VaultState {
   query: string;
   /** A tag filter outlives a folder change on purpose; it is switched off explicitly. */
   tag: string | null;
+  /** How the listed notes are ordered. Filtering decides which, this decides their order. */
+  sort: SortOrder;
   loadVault: () => Promise<void>;
   /**
    * Re-read what a save or a file operation may have changed. It throws on failure rather than
@@ -37,6 +40,7 @@ interface VaultState {
   setActiveFolder: (folder: FolderFilter) => void;
   setQuery: (query: string) => void;
   setTag: (tag: string | null) => void;
+  setSort: (order: SortOrder) => void;
 }
 
 export const useVaultStore = create<VaultState>((set) => ({
@@ -49,6 +53,7 @@ export const useVaultStore = create<VaultState>((set) => ({
   activeFolder: "All",
   query: "",
   tag: null,
+  sort: readSort(localStore()),
 
   /** Load the vault from the daemon; fall back to demo data if it is not running. */
   loadVault: async () => {
@@ -77,4 +82,9 @@ export const useVaultStore = create<VaultState>((set) => ({
   setActiveFolder: (activeFolder) => set({ activeFolder }),
   setQuery: (query) => set({ query }),
   setTag: (tag) => set({ tag }),
+  setSort: (sort) => {
+    // Stored before it is applied: a write that fails must not stop the list from reordering.
+    writeSort(sort, localStore());
+    set({ sort });
+  },
 }));

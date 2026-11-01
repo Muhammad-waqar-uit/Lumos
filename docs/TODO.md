@@ -90,6 +90,12 @@ end to end, and because nothing else on this page can close them.
 - [x] Subtle transitions - a pane switched to, the palette, the bulk bar and a notice each enter
   with one soft fade (`fade-in`/`slide-down` in `index.css`), and none of it runs for
   `prefers-reduced-motion`
+- [x] A list order worth choosing (P2) - newest, oldest or title, from the control under the
+  search field, with the choice remembered. Ordering is a separate function from filtering, so a
+  tag or folder change cannot reorder what survives it, a note with an unreadable `created` sorts
+  last instead of being read as 1970, and the title order is case-insensitive with the path as a
+  tie-break so it cannot wobble between renders (`sortEntries()` in `src/lib/sort.ts`,
+  `sort.test.ts`, `NoteList.sort.test.tsx`)
 - [x] An offline state that says why (P1) - `src/lib/diagnostics.ts` probes `/health` and, when
   that fails, asks the same port once more with `mode: "no-cors"`: an opaque answer proves
   something served the request, which is how "nothing is listening" and "a daemon answered and then

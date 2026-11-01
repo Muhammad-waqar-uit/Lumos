@@ -42,6 +42,7 @@ beforeEach(() => {
     notes: [],
     graph: null,
     diagnosis: null,
+    sort: "newest",
     activeFolder: "All",
     query: "",
     tag: null,
@@ -127,6 +128,16 @@ describe("refreshVault", () => {
 });
 
 describe("the filters", () => {
+  it("orders the list without touching the notes it orders", () => {
+    useVaultStore.setState({ notes: NOTES });
+
+    useVaultStore.getState().setSort("oldest");
+
+    const state = useVaultStore.getState();
+    expect(state.sort).toBe("oldest");
+    expect(state.notes).toEqual(NOTES);
+  });
+
   it.each([
     ["setActiveFolder", "Ideas"],
     ["setQuery", "release"],

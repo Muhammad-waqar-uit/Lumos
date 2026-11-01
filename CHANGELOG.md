@@ -29,6 +29,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `allowedNumbers` to `lumos.config.json` there before sending messages.
 
 ### Added
+- The note list can be ordered: **Newest first**, **Oldest first** or **Title A–Z**, from a small
+  control under the search field. The choice is remembered for the next launch, and a note whose
+  `created` does not parse goes last rather than pretending to be the oldest thing in the vault.
+  Filtering and ordering stay separate, so narrowing by a folder or tag never quietly reorders
+  what is left.
 - The offline state now says *why*. When the vault cannot be read, the status bar reports what a
   probe found instead of only *Daemon offline*: nothing listening on `127.0.0.1:3001`, the HTTP
   status the daemon answered, a reply slower than 4 seconds, or the case that used to be
