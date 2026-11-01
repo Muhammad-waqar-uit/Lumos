@@ -65,4 +65,40 @@ describe("StatusBar", () => {
     renderBar({ whatsapp: null, onWhatsApp: () => {} });
     expect(screen.queryByRole("button", { name: /WhatsApp/ })).toBeNull();
   });
+
+  // The offline label is the symptom; this line is the finding. A stopped daemon and one that
+  // answered and then refused this window used to read identically.
+  it("explains an offline daemon and offers to probe again", () => {
+    const onRetry = vi.fn();
+    renderBar({
+      connection: "demo",
+      count: 0,
+      diagnosis: {
+        cause: "origin",
+        title: "The daemon answered, then refused http://tauri.localhost.",
+        action: "That address is missing from its CORS allow-list.",
+      },
+      onRetry,
+    });
+
+    expect(screen.getByText("Daemon offline — showing demo notes")).toBeDefined();
+    expect(screen.getByText(/refused http:\/\/tauri\.localhost/)).toBeDefined();
+    expect(screen.getByText(/CORS allow-list/)).toBeDefined();
+
+    fireEvent.click(screen.getByRole("button", { name: "Check now" }));
+    expect(onRetry).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps the bar to one line while the daemon answers", () => {
+    renderBar({
+      diagnosis: {
+        cause: "stopped",
+        title: "Nothing is listening on 127.0.0.1:3001.",
+        action: "Open Lumos again.",
+      },
+    });
+
+    expect(screen.queryByRole("button", { name: "Check now" })).toBeNull();
+    expect(screen.queryByText(/Nothing is listening/)).toBeNull();
+  });
 });

@@ -74,6 +74,8 @@ export default function App() {
   const loading = useVaultStore((s) => s.loading);
   // Null means the daemon could not serve a graph, so the demo vault is drawn instead.
   const graph = useVaultStore((s) => s.graph);
+  // Why the last read failed, when it did. The status bar says the cause, not just the symptom.
+  const diagnosis = useVaultStore((s) => s.diagnosis);
   const activeFolder = useVaultStore((s) => s.activeFolder);
   const query = useVaultStore((s) => s.query);
   // A tag filter outlives a folder change on purpose; it is switched off explicitly.
@@ -834,6 +836,8 @@ export default function App() {
         action={noticeAction}
         whatsapp={connection === "daemon" ? whatsapp : null}
         onWhatsApp={() => setWhatsappOpen(true)}
+        diagnosis={diagnosis}
+        onRetry={() => void loadVault()}
       />
       <ThemeToggle />
       {whatsappOpen && connection === "daemon" ? (

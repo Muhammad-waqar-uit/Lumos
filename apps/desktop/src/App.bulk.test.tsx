@@ -62,6 +62,8 @@ const { getFolders, getNotes, getGraph, getNote, moveNote, updateNoteMeta } = vi
 }));
 
 vi.mock("./lib/api", () => ({
+  // The offline probe names the same host the client reads, so the shell's mock has to carry it.
+  DAEMON_BASE: "http://127.0.0.1:3001",
   getFolders,
   getNotes,
   getGraph,

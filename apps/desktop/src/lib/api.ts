@@ -9,7 +9,8 @@ export interface FolderCount {
 }
 
 /** Base URL of the local Lumos daemon. Override with VITE_DAEMON_URL. */
-const BASE: string = import.meta.env.VITE_DAEMON_URL ?? "http://127.0.0.1:3001";
+export const DAEMON_BASE: string = import.meta.env.VITE_DAEMON_URL ?? "http://127.0.0.1:3001";
+const BASE: string = DAEMON_BASE;
 
 async function getJson<T>(path: string): Promise<T> {
   const res = await fetch(`${BASE}${path}`, { headers: { accept: "application/json" } });

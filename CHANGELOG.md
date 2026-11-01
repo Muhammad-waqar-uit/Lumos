@@ -29,6 +29,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `allowedNumbers` to `lumos.config.json` there before sending messages.
 
 ### Added
+- The offline state now says *why*. When the vault cannot be read, the status bar reports what a
+  probe found instead of only *Daemon offline*: nothing listening on `127.0.0.1:3001`, the HTTP
+  status the daemon answered, a reply slower than 4 seconds, or the case that used to be
+  invisible - a daemon that answered and then refused this window's origin, which is exactly what
+  put *Daemon offline* beside a working daemon. **Check now** probes again without waiting for the
+  two-second retry.
 - A full-link action in the note reader opens a separate, isolated in-app webview window on desktop;
   the web preview opens a browser tab. The native window accepts credential-free HTTP(S) URLs and
   blocks navigation to other schemes. It uses the platform webview rather than bundling Chrome.

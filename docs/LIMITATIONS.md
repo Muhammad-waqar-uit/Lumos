@@ -7,6 +7,19 @@ so if you hit one of these, it is not a surprise bug.
 
 Each entry says what is given up. Where a limit is deliberate, the alternative is named.
 
+## Telling a stopped daemon from a refused one
+
+- **The offline diagnosis is a probe, not a diagnosis of the machine.** `src/lib/diagnostics.ts`
+  reads `/health` and, if that fails, reads the same port once more with `mode: "no-cors"`, where an
+  opaque answer proves something served the request. That separates *nothing is listening* from
+  *something answered and refused this window*, which is the pair that used to look identical. It
+  cannot tell a stopped daemon from a port held by another program, a crash from a firewall, or
+  refused credentials from an empty vault: only the daemon's own log carries its reason. And the
+  second probe is the part that can be wrong - a browser is free to refuse a `no-cors` request to a
+  private address on its own grounds, and then the app says *nothing is listening* when the truth is
+  "could not tell". The distinction is a best effort, not a guarantee, and the log line is still the
+  thing to follow when the sentence does not match what is happening.
+
 ## Link playback and the reader
 
 - **Only YouTube, Vimeo, Instagram and Facebook play inline.** Every other media URL is not

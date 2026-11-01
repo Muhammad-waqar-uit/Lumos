@@ -4,6 +4,24 @@ Chronological record of what has been built. Newest entries first within each da
 
 ## 2026-10-29
 
+### Added - the offline state names its cause
+- [x] **Why add it.** The CORS bug was found by reading the daemon's log, not by the app. From
+  inside the webview a stopped daemon, a daemon on a held port and a daemon that refuses this
+  window's origin are one `TypeError`, so the shell could only ever say *Daemon offline* and let
+  someone guess which. A person with a working daemon and no notes has nothing to go on.
+- [x] **What it does.** `probeDaemon()` in `src/lib/diagnostics.ts` reads `/health`; when that
+  fails it asks the same port once more with `mode: "no-cors"`. An opaque answer there proves
+  something served the request, so a refusal and a CORS rejection separate. Four findings become
+  four sentences: nothing listening (with the host), the origin that was refused (named, and
+  called a fault in Lumos rather than in the setup), the HTTP status the daemon answered, and a
+  reply slower than 4 seconds. The store keeps the finding beside the demo fallback and clears
+  it on the next good read; the status bar shows it as a second line with **Check now**.
+- [x] **Proven in jsdom, not yet in the packaged window.** 26 focused tests cover both probe paths,
+  every sentence, the store keeping and clearing it, and the bar showing it only while offline.
+  The `no-cors` probe against a real Tauri window is the part that still wants a person: browsers
+  apply local-network checks to private addresses, and if that probe is refused the app reports
+  *nothing is listening* instead of naming the origin. Recorded in [LIMITATIONS.md](LIMITATIONS.md).
+
 ### Fixed - the packaged app said offline beside a working daemon
 - [x] **Found by running the installed copy, not the build.** With the launch fixed the app stayed
   open and its daemon answered, yet the status bar still read *Daemon offline - showing demo

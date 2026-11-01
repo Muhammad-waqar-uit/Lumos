@@ -272,7 +272,7 @@ In a session, `/mcp` lists the tools. Then ask for something you would otherwise
 
 | What you see | What it means |
 |---|---|
-| *Daemon offline - showing demo notes* | The app could not reach `:3001`. Start the daemon, or carry on looking around |
+| *Daemon offline - showing demo notes* | The app could not reach `:3001`. The line under it says which: nothing listening, an origin the daemon refused, an HTTP status, or a slow reply - **Check now** probes again without waiting |
 | The daemon refuses to start, one sentence naming a setting | That setting is bad - the sentence says which and why. Fix it, no stack read needed |
 | A message from your phone is ignored, log says *not in the allowlist* | `ALLOWED_NUMBERS` has the number in another shape. Digits only, country code first |
 | The chip says `WhatsApp off` | Started with `LUMOS_DISABLE_WHATSAPP=1` or `whatsapp: false`. The app cannot switch it on for a run that was started without it |

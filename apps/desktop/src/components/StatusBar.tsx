@@ -1,5 +1,6 @@
 import type { WhatsAppStatus } from "@lumos/shared";
 import type { Connection } from "../lib/api";
+import type { DaemonDiagnosis } from "../lib/diagnostics";
 import { SEARCH_SHORTCUT } from "../lib/search";
 import { WHATSAPP_DOT, WHATSAPP_LABEL } from "../lib/whatsapp";
 
@@ -32,6 +33,8 @@ export function StatusBar({
   action,
   whatsapp,
   onWhatsApp,
+  diagnosis,
+  onRetry,
 }: {
   connection: Connection;
   count: number;
@@ -45,6 +48,13 @@ export function StatusBar({
   onDismissNotice?: () => void;
   /** The one way back from what the notice describes, offered next to it. */
   action?: StatusAction | null;
+  /**
+   * Why the daemon could not be read. *Daemon offline* names the symptom; this names the cause,
+   * so a stopped daemon and one that answered and then refused this window are not one message.
+   */
+  diagnosis?: DaemonDiagnosis | null;
+  /** Probe again now, instead of waiting for the retry that runs every two seconds. */
+  onRetry?: () => void;
 }) {
   // The link is the daemon's, so the chip is only offered while the daemon answers: offline there
   // is nothing to report and a grey chip would be a second way of saying what the bar already says.
@@ -66,48 +76,73 @@ export function StatusBar({
     ) : null;
 
   return (
-    <footer className="flex shrink-0 items-center justify-between border-t border-border px-4 py-1 text-[11px] text-muted-foreground">
-      <span className="flex min-w-0 items-center gap-2">
-        <span aria-hidden className={`inline-block h-1.5 w-1.5 rounded-full ${DOT[connection]}`} />
-        {notice ? (
-          <>
-            <button
-              type="button"
-              onClick={onDismissNotice}
-              title="Dismiss"
-              className="fade-in truncate text-amber-400 hover:underline"
-            >
-              {notice}
-            </button>
-            {action ? (
+    <footer className="flex shrink-0 flex-col border-t border-border text-[11px] text-muted-foreground">
+      <div className="flex items-center justify-between px-4 py-1">
+        <span className="flex min-w-0 items-center gap-2">
+          <span
+            aria-hidden
+            className={`inline-block h-1.5 w-1.5 rounded-full ${DOT[connection]}`}
+          />
+          {notice ? (
+            <>
               <button
                 type="button"
-                onClick={action.onClick}
-                className="shrink-0 rounded border border-border px-1.5 py-0.5 text-foreground transition-colors hover:bg-accent"
+                onClick={onDismissNotice}
+                title="Dismiss"
+                className="fade-in truncate text-amber-400 hover:underline"
               >
-                {action.label}
+                {notice}
               </button>
-            ) : null}
-          </>
-        ) : (
-          LABEL[connection]
-        )}
-      </span>
-      <span className="flex items-center gap-3">
-        <button
-          type="button"
-          onClick={onSearch}
-          aria-keyshortcuts="Control+K Meta+K"
-          className="flex items-center gap-1.5 rounded border border-border px-1.5 py-0.5 transition-colors hover:bg-accent hover:text-foreground"
-        >
-          Search
-          <kbd className="text-[10px] opacity-70">{SEARCH_SHORTCUT}</kbd>
-        </button>
-        <span className="tabular-nums">
-          {count} {count === 1 ? "note" : "notes"}
+              {action ? (
+                <button
+                  type="button"
+                  onClick={action.onClick}
+                  className="shrink-0 rounded border border-border px-1.5 py-0.5 text-foreground transition-colors hover:bg-accent"
+                >
+                  {action.label}
+                </button>
+              ) : null}
+            </>
+          ) : (
+            LABEL[connection]
+          )}
         </span>
-        {whatsappChip}
-      </span>
+        <span className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={onSearch}
+            aria-keyshortcuts="Control+K Meta+K"
+            className="flex items-center gap-1.5 rounded border border-border px-1.5 py-0.5 transition-colors hover:bg-accent hover:text-foreground"
+          >
+            Search
+            <kbd className="text-[10px] opacity-70">{SEARCH_SHORTCUT}</kbd>
+          </button>
+          <span className="tabular-nums">
+            {count} {count === 1 ? "note" : "notes"}
+          </span>
+          {whatsappChip}
+        </span>
+      </div>
+      {connection === "demo" && diagnosis ? (
+        // A second line rather than a dialog: the reason for an empty window is worth reading
+        // without a click, and it is the one place that knows what the probe found.
+        <p
+          role="status"
+          className="fade-in flex flex-wrap items-baseline gap-x-2 gap-y-1 border-t border-border/60 px-4 py-1"
+        >
+          <span className="text-foreground">{diagnosis.title}</span>
+          <span>{diagnosis.action}</span>
+          {onRetry ? (
+            <button
+              type="button"
+              onClick={onRetry}
+              className="shrink-0 rounded border border-border px-1.5 py-0.5 text-foreground transition-colors hover:bg-accent"
+            >
+              Check now
+            </button>
+          ) : null}
+        </p>
+      ) : null}
     </footer>
   );
 }

@@ -90,6 +90,14 @@ end to end, and because nothing else on this page can close them.
 - [x] Subtle transitions - a pane switched to, the palette, the bulk bar and a notice each enter
   with one soft fade (`fade-in`/`slide-down` in `index.css`), and none of it runs for
   `prefers-reduced-motion`
+- [x] An offline state that says why (P1) - `src/lib/diagnostics.ts` probes `/health` and, when
+  that fails, asks the same port once more with `mode: "no-cors"`: an opaque answer proves
+  something served the request, which is how "nothing is listening" and "a daemon answered and then
+  refused this window" stop being one message. Four findings, four sentences - stopped, wrong
+  origin (naming the origin and saying it is Lumos's fault, not the person's), an HTTP status, and
+  a reply slower than 4s - shown as a second line in the status bar with **Check now**. Tested in
+  `diagnostics.test.ts` (both probes, all four sentences), `store.test.ts` (kept on a failed read,
+  cleared on a good one) and `StatusBar.test.tsx` (shown offline, absent while connected)
 - [x] List virtualization - above 50 notes the list windows itself (`VIRTUALIZE_ABOVE` in
   `NoteList.tsx`, `@tanstack/react-virtual`); below that, every row is simply rendered as before
 - [x] A daemon-side search index - `createNoteSearch` in `@lumos/vault-utils`, one per daemon,

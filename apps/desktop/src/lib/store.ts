@@ -2,6 +2,7 @@ import { create } from "zustand";
 import type { GraphData, VaultEntry } from "@lumos/shared";
 import { getFolders, getGraph, getNotes, type Connection, type FolderCount } from "./api";
 import { DEMO_FOLDERS, DEMO_NOTES } from "./demo";
+import { diagnoseDaemon, type DaemonDiagnosis } from "./diagnostics";
 import type { FolderFilter } from "./filter";
 
 /**
@@ -17,6 +18,11 @@ interface VaultState {
   notes: VaultEntry[];
   /** Null means the daemon could not serve a graph, so the demo vault is drawn instead. */
   graph: GraphData | null;
+  /**
+   * Why the last read failed, when it did. Null while the daemon answers, which is what keeps a
+   * stale reason from being shown beside a working vault.
+   */
+  diagnosis: DaemonDiagnosis | null;
   activeFolder: FolderFilter;
   query: string;
   /** A tag filter outlives a folder change on purpose; it is switched off explicitly. */
@@ -39,6 +45,7 @@ export const useVaultStore = create<VaultState>((set) => ({
   folders: [],
   notes: [],
   graph: null,
+  diagnosis: null,
   activeFolder: "All",
   query: "",
   tag: null,
@@ -47,11 +54,12 @@ export const useVaultStore = create<VaultState>((set) => ({
   loadVault: async () => {
     try {
       const [folders, notes] = await Promise.all([getFolders(), getNotes()]);
-      set({ folders, notes, connection: "daemon" });
+      set({ folders, notes, connection: "daemon", loading: false, diagnosis: null });
     } catch {
-      set({ folders: DEMO_FOLDERS, notes: DEMO_NOTES, connection: "demo" });
-    } finally {
-      set({ loading: false });
+      // The panes get something to draw before the probe runs: a diagnosis is worth a request, but
+      // a blank window is not worth waiting for one.
+      set({ folders: DEMO_FOLDERS, notes: DEMO_NOTES, connection: "demo", loading: false });
+      set({ diagnosis: await diagnoseDaemon() });
     }
     // The graph is a separate read: notes still work if it fails.
     try {

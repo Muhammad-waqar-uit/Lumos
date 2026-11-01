@@ -15,23 +15,33 @@ const NOTES: VaultEntry[] = [
   },
 ];
 
-const { getFolders, getNotes, getGraph } = vi.hoisted(() => ({
+const { getFolders, getNotes, getGraph, diagnoseDaemon } = vi.hoisted(() => ({
   getFolders: vi.fn(),
   getNotes: vi.fn(),
   getGraph: vi.fn(),
+  diagnoseDaemon: vi.fn(),
 }));
 
 vi.mock("./api", () => ({ getFolders, getNotes, getGraph }));
+vi.mock("./diagnostics", () => ({ diagnoseDaemon }));
+
+const DIAGNOSIS = {
+  cause: "stopped" as const,
+  title: "Nothing is listening on 127.0.0.1:3001.",
+  action: "Open Lumos again.",
+};
 
 /** The slice starts where a fresh app starts, so one test cannot lean on another's reads. */
 beforeEach(() => {
   vi.clearAllMocks();
+  diagnoseDaemon.mockResolvedValue(DIAGNOSIS);
   useVaultStore.setState({
     connection: "connecting",
     loading: true,
     folders: [],
     notes: [],
     graph: null,
+    diagnosis: null,
     activeFolder: "All",
     query: "",
     tag: null,
@@ -65,6 +75,19 @@ describe("loadVault", () => {
     expect(state.loading).toBe(false);
     expect(state.notes).toEqual(DEMO_NOTES);
     expect(state.folders).toEqual(DEMO_FOLDERS);
+    // The fallback draws something first, then the status bar says what the probe found.
+    expect(state.diagnosis).toEqual(DIAGNOSIS);
+  });
+
+  it("clears a reason the moment the daemon answers again", async () => {
+    useVaultStore.setState({ diagnosis: DIAGNOSIS });
+    getFolders.mockResolvedValueOnce([]);
+    getNotes.mockResolvedValueOnce([]);
+    getGraph.mockResolvedValueOnce({ nodes: [], edges: [], unresolved: [] });
+
+    await useVaultStore.getState().loadVault();
+
+    expect(useVaultStore.getState().diagnosis).toBeNull();
   });
 
   it("still answers with the notes when only the graph read fails", async () => {

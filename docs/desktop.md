@@ -16,7 +16,8 @@ back to demo data when the daemon is offline):
 
 - `src/App.tsx` - the shell: wires the store, the router and the components together; *where you are* (the pane and the open note) comes from the address, not from local state
 - `src/router.tsx` - the TanStack Router factory: one route at `/` whose typed search parameters carry `view` and `note`, validated so a hand-edited address cannot smuggle a pane in
-- `src/lib/store.ts` - the vault store (zustand): the daemon read with its demo fallback, the re-read after every change, and the list's filters
+- `src/lib/store.ts` - the vault store (zustand): the daemon read with its demo fallback, the reason a failed read leaves behind, the re-read after every change, and the list's filters
+- `src/lib/diagnostics.ts` - why the vault could not be read: one `/health` probe, a second one in `no-cors` mode when the first fails, and the four sentences the status bar can say - nothing listening, an origin refused, an HTTP status, a slow reply. The second probe is the whole point: a stopped daemon and a CORS rejection are the same `TypeError` inside the webview
 - `src/lib/bulk.ts` - the bulk helper: one write over many notes with every refusal kept, and the one sentence the status bar shows for it
 - `src/components/Sidebar.tsx` - the brand row (mark + wordmark + the avatar button that opens the profile), the Notes/Graph/Stats/Trash view switch (four tabs share 224px, so the insights tab carries the short word), folders with note counts, and **+ New folder**: a name, a `POST /folders`, and the new folder becomes what the list is looking at. A refusal (a name already taken, or one the vault cannot make) keeps the form open with the daemon's sentence. Every folder row also carries **Rename** and **Delete**: rename is an inline field that sends `PATCH /folder` and the row follows the notes to the new name; delete asks first ("Remove Movies? The 12 notes inside move to Inbox."), sends `DELETE /folder`, and the Inbox becomes what the list is looking at. Both are offered only while the daemon answers, because both are daemon writes; with the daemon down the rows are read-only and the app is showing demo data
 - `src/components/LumosMark.tsx` - the mark itself, drawn inline in `currentColor` so it takes `--color-brand` from the theme
@@ -525,6 +526,15 @@ A daemon that will not start no longer closes the app: the panes show their offl
 reason is written to that log. While the shell has no daemon it asks again every two seconds
 (`RECONNECT_MS` in `src/App.tsx`), so the vault appears as soon as the port answers instead of
 staying on demo data for the session.
+
+Beside the *Daemon offline* label the bar states what a probe found, because that label is a
+symptom and the causes behind it want different answers. `src/lib/diagnostics.ts` reads `/health`
+and, when that fails, reads it again with `mode: "no-cors"`: an opaque answer proves something
+served the port, so *nothing is listening* and *a daemon answered and then refused this window* are
+not the same sentence any more. The other two findings are the HTTP status the daemon answered and
+a reply slower than 4 seconds; the refused one names the origin and says it is a fault in Lumos,
+because it is the one case a person cannot fix. **Check now** probes again without waiting for the
+retry.
 
 The `lumos.config.json` file in that app-data folder is where a person
 sets `allowedNumbers`; paired credentials remain outside the install directory so upgrades keep the
