@@ -8,6 +8,7 @@ import {
   whatsappAction,
   whatsappSentence,
 } from "../lib/whatsapp";
+import { qrCells, qrFontSizeCss } from "../lib/qr";
 
 /** How the last read of `/whatsapp` went: a panel has to say "loading" or "failed", never nothing. */
 export type WhatsAppRead = "loading" | "ok" | "error";
@@ -69,7 +70,7 @@ export function WhatsAppPanel({ status, read, onConnect, onDisconnect, onClose }
         role="dialog"
         aria-modal="true"
         aria-label="WhatsApp"
-        className="flex w-[min(22rem,calc(100vw-2rem))] flex-col gap-3 rounded-lg border border-border bg-card p-4 shadow-2xl"
+        className="flex max-h-[calc(100vh-3rem)] w-[min(22rem,calc(100vw-2rem))] flex-col gap-3 overflow-y-auto rounded-lg border border-border bg-card p-4 shadow-2xl"
       >
         <div className="flex items-start justify-between gap-2">
           <h2 className="flex items-center gap-2 text-sm font-medium">
@@ -113,10 +114,14 @@ export function WhatsAppPanel({ status, read, onConnect, onDisconnect, onClose }
             {status.qr ? (
               // The same polarity the daemon's page draws: light modules on dark. Each character
               // covers one module across and two down, so the line height is exactly two character
-              // widths - a module that is not square is a module a camera may not read.
+              // widths - a module that is not square is a module a camera may not read. The size is
+              // computed from the drawing's own cells instead of fixed: a 65-module code at 13px is
+              // wider than this card, and the bar became a scrollbar instead of a pairing code.
               <pre
                 aria-hidden="true"
-                className="overflow-x-auto rounded bg-black p-3 font-mono text-[13px] leading-[2ch] text-white"
+                data-qr-cells={`${qrCells(status.qr).columns}x${qrCells(status.qr).rows}`}
+                style={{ fontSize: qrFontSizeCss(qrCells(status.qr)) }}
+                className="overflow-hidden rounded bg-black p-3 font-mono leading-[2ch] text-white"
               >
                 {status.qr}
               </pre>

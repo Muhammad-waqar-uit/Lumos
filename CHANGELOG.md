@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- The WhatsApp pairing code now fits the panel. It was drawn at a fixed 13px, and a real code is
+  60-odd modules across, so it hung out of the card on a horizontal scrollbar and pushed the
+  dialog past the bottom of a short window. Its size is now computed from the drawing's own columns
+  and rows, and the card is capped to the window and scrolls instead of clipping.
 - The installed Windows app now finds its running daemon. A Tauri window on Windows serves the
   frontend from `http://tauri.localhost`, which was not in the daemon's CORS allow-list, so every
   read was answered `200` and then discarded by the browser: the status bar said *Daemon offline -

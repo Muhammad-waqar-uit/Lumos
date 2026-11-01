@@ -4,6 +4,21 @@ Chronological record of what has been built. Newest entries first within each da
 
 ## 2026-10-29
 
+### Fixed - the pairing code was too wide to scan
+- [x] **Found by scanning it, not by a test.** The code was drawn as text at a fixed 13px. A real
+  WhatsApp pairing code is 60-odd modules across, which is wider than the 22rem card, so the
+  drawing hung out of the panel behind an `overflow-x-auto` scrollbar and pushed the dialog past the
+  bottom of a short window. The one thing in that dialog that has to be visible was the one thing
+  only half visible.
+- [x] **Sized from the drawing.** `src/lib/qr.ts` counts the code's columns and rows, then answers a
+  `font-size` of `min(13px, card width / (columns * 0.6em), available height / (rows * 1.2em))`.
+  Width is the cap that bites; the height term is for a short window. The card itself is now
+  `max-h-[calc(100vh-3rem)] overflow-y-auto`, so nothing can leave the window even if a future
+  section grows.
+- [x] **Proven.** Seven unit tests (widest line, the daemon's trailing newline not counting as a
+  row, the cap, both divisors, the empty case) and a component test that a 65-module code gets the
+  computed size rather than a fixed one.
+
 ### Added - the note list can be ordered
 - [x] **Why.** The list only ever showed newest first, which is right for capture and wrong for
   everything else: finding a note by name in a growing vault meant reading it backwards. The

@@ -56,6 +56,20 @@ describe("WhatsAppPanel", () => {
     expect(screen.getByText(/Link a device/)).toBeDefined();
   });
 
+  // A real pairing code is 60-odd modules across. At the fixed 13px this used to use, it hung out
+  // of the card and the pane grew a scrollbar instead of showing a code a phone could scan.
+  it("sizes the code from its own width, so a wide one still fits the card", () => {
+    const wide = `${"█".repeat(65)}\n${"▀".repeat(65)}`;
+    renderPanel({ status: status({ state: "waiting", qr: wide, since: null }) });
+
+    const drawn = document.querySelector("pre");
+    // jsdom drops a CSS `min()`-with-`calc()` value it cannot parse, so the drawing carries the
+    // cell count it was sized from and the scroll fallback is gone.
+    expect(drawn?.dataset.qrCells).toBe("65x2");
+    expect(drawn?.className).toContain("overflow-hidden");
+    expect(drawn?.className).not.toContain("overflow-x-auto");
+  });
+
   it("offers Connect on a link that is down, and keeps the phone's pairing in the sentence", () => {
     renderPanel({ status: status({ state: "disconnected", error: null }) });
 
