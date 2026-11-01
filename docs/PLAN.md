@@ -38,13 +38,13 @@ In use today:
 - react-markdown + remark-gfm (rendering)
 - force-graph (link graph, canvas)
 - fuse.js (the `Cmd/Ctrl+K` search palette)
+- TanStack Router (routing - the pane and the open note *are* the address)
+- zustand (state - the vault index and the list's filters)
 
-Chosen and recorded in the decisions log, but **not installed yet** - the UI currently does the job
-with plain React state and a local filter:
+Chosen and recorded in the decisions log, but **not installed yet**:
 
-- TanStack Router (routing)
-- zustand (state)
-- lucide-react (icons)
+- lucide-react (icons) - the handful of marks the shell needs are drawn inline, so nothing is
+  waiting on it
 
 ### Shared / Infra
 - pnpm workspaces (pnpm only)

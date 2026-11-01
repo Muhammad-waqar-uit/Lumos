@@ -87,7 +87,7 @@ session. The phase itself is not finished: reading a PDF or plain HTML file rema
 - Desktop component tests in jsdom with Testing Library: the sidebar, note list, palette, link pane
   and note editor. ✅
 - Editing a note's body in the app and saving it to disk. ✅ (the frontmatter is left as written;
-  there is no preview beside the textarea)
+  the draft is previewed beside the textarea, and **Hide preview** switches it off)
 - Creating a note from the app. ✅ (a composer in the list's own pane: a folder picker and a
   textarea, filed with the same writer WhatsApp uses, stamped `source: desktop`)
 - Renaming, moving and deleting a note from the app. ✅ (a title-based rename that keeps the filename,
