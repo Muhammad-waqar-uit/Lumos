@@ -8,6 +8,10 @@ pnpm-lock.yaml
 apps/desktop/src-tauri/gen
 apps/desktop/src-tauri/target
 
+# Packaging scratch: the daemon runtime is copied here mid-build, node_modules and WhatsApp
+# credentials included. Formatting it is meaningless and `prettier --check .` fails on it.
+.lumos-daemon-runtime*
+
 # Docs are hand-wrapped prose; prettier would reflow every line.
 *.md
 

@@ -16,7 +16,10 @@ dist
 .next
 # Generated self-contained daemon runtimes included in Windows Tauri installers
 .lumos-daemon-runtime/
-.lumos-daemon-runtime-build/
+# The build stages each package here, and the stage suffix is a timestamp: a plain trailing slash
+# leaves the stage directories untracked-but-visible, which is one `git add -A` from committing a
+# copy of auth_info.
+.lumos-daemon-runtime-build*/
 out
 
 # Environment variables
