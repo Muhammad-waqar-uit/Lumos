@@ -10,3 +10,6 @@ apps/desktop/src-tauri/target
 
 # Docs are hand-wrapped prose; prettier would reflow every line.
 *.md
+
+# Imported conversation dumps are data, not source: a one-line JSON a person never edits.
+.cloud-attachments

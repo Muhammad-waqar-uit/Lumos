@@ -67,3 +67,6 @@ idea/
 
 # A walkthrough for demoing Lumos, written for the person presenting it - local, never committed
 DEMO-GUIDE.md
+
+# Imported conversation attachments: saved by the assistant client, not part of the project
+.cloud-attachments/
