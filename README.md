@@ -296,7 +296,7 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md) and [RULES.md](RULES.md) first: work lan
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) if available.
+MIT License - see [LICENSE](LICENSE)
 
 ## Acknowledgments
 
