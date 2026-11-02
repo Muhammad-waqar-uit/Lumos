@@ -20,16 +20,17 @@ back to demo data when the daemon is offline):
 - `src/lib/sort.ts` - the list's order (newest, oldest, title) as a pure function over the filtered notes, plus reading and writing the remembered choice. Ties break on the path, an unreadable `created` sorts last, and titles compare case-insensitively
 - `src/lib/diagnostics.ts` - why the vault could not be read: one `/health` probe, a second one in `no-cors` mode when the first fails, and the four sentences the status bar can say - nothing listening, an origin refused, an HTTP status, a slow reply. The second probe is the whole point: a stopped daemon and a CORS rejection are the same `TypeError` inside the webview
 - `src/lib/bulk.ts` - the bulk helper: one write over many notes with every refusal kept, and the one sentence the status bar shows for it
-- `src/components/Sidebar.tsx` - the brand row (mark + wordmark + the avatar button that opens the profile), the Notes/Graph/Stats/Trash view switch (four tabs share 224px, so the insights tab carries the short word), folders with note counts, and **+ New folder**: a name, a `POST /folders`, and the new folder becomes what the list is looking at. A refusal (a name already taken, or one the vault cannot make) keeps the form open with the daemon's sentence. Every folder row also carries **Rename** and **Delete**: rename is an inline field that sends `PATCH /folder` and the row follows the notes to the new name; delete asks first ("Remove Movies? The 12 notes inside move to Inbox."), sends `DELETE /folder`, and the Inbox becomes what the list is looking at. Both are offered only while the daemon answers, because both are daemon writes; with the daemon down the rows are read-only and the app is showing demo data
+- `src/components/Sidebar.tsx` - the brand row (mark + wordmark + the avatar button that opens the profile), the Notes/Graph/Stats/Trash view switch (five tabs wrap onto two rows in a 224px sidebar, so each label is the short word for its pane), folders with note counts, and **+ New folder**: a name, a `POST /folders`, and the new folder becomes what the list is looking at. A refusal (a name already taken, or one the vault cannot make) keeps the form open with the daemon's sentence. Every folder row also carries **Rename** and **Delete**: rename is an inline field that sends `PATCH /folder` and the row follows the notes to the new name; delete asks first ("Remove Movies? The 12 notes inside move to Inbox."), sends `DELETE /folder`, and the Inbox becomes what the list is looking at. Both are offered only while the daemon answers, because both are daemon writes; with the daemon down the rows are read-only and the app is showing demo data
 - `src/components/LumosMark.tsx` - the mark itself, drawn inline in `currentColor` so it takes `--color-brand` from the theme
 - `src/components/NoteList.tsx` - searchable note list (title, date, preview, tags), the **New** button that opens the composer, the selection checkboxes with the bulk bar (move, add-tag, archive, clear) they raise, and a windowed row list above 50 notes so a large vault keeps a small DOM
 - `src/components/NoteComposer.tsx` - a new note: a folder picker, a textarea, Create, Cancel, and a failure that keeps the draft
-- `src/components/NoteViewer.tsx` - note header (folder, date, source, url) + backlinks + link pane + Markdown body, the Edit button that turns the body into the editor, and the **...** button that opens the file operations
+- `src/components/NoteViewer.tsx` - note header (folder, date, source, url, word count and reading time) + related notes + Contents + backlinks + link pane + Markdown body, the Edit button that turns the body into the editor, and the **...** button that opens the file operations
 - `src/components/NoteEditor.tsx` - the body as a textarea with a live preview of the draft beside it: Save, Cancel, the preview toggle, the unsaved marker and a failure that keeps the draft
 - `src/components/NoteMeta.tsx` - the strip under the note header: tag chips with a remove button, a field that adds one, and a status picker; a failure stays on screen and keeps the draft
 - `src/components/Markdown.tsx` - the one Markdown renderer, used by the reader and by the editor's preview
 - `src/components/NoteActions.tsx` - rename, move and delete for the open note: a menu, a rename field, a folder picker, a delete that asks first, and a failure that keeps the panel open
 - `src/components/TrashPanel.tsx` - what a delete kept: every trashed note with its folder and when, a Restore per entry, and an Empty that asks first
+- `src/components/TagsView.tsx` - the vault's tags in one pane: each tag's reach, its folders and the tags that keep company with it, a filter field, and rows that open the notes carrying the tag. It reads `tagIndex()` from `@lumos/vault-utils/tags`, so it needs no request and works offline
 - `src/components/InsightsView.tsx` - the vault counted: six figures, then the most-linked notes, the ones with no links or tags, the commonest tags and every folder's size, each row a way in
 - `src/components/ProfileView.tsx` - the profile: the name and the line the vault gives itself, up to six pinned notes as cards, the year's calendar square per day with the streaks beside it, and the form that edits the two
 - `src/lib/profile.ts` - the profile itself (name, bio, pins) with its validation and pinning rules, and the zustand store that keeps the sidebar's avatar and the pane in step
@@ -37,7 +38,7 @@ back to demo data when the daemon is offline):
 - `src/lib/link-viewer.ts` - URL validation and the Tauri/native-webview vs browser-preview handoff
 - `src/components/GraphView.tsx` - canvas link graph (routes, controls, click-to-open)
 - `src/components/PaneBoundary.tsx` - error boundary around the lazily loaded graph pane
-- `src/components/SearchModal.tsx` - the `Cmd/Ctrl+K` palette: ranked matches, keyboard selection, body matches from the daemon, and the six commands the palette can run itself - new note, new folder, and the graph, stats, trash and profile panes. The shell owns the shortcut so it works even while a field has focus
+- `src/components/SearchModal.tsx` - the `Cmd/Ctrl+K` palette: ranked matches, keyboard selection, body matches from the daemon, and the ten commands the palette can run itself - new note, new folder, today's note, a duplicate of the open note, a random note, and the graph, stats, tags, trash and profile panes. The shell owns the shortcut so it works even while a field has focus
 - `src/components/StatusBar.tsx` - connection state, the search shortcut, the note count, a notice the app needs to say (a save whose refresh failed), and a chip for the WhatsApp link that opens the panel below. The chip is offered while the daemon answers, and it says the link's own state - being able to read notes says nothing about whether a message would be filed
 - `src/components/ThemeToggle.tsx` - switches the full shared palette through `data-theme`, persisting plain `light`/`dark` in `localStorage` and reading legacy JSON-quoted values
 - `src/lib/qr.ts` - the pairing code's size: it counts the drawing's columns and rows and answers a `font-size` that fits the card in both directions, so a 60-module code is small enough to see whole instead of hiding behind a scrollbar
@@ -73,7 +74,7 @@ The three cases - a registered language, an unregistered one, and an untagged fe
 to a string in Node and asserted in `src/components/NoteViewer.test.tsx`, so the wiring has a test
 without a jsdom setup.
 
-Still to come: routing (see the **Plan** section of [`TODO.md`](TODO.md)).
+Routing ships too: the pane and the open note are the address (see **Typed routing** below).
 
 ### Creating a note
 
@@ -148,7 +149,7 @@ fence that swallows the rest of the note is visible before the save rather than 
 ### Tags and status
 
 The strip under the note header is the one edit the body write cannot make: tags and status live in
-the frontmatter, and they are what the filters, the graph and the palette read.
+the frontmatter, and they are what the filter chips, the Tags pane, the graph and the palette read.
 
 - Each tag is a chip with an **×**; a tag is typed into **Add a tag** and sent on `Enter`. Both send
   the whole new list rather than a delta, so two quick edits cannot disagree about what the list is.
@@ -237,10 +238,60 @@ and a short list of where it is thin.
   the loading and empty states, the unreadable graph); `App.routing.test.tsx` proves the tab writes
   `?view=insights` into the address.
 
+### Contents and length
+
+A note with two or more h2/h3 sections gets a **Contents** strip under the header: every section in
+order, each a button that scrolls the rendered heading into view. It is built by `outlineOf()` in
+`@lumos/vault-utils/note-text`, and the `h2`/`h3` components in `Markdown.tsx` assign ids with the
+same `createSlugger()` walk, so a Contents entry always has a target and a repeated heading is
+`notes-2` in both. Only h2 and h3 are listed - the h1 is the title above it - and a heading inside a
+code fence is not a section.
+
+The header also reports the note's length: a word count and an estimated reading time at 200 words a
+minute. `readingStats()` counts runs of letters and digits outside code fences, so Markdown syntax
+does not inflate the count and a shell sample is not prose; any note with words is at least one
+minute, never "0 min read". Both the strip and the figures come from the body the viewer already
+holds, so they need no request and read the same offline.
+
+- Covered by `packages/vault-utils/src/note-text.test.ts` (the outline and its ids, the slugger, the
+  word count and the minute rounding) and by `Markdown.test.tsx` and `NoteViewer.test.tsx` (the ids
+  the renderer produces, and the strip and figures the viewer shows).
+
+### The tags pane
+
+`?view=tags` is the vault-wide counterpart to the chips above the list. Every tag is a row with its
+reach (**3 notes**), the folders it spans, and up to four tags that usually appear with it; a filter
+field matches a tag by its own name, a neighbour's name or a folder, so a tag can be found by what it
+is near. Choosing a row or a neighbour chip hands the tag to the list's own filter and opens the
+notes view, the same path a chip takes, so the pane cannot filter differently from the list.
+
+- It is counted by `tagIndex()` in `@lumos/vault-utils/tags`, pure over the listing the shell already
+  holds: no request, and the demo vault counts like any other.
+- Tags are normalised the way the graph reads them (no `#`, lower-case, once per note), and the order
+  is total - count, then name - so two renders cannot disagree.
+- The empty states are explicit: an empty vault, a vault with no tags yet, and a filter that matches
+  nothing each say which one it is.
+- Covered by `packages/vault-utils/src/tags.test.ts` (the counts, normalisation, folder order,
+  co-occurrence and its cap, the untagged count, the empty vault) and `src/components/TagsView.test.tsx`
+  (the figures, the rows, selecting a tag, filtering by name and folder, the empty states).
+
+### Related notes
+
+Under `Linked from`, the viewer lists the notes beside the open one: the ones this note links to and
+the ones that share its tags, with the reason on each chip (`#rust`, or *this note links to it*).
+
+- A written link outranks a shared tag, two shared tags outrank one link, and a shared folder alone
+  never qualifies - every note in a folder would otherwise be related to every other.
+- A note that links *here* stays under **Linked from**; the same neighbour in two panels reads as two
+  different things.
+- `relatedNotes()` in `@lumos/vault-utils/related` is pure over the listing and the graph, so the list
+  costs no request and works with the daemon stopped. Titles break ties, so the order cannot wobble
+  between renders.
+
 ### The profile
 
 The avatar at the top of the sidebar opens the **Profile** pane (`?view=profile`). It is not a fifth
-tab: four tabs already share 224px and a fifth would truncate every label, and the avatar is the
+tab: the five view tabs already fill the switch in two rows, and the avatar is the
 control a person looks for anyway.
 
 - **Pinned**, up to six notes, each a card carrying its folder, date, opening lines and tags. The
@@ -419,7 +470,7 @@ simulation puts a node is still checked by hand.
   tag filtered - the same handler the chips use.
 - The filtering is pure logic in `src/lib/filter.ts`, covered by `src/lib/filter.test.ts`. The desktop
   workspace has its own `test` script, so `pnpm --filter desktop test` checks it, together with the
-  component tests over the sidebar, the note list, the palette, the link pane and the WhatsApp panel.
+  component tests over the sidebar, the note list, the palette, the tags pane, the link pane and the WhatsApp panel.
 - The offline demo notes carry the same tags their bodies declare (`src/lib/demo.ts`), so the chips
   and the filter work with the daemon stopped; `demo.test.ts` keeps the listing and the bodies in
   step.
@@ -594,21 +645,28 @@ than the filtered list. It narrows in two stages and says which one answered:
 
 ### The palette runs commands too
 
-Under the notes, and first once the query matches one, the palette offers six commands:
+Under the notes, and first once the query matches one, the palette offers ten commands:
 
 - **New note** - the Notes view comes back with the composer open. The palette is where someone is
   already typing, so writing should not need a trip to the list's **New** button.
 - **New folder** - the field becomes a name field, `Enter` makes the folder and the list looks at it,
   `Esc` steps back out to searching. A refusal keeps the name typed with the daemon's sentence under
   it, the same as every other write.
-- **Open the graph**, **Open the stats**, **Open the trash**, **Open the profile** - the pane,
+- **Open today's note** - the daemon writes `Daily/<date>.md` on the first ask and opens that same
+  file after that. Offered only while the daemon answers, because it is a write.
+- **Duplicate the open note** - a copy beside the original, titled `<title> (copy)`, keeping its
+  body, tags, status and link. Offered while a note is open and the daemon can take the write.
+- **Open a random note** - another note from the listing, never the one on screen while there is
+  another to choose. Offered while the vault has notes.
+- **Open the graph**, **Open the stats**, **Open the tags**, **Open the trash**, **Open the profile** - the pane,
   without hunting for the sidebar tab or its avatar. Every pane has one, so a pane added to the
   sidebar cannot be left unreachable here.
 
 With nothing typed the commands sit under the recent notes rather than over them: searching is what
 the palette is open for, and a command is one keystroke from the end of the list. Typing puts any
 command whose words matched first, so `new folder` is reachable without leaving the keyboard. The
-commands are only offered while the daemon answers - a palette that offered a write to the demo
+four writes are offered only while the daemon answers, the panes are always there, and the
+random pick while there is a note to pick, today's note while the daemon can take the write - a palette that offered a write to the demo
 vault would be offering nothing.
 
 ## Keyboard

@@ -31,6 +31,10 @@ While the daemon handles capture via WhatsApp, the desktop app is designed to he
   exist yet, notes added this week, the notes with the most links pointing in, the ones with no
   links or tags, the commonest tags and every folder's size. Each row opens a note or filters the
   list, and it is counted from the listing and graph the window already has, so it works offline
+- The **Tags** tab lists every tag in the vault with its reach, the folders it spans and the tags that
+  usually appear with it; a filter field matches a name, a neighbour or a folder, and a tag opens its
+  notes. The viewer's **Related** list names the notes this one links to and the ones sharing its
+  tags, with the reason on each chip
 - The **Trash** tab beside Notes, Graph and Stats lists what those deletes kept — each entry with
   its folder and when it went — with a **Restore** per note and an **Empty the trash** that asks
   first, because emptying is the one action in the app with nothing to undo afterwards
@@ -108,12 +112,12 @@ possible future path (see [docs/desktop.md](../../docs/desktop.md)); it does not
 
 - [~] Vault browser with folder navigation (dark-first shell with a light theme, folder sidebar, note list and viewer built)
 - [x] Full-text search (`Cmd/Ctrl+K` palette: `fuse.js` ranking over titles, tags and previews, plus the daemon's body matches)
-- [~] Note editor (the body is edited as text and saved back to the vault, and a new note can be written from the list; a live Markdown preview beside the textarea is still to come)
+- [x] Note editor (the body is edited as text and saved back to the vault, a live Markdown preview sits beside the textarea, and a new note can be written from the list)
 - [x] Tag filtering (chips with counts, a note's own tag as a filter, tag nodes offering **Show notes**); bulk tag management is still to come
 - [x] Graph view (link graph from the daemon, canvas force layout, per-folder hues, filters, local depth)
 - [x] Syntax-highlighted code blocks (37 common languages; only a fence that names one is highlighted)
 - [x] Recent notes in the palette (the five opened this session, newest first)
-- [x] Commands in the palette (new note, new folder named in the palette itself, and the graph, stats, trash and profile panes; Ctrl/Cmd+K is handled by the shell, including when a field has focus)
+- [x] Commands in the palette (new note, new folder named in the palette itself, and the graph, stats, tags, trash and profile panes; Ctrl/Cmd+K is handled by the shell, including when a field has focus)
 - [x] The WhatsApp link in the app (state, pairing code, connect and disconnect from the status bar chip; automatically opens the in-app pairing dialog when a QR arrives)
 - [x] Resizable list column (drag the separator, double-click to reset, or use the arrow keys)
 - [x] Frontmatter warnings (a note with a broken frontmatter block is still listed and readable, with the reasons above its body and a marker in the list)
@@ -121,6 +125,7 @@ possible future path (see [docs/desktop.md](../../docs/desktop.md)); it does not
 - [ ] Link reader polish (less site chrome in the extracted text) — see [docs/LIMITATIONS.md](../../docs/LIMITATIONS.md)
 - [ ] Daily notes view
 - [x] Statistics and insights
+- [x] Tags pane and related notes (every tag with its reach and neighbours; the notes beside the open one, with the reason)
 
 ## Related
 

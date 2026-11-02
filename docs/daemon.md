@@ -94,7 +94,7 @@ Every note in the vault, newest first: `{ "notes": VaultEntry[] }`. An entry who
 problem carries `problems: string[]` with the reasons; a clean entry has no such field, so the usual
 response is unchanged. A note with a broken block is listed rather than dropped.
 
-### `POST /notes`
+### `POST /notes` and `POST /note/daily` and `POST /note/duplicate`
 ```json
 { "folder": "Ideas", "text": "Book the flights #travel\n\nTwo weeks in October." }
 ```

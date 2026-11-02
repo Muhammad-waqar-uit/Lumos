@@ -33,6 +33,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `allowedNumbers` to `lumos.config.json` there before sending messages.
 
 ### Added
+- `Cmd/Ctrl+K` can **duplicate the open note** (`POST /note/duplicate`): the copy sits beside the
+  original with a "(copy)" title, the same body, tags, status and link, and its own date. The
+  original is only read.
+- `Cmd/Ctrl+K` opens **today's note** (`POST /note/daily`): the first ask writes
+  `Daily/<date>.md`, stamped `source: desktop`, and every ask that day opens the same file.
+  Offered only while the daemon answers.
+- The note header can pin the open note to the profile and says **Pinned** once it is; the control
+  is disabled when the six pins are taken, and unpinning stays on the profile. It writes the profile's
+  own `localStorage` preference, so it works with the daemon stopped.
+- `Cmd/Ctrl+K` can open a **random note** - never the one already on screen while there is another to
+  pick - chosen from the listing the window already holds.
+- A note with two or more sections shows a **Contents** strip under its header: every h2 and h3,
+  in order, each one a button that scrolls the rendered heading into view. Heading ids come from the
+  same slugger the strip is built from, so a repeated heading is `notes-2` in the strip and in the
+  DOM alike.
+- The note header reports the note's length - a word count and an estimated reading time at 200
+  words a minute - counted from the body the viewer already holds. Code fences are left out of both.
+- A **Tags** pane lists every tag in the vault with the shape of its use: how many notes carry it,
+  which folders it spans, and the tags that most often keep it company. A filter field finds a tag
+  by its name, a neighbour or a folder, and choosing one opens the notes that carry it. It is
+  counted from the listing the window already holds, so it opens with no request and works with the
+  daemon stopped.
+- The note viewer lists **Related** notes under the one being read: the notes this note links to,
+  and the ones that share its tags, ranked so a written link comes first and a shared folder alone
+  never qualifies. A note that links here stays under **Linked from**, so one neighbour is not
+  shown twice.
 - The note list can be ordered: **Newest first**, **Oldest first** or **Title A–Z**, from a small
   control under the search field. The choice is remembered for the next launch, and a note whose
   `created` does not parse goes last rather than pretending to be the oldest thing in the vault.

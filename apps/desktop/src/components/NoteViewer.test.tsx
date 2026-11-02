@@ -8,6 +8,8 @@ function render(
   content: string,
   problems: string[] = [],
   connection: "daemon" | "demo" = "daemon",
+  related: { id: string; label: string; folder: string; reasons: string[] }[] = [],
+  pin: { pinned?: boolean; full?: boolean } = {},
 ): string {
   const note: Note = {
     title: "Snippet",
@@ -27,6 +29,10 @@ function render(
       note={note}
       connection={connection}
       backlinks={[]}
+      related={related}
+      pinned={pin.pinned ?? false}
+      pinFull={pin.full ?? false}
+      onTogglePin={() => {}}
       onOpenNote={() => {}}
       onSave={async () => note}
       onRename={async () => {}}
@@ -88,6 +94,77 @@ describe("NoteViewer file operations", () => {
 
   it("keeps the panel closed until it is asked for", () => {
     expect(render("body")).not.toContain("Rename");
+  });
+});
+
+describe("NoteViewer related notes", () => {
+  it("offers the notes beside this one, with the reason", () => {
+    const html = render("body", [], "daemon", [
+      {
+        id: "Ideas/morning-walk.md",
+        label: "Morning walk",
+        folder: "Ideas",
+        reasons: ["#health"],
+      },
+    ]);
+
+    expect(html).toContain('aria-label="Related notes"');
+    expect(html).toContain("Morning walk");
+    expect(html).toContain("#health");
+  });
+
+  it("says nothing when nothing is related", () => {
+    expect(render("body")).not.toContain('aria-label="Related notes"');
+  });
+});
+
+describe("NoteViewer pinning", () => {
+  it("offers to pin the open note", () => {
+    const html = render("body");
+
+    expect(html).toContain(">Pin</button>");
+    expect(html).toContain('aria-pressed="false"');
+  });
+
+  it("shows a pinned note as pinned", () => {
+    const html = render("body", [], "daemon", [], { pinned: true });
+
+    expect(html).toContain(">Pinned</button>");
+    expect(html).toContain('aria-pressed="true"');
+  });
+
+  it("disables the control when the profile has no room for another pin", () => {
+    const html = render("body", [], "daemon", [], { full: true });
+
+    expect(html).toContain("disabled");
+    expect(html).toContain("No room for another pin");
+  });
+});
+
+describe("NoteViewer reading aids", () => {
+  it("lists the note's sections and points them at the rendered headings", () => {
+    const html = render("# Read me\n\ntext\n\n## First\n\nmore\n\n### Detail\n\n## Second");
+
+    expect(html).toContain('aria-label="Contents"');
+    expect(html).toContain('id="first"');
+    expect(html).toContain('id="detail"');
+    expect(html).toContain('id="second"');
+    expect(html).toContain(">First</button>");
+  });
+
+  it("leaves out a note with fewer than two sections", () => {
+    expect(render("# Title\n\n## Only one")).not.toContain('aria-label="Contents"');
+  });
+
+  it("reports the word count and the reading time", () => {
+    const html = render("one two three four");
+
+    expect(html).toContain("4 words");
+    expect(html).toContain("1 min read");
+  });
+
+  it("says nothing about length for an empty note", () => {
+    expect(render("")).not.toContain("min read");
   });
 });
 

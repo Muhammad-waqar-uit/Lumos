@@ -161,6 +161,9 @@ describe("SearchModal - the commands", () => {
     onNewNote: vi.fn(),
     onCreateFolder: vi.fn(async (name: string) => name),
     onOpenView: vi.fn(),
+    onRandomNote: vi.fn(),
+    onDailyNote: vi.fn(),
+    onDuplicateNote: vi.fn(),
   });
 
   it("lists what the palette can do under the recent notes, not over them", () => {
@@ -179,6 +182,10 @@ describe("SearchModal - the commands", () => {
     expect(tail).toContain("Open the stats");
     expect(tail).toContain("Open the trash");
     expect(tail).toContain("Open the profile");
+    expect(tail).toContain("Open the tags");
+    expect(tail).toContain("Open a random note");
+    expect(tail).toContain("Open today's note");
+    expect(tail).toContain("Duplicate the open note");
   });
 
   it("opens the profile pane from the palette", () => {
@@ -189,6 +196,39 @@ describe("SearchModal - the commands", () => {
     fireEvent.click(screen.getByRole("button", { name: /Open the profile/ }));
 
     expect(props.onOpenView).toHaveBeenCalledWith("profile");
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it("duplicates the open note from the palette", () => {
+    const onClose = vi.fn();
+    const props = commands();
+    renderModal({ onClose, ...props });
+
+    fireEvent.click(screen.getByRole("button", { name: /Duplicate the open note/ }));
+
+    expect(props.onDuplicateNote).toHaveBeenCalledTimes(1);
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it("opens today's note from the palette", () => {
+    const onClose = vi.fn();
+    const props = commands();
+    renderModal({ onClose, ...props });
+
+    fireEvent.click(screen.getByRole("button", { name: /Open today's note/ }));
+
+    expect(props.onDailyNote).toHaveBeenCalledTimes(1);
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it("opens a random note from the palette", () => {
+    const onClose = vi.fn();
+    const props = commands();
+    renderModal({ onClose, ...props });
+
+    fireEvent.click(screen.getByRole("button", { name: /Open a random note/ }));
+
+    expect(props.onRandomNote).toHaveBeenCalledTimes(1);
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 

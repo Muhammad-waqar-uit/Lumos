@@ -35,7 +35,7 @@ end to end, and because nothing else on this page can close them.
   injected bridge, but the socket it pauses is not.
 - [!] **A real Claude Code session with the MCP server** (P1) - `claude mcp add --scope user lumos
   -- pnpm --dir <repo>/apps/mcp start`, then `claude mcp list` shows it connected, `/mcp` lists the
-  twelve tools, and a request in your own words lands in the vault. The protocol is covered over the
+  thirteen tools, and a request in your own words lands in the vault. The protocol is covered over the
   SDK's in-memory transport and the entry point is spawned over a real stdio pipe, but nothing signs
   the server into a client and lets an agent choose the tools itself - which is the part worth
   watching, because a tool description that reads well to a person can still lead a model to the
@@ -65,8 +65,14 @@ end to end, and because nothing else on this page can close them.
   happens
 
 - [x] Commands in the palette - New note, New folder (named in the palette itself), Open the graph,
-  Open the trash. The composer's open state moved from the list to the shell for it, because two
+  Open the stats, Open the tags, Open the trash, Open the profile, Open a random note, Open today's note, Duplicate the open note. The composer's open state moved from the list to the shell for it, because two
   places can now open it
+- [x] Duplicate a note - `POST /note/duplicate` copies the body, tags, status and link beside the
+  original under a `(copy)` title, and the palette command appears while a note is open
+- [x] Today's note - `POST /note/daily` writes `Daily/<date>.md` on the first ask and re-reads it
+  after that, so edits survive; the palette command appears only while the daemon answers
+- [x] Pin the open note from its header - the same `togglePin` the profile's picker uses, disabled
+  once the six pins are taken; unpinning still happens on the profile card
 - [x] Live capture - a note written by WhatsApp appears in an open window within one poll, named in
   the status bar with **Open** (or counted, with **Open newest**). The trigger is the link's `lastAt`,
   so an edit made in another editor still needs a read; that limit is in
@@ -343,6 +349,21 @@ sharing is added. These are reminders, not commitments or requirements for the c
 
 ### Phase 6: Search & Discovery (P1)
 
+- [x] A note's contents and length (P2) - a note with two or more sections lists its h2/h3 as
+  **Contents**, each scrolling the rendered heading into view, and the header adds the word count and
+  a reading estimate at 200 words a minute. `outlineOf()` and `readingStats()` in
+  `@lumos/vault-utils/note-text` share `createSlugger()` with the Markdown renderer, so an id always
+  has a target (`note-text.test.ts`, `Markdown.test.tsx`, `NoteViewer.test.tsx`)
+- [x] A vault-wide tag index (P2) - the **Tags** tab lists every tag with its count, the folders
+  it spans and up to four tags that usually travel with it; a filter field matches a name, a
+  neighbour or a folder, and every row opens the notes that carry it through the chips' own handler.
+  `tagIndex()` in `@lumos/vault-utils/tags` is pure over the listing, so the pane needs no request
+  and works offline (`TagsView.tsx`, `tags.test.ts`, `TagsView.test.tsx`)
+- [x] Related notes in the viewer (P2) - the notes this note links to and the ones that share its
+  tags, ranked with a written link first; a shared folder alone is not a relationship and a note
+  that links here stays under **Linked from**. `relatedNotes()` in `@lumos/vault-utils/related` is
+  pure over the listing and the graph, so the list costs no request (`related.test.ts`,
+  `NoteViewer.test.tsx`)
 - [x] Vault insights (the **Stats** tab) - the one "Beyond" idea that needed no new data, since the
   shell already loads the listing and the graph: notes, folders, tags, resolved and unresolved
   links, notes added this week and this month, the most-linked notes, the notes with no links or
@@ -452,7 +473,7 @@ sharing is added. These are reminders, not commitments or requirements for the c
 
 ### Phase 9: Agent access (P1)
 
-- [x] An MCP server over the vault - `apps/mcp`, twelve tools over stdio (`list_folders`,
+- [x] An MCP server over the vault - `apps/mcp`, thirteen tools over stdio (`vault_health`, `list_folders`,
   `list_notes`, `search_notes`, `read_note`, `create_note`, `update_note`, `rename_note`, `move_note`,
   `delete_note`, `list_trash`, `restore_note`, `create_folder`). Notes are addressed by the key every
   tool answers (`Folder/name.md`), a refusal is a tool error carrying the vault's own sentence, and

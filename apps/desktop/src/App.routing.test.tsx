@@ -5,6 +5,7 @@ import { RouterProvider, createMemoryHistory } from "@tanstack/react-router";
 import type { GraphData, Note, VaultEntry, WhatsAppStatus } from "@lumos/shared";
 import { getNotes, getWhatsApp } from "./lib/api";
 import { createAppRouter } from "./router";
+import { useProfileStore } from "./lib/profile";
 import { useVaultStore } from "./lib/store";
 
 // The shell talks to one module, so the whole daemon is stood in for here - routing is what is
@@ -91,6 +92,7 @@ beforeEach(() => {
     lastAt: null,
     qr: null,
   });
+  useProfileStore.setState({ pins: [] });
   useVaultStore.setState({
     connection: "connecting",
     loading: true,
@@ -137,6 +139,28 @@ describe("the shell's address", () => {
     expect(router.state.location.search.view).toBe("insights");
     expect(await screen.findByRole("region", { name: "Vault insights" })).toBeTruthy();
     expect(screen.queryByPlaceholderText("Search notes")).toBeNull();
+  });
+
+  it("opens the tags pane from its tab, and never the list beside it", async () => {
+    const router = renderAt("/");
+    await screen.findByPlaceholderText("Search notes");
+
+    fireEvent.click(screen.getByRole("tab", { name: "Tags" }));
+
+    expect(router.state.location.search.view).toBe("tags");
+    expect(await screen.findByRole("region", { name: "Tags" })).toBeTruthy();
+    expect(screen.queryByPlaceholderText("Search notes")).toBeNull();
+  });
+
+  it("pins the open note from its header, and keeps it on the profile", async () => {
+    renderAt("/");
+    await screen.findByRole("heading", { level: 2, name: "Ship the release" });
+
+    fireEvent.click(screen.getByRole("button", { name: "Pin" }));
+
+    await waitFor(() =>
+      expect(useProfileStore.getState().pins).toEqual(["Inbox/ship-the-release.md"]),
+    );
   });
 
   it("opens the profile from its avatar, and never the list beside it", async () => {

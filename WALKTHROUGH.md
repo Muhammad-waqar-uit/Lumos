@@ -21,7 +21,7 @@ Two halves:
 | Half | What it does | How it starts |
 |---|---|---|
 | **daemon** | Holds the WhatsApp link, parses messages, writes files, serves a small HTTP API on `127.0.0.1:3001` | `pnpm --filter daemon dev` |
-| **desktop** | The app: sidebar, list, reader, editor, search palette, graph, trash | `pnpm --filter desktop dev` (browser at :1420) or `pnpm --filter desktop tauri dev` (the real window) |
+| **desktop** | The app: sidebar, list, reader, editor, search palette, graph, tags, stats, trash | `pnpm --filter desktop dev` (browser at :1420) or `pnpm --filter desktop tauri dev` (the real window) |
 
 The app needs the daemon. The daemon does not need the app - it can run headless and you can talk to
 it with `curl`.
@@ -167,15 +167,15 @@ looked at. The status bar says *Daemon offline - showing demo notes* when it doe
 
 **Find.** `Cmd/Ctrl+K` opens the palette: it ranks titles, tags and previews locally, and asks the
 daemon for body matches (those rows say *in the body*). Arrow keys, `Enter`, `Esc`. With nothing
-typed it lists what you opened this session - and, under that, six commands: **New note**, **New
-folder**, **Open the graph**, **Open the stats**, **Open the trash** and **Open the profile**.
+typed it lists what you opened this session - and, under that, ten commands: **New note**, **New
+folder**, **Open the graph**, **Open the stats**, **Open the tags**, **Open the trash** and **Open the profile**.
 
 **Write, without leaving the keyboard.** `Cmd/Ctrl+K`, type `new folder`, `Enter`, type `Clients`,
 `Enter` - the folder exists, the sidebar shows it, and the list is already looking at it. The same
 palette writes a note: **New note** opens the composer in the folder you were in.
 
 **Read.** The viewer renders Markdown, highlights fenced code that names a language, plays a YouTube
-or Vimeo link in place, and lists **backlinks** - the notes that link here with `[[like this]]`.
+or Vimeo link in place, and lists **backlinks** - the notes that link here with `[[like this]]`. **Related** beside it names the notes this one links to and the tags it shares.
 
 **Edit.** **Edit** turns the body into a textarea with a live preview; `Cmd/Ctrl+S` saves, `Esc`
 cancels. Only the body is written - the frontmatter block survives character for character, which is

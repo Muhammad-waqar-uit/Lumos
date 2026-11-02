@@ -199,8 +199,14 @@ the only signal it has: there is no server-sent event, and the daemon does not w
   Obsidian, another agent or a shell script is on disk but invisible until the next read, because the
   trigger is the link's activity rather than the filesystem. With the daemon stopped the app is in
   its demo mode and polls nothing, so a capture that happened meanwhile appears on the next load.
-- **The palette runs six commands, and the two that write only while the daemon answers.** Writing
-  a note, making a folder, and the graph, stats, trash and profile panes - the panes are always
+- **Reading time is an estimate, not a measurement.** It divides the words outside code fences by
+  a fixed 200 a minute and rounds up, so it ignores the reader, tables, images and long quotations.
+  The word count is the same arithmetic, which is why the two always agree.
+- **A heading id is an ASCII slug.** A heading written in another script keeps its label in the
+  Contents strip but its id is `section`, and a second one is `section-2`; the strip still works
+  because both sides slug the same way, but the id says nothing about the heading.
+- **The palette runs ten commands, and the four that write only while the daemon answers.** Writing
+  a note, making a folder, today's note, a duplicate, a random note, and the graph, stats, tags, trash and profile panes - the panes are always
   offered, because opening one is free. The palette does not yet offer "new note in *this* folder" per folder, a
   move or a tag of the open note, or a command history; a palette that listed everything would be a
   menu with a text box on top, so the set stays the ones there is nothing else for.
@@ -246,6 +252,14 @@ the only signal it has: there is no server-sent event, and the daemon does not w
   because a folder or tag filter narrowed the list, is not recorded - the history is what you opened,
   not what the shell happened to show. A note deleted while the app runs drops out of the list,
   which is deliberate: a dead row is worse than a shorter list.
+- **A tag written in a note's body is not in the Tags pane.** The pane, the chips and the related
+  list read the listing's `tags`, which is the frontmatter; an inline `#tag` typed by hand into a
+  body reaches the graph (`extractTags()`) and nothing else. Capture is unaffected - a hashtag in a
+  WhatsApp message is written to the frontmatter at capture - and the note header can add one to the
+  block. Given up: reading every body for the pane, which is what a second index would be for.
+- **Related notes is a graph question, not a similarity one.** It knows about links the note wrote and
+  tags the two notes share; it does not compare bodies, so two notes about the same subject in
+  different words are not related. A note that links here is deliberately left to **Linked from**.
 - **Backlinks are link-only.** A note that shares a tag with the open one is deliberately not listed
   as a backlink - it is a neighbour in the graph, not something that points here - so "Linked from"
   can be empty on a tag-heavy vault. With the daemon down the list comes from the demo graph, so a demo

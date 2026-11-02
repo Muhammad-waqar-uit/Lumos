@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
 import type { GraphNode, Note } from "@lumos/shared";
 import { firstExternalLink } from "@lumos/vault-utils/link";
+import { outlineOf, readingStats } from "@lumos/vault-utils/note-text";
+import type { RelatedNote } from "@lumos/vault-utils/related";
 import { type Connection } from "../lib/api";
 import { LinkPane } from "./LinkPane";
 import { Markdown } from "./Markdown";
@@ -24,6 +26,12 @@ function formatDate(iso: string): string {
 interface Props {
   note: Note | null;
   connection: Connection;
+  /** Notes beside this one: a shared tag, or a link this note wrote itself. */
+  related: readonly RelatedNote[];
+  /** Whether this note is on the profile, and whether the profile has room for another. */
+  pinned: boolean;
+  pinFull: boolean;
+  onTogglePin: () => void;
   /** Notes that link here, from the same graph the Graph tab draws. */
   backlinks: GraphNode[];
   onOpenNote: (id: string) => void;
@@ -44,6 +52,10 @@ export function NoteViewer({
   note,
   connection,
   backlinks,
+  related,
+  pinned,
+  pinFull,
+  onTogglePin,
   onOpenNote,
   onSave,
   onRename,
@@ -65,6 +77,11 @@ export function NoteViewer({
     return note.frontmatter.url ?? firstExternalLink(note.content);
   }, [note]);
 
+  // Counted from the body the viewer holds, so the header and the Contents list need no request
+  // and agree with what is rendered under them.
+  const outline = useMemo(() => (note ? outlineOf(note.content) : []), [note]);
+  const stats = useMemo(() => readingStats(note?.content ?? ""), [note]);
+
   if (!note) {
     return (
       <main className="flex flex-1 items-center justify-center p-8 text-sm text-muted-foreground">
@@ -77,6 +94,11 @@ export function NoteViewer({
   const frontmatterUrl = fm.url;
   const isEditing = editing === note.file;
 
+  /** Bring a section into view without changing the address or remounting the note. */
+  const jumpTo = (id: string): void => {
+    document.getElementById(id)?.scrollIntoView?.({ behavior: "smooth", block: "start" });
+  };
+
   return (
     <main className="fade-in flex flex-1 flex-col overflow-hidden">
       <header className="flex items-start justify-between gap-4 border-b border-border px-6 py-4">
@@ -86,6 +108,14 @@ export function NoteViewer({
             <span>{note.folder}</span>
             <span>{formatDate(fm.created)}</span>
             <span>source: {fm.source}</span>
+            {stats.words > 0 ? (
+              <>
+                <span>
+                  {stats.words} {stats.words === 1 ? "word" : "words"}
+                </span>
+                <span>{stats.minutes} min read</span>
+              </>
+            ) : null}
             {frontmatterUrl ? (
               <OpenLink href={frontmatterUrl} className="underline hover:text-foreground">
                 {frontmatterUrl}
@@ -95,6 +125,22 @@ export function NoteViewer({
         </div>
         {isEditing ? null : (
           <span className="flex shrink-0 items-center gap-2">
+            <button
+              type="button"
+              onClick={onTogglePin}
+              disabled={pinFull}
+              aria-pressed={pinned}
+              title={
+                pinFull
+                  ? "No room for another pin - unpin one on the profile"
+                  : pinned
+                    ? "Pinned to your profile"
+                    : "Pin to your profile"
+              }
+              className="rounded-md border border-border px-2 py-1 text-[11px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-50"
+            >
+              {pinned ? "Pinned" : "Pin"}
+            </button>
             <button
               type="button"
               onClick={() => setActionsOpen((open) => !open)}
@@ -190,6 +236,50 @@ export function NoteViewer({
                 >
                   <span className="truncate">{node.label}</span>
                   {node.folder ? <span className="opacity-60">{node.folder}</span> : null}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+      {!isEditing && related.length > 0 ? (
+        <section aria-label="Related notes" className="border-b border-border px-6 py-2.5">
+          <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
+            Related {related.length}
+          </p>
+          <ul className="mt-1 flex flex-wrap gap-1.5">
+            {related.map((node) => (
+              <li key={node.id}>
+                <button
+                  type="button"
+                  onClick={() => onOpenNote(node.id)}
+                  title={`${node.id} — ${node.reasons.join(", ")}`}
+                  className="flex items-center gap-1.5 rounded-md border border-border px-1.5 py-0.5 text-[11px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                >
+                  <span className="truncate">{node.label}</span>
+                  <span className="opacity-60">{node.reasons.join(" · ")}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+      {!isEditing && outline.length >= 2 ? (
+        <section aria-label="Contents" className="border-b border-border px-6 py-2.5">
+          <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Contents</p>
+          <ul className="mt-1 flex flex-wrap gap-1.5">
+            {outline.map((heading) => (
+              <li key={heading.id}>
+                <button
+                  type="button"
+                  onClick={() => jumpTo(heading.id)}
+                  title={heading.text}
+                  className={
+                    "rounded-md border border-border px-1.5 py-0.5 text-[11px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground " +
+                    (heading.level === 3 ? "opacity-80" : "")
+                  }
+                >
+                  {heading.text}
                 </button>
               </li>
             ))}

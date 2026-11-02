@@ -44,14 +44,17 @@ folder, so progress is always visible.
 - TanStack Router wired up. ✅ (the pane and the open note are address parameters, 2026-10-24)
 - zustand wired up. ✅ (the vault index and the list's filters; the pane and the note stay in the address)
 
-## M5 - Vault browser MVP (Phase 5) — in progress
+## M5 - Vault browser MVP (Phase 5) ✅
 
 - Folder sidebar, note list, note viewer. ✅
 - Vault load on mount via the daemon read API. ✅
 - Markdown rendering. ✅
 - Link graph: notes and tags as nodes, links and tag references as edges, filters and local depth. ✅
 - Tag filtering: the tags in the current folder and query become chips with counts, a chip or a note's own tag narrows the list, and a tag node offers **Show notes** with the same filter. ✅
+- A **Tags** pane (`?view=tags`) lists every tag with its reach, the folders it spans and the tags that usually travel with it; a filter field matches a name, a neighbour or a folder, and a tag opens its notes. ✅ (`@lumos/vault-utils/tags`, `TagsView.tsx`)
 - Backlinks in the note viewer: the notes that link to the open one, from the same graph, each one a button that opens it. ✅
+- Related notes beside the open one: the notes it links to and the ones sharing its tags, with the reason on each chip; a note that links here stays under **Linked from**. ✅ (`@lumos/vault-utils/related`)
+- Contents and length: a **Contents** strip for a note's h2/h3, and the header's word count and reading estimate. ✅ (`@lumos/vault-utils/note-text`)
 - Vault insights: a **Stats** tab that counts what the vault holds and where it is thin - links,
   unresolved targets, notes added this week and this month, the most-linked notes, the notes nothing
   links to, the commonest tags, every folder's size - with each row opening a note or filtering the
@@ -68,10 +71,9 @@ folder, so progress is always visible.
 - The graph keeps its layout: node positions and a view you placed survive a tab switch, and a resized
   pane re-fits a view the app fitted itself. ✅
 
-That finishes the graph, code in a note is highlighted, and a scraped page is now kept for the
-session. The phase itself is not finished: reading a PDF or plain HTML file remains open under
-**Plan** in
-[`TODO.md`](TODO.md).
+That finishes the vault browser: the graph keeps its layout, code in a note is highlighted, a
+PDF or a plain page is read as text, and a scraped page is kept for the session. Nothing from this
+milestone is left open.
 
 ## M6 - Search (Phase 6) ✅
 
@@ -79,7 +81,7 @@ session. The phase itself is not finished: reading a PDF or plain HTML file rema
 - `Cmd/Ctrl+K` search modal. ✅ (arrows, `Enter`, `Esc`; body matches come from `GET /notes/search`)
 - Recent notes. ✅ (an empty palette lists what was opened this session; a reload starts empty)
 - Commands in the palette. ✅ (new note, new folder named in the palette itself, and the graph,
-  stats, trash and profile; an empty field lists them under the recent notes, a matched query puts
+  stats, tags, trash and profile; an empty field lists them under the recent notes, a matched query puts
   them first)
 
 ## M7 - Editing + polish (Phases 7-8) — partly done
@@ -108,7 +110,7 @@ The work itself is listed under **Plan** in [`TODO.md`](TODO.md).
 ## M8 - Agent access (Phase 9) ✅
 
 - An MCP server over the vault, on stdio, so Claude Code and other agents work on the notes rather
-  than on a copy of them. ✅ (`apps/mcp`: twelve tools, `LUMOS_VAULT` to choose the vault, the
+  than on a copy of them. ✅ (`apps/mcp`: thirteen tools, `LUMOS_VAULT` to choose the vault, the
   operations through `@lumos/vault-utils` so there is no second writer; see [mcp.md](mcp.md))
 - Connecting a client documented end to end, for Claude Code and Claude Desktop. ✅ (the commands,
   the JSON config, the tool list and the trade-offs are in [mcp.md](mcp.md))
