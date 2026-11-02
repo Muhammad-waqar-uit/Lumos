@@ -10,7 +10,12 @@
     "./graph": "./src/graph.ts",
     "./link": "./src/link.ts",
     "./insights": "./src/insights.ts",
-    "./profile": "./src/profile.ts"
+    "./profile": "./src/profile.ts",
+    "./tags": "./src/tags.ts",
+    "./related": "./src/related.ts",
+    "./duplicate": "./src/duplicate.ts",
+    "./daily": "./src/daily.ts",
+    "./note-text": "./src/note-text.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
