@@ -5,14 +5,15 @@ import { profileInitial, useProfileStore } from "../lib/profile";
 import { LumosMark } from "./LumosMark";
 
 export type { FolderFilter } from "../lib/filter";
-export type ShellView = "notes" | "graph" | "insights" | "trash" | "profile";
+export type ShellView = "notes" | "graph" | "insights" | "tags" | "trash" | "profile";
 
-// Four tabs share a 224px sidebar, so the labels are the short word for each pane: the pane
+// Five tabs share a 224px sidebar and wrap onto two rows, so each label is the short word: the pane
 // itself says "Vault insights" at the top.
 const VIEWS: { key: ShellView; label: string }[] = [
   { key: "notes", label: "Notes" },
   { key: "graph", label: "Graph" },
   { key: "insights", label: "Stats" },
+  { key: "tags", label: "Tags" },
   { key: "trash", label: "Trash" },
 ];
 
@@ -166,7 +167,7 @@ export function Sidebar({
         <div
           role="tablist"
           aria-label="View"
-          className="flex gap-0.5 rounded-md border border-border p-0.5"
+          className="grid grid-cols-3 gap-0.5 rounded-md border border-border p-0.5"
         >
           {VIEWS.map((option) => (
             <button

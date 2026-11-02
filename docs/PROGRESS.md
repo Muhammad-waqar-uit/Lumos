@@ -2,6 +2,53 @@
 
 Chronological record of what has been built. Newest entries first within each date.
 
+## 2026-11-02
+
+### Added - the vault's tags in one pane
+- [x] **Why.** The chips above the list only offer the tags in the folder and query on screen, which
+  narrows a list well and says nothing about the vault. A tag's reach, the folders it spans and the
+  tags that travel with it were only answerable by reading the graph. The sidebar now has a **Tags**
+  tab: every tag, busiest first, with its count, its folders and up to four neighbours, and a filter
+  field that matches a tag by its own name, a neighbour's name or a folder's.
+- [x] **One list, every way in.** Choosing a tag row or a neighbour chip goes through the same
+  handler the chips already use, so the pane cannot filter differently from the list. The index is
+  `tagIndex()` in `@lumos/vault-utils/tags` - pure, clock-free and computed from the listing the
+  shell already holds - so the pane opens with no request and a demo vault is counted like any
+  other.
+- [x] **Proven.** 8 unit tests (counts, normalisation, folder order, co-occurrence and its cap, the
+  untagged count, the empty vault, the input not being mutated) and 9 component tests (the figures,
+  the rows, selecting a tag, filtering by name and by folder, a neighbour match, the three empty
+  states, the demo label).
+
+### Added - related notes beside the open one
+- [x] **Why.** Backlinks answer who points here, and the graph answers the shape of the whole
+  vault; neither answers "what else belongs with this note?". The viewer now lists **Related**
+  notes: the ones this note links to, and the ones that share its tags.
+- [x] **Ranked, and not a second backlink panel.** A link the author wrote scores above a shared tag,
+  two shared tags score above one link, and a shared folder alone never qualifies - otherwise every
+  note in a folder would be related to every other. Notes that link *here* are left out, because
+  **Linked from** already shows them. `relatedNotes()` in `@lumos/vault-utils/related` is pure over
+  the listing and the graph, so it costs no request and works offline.
+- [x] **Proven.** 9 unit tests (the two scores and their order, the backlink exclusion, the shared
+  folder, tag normalisation, the limit, an unknown note, the tie-break) and two viewer render tests.
+
+### Added - a note's sections, and how long it takes to read
+- [x] **Why.** A long note was one scroll: its headings were rendered but not reachable, and there
+  was no way to see how much there was before starting. The viewer now lists every h2 and h3 as
+  **Contents**, and the header reports the word count and an estimated reading time.
+- [x] **One slugger, two callers.** `outlineOf()` and the renderer both use `createSlugger()` from
+  `@lumos/vault-utils/note-text`, walking the same headings in the same order, so a Contents button
+  always has a target and a repeated "Notes" is `notes-2` in the strip and in the DOM. Only h2/h3 are
+  targets: the note's h1 is the title above it, and h4 is detail inside a section.
+- [x] **Counted where it is shown.** `readingStats()` counts runs of letters and digits outside code
+  fences, so Markdown syntax does not inflate the figure and a shell sample is not prose; any note
+  with words is at least one minute. Both the strip and the figures come from the body the viewer
+  already holds - no request, and the same answer with the daemon stopped.
+- [x] **Proven.** 14 unit tests (levels, order, ids, duplicates, inline Markdown, wikilink aliases,
+  trailing hashes, fenced headings, the empty body, the slug fallback, word counting, code exclusion,
+  the minute rounding) and eight component tests. `Markdown.test.tsx` asserts the ids and the
+  duplicate suffix, so the strip and the rendered headings cannot drift apart.
+
 ## 2026-10-29
 
 ### Fixed - the pairing code was too wide to scan
@@ -1466,3 +1513,34 @@ Chronological record of what has been built. Newest entries first within each da
 ### Blocked
 - [!] ... (reason)
 ```
+
+### Done — the note header can pin, and the palette can surprise
+- [x] The viewer header offers **Pin** / **Pinned** beside the file actions, writing the same
+  `localStorage` profile the profile pane's picker writes (`useProfileStore().togglePin`); the
+  control is disabled once the six pins are taken, and unpinning still happens on the profile.
+  Desktop suite 361.
+- [x] `Cmd/Ctrl+K` offers **Open a random note**, picked from the listing the shell already holds by
+  `pickRandomNote()` (`src/lib/random.ts`: injected source of chance, a clamped index, and the open
+  note excluded while another exists; 5 unit tests).
+- [x] Docs moved with both features: CHANGELOG, FEATURES, TODO, LIMITATIONS, USAGE, WALKTHROUGH,
+  desktop.md and the regenerated TESTING.md counts.
+
+### Done — today's note is one command away
+- [x] `POST /note/daily` writes `Daily/<date>.md` on the first ask and answers the same note after
+  that (201 then 200); the folder is made when missing, the file is created with `wx` so two asks
+  cannot overwrite each other, and the body is `# <date>` stamped `source: desktop`
+  (`ensureDailyNote()` in `@lumos/vault-utils/daily`, 5 unit tests, 2 route tests).
+- [x] `Cmd/Ctrl+K` offers **Open today's note**, only while the daemon answers; the shell re-reads
+  the listing and opens the note the daemon answers.
+- [x] Docs moved: CHANGELOG, FEATURES, TODO, LIMITATIONS, USAGE, WALKTHROUGH, daemon.md,
+  desktop.md and TESTING.md counts.
+
+### Done — a note can be copied beside itself
+- [x] `POST /note/duplicate` reads the original, rebuilds the heading as `<title> (copy)` and
+  writes the body, tags, status and link beside it with a fresh date; the original is never
+  modified, a missing note is a 404 and a name outside the folder a 400
+  (`duplicateNote()` in `@lumos/vault-utils/duplicate`, 6 unit tests, 2 route tests).
+- [x] `Cmd/Ctrl+K` offers **Duplicate the open note** while a note is open and the daemon answers;
+  the shell re-reads the listing and opens the copy.
+- [x] Docs moved: CHANGELOG, FEATURES, TODO, LIMITATIONS, USAGE, WALKTHROUGH, daemon.md,
+  desktop.md and TESTING.md counts.

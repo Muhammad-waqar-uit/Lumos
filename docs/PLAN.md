@@ -61,7 +61,7 @@ Chosen and recorded in the decisions log, but **not installed yet**:
 3. **Phase 3: Daemon Enhancements** - Link expansion, `/find`, `/plan` with Ollama, tag extraction, config file, tests.
 4. **Phase 4: Desktop UI Foundation** - shadcn/ui dark theme setup, app shell layout, routing, state.
 5. **Phase 5: Vault Browser** - Sidebar (folders), note list, note viewer, vault scanning/indexing.
-6. **Phase 6: Search & Discovery** - Full-text search, Cmd/Ctrl+K modal, tag filtering, recent notes.
+6. **Phase 6: Search & Discovery** - Full-text search, Cmd/Ctrl+K modal, tag filtering, a vault-wide Tags pane, related notes beside the open one, recent notes.
 7. **Phase 7: Editing & Enrichment** - Note editor, link enrichment, bulk operations.
 8. **Phase 8: Polish & Docs** - UI polish, performance, tests, complete documentation.
 9. **Phase 9: Agent access (MCP)** - an MCP server over the vault (`apps/mcp`), so Claude Code and other agents read and write the notes themselves, plus the connection guide in `docs/mcp.md`.
@@ -77,7 +77,7 @@ Dark minimal, shadcn/ui inspired:
 - No gradients, no heavy shadows, no vibrant color.
 - Emphasis on typography, spacing, and clarity.
 
-Layout: resizable panes - **Sidebar (folders) | Notes list | Note viewer** - with keyboard-friendly navigation.
+Layout: resizable panes - **Sidebar (folders) | Notes list | Note viewer** - with keyboard-friendly navigation. The Graph, Stats, Tags, Trash and Profile panes replace the list and viewer when chosen; the sidebar stays.
 
 ## Documentation Plan
 

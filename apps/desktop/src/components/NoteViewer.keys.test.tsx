@@ -24,6 +24,10 @@ function renderViewer(): void {
       note={note}
       connection="daemon"
       backlinks={[]}
+      related={[]}
+      pinned={false}
+      pinFull={false}
+      onTogglePin={() => {}}
       onOpenNote={() => {}}
       onSave={async (content) => ({ ...note, content })}
       onRename={async () => {}}

@@ -217,6 +217,21 @@ export function createNote(folder: string, text: string): Promise<Note> {
 }
 
 /**
+ * Today's note, created the first time it is asked for.
+ *
+ * The daemon names it after the date and answers the same file all day, so asking twice opens what
+ * is there rather than writing a second note into the Daily folder.
+ */
+export function openDailyNote(): Promise<Note> {
+  return send("POST", "/note/daily", {});
+}
+
+/** Copy a note beside itself, and answer the copy. */
+export function duplicateNote(folder: string, name: string): Promise<Note> {
+  return send("POST", "/note/duplicate", { folder, name });
+}
+
+/**
  * Save an edited body into an existing note and answer the note as it now reads.
  *
  * The daemon rewrites the body only and never the frontmatter, so a failure keeps the draft the

@@ -31,12 +31,18 @@ interface Props {
   onNewNote?: () => void;
   /** Makes a folder and answers its name; a refusal throws with the daemon's sentence. */
   onCreateFolder?: (name: string) => Promise<string>;
+  /** Copies the open note. Absent when no note is open or the daemon cannot take the write. */
+  onDuplicateNote?: () => void;
+  /** Opens today's note, making it first. Absent while the daemon cannot take the write. */
+  onDailyNote?: () => void;
+  /** Opens a note chosen at random. Absent while there is no vault to choose from. */
+  onRandomNote?: () => void;
   /** Opens another pane of the shell. Absent when there is nowhere to go. */
   onOpenView?: (view: TargetView) => void;
 }
 
 /** What the palette can do besides open a note. */
-type ActionId = "note" | "folder" | TargetView;
+type ActionId = "note" | "folder" | "daily" | "duplicate" | "random" | TargetView;
 
 interface Action {
   id: ActionId;
@@ -68,7 +74,7 @@ function matches(action: Action, query: string): boolean {
 /**
  * The `Cmd/Ctrl+K` palette: fuzzy matches over the loaded notes, the daemon's body search when it
  * is running, and the commands that would otherwise mean a trip to another part of the app - write
- * a note, make a folder, go to the graph or the trash.
+ * a note, make a folder, and open the graph, the stats, the tags, the trash or the profile.
  *
  * The commands are kept few and their words plain. A palette that lists everything is a menu with
  * a text box on top; these are the five things someone reaches for with the keyboard already open.
@@ -82,6 +88,9 @@ export function SearchModal({
   onNewNote,
   onCreateFolder,
   onOpenView,
+  onRandomNote,
+  onDailyNote,
+  onDuplicateNote,
 }: Props) {
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
@@ -122,16 +131,23 @@ export function SearchModal({
     const list: Action[] = [];
     if (onNewNote) list.push({ id: "note", label: "New note", detail: "in the composer" });
     if (onCreateFolder) list.push({ id: "folder", label: "New folder", detail: "name it here" });
+    if (onDailyNote)
+      list.push({ id: "daily", label: "Open today's note", detail: "made when missing" });
+    if (onDuplicateNote)
+      list.push({ id: "duplicate", label: "Duplicate the open note", detail: "a copy beside it" });
+    if (onRandomNote)
+      list.push({ id: "random", label: "Open a random note", detail: "somewhere unexpected" });
     if (onOpenView) {
       list.push(
         { id: "graph", label: "Open the graph", detail: "links and tags" },
         { id: "insights", label: "Open the stats", detail: "the vault counted" },
         { id: "trash", label: "Open the trash", detail: "deleted notes" },
         { id: "profile", label: "Open the profile", detail: "pins and the year in notes" },
+        { id: "tags", label: "Open the tags", detail: "every tag in the vault" },
       );
     }
     return list;
-  }, [onNewNote, onCreateFolder, onOpenView]);
+  }, [onNewNote, onCreateFolder, onOpenView, onRandomNote, onDailyNote, onDuplicateNote]);
 
   /**
    * The rows on screen, in the order they are listed, with the index the arrow keys walk.
@@ -245,6 +261,22 @@ export function SearchModal({
         return;
       case "trash":
         onOpenView?.("trash");
+        onClose();
+        return;
+      case "duplicate":
+        onDuplicateNote?.();
+        onClose();
+        return;
+      case "daily":
+        onDailyNote?.();
+        onClose();
+        return;
+      case "random":
+        onRandomNote?.();
+        onClose();
+        return;
+      case "tags":
+        onOpenView?.("tags");
         onClose();
         return;
       case "profile":

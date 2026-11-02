@@ -8,8 +8,10 @@ import {
   createNote,
   deleteNote,
   disconnectWhatsApp,
+  duplicateNote,
   getNote,
   getTrash,
+  openDailyNote,
   getWhatsApp,
   moveNote,
   removeFolder,
@@ -24,13 +26,17 @@ import { bulkNotice, runBulk } from "./lib/bulk";
 import { addedNotes, captureNotice } from "./lib/capture";
 import { useVaultStore } from "./lib/store";
 import { backlinks } from "@lumos/vault-utils/graph";
+import { relatedNotes } from "@lumos/vault-utils/related";
 import { DEMO_GRAPH, demoNote } from "./lib/demo";
 import { countTags, filterEntries, nodeTag } from "./lib/filter";
 import { isTypingTarget, stepForKey, stepIndex } from "./lib/list-nav";
 import { PANE_DEFAULT, clampPaneWidth } from "./lib/pane-size";
+import { PIN_LIMIT, useProfileStore } from "./lib/profile";
+import { pickRandomNote } from "./lib/random";
 import { recentEntries, rememberRecent } from "./lib/recent";
 import { sortEntries } from "./lib/sort";
 import { InsightsView } from "./components/InsightsView";
+import { TagsView } from "./components/TagsView";
 import { NoteList, keyOf } from "./components/NoteList";
 import { NoteViewer } from "./components/NoteViewer";
 import { PaneBoundary } from "./components/PaneBoundary";
@@ -94,6 +100,9 @@ export default function App() {
   const { view = "notes", note: selected } = useSearch({ from: "/" });
   const navigate = useNavigate({ from: "/" });
   const [fetched, setFetched] = useState<{ key: string; note: Note } | null>(null);
+  // Pins live with the profile in localStorage, so the header can offer one without a request.
+  const pins = useProfileStore((s) => s.pins);
+  const togglePin = useProfileStore((s) => s.togglePin);
   const [searchOpen, setSearchOpen] = useState(false);
   // The composer is opened from two places - the list's New button and the command palette - so
   // whether it is open belongs to the shell rather than to the list.
@@ -284,6 +293,13 @@ export default function App() {
   const activeEntry = useMemo(
     () => (activeKey ? (notes.find((n) => keyOf(n) === activeKey) ?? null) : null),
     [activeKey, notes],
+  );
+
+  // Notes that sit beside the open one: a shared tag, or a link this note wrote itself. Both are
+  // already in the graph, so this costs no request and works with the daemon stopped.
+  const related = useMemo(
+    () => (activeKey ? relatedNotes(notes, graph ?? DEMO_GRAPH, activeKey) : []),
+    [notes, graph, activeKey],
   );
 
   // The graph already knows every link, so the viewer's backlinks need no second request. Offline it
@@ -650,6 +666,46 @@ export default function App() {
     [openNote],
   );
 
+  /**
+   * Today's note, written the first time it is asked for.
+   *
+   * The daemon names the file after the date, so a second ask opens the note that is there instead
+   * of making another. A failed open is a notice, not a dead command.
+   */
+  const openTodaysNote = useCallback(async (): Promise<void> => {
+    try {
+      const note = await openDailyNote();
+      setNotice(null);
+      try {
+        await refreshVault();
+      } catch (err: unknown) {
+        setNotice({
+          text: `Opened today's note, but the list could not be refreshed (${reasonOf(err)}).`,
+        });
+      }
+      openNote(keyOfNote(note));
+    } catch (err: unknown) {
+      setNotice({ text: `Today's note could not be opened (${reasonOf(err)}).` });
+    }
+  }, [openNote, refreshVault]);
+
+  /** Copy the open note beside itself and open the copy. */
+  const duplicateActiveNote = useCallback(async (): Promise<void> => {
+    if (!activeEntry) return;
+    try {
+      const copy = await duplicateNote(activeEntry.folder, activeEntry.name);
+      setNotice(null);
+      try {
+        await refreshVault();
+      } catch (err: unknown) {
+        setNotice({ text: `Duplicated, but the list could not be refreshed (${reasonOf(err)}).` });
+      }
+      openNote(keyOfNote(copy));
+    } catch (err: unknown) {
+      setNotice({ text: `"${activeEntry.title}" could not be duplicated (${reasonOf(err)}).` });
+    }
+  }, [activeEntry, openNote, refreshVault]);
+
   // Writing from the palette: the notes pane comes back, with the composer open above the list.
   const composeFromPalette = useCallback((): void => {
     setComposer({ folder: null });
@@ -662,6 +718,12 @@ export default function App() {
   // Every folder the vault has, in the order the sidebar lists them. One list feeds the composer,
   // the move menus and the graph legend, so a folder made a moment ago is offered in all of them.
   const folderNames = useMemo(() => folders.map((f) => f.folder), [folders]);
+
+  /** Take the keyboard somewhere unexpected: another note, chosen from the loaded listing. */
+  const openRandomNote = useCallback((): void => {
+    const pick = pickRandomNote(notes, activeKey);
+    if (pick) openNote(`${pick.folder}/${pick.name}`);
+  }, [notes, activeKey, openNote]);
 
   /** A tag picked in the list or on a graph node shows that tag's notes and drops the rest. */
   const filterByTag = (value: string): void => {
@@ -747,6 +809,15 @@ export default function App() {
               onFilterFolder={filterByFolder}
             />
           </PaneBoundary>
+        ) : view === "tags" ? (
+          <PaneBoundary title="Tags">
+            <TagsView
+              notes={notes}
+              connection={connection}
+              loading={loading}
+              onFilterTag={filterByTag}
+            />
+          </PaneBoundary>
         ) : view === "profile" ? (
           <PaneBoundary title="The profile">
             <ProfileView
@@ -820,6 +891,7 @@ export default function App() {
               note={note}
               connection={connection}
               backlinks={linkedFrom}
+              related={related}
               onOpenNote={openNote}
               onSave={saveActiveNote}
               onRename={renameActiveNote}
@@ -828,6 +900,13 @@ export default function App() {
               folders={folderNames}
               onTags={(tags) => editActiveMeta({ tags })}
               onStatus={(status) => editActiveMeta({ status })}
+              pinned={activeKey ? pins.includes(activeKey) : false}
+              pinFull={
+                pins.length >= PIN_LIMIT && !(activeKey !== null && pins.includes(activeKey))
+              }
+              onTogglePin={() => {
+                if (activeKey) togglePin(activeKey);
+              }}
             />
           </>
         )}
@@ -864,7 +943,10 @@ export default function App() {
           // The commands that write are only offered while the daemon can take the write.
           onNewNote={connection === "daemon" ? composeFromPalette : undefined}
           onCreateFolder={connection === "daemon" ? createFolderAndOpen : undefined}
+          onDailyNote={connection === "daemon" ? openTodaysNote : undefined}
+          onDuplicateNote={connection === "daemon" && activeEntry ? duplicateActiveNote : undefined}
           onOpenView={setView}
+          onRandomNote={notes.length > 0 ? openRandomNote : undefined}
         />
       ) : null}
     </div>

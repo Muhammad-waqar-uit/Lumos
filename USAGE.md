@@ -13,8 +13,8 @@ and writes them over `127.0.0.1`, and nothing is uploaded anywhere.
 |---|---|---|
 | **Installed desktop app** | One Windows app: it starts its bundled Node daemon and WhatsApp capture automatically | Install `lumos_0.1.0_x64-setup.exe` and open Lumos from Start |
 | **Daemon (development)** | Connects to WhatsApp, parses what you send, writes the note files, and serves the HTTP API | `pnpm --filter daemon dev` |
-| **Desktop (development)** | The app: folder sidebar, note list, viewer and editor, search palette, link graph, trash | `pnpm --filter desktop tauri dev` (the window) or `pnpm --filter desktop dev` (in a browser at `http://localhost:1420`) |
-| **MCP server** | Puts the same vault in front of Claude Code and other agents: twelve tools over stdio, no port | `pnpm --filter mcp start`, or the `claude mcp add` line in [Letting a coding agent read the vault](#letting-a-coding-agent-read-the-vault) |
+| **Desktop (development)** | The app: folder sidebar, note list, viewer and editor, search palette, link graph, tags, stats, trash | `pnpm --filter desktop tauri dev` (the window) or `pnpm --filter desktop dev` (in a browser at `http://localhost:1420`) |
+| **MCP server** | Puts the same vault in front of Claude Code and other agents: thirteen tools over stdio, no port | `pnpm --filter mcp start`, or the `claude mcp add` line in [Letting a coding agent read the vault](#letting-a-coding-agent-read-the-vault) |
 
 The installed Windows app starts both parts for you: Tauri launches its bundled Node daemon when the app opens and stops it when the app exits. The daemon is still a separate process internally, but there is only one installer and one click to run Lumos. The developer `tauri dev` and browser preview do not start the daemon.
 
@@ -109,8 +109,8 @@ hiding the note. Pointing Obsidian at the vault is the intended way to browse it
   titles, tags and previews, plus a body search from the daemon for words that appear nowhere in the
   preview - those rows are marked *in
   the body*, as the last row is here. Arrow keys move, `Enter` opens, `Esc` closes. Empty, it lists
-  the notes you opened this session and then six commands: **New note**, **New folder**, **Open the
-  graph**, **Open the stats**, **Open the trash** and **Open the profile**. Typing puts whichever command's words match first, so `new folder` +
+  the notes you opened this session and then ten commands: **New note**, **New folder**, **Open today's note**, **Duplicate the open note**, **Open a random note**, **Open
+  the graph**, **Open the stats**, **Open the tags**, **Open the trash** and **Open the profile**. Typing puts whichever command's words match first, so `new folder` +
   `Enter` turns the field into a name field - `Enter` makes the folder and the list looks at it.
 - **Moon/Sun toggle** switches the full app between dark and light palettes; the choice is saved on
   this machine.
@@ -125,8 +125,14 @@ code with syntax highlighting for a fence that names its language. A YouTube, Vi
 Facebook link plays or embeds in place; an image link renders as the image; any other link gets a
 reader with the page's text.
 
+The header says how long the note is - a word count and an estimated read at 200 words a minute -
+and a note with two or more sections gets a **Contents** strip above the body: pick one to jump to
+it.
+
 **Backlinks** under the note list the notes that link to this one (`[[like this]]`), and each is a
-button.
+button. **Related** beside it lists the notes this one links to and the ones that share its tags,
+with the reason on each chip - a written link first, a shared tag second, and never a note that
+only shares the folder.
 
 ### Writing
 
@@ -146,6 +152,10 @@ button.
   pointing in, the ones nothing links to, the commonest tags and every folder's size. Each row opens
   a note or filters the list to a tag, and the whole pane is counted from what the window already
   has, so it opens with no request and works with the daemon stopped.
+- **Tags** in the sidebar is the other half of the chips: every tag in the vault, busiest first,
+  with how many notes carry it, which folders it spans and the tags that usually appear with it. A
+  filter field finds a tag by its name, a neighbour or a folder, and choosing one opens the notes
+  that carry it.
 - **Trash** in the sidebar lists what a delete kept, each with **Restore**; **Empty the trash**
   takes two presses because it is the one action with no undo.
 - **Profile** — the avatar at the top of the sidebar. It holds a name and one line for the vault
@@ -243,7 +253,7 @@ you are most likely to reach for: `GET /notes`, `/notes/search`, `/note`, `/fold
 ## Letting a coding agent read the vault
 
 An [MCP](https://modelcontextprotocol.io) server puts the vault in front of Claude Code, Claude
-Desktop or any other MCP client: twelve tools to list, search, read, write, rename, move and delete
+Desktop or any other MCP client: thirteen tools to list, search, read, write, rename, move and delete
 notes. No port is opened - the client starts the process and speaks to it over stdio - and the
 vault stays a folder of Markdown files throughout.
 

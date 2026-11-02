@@ -27,3 +27,25 @@ describe("Markdown links", () => {
     expect(opened.openLinkInApp).not.toHaveBeenCalled();
   });
 });
+
+describe("Markdown headings", () => {
+  it("gives h2 and h3 the ids the Contents list points at", () => {
+    const { container } = render(<Markdown source={"## Hello, world!\n\n### What is next"} />);
+
+    expect(container.querySelector("h2")?.id).toBe("hello-world");
+    expect(container.querySelector("h3")?.id).toBe("what-is-next");
+  });
+
+  it("keeps two headings of the same name apart", () => {
+    const { container } = render(<Markdown source={"## Notes\n\n## Notes"} />);
+    const ids = Array.from(container.querySelectorAll("h2")).map((heading) => heading.id);
+
+    expect(ids).toEqual(["notes", "notes-2"]);
+  });
+
+  it("does not read a heading out of a fenced line", () => {
+    const { container } = render(<Markdown source={"```md\n## Not a heading\n```"} />);
+
+    expect(container.querySelector("h2")).toBeNull();
+  });
+});

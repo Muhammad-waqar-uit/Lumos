@@ -114,6 +114,8 @@ Three-pane shell, with the list column resizable (see [`desktop.md`](desktop.md)
 - Sidebar: fixed-ish width, folder list, note counts.
 - Notes list: scrollable, keyboard-navigable.
 - Viewer: wide, readable measure; frontmatter shown as subtle metadata.
+- The Graph, Stats, Tags, Trash and Profile panes take the list and viewer's place as one full-width
+  pane; the sidebar keeps its position, so a pane switch never moves the way back.
 
 ## Interaction
 
