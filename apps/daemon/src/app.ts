@@ -30,6 +30,8 @@ import {
   updateNote,
   updateNoteMeta,
 } from "@lumos/vault-utils";
+import { duplicateNote } from "@lumos/vault-utils/duplicate";
+import { ensureDailyNote } from "@lumos/vault-utils/daily";
 import { vaultInsights } from "@lumos/vault-utils/insights";
 import type { LinkCard, WhatsAppStatus } from "@lumos/shared";
 import { DISABLED_BRIDGE, DISABLED_SENTENCE, type BridgeControl } from "./bridge.js";
@@ -258,6 +260,27 @@ export async function createApp({
   });
 
   /** List every note in the vault, newest first. */
+  /**
+   * Today's note, made the first time it is asked for.
+   *
+   * The filename is the date and nothing else, so the same day always resolves to one file and
+   * asking twice opens what is there. `date` is accepted as `YYYY-MM-DD` for a backfill or a test;
+   * anything else is refused. The folder is made when the vault does not have it yet.
+   */
+  app.post<{ Body: { date?: string } }>("/note/daily", async (req, reply) => {
+    const raw = req.body?.date;
+    if (raw !== undefined && !/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+      return reply.code(400).send({ error: "date must be YYYY-MM-DD" });
+    }
+    // Noon, so a local date cannot slip into a neighbouring day through a timezone offset.
+    const date = raw === undefined ? new Date() : new Date(`${raw}T12:00:00`);
+    if (Number.isNaN(date.getTime())) {
+      return reply.code(400).send({ error: "date must be YYYY-MM-DD" });
+    }
+    const { note, created } = await ensureDailyNote(vault, date);
+    return reply.code(created ? 201 : 200).send({ note, created });
+  });
+
   app.get("/notes", async () => ({ notes: await listNotes(vault) }));
 
   /** Case-insensitive search across titles, content, and tags, from the app's warm index. */
@@ -402,6 +425,27 @@ export async function createApp({
       },
     );
     return { note: await readNote(file, folder) };
+  });
+
+  /**
+   * Copy a note beside itself.
+   *
+   * The copy carries the body, tags, status and link under a "(copy)" title and a fresh date; the
+   * original is only read. A note that is not there is a 404, an unsafe name a 400.
+   */
+  app.post<{ Body: { folder?: string; name?: string } }>("/note/duplicate", async (req, reply) => {
+    const { folder, name } = req.body ?? {};
+    if (!folder || !name) return reply.code(400).send({ error: "folder and name are required" });
+    if (!(await knownFolder(folder))) return reply.code(400).send({ error: "unknown folder" });
+    if (!isNoteName(name)) return reply.code(400).send({ error: "invalid name" });
+
+    try {
+      return { note: await duplicateNote(vault, { folder, name }) };
+    } catch (err: unknown) {
+      const refusal = noteRefusal(err);
+      if (refusal) return reply.code(refusal.status).send({ error: refusal.message });
+      throw err;
+    }
   });
 
   /** Read a single note by folder + filename. */

@@ -1021,6 +1021,88 @@ describe("PATCH /note/meta", () => {
   });
 });
 
+describe("POST /note/duplicate", () => {
+  it("copies a note beside itself with its body and tags", async () => {
+    const { vault, app } = await makeApp([{ folder: "Ideas", text: "a thought #idea" }]);
+    const listing = await app.inject({ method: "GET", url: "/notes" });
+    const name = listing.json<{ notes: { name: string }[] }>().notes[0].name;
+
+    const res = await app.inject({
+      method: "POST",
+      url: "/note/duplicate",
+      payload: { folder: "Ideas", name },
+    });
+
+    expect(res.statusCode).toBe(200);
+    const { note } = res.json<{
+      note: { title: string; folder: string; content: string; frontmatter: { tags: string[] } };
+    }>();
+    expect(note.title).toBe("a thought #idea (copy)");
+    expect(note.folder).toBe("Ideas");
+    expect(note.content).toContain("a thought");
+    expect(note.frontmatter.tags).toEqual(["idea"]);
+    expect(await readdir(path.join(vault, "Ideas"))).toHaveLength(2);
+  });
+
+  it("answers a missing note with 404 and a name outside the folder with 400", async () => {
+    const { app } = await makeApp();
+
+    for (const name of ["2026-01-01-gone.md", "../outside.md"]) {
+      const res = await app.inject({
+        method: "POST",
+        url: "/note/duplicate",
+        payload: { folder: "Ideas", name },
+      });
+      expect(res.statusCode, name).toBe(name.startsWith("..") ? 400 : 404);
+    }
+  });
+});
+
+describe("POST /note/daily", () => {
+  it("makes today's note once, then opens the same file", async () => {
+    const { vault, app } = await makeApp();
+
+    const first = await app.inject({ method: "POST", url: "/note/daily", payload: {} });
+    expect(first.statusCode).toBe(201);
+    const created = first.json<{
+      note: { title: string; folder: string; file: string; frontmatter: { source: string } };
+      created: boolean;
+    }>();
+    expect(created.created).toBe(true);
+    expect(created.note.folder).toBe("Daily");
+    expect(path.basename(created.note.file)).toMatch(/^\d{4}-\d{2}-\d{2}\.md$/);
+    expect(created.note.title).toBe(path.basename(created.note.file, ".md"));
+    expect(created.note.frontmatter.source).toBe("desktop");
+
+    const second = await app.inject({ method: "POST", url: "/note/daily" });
+    expect(second.statusCode).toBe(200);
+    expect(path.basename(second.json<{ note: { file: string } }>().note.file)).toBe(
+      path.basename(created.note.file),
+    );
+    expect(await readdir(path.join(vault, "Daily"))).toHaveLength(1);
+  });
+
+  it("takes a date for a backfill and refuses anything that is not one", async () => {
+    const { app } = await makeApp();
+
+    const res = await app.inject({
+      method: "POST",
+      url: "/note/daily",
+      payload: { date: "2026-01-02" },
+    });
+    expect(res.statusCode).toBe(201);
+    expect(path.basename(res.json<{ note: { file: string } }>().note.file)).toBe("2026-01-02.md");
+
+    const bad = await app.inject({
+      method: "POST",
+      url: "/note/daily",
+      payload: { date: "yesterday" },
+    });
+    expect(bad.statusCode).toBe(400);
+    expect(bad.json()).toEqual({ error: "date must be YYYY-MM-DD" });
+  });
+});
+
 describe("POST /note/move", () => {
   it("moves the note into the other folder and answers it there", async () => {
     const { vault, app } = await makeApp([NOTE]);
